@@ -1,0 +1,12 @@
+{
+  "name": "event-app-monorepo",
+  "private": true,
+  "workspaces": [
+    "back",
+    "front"
+  ],
+  "scripts": {
+    "dev:back": "npm --workspace back run dev",
+    "dev:front": "npm --workspace front run dev"
+  }
+}

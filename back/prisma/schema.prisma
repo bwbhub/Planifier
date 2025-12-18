@@ -1,5 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// --------------------------------------------------------
+// CONFIGURATION & DATASOURCE
+// --------------------------------------------------------
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +9,209 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// --------------------------------------------------------
+// ENUMS (Standardisation des états)
+// --------------------------------------------------------
+
+// Rôles hiérarchiques au sein d'un événement
+enum EventRole {
+  OWNER     // Créateur, tous droits (inviter, modifier, supprimer, promouvoir)
+  ORGANIZER // Droit d'inviter sans validation, modifier infos event
+  GUEST     // (Basic) Droit de suggérer des invités (soumis à validation), voir infos
+}
+
+// Statut de présence du participant
+enum ParticipantStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+  PENDING // En attente de réponse de l'utilisateur lui-même
+}
+
+// Statut d'une invitation officielle
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+// Statut d'une suggestion faite par un Guest
+enum ProposalStatus {
+  PENDING
+  APPROVED // Devient une Invite officielle
+  REJECTED
+}
+
+enum NotificationType {
+  INVITE_RECEIVED
+  INVITE_ACCEPTED
+  EVENT_UPDATED
+  PROPOSAL_RECEIVED
+  PROPOSAL_APPROVED
+}
+
+// --------------------------------------------------------
+// MODÈLES PRINCIPAUX
+// --------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String    // Ne jamais stocker en clair
+  avatarUrl     String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  eventsParticapation EventParticipant[] // Événements où l'user est participant
+  
+  sentInvites         Invite[]           @relation("Sender")
+  receivedInvites     Invite[]           @relation("Receiver") // Si l'invitation est liée à un compte existant
+  
+  madeProposals       ProposedInvite[]   @relation("Proposer") // Suggestions faites par cet user
+  
+  notifications       Notification[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  description String?   @db.Text
+  location    String?
+  
+  startDate   DateTime
+  endDate     DateTime?
+  
+  coverUrl    String?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  participants    EventParticipant[]
+  settings        EventSettings?
+  invites         Invite[]
+  proposedInvites ProposedInvite[]
+  notifications   Notification[] // Notifications liées à cet event
+
+  @@map("events")
+}
+
+// Table de jointure User <-> Event avec Rôles
+model EventParticipant {
+  id        String            @id @default(uuid())
+  
+  role      EventRole         @default(GUEST)
+  status    ParticipantStatus @default(PENDING)
+  
+  joinedAt  DateTime          @default(now())
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId]) // Un user ne peut être qu'une seule fois dans un event
+  @@index([eventId])          // Pour lister rapidement les participants
+  @@map("event_participants")
+}
+
+// Configuration spécifique de l'événement (1-1)
+model EventSettings {
+  id        String  @id @default(uuid())
+  eventId   String  @unique
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  isGuestListVisible  Boolean @default(true)  // Les invités peuvent voir qui vient
+  allowGuestInvite    Boolean @default(false) // Si true, Guest peut inviter directement. Si false, passe par ProposedInvite.
+  maxParticipants     Int?    // Null = illimité
+
+  @@map("event_settings")
+}
+
+// --------------------------------------------------------
+// GESTION DES INVITATIONS
+// --------------------------------------------------------
+
+// Invitations OFFICIELLES (envoyées par Owner/Organizer ou après validation)
+model Invite {
+  id        String       @id @default(uuid())
+  token     String       @unique // Token unique pour lien d'accès
+  email     String       // On stocke l'email car l'invité n'a peut-être pas encore de compte
+  
+  status    InviteStatus @default(PENDING)
+  role      EventRole    @default(GUEST) // Le rôle qu'aura la personne si elle accepte
+
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+
+  // Relations
+  eventId   String
+  event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  inviterId String
+  inviter   User         @relation("Sender", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  userId    String?      // Optionnel : si l'invité a déjà un compte, on le lie
+  user      User?        @relation("Receiver", fields: [userId], references: [id])
+
+  @@unique([eventId, email]) // On n'invite pas deux fois la même personne au même event
+  @@index([token])
+  @@map("invites")
+}
+
+// Suggestions d'invitations (faites par les rôles GUEST/BASIC)
+model ProposedInvite {
+  id              String         @id @default(uuid())
+  
+  suggestedEmail  String?        // Email suggéré
+  reason          String?        // "C'est le cousin de machin"
+  
+  status          ProposalStatus @default(PENDING)
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  proposerId      String
+  proposer        User     @relation("Proposer", fields: [proposerId], references: [id], onDelete: Cascade)
+
+  @@map("proposed_invites")
+}
+
+// --------------------------------------------------------
+// SYSTÈME DE NOTIFICATION
+// --------------------------------------------------------
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  
+  // Payload générique pour flexibilité (ex: { "actorName": "Alice", "inviteId": "xyz" })
+  metadata  Json?            
+  
+  createdAt DateTime         @default(now())
+
+  // Relations
+  userId    String           // Destinataire
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId   String?          // Optionnel : lien direct vers l'event concerné
+  event     Event?           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead]) // Pour récupérer rapidement les notifs non lues
+  @@map("notifications")
 }

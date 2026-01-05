@@ -11,11 +11,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr">
       <body>
-        <ThemeRegistry>
-          <AuthProvider>
+        <AuthProvider>
+          <ThemeRegistry>
             {children}
-          </AuthProvider>
-        </ThemeRegistry>
+          </ThemeRegistry>
+        </AuthProvider>
       </body>
     </html>
   );

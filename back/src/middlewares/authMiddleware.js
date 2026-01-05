@@ -19,7 +19,7 @@ export const protect = asyncHandler(async (req, res, next) => {
       // Récupérer l'utilisateur sans le mot de passe
       req.user = await prisma.user.findUnique({
         where: { id: decoded.id },
-        select: { id: true, name: true, email: true, avatarUrl: true },
+        select: { id: true, name: true, email: true, avatarUrl: true, preferredTheme: true },
       });
 
       if (!req.user) {

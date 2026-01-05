@@ -63,6 +63,8 @@ model User {
   name          String?
   passwordHash  String    // Ne jamais stocker en clair
   avatarUrl     String?
+
+  preferredTheme String?
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

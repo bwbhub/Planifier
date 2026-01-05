@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Container,
@@ -23,7 +23,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  Clock,
   MapPin,
   Users,
   ExternalLink,
@@ -50,13 +49,20 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [hasScrollbar, setHasScrollbar] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   // Pour la vue mobile (jour unique)
-  const [currentDayIndex, setCurrentDayIndex] = useState(new Date().getDay() || 7); // 1-7 (lundi-dimanche)
+  const [currentDayIndex, setCurrentDayIndex] = useState(
+    new Date().getDay() || 7
+  ); // 1-7 (lundi-dimanche)
 
+  const scrollContainerRef = useRef(null);
   // ========================================
   // CHARGEMENT DES ÉVÉNEMENTS
   // ========================================
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -66,7 +72,8 @@ export default function EventsPage() {
           },
         });
 
-        if (!res.ok) throw new Error("Erreur lors du chargement des événements");
+        if (!res.ok)
+          throw new Error("Erreur lors du chargement des événements");
 
         const data = await res.json();
         setEvents(data);
@@ -82,9 +89,25 @@ export default function EventsPage() {
     }
   }, [token]);
 
+  useEffect(() => {
+    const checkScrollbar = () => {
+      if (scrollContainerRef.current) {
+        const hasScroll =
+          scrollContainerRef.current.scrollHeight >
+          scrollContainerRef.current.clientHeight;
+        setHasScrollbar(hasScroll);
+      }
+    };
+    checkScrollbar();
+    window.addEventListener("resize", checkScrollbar);
+
+    return () => window.removeEventListener("resize", checkScrollbar);
+  }, [events, view]);
+
   // ========================================
   // UTILITAIRES DE DATE
   // ========================================
+
   const getWeekDates = (date) => {
     const curr = new Date(date);
     const first = curr.getDate() - curr.getDay() + 1; // Lundi
@@ -98,35 +121,16 @@ export default function EventsPage() {
     return dates;
   };
 
-  const getMonthDates = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    // Trouver le lundi de la première semaine
-    const startDate = new Date(firstDay);
-    const dayOfWeek = firstDay.getDay() || 7; // 0 = dimanche → 7
-    startDate.setDate(firstDay.getDate() - dayOfWeek + 1);
-
-    // Générer 6 semaines (42 jours)
-    const dates = [];
-    for (let i = 0; i < 42; i++) {
-      const day = new Date(startDate);
-      day.setDate(startDate.getDate() + i);
-      dates.push(day);
-    }
-
-    return dates;
-  };
-
   const formatWeekTitle = (date) => {
     const weekDates = getWeekDates(date);
     const first = weekDates[0];
     const last = weekDates[6];
 
     const options = { day: "numeric", month: "long", year: "numeric" };
-    const firstStr = first.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+    const firstStr = first.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+    });
     const lastStr = last.toLocaleDateString("fr-FR", options);
 
     return `Semaine du ${firstStr} → ${lastStr}`;
@@ -139,6 +143,7 @@ export default function EventsPage() {
   // ========================================
   // NAVIGATION
   // ========================================
+
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
     if (view === "week") {
@@ -166,6 +171,7 @@ export default function EventsPage() {
   // ========================================
   // GESTION DES ÉVÉNEMENTS
   // ========================================
+
   const handleEventClick = (event) => {
     setSelectedEvent(event);
     setShowEventModal(true);
@@ -181,6 +187,32 @@ export default function EventsPage() {
       router.push(`/events/${selectedEvent.id}`);
     }
   };
+
+  const handleSlotClick = (date, hour) => {
+    setSelectedSlot({ date, hour });
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setSelectedSlot(null);
+  };
+
+  const handleCreateEvent = () => {
+    if (selectedSlot) {
+      const startDate = new Date(selectedSlot.date);
+      startDate.setHours(selectedSlot.hour, 0, 0, 0);
+      router.push(`/events/create?start=${startDate.toISOString()}`);
+    }
+  };
+
+  // ========================================
+  // LOGS
+  // ========================================
+
+  console.log("events length:", events.length);
+  console.log("selectedSlot:", selectedSlot);
+  console.log("showCreateModal:", showCreateModal);
 
   // ========================================
   // RENDU
@@ -201,7 +233,17 @@ export default function EventsPage() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, px: { xs: 1, sm: 2 }, height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <Container
+      maxWidth="xl"
+      sx={{
+        py: 4,
+        px: { xs: 1, sm: 2 },
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       {/* Header */}
       <Paper
         elevation={1}
@@ -221,12 +263,19 @@ export default function EventsPage() {
         {/* Titre */}
         <Box>
           <Typography variant="h5" fontWeight="bold">
-            {view === "week" ? formatWeekTitle(currentDate) : formatMonthTitle(currentDate)}
+            {view === "week"
+              ? formatWeekTitle(currentDate)
+              : formatMonthTitle(currentDate)}
           </Typography>
         </Box>
 
         {/* Contrôles */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent={{ xs: "center", sm: "flex-end" }}>
+        <Stack
+          direction="row"
+          spacing={{ xs: 0.5, sm: 1 }}
+          flexWrap="wrap"
+          justifyContent={{ xs: "center", sm: "flex-end" }}
+        >
           {/* Bouton Aujourd'hui */}
           <Button variant="outlined" size="small" onClick={handleToday}>
             Aujourd&apos;hui
@@ -271,6 +320,9 @@ export default function EventsPage() {
           isMobile={isMobile}
           currentDayIndex={currentDayIndex}
           setCurrentDayIndex={setCurrentDayIndex}
+          hasScrollbar={hasScrollbar}
+          scrollContainerRef={scrollContainerRef}
+          onSlotClick={handleSlotClick}
         />
       ) : (
         <CalendarMonthView
@@ -286,7 +338,26 @@ export default function EventsPage() {
         event={selectedEvent}
         onClose={handleCloseModal}
         onViewEvent={handleViewEvent}
+        onSlotClick={handleSlotClick}
       />
+
+      {/* Modale de création d'événement */}
+      <Dialog open={showCreateModal} onClose={handleCloseCreateModal}>
+        <DialogTitle>Créer un événement</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Voulez-vous créer un événement pour le{" "}
+            {selectedSlot?.date.toLocaleDateString("fr-FR")} à{" "}
+            {selectedSlot?.hour - 1}h ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreateModal}>Annuler</Button>
+          <Button variant="contained" onClick={handleCreateEvent}>
+            Créer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
@@ -294,9 +365,19 @@ export default function EventsPage() {
 // ========================================
 // COMPOSANT : VUE SEMAINE
 // ========================================
-function CalendarWeekView({ currentDate, events, onEventClick, isMobile, currentDayIndex, setCurrentDayIndex }) {
+function CalendarWeekView({
+  currentDate,
+  events,
+  onEventClick,
+  isMobile,
+  currentDayIndex,
+  setCurrentDayIndex,
+  hasScrollbar,
+  scrollContainerRef,
+  onSlotClick,
+}) {
   const weekDates = getWeekDates(currentDate);
-  const hours = Array.from({ length: 19 }, (_, i) => i + 6); // 6h → 00h (24h)
+  const hours = Array.from({ length: 24 }, (_, i) => i); // 00h → 23h (24h)
 
   // Sur mobile, afficher un seul jour
   const displayDates = isMobile ? [weekDates[currentDayIndex - 1]] : weekDates;
@@ -314,7 +395,9 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
 
   const getEventPosition = (event) => {
     const start = new Date(event.startDate);
-    const end = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 60 * 60 * 1000);
+    const end = event.endDate
+      ? new Date(event.endDate)
+      : new Date(start.getTime() + 60 * 60 * 1000);
 
     const startHour = start.getHours() + start.getMinutes() / 60;
     const endHour = end.getHours() + end.getMinutes() / 60;
@@ -326,7 +409,16 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
   };
 
   return (
-    <Paper elevation={2} sx={{ overflow: "hidden", borderRadius: 1, display: "flex", flexDirection: "column", flex: 1 }}>
+    <Paper
+      elevation={2}
+      sx={{
+        overflow: "hidden",
+        borderRadius: 1,
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+      }}
+    >
       {/* Navigation mobile jour par jour */}
       {isMobile && (
         <Box
@@ -367,14 +459,22 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "60px repeat(7, 1fr)",
-            borderBottom: (theme) => `2px solid ${theme.palette.text.secondary}`,
+            gridTemplateColumns: hasScrollbar
+              ? "60px repeat(7, 1fr) 15px"
+              : "60px repeat(7, 1fr)",
+            borderBottom: (theme) =>
+              `2px solid ${theme.palette.text.secondary}`,
             bgcolor: "background.default",
-            scrollbarGutter: "stable", // Réserve l'espace pour la scrollbar
             flexShrink: 0,
           }}
         >
-          <Box sx={{ borderRight: (theme) => `2px solid ${theme.palette.text.secondary}` }} /> {/* Espace pour la colonne des heures */}
+          <Box
+            sx={{
+              borderRight: (theme) =>
+                `2px solid ${theme.palette.text.secondary}`,
+            }}
+          />{" "}
+          {/* Espace pour la colonne des heures */}
           {weekDates.map((date, index) => {
             const isToday =
               date.getDate() === new Date().getDate() &&
@@ -385,23 +485,33 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
                 key={index}
                 sx={{
                   py: 0.75,
-                  px: 1,
+                  // px: 1,
                   textAlign: "center",
                   position: "relative",
                   // Bordure gauche (sauf pour le premier jour)
-                  "&::before": index > 0 ? {
-                    content: '""',
-                    position: "absolute",
-                    left: 0,
-                    top: "50%",
-                    bottom: "0",
-                    width: "1px",
-                    bgcolor: "text.secondary",
-                  } : {},
+                  "&::before":
+                    index > 0
+                      ? {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          bottom: "0",
+                          width: "1px",
+                          bgcolor: "text.secondary",
+                        }
+                      : {},
                 }}
               >
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: "0.7rem" }}>
-                  {date.toLocaleDateString("fr-FR", { weekday: "short" }).toUpperCase()}
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ fontSize: "0.7rem" }}
+                >
+                  {date
+                    .toLocaleDateString("fr-FR", { weekday: "short" })
+                    .toUpperCase()}
                 </Typography>
                 <Typography
                   variant="body1"
@@ -416,25 +526,42 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
               </Box>
             );
           })}
+          {hasScrollbar && (
+            <Box
+              sx={{
+                width: "15px",
+                bgcolor: "background.default",
+                height: "54px",
+              }}
+            />
+          )}
         </Box>
       )}
 
       {/* Grille horaire */}
-      <Box sx={{ 
-        position: "relative", 
-        flex: 1,
-        overflow: "auto",
-        scrollbarGutter: "stable", // Réserve l'espace pour la scrollbar
-      }}>
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          position: "relative",
+          flex: 1,
+          overflow: "auto",
+        }}
+      >
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: isMobile ? "60px 1fr" : "60px repeat(7, 1fr)",
             position: "relative",
+            height: "100%",
           }}
         >
           {/* Colonne des heures */}
-          <Box sx={{ borderRight: (theme) => `2px solid ${theme.palette.text.secondary}` }}>
+          <Box
+            sx={{
+              borderRight: (theme) =>
+                `2px solid ${theme.palette.text.secondary}`,
+            }}
+          >
             {hours.map((hour) => (
               <Box
                 key={hour}
@@ -443,11 +570,16 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderTop: (theme) => `1px solid ${theme.palette.text.secondary}`,
+                  borderTop: (theme) =>
+                    `1px solid ${theme.palette.text.secondary}`,
                   bgcolor: "background.default",
                 }}
               >
-                <Typography variant="caption" color="text.secondary" fontWeight="500">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight="500"
+                >
                   {hour}h
                 </Typography>
               </Box>
@@ -463,17 +595,27 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
                 key={dayIndex}
                 sx={{
                   position: "relative",
-                  borderLeft: (theme) => `1px solid ${theme.palette.text.secondary}`,
-                  borderRight: dayIndex === displayDates.length - 1 ? (theme) => `1px solid ${theme.palette.text.secondary}` : "none",
+                  borderLeft: (theme) =>
+                    `1px solid ${theme.palette.text.secondary}`,
+                  borderRight:
+                    dayIndex === displayDates.length - 1
+                      ? (theme) => `1px solid ${theme.palette.text.secondary}`
+                      : "none",
                 }}
               >
                 {/* Lignes horaires */}
                 {hours.map((hour) => (
                   <Box
                     key={hour}
+                    onClick={() => onSlotClick(date, hour + 1)}
                     sx={{
                       height: "50px",
-                      borderTop: (theme) => `1px solid ${theme.palette.text.secondary}`,
+                      borderTop: (theme) =>
+                        `1px solid ${theme.palette.text.secondary}`,
+                      cursor: "pointer",
+                      "&:hover": {
+                        bgcolor: "action.hover",
+                      },
                     }}
                   />
                 ))}
@@ -507,7 +649,12 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
                         {event.title}
                       </Typography>
                       {event.location && (
-                        <Typography variant="caption" display="block" noWrap sx={{ opacity: 0.9 }}>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          noWrap
+                          sx={{ opacity: 0.9 }}
+                        >
                           📍 {event.location}
                         </Typography>
                       )}
@@ -526,7 +673,7 @@ function CalendarWeekView({ currentDate, events, onEventClick, isMobile, current
 // ========================================
 // COMPOSANT : VUE MOIS
 // ========================================
-function CalendarMonthView({ currentDate, events, onEventClick }) {
+function CalendarMonthView({ currentDate, events, onEventClick, onSlotClick }) {
   const monthDates = getMonthDates(currentDate);
   const weekDays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
@@ -555,7 +702,16 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
   };
 
   return (
-    <Paper elevation={2} sx={{ overflow: "hidden", borderRadius: 1, display: "flex", flexDirection: "column", flex: 1 }}>
+    <Paper
+      elevation={2}
+      sx={{
+        overflow: "hidden",
+        borderRadius: 1,
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+      }}
+    >
       {/* En-tête des jours de la semaine */}
       <Box
         sx={{
@@ -567,26 +723,34 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
         }}
       >
         {weekDays.map((day, index) => (
-          <Box 
-            key={day} 
-            sx={{ 
-              py: 0.75, 
-              px: 1, 
+          <Box
+            key={day}
+            sx={{
+              py: 0.75,
+              px: 1,
               textAlign: "center",
               position: "relative",
               // Bordure gauche (sauf pour le premier jour)
-              "&::before": index > 0 ? {
-                content: '""',
-                position: "absolute",
-                left: 0,
-                top: "50%",
-                bottom: "0",
-                width: "1px",
-                bgcolor: "text.secondary",
-              } : {},
+              "&::before":
+                index > 0
+                  ? {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      top: "50%",
+                      bottom: "0",
+                      width: "1px",
+                      bgcolor: "text.secondary",
+                    }
+                  : {},
             }}
           >
-            <Typography variant="caption" fontWeight="600" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
+            <Typography
+              variant="caption"
+              fontWeight="600"
+              color="text.secondary"
+              sx={{ fontSize: "0.7rem" }}
+            >
               {day.toUpperCase()}
             </Typography>
           </Box>
@@ -614,9 +778,17 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
               sx={{
                 height: "100%", // Prend toute la hauteur de la cellule
                 p: 1,
-                borderRight: (index + 1) % 7 !== 0 ? (theme) => `1px solid ${theme.palette.text.secondary}` : "none",
-                borderBottom: index < 35 ? (theme) => `1px solid ${theme.palette.text.secondary}` : "none",
-                bgcolor: !isCurrentMonth(date) ? "action.hover" : "background.paper",
+                borderRight:
+                  (index + 1) % 7 !== 0
+                    ? (theme) => `1px solid ${theme.palette.text.secondary}`
+                    : "none",
+                borderBottom:
+                  index < 35
+                    ? (theme) => `1px solid ${theme.palette.text.secondary}`
+                    : "none",
+                bgcolor: !isCurrentMonth(date)
+                  ? "action.hover"
+                  : "background.paper",
                 opacity: !isCurrentMonth(date) ? 0.5 : 1,
                 overflow: "hidden", // Empêche le débordement
                 display: "flex",
@@ -654,9 +826,9 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
                     }}
                   >
                     {/* Heure sur la première ligne */}
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
+                    <Typography
+                      variant="caption"
+                      sx={{
                         fontSize: "0.65rem",
                         fontWeight: "500",
                         display: "block",
@@ -669,9 +841,9 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
                       })}
                     </Typography>
                     {/* Titre sur la deuxième ligne avec ellipsis */}
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
+                    <Typography
+                      variant="caption"
+                      sx={{
                         fontSize: "0.7rem",
                         fontWeight: "600",
                         display: "block",
@@ -688,7 +860,11 @@ function CalendarMonthView({ currentDate, events, onEventClick }) {
 
                 {/* +X autres */}
                 {remainingCount > 0 && (
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem" }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: "0.65rem" }}
+                  >
                     +{remainingCount} autre{remainingCount > 1 ? "s" : ""}
                   </Typography>
                 )}
@@ -744,8 +920,15 @@ function EventDetailModal({ open, event, onClose, onViewEvent }) {
                 })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {startDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                {endDate && ` → ${endDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`}
+                {startDate.toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {endDate &&
+                  ` → ${endDate.toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}`}
               </Typography>
             </Box>
           </Box>
@@ -762,7 +945,11 @@ function EventDetailModal({ open, event, onClose, onViewEvent }) {
           {event.description && (
             <>
               <Divider />
-              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ whiteSpace: "pre-wrap" }}
+              >
                 {event.description}
               </Typography>
             </>
@@ -773,25 +960,43 @@ function EventDetailModal({ open, event, onClose, onViewEvent }) {
             <>
               <Divider />
               <Box>
-                <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mb: 1.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1.5,
+                    alignItems: "center",
+                    mb: 1.5,
+                  }}
+                >
                   <Users size={20} />
                   <Typography variant="body1" fontWeight="600">
-                    Participants ({event._count?.participants || event.participants.length})
+                    Participants (
+                    {event._count?.participants || event.participants.length})
                   </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   {event.participants.slice(0, 5).map((participant, index) => (
                     <Chip
                       key={index}
-                      avatar={<Avatar>{participant.user?.name?.[0] || "?"}</Avatar>}
+                      avatar={
+                        <Avatar>{participant.user?.name?.[0] || "?"}</Avatar>
+                      }
                       label={participant.user?.name || "Utilisateur"}
                       size="small"
-                      variant={participant.role === "OWNER" ? "filled" : "outlined"}
-                      color={participant.role === "OWNER" ? "primary" : "default"}
+                      variant={
+                        participant.role === "OWNER" ? "filled" : "outlined"
+                      }
+                      color={
+                        participant.role === "OWNER" ? "primary" : "default"
+                      }
                     />
                   ))}
                   {event.participants.length > 5 && (
-                    <Chip label={`+${event.participants.length - 5}`} size="small" variant="outlined" />
+                    <Chip
+                      label={`+${event.participants.length - 5}`}
+                      size="small"
+                      variant="outlined"
+                    />
                   )}
                 </Stack>
               </Box>
@@ -804,7 +1009,11 @@ function EventDetailModal({ open, event, onClose, onViewEvent }) {
         <Button onClick={onClose} variant="outlined">
           Fermer
         </Button>
-        <Button onClick={onViewEvent} variant="contained" endIcon={<ExternalLink size={18} />}>
+        <Button
+          onClick={onViewEvent}
+          variant="contained"
+          endIcon={<ExternalLink size={18} />}
+        >
           Voir l&apos;événement
         </Button>
       </DialogActions>

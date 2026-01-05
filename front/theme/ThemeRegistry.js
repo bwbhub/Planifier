@@ -4,16 +4,20 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter"; // Adapté pour Next.js 14+
 import { getTheme } from "./theme";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import { useAuth } from "../context/AuthContext";
 
 export default function ThemeRegistry({ children }) {
-  // Détection du mode système
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+  const { user } = useAuth();
+
+  console.log("User data in ThemeRegistry:", user);
+  
+  // Utiliser le thème préféré de l'utilisateur, sinon "light" par défaut
+  const themeMode = user?.preferredTheme || "light";
   
   // On mémorise le thème pour éviter des recréations inutiles
   const theme = React.useMemo(
-    () => getTheme(prefersDarkMode ? "dark" : "light"),
-    [prefersDarkMode]
+    () => getTheme(themeMode),
+    [themeMode]
   );
 
   return (

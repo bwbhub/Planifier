@@ -14,6 +14,10 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { User, Mail, Lock, Save, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -40,6 +44,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [preferredTheme, setPreferredTheme] = useState("");
 
   // États de chargement et messages
   const [loading, setLoading] = useState(true); // Chargement initial des données
@@ -79,6 +84,7 @@ export default function ProfilePage() {
         // Pré-remplir les champs du formulaire avec les données récupérées
         setName(data.name || "");
         setEmail(data.email || "");
+        setPreferredTheme(data.preferredTheme || "");
         setLoading(false); // Fin du chargement
       } catch (err) {
         setError(err.message);
@@ -109,7 +115,7 @@ export default function ProfilePage() {
     }
 
     // Validation : au moins un champ doit être modifié
-    if (!name.trim() && !email.trim() && !password.trim()) {
+    if (!name.trim() && !email.trim() && !password.trim() && !preferredTheme) {
       setError("Veuillez remplir au moins un champ");
       return;
     }
@@ -122,7 +128,8 @@ export default function ProfilePage() {
       if (name.trim()) updateData.name = name.trim();
       if (email.trim()) updateData.email = email.trim();
       if (password.trim()) updateData.password = password.trim();
-
+      if (preferredTheme) updateData.preferredTheme = preferredTheme;
+      
       // Appel PUT vers l'API pour mettre à jour le profil
       const res = await fetch("/api/auth/me", {
         method: "PUT",
@@ -177,7 +184,12 @@ export default function ProfilePage() {
   }
 
   // ========================================
-  // 6. RENDU DE LA PAGE
+  // 6. CHARGEMENTS DES ÉVÉNEMENTS
+  // ========================================
+
+
+  // ========================================
+  // 7. RENDU DE LA PAGE
   // ========================================
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -320,6 +332,27 @@ export default function ProfilePage() {
                 ),
               }}
             />
+            <Divider sx={{ my: 2 }} />
+            
+            {/* Section : Changer le mot de passe (optionnel) */}
+            <Typography variant="h6" fontWeight="bold">
+              Changer le thème
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Choisissez votre thème préféré
+            </Typography>
+
+            {/* Thème préféré */}
+            <FormControl fullWidth>
+              <Select
+                value={preferredTheme}
+                onChange={(e) => setPreferredTheme(e.target.value)}
+                disabled={saving}
+              >
+                <MenuItem value="light">Clair</MenuItem>
+                <MenuItem value="dark">Sombre</MenuItem>
+              </Select>
+            </FormControl>
 
             {/* Bouton de sauvegarde */}
             <Button

@@ -39,9 +39,9 @@ export function AuthProvider({ children }) {
 
       // Sauvegarder dans le state et localStorage
       setToken(data.token);
-      setUser({ id: data.id, name: data.name, email: data.email });
+      setUser({ id: data.id, name: data.name, email: data.email, preferredTheme: data.preferredTheme });
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({ id: data.id, name: data.name, email: data.email }));
+      localStorage.setItem("user", JSON.stringify({ id: data.id, name: data.name, email: data.email, preferredTheme: data.preferredTheme }));
 
       router.push("/dashboard");
       return { success: true };
@@ -70,6 +70,7 @@ export function AuthProvider({ children }) {
       id: userData.id,
       name: userData.name,
       email: userData.email,
+      preferredTheme: userData.preferredTheme,
     };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));

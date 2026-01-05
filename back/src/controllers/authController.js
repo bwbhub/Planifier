@@ -41,6 +41,7 @@ export const register = asyncHandler(async (req, res) => {
       name,
       email,
       passwordHash: hashedPassword,
+      preferredTheme: "light"
     },
   });
 
@@ -93,7 +94,7 @@ export const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/me
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, preferredTheme } = req.body;
 
   // Récupérer l'utilisateur actuel
   const user = await prisma.user.findUnique({
@@ -121,6 +122,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const updateData = {
     name: name || user.name,
     email: email || user.email,
+    preferredTheme: preferredTheme || user.preferredTheme,
   };
 
   // Si un nouveau mot de passe est fourni, le hasher
@@ -139,6 +141,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     id: updatedUser.id,
     name: updatedUser.name,
     email: updatedUser.email,
+    preferredTheme: updatedUser.preferredTheme,
     token: generateToken(updatedUser.id),
   });
 });

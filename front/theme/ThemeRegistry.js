@@ -9,16 +9,11 @@ import { useAuth } from "../context/AuthContext";
 export default function ThemeRegistry({ children }) {
   const { user } = useAuth();
 
-  console.log("User data in ThemeRegistry:", user);
-  
   // Utiliser le thème préféré de l'utilisateur, sinon "light" par défaut
   const themeMode = user?.preferredTheme || "light";
-  
+
   // On mémorise le thème pour éviter des recréations inutiles
-  const theme = React.useMemo(
-    () => getTheme(themeMode),
-    [themeMode]
-  );
+  const theme = React.useMemo(() => getTheme(themeMode), [themeMode]);
 
   return (
     <AppRouterCacheProvider>

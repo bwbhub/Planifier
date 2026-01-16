@@ -39,12 +39,24 @@ export function AuthProvider({ children }) {
 
       // Sauvegarder dans le state et localStorage
       setToken(data.token);
-      setUser({ id: data.id, name: data.name, email: data.email, preferredTheme: data.preferredTheme });
+      setUser({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        preferredTheme: data.preferredTheme,
+      });
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({ id: data.id, name: data.name, email: data.email, preferredTheme: data.preferredTheme }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          preferredTheme: data.preferredTheme,
+        })
+      );
 
-      router.push("/dashboard");
-      return { success: true };
+      return { success: true, token: data.token };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -64,7 +76,7 @@ export function AuthProvider({ children }) {
       setToken(userData.token);
       localStorage.setItem("token", userData.token);
     }
-    
+
     // Mettre à jour les infos utilisateur
     const updatedUser = {
       id: userData.id,
@@ -77,7 +89,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, updateUser, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );

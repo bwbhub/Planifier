@@ -5,6 +5,8 @@
  */
 
 import React from "react";
+import { useRouter } from "next/navigation";
+import { ParticipantRole } from "../../constants/participantConstants";
 import {
   Dialog,
   DialogTitle,
@@ -139,10 +141,14 @@ export default function EventDetailModal({
                       label={participant.user?.name || "Utilisateur"}
                       size="small"
                       variant={
-                        participant.role === "OWNER" ? "filled" : "outlined"
+                        participant.role === ParticipantRole.OWNER
+                          ? "filled"
+                          : "outlined"
                       }
                       color={
-                        participant.role === "OWNER" ? "primary" : "default"
+                        participant.role === ParticipantRole.OWNER
+                          ? "primary"
+                          : "default"
                       }
                     />
                   ))}

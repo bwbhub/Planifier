@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { User, Mail, Save } from "lucide-react";
 import PasswordFields from "./PasswordFields.jsx";
+import { Theme, ThemeLabels } from "@/app/constants/uiConstants.js";
 
 /**
  * @param {Object} props
@@ -153,8 +154,8 @@ export default function ProfileForm({
             onChange={(e) => setPreferredTheme(e.target.value)}
             disabled={saving}
           >
-            <MenuItem value="light">Clair</MenuItem>
-            <MenuItem value="dark">Sombre</MenuItem>
+            <MenuItem value={Theme.LIGHT}>{ThemeLabels.LIGHT}</MenuItem>
+            <MenuItem value={Theme.DARK}>{ThemeLabels.DARK}</MenuItem>
           </Select>
         </FormControl>
 

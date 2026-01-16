@@ -2,7 +2,14 @@
  * Fonctions utilitaires pour la page de détail d'événement
  */
 
-import { Check, X, HelpCircle } from "lucide-react";
+// Réexporter les fonctions depuis les constantes
+export {
+  isUserOrganizer as isOrganizer,
+  getUserParticipation as getMyParticipation,
+  getStatusIcon,
+  getStatusColor,
+  getEventOwner,
+} from "../../constants/participantConstants";
 
 /**
  * Formate une date complète
@@ -38,54 +45,4 @@ export const formatDateTime = (dateString) => {
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-/**
- * Vérifie si l'utilisateur est organisateur
- */
-export const isOrganizer = (event, user) => {
-  if (!event || !user) return false;
-  return event.participants?.some(
-    (p) => p.userId === user.id && p.role === "ORGANIZER"
-  );
-};
-
-/**
- * Récupère la participation de l'utilisateur
- */
-export const getMyParticipation = (event, user) => {
-  if (!event || !user) return null;
-  return event.participants?.find((p) => p.userId === user.id);
-};
-
-/**
- * Récupère l'icône selon le statut
- */
-export const getStatusIcon = (status) => {
-  switch (status) {
-    case "CONFIRMED":
-      return <Check size={16} />;
-    case "DECLINED":
-      return <X size={16} />;
-    case "MAYBE":
-      return <HelpCircle size={16} />;
-    default:
-      return null;
-  }
-};
-
-/**
- * Récupère la couleur selon le statut
- */
-export const getStatusColor = (status) => {
-  switch (status) {
-    case "CONFIRMED":
-      return "success";
-    case "DECLINED":
-      return "error";
-    case "MAYBE":
-      return "warning";
-    default:
-      return "default";
-  }
 };

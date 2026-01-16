@@ -18,8 +18,11 @@ export function useEventForm(token) {
     name: "",
     date: null,
     time: null,
+    endDate: null,
+    endTime: null,
     location: "",
     description: "",
+    color: "#ff6b35", // Orange par défaut
   });
 
   const [coverImage, setCoverImage] = useState(null);
@@ -67,18 +70,40 @@ export function useEventForm(token) {
         return false;
       }
 
+      if (!formData.time) {
+        setError("L'heure de début est obligatoire");
+        return false;
+      }
+
+      if (formData.endDate && !formData.endTime) {
+        setError(
+          "L'heure de fin est obligatoire si vous spécifiez une date de fin"
+        );
+        return false;
+      }
+
       setLoading(true);
 
       try {
-        // Préparer la date/heure
+        // Préparer la date/heure de début
         const dateObj = new Date(formData.date);
-        if (formData.time) {
-          const timeObj = new Date(formData.time);
-          dateObj.setHours(timeObj.getHours(), timeObj.getMinutes(), 0, 0);
-        } else {
-          dateObj.setHours(0, 0, 0, 0);
-        }
+        const timeObj = new Date(formData.time);
+        dateObj.setHours(timeObj.getHours(), timeObj.getMinutes(), 0, 0);
         const startDateTime = dateObj.toISOString();
+
+        // Préparer la date/heure de fin (optionnelle)
+        let endDateTime = null;
+        if (formData.endDate && formData.endTime) {
+          const endDateObj = new Date(formData.endDate);
+          const endTimeObj = new Date(formData.endTime);
+          endDateObj.setHours(
+            endTimeObj.getHours(),
+            endTimeObj.getMinutes(),
+            0,
+            0
+          );
+          endDateTime = endDateObj.toISOString();
+        }
 
         // Ajouter les tags à la description
         let fullDescription = formData.description.trim();
@@ -92,10 +117,11 @@ export function useEventForm(token) {
         const eventData = {
           title: formData.name.trim(),
           startDate: startDateTime,
-          endDate: null,
+          endDate: endDateTime,
           location: formData.location.trim() || null,
           description: fullDescription || null,
           coverUrl: null,
+          color: formData.color,
           settings: {
             isGuestListVisible: true,
             allowGuestInvite: false,

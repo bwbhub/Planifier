@@ -15,6 +15,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
+import { CalendarView } from "@/app/constants/uiConstants";
 
 // Composants
 import CalendarWeekView from "./components/calendar/CalendarWeekView.jsx";
@@ -43,7 +44,9 @@ export default function EventsPage() {
   // ========================================
   // ÉTATS
   // ========================================
-  const [view, setView] = useState(isMobile ? "month" : "week");
+  const [view, setView] = useState(
+    isMobile ? CalendarView.MONTH : CalendarView.WEEK
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -70,7 +73,7 @@ export default function EventsPage() {
   // ========================================
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
-    if (view === "week") {
+    if (view === CalendarView.WEEK) {
       newDate.setDate(currentDate.getDate() - 7);
     } else {
       newDate.setMonth(currentDate.getMonth() - 1);
@@ -80,7 +83,7 @@ export default function EventsPage() {
 
   const handleNext = () => {
     const newDate = new Date(currentDate);
-    if (view === "week") {
+    if (view === CalendarView.WEEK) {
       newDate.setDate(currentDate.getDate() + 7);
     } else {
       newDate.setMonth(currentDate.getMonth() + 1);
@@ -170,7 +173,7 @@ export default function EventsPage() {
         {/* Titre */}
         <Box>
           <Typography variant="h5" fontWeight="bold">
-            {view === "week"
+            {view === CalendarView.WEEK
               ? formatWeekTitle(currentDate)
               : formatMonthTitle(currentDate)}
           </Typography>
@@ -198,16 +201,16 @@ export default function EventsPage() {
 
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <Button
-              variant={view === "week" ? "contained" : "outlined"}
+              variant={view === CalendarView.WEEK ? "contained" : "outlined"}
               size="small"
-              onClick={() => setView("week")}
+              onClick={() => setView(CalendarView.WEEK)}
             >
               Semaine
             </Button>
             <Button
-              variant={view === "month" ? "contained" : "outlined"}
+              variant={view === CalendarView.MONTH ? "contained" : "outlined"}
               size="small"
-              onClick={() => setView("month")}
+              onClick={() => setView(CalendarView.MONTH)}
             >
               Mois
             </Button>
@@ -216,7 +219,7 @@ export default function EventsPage() {
       </Paper>
 
       {/* Calendrier */}
-      {view === "week" ? (
+      {view === CalendarView.WEEK ? (
         <CalendarWeekView
           currentDate={currentDate}
           events={events}

@@ -46,10 +46,18 @@ export function useDashboardStats(token) {
         }));
       }
 
-      // TODO: Récupérer les invitations en attente
-      // const invitationsRes = await fetch("/api/invitations", {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+      // Récupérer les invitations en attente
+      const invitationsRes = await fetch("http://localhost:4000/api/invites", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (invitationsRes.ok) {
+        const invitationsData = await invitationsRes.json();
+        setStats((prev) => ({
+          ...prev,
+          pendingInvitations: invitationsData.count || 0,
+        }));
+      }
 
       setError(null);
     } catch (err) {

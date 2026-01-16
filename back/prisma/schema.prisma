@@ -78,6 +78,10 @@ model User {
   madeProposals       ProposedInvite[]   @relation("Proposer") // Suggestions faites par cet user
   
   notifications       Notification[]
+  
+  friends             Friendship[]       @relation("UserFriends") // Liste d'amis de cet utilisateur
+  friendOf            Friendship[]       @relation("FriendOf")    // Utilisateurs qui ont cet user comme ami
+  comments            Comment[]
 
   @@map("users")
 }
@@ -92,6 +96,7 @@ model Event {
   endDate     DateTime?
   
   coverUrl    String?
+  color       String?   @default("#ff6b35") // Couleur de l'événement (hex), orange par défaut
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -102,6 +107,7 @@ model Event {
   invites         Invite[]
   proposedInvites ProposedInvite[]
   notifications   Notification[] // Notifications liées à cet event
+  comments        Comment[]
 
   @@map("events")
 }
@@ -216,4 +222,49 @@ model Notification {
 
   @@index([userId, isRead]) // Pour récupérer rapidement les notifs non lues
   @@map("notifications")
+}
+
+// --------------------------------------------------------
+// SYSTÈME DE COMMENTAIRES
+// --------------------------------------------------------
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([userId])
+  @@map("comments")
+}
+
+// --------------------------------------------------------
+// SYSTÈME D'AMIS / CONTACTS
+// --------------------------------------------------------
+
+// Liste d'amis pour ajout rapide aux événements
+model Friendship {
+  id        String   @id @default(uuid())
+  
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String   // L'utilisateur qui a la liste d'amis
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  
+  friendId  String   // L'ami dans la liste
+  friend    User     @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId]) // Un user ne peut ajouter le même ami qu'une fois
+  @@index([userId])            // Pour lister rapidement les amis d'un user
+  @@map("friendships")
 }

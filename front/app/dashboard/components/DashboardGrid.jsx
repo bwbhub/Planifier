@@ -13,13 +13,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import BentoCard from "./BentoCard.jsx";
+import { ComponentVariant } from "@/app/constants/uiConstants";
 
 /**
  * @param {Object} props
  * @param {Object} props.stats - Statistiques du dashboard (événements, invitations, etc.)
  */
 export default function DashboardGrid({ stats = {} }) {
-  const { upcomingEvents = 3, pendingInvitations = 2 } = stats;
+  const { upcomingEvents, pendingInvitations } = stats;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[180px]">
@@ -30,7 +31,7 @@ export default function DashboardGrid({ stats = {} }) {
           subtitle="Planifiez une nouvelle soirée inoubliable"
           icon={Plus}
           href="/events/create"
-          variant="primary"
+          variant={ComponentVariant.PRIMARY}
           action
         />
       </div>
@@ -52,7 +53,7 @@ export default function DashboardGrid({ stats = {} }) {
           subtitle={`${pendingInvitations} en attente`}
           icon={Mail}
           href="/invitations"
-          variant="secondary"
+          variant={ComponentVariant.SECONDARY}
         />
       </div>
 

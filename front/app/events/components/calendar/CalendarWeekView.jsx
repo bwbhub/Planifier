@@ -44,16 +44,28 @@ export default function CalendarWeekView({
 
   /**
    * Récupère les événements pour un jour donné
+   * Inclut les événements qui commencent ce jour OU qui se déroulent sur ce jour
    * @param {Date} date - Date du jour
    * @returns {Array} Liste des événements du jour
    */
   const getEventsForDay = (date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
     return events.filter((event) => {
       const eventStart = new Date(event.startDate);
+      const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+
+      // L'événement se déroule ce jour si :
+      // - Il commence ce jour, OU
+      // - Il se termine ce jour, OU
+      // - Il commence avant et se termine après (il englobe ce jour)
       return (
-        eventStart.getDate() === date.getDate() &&
-        eventStart.getMonth() === date.getMonth() &&
-        eventStart.getFullYear() === date.getFullYear()
+        (eventStart >= dayStart && eventStart <= dayEnd) || // Commence ce jour
+        (eventEnd >= dayStart && eventEnd <= dayEnd) || // Se termine ce jour
+        (eventStart < dayStart && eventEnd > dayEnd) // Englobe ce jour
       );
     });
   };
@@ -272,6 +284,29 @@ export default function CalendarWeekView({
                       const dayEvents = getEventsForDay(date);
                       const hourEvents = dayEvents.filter((event) => {
                         const eventStart = new Date(event.startDate);
+                        const eventEnd = event.endDate
+                          ? new Date(event.endDate)
+                          : eventStart;
+
+                        const dayStart = new Date(date);
+                        dayStart.setHours(0, 0, 0, 0);
+                        const dayEnd = new Date(date);
+                        dayEnd.setHours(23, 59, 59, 999);
+
+                        // Pour les événements multi-jours, afficher seulement dans la première cellule du jour
+                        const isMultiDay =
+                          eventStart < dayStart || eventEnd > dayEnd;
+
+                        if (isMultiDay) {
+                          // Si l'événement commence avant ce jour, afficher à partir de 0h
+                          if (eventStart < dayStart) {
+                            return hour === 0;
+                          }
+                          // Sinon afficher à l'heure de début
+                          return eventStart.getHours() === hour;
+                        }
+
+                        // Pour les événements sur un seul jour
                         return eventStart.getHours() === hour;
                       });
 
@@ -289,51 +324,92 @@ export default function CalendarWeekView({
                       return (
                         <Box
                           sx={{
+                            position: "relative",
                             display: "flex",
                             gap: 0.5,
                             p: 0.5,
                             height: "100%",
-                            alignItems: "stretch",
+                            alignItems: "flex-start",
                           }}
                         >
                           {/* Événements visibles */}
-                          {visibleEvents.map((event) => (
-                            <Box
-                              key={event.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEventClick(event);
-                              }}
-                              sx={{
-                                flex: 1,
-                                bgcolor: "primary.main",
-                                color: "white",
-                                borderRadius: 1,
-                                p: 0.5,
-                                cursor: "pointer",
-                                overflow: "hidden",
-                                fontSize: "0.7rem",
-                                display: "flex",
-                                flexDirection: "column",
-                                minWidth: 0,
-                                "&:hover": {
-                                  bgcolor: "primary.dark",
-                                  boxShadow: 2,
-                                },
-                              }}
-                            >
-                              <Typography
-                                variant="caption"
-                                fontWeight="bold"
-                                noWrap
+                          {visibleEvents.map((event, eventIndex) => {
+                            // Calculer la durée de l'événement
+                            const eventStart = new Date(event.startDate);
+                            const eventEnd = event.endDate
+                              ? new Date(event.endDate)
+                              : eventStart;
+
+                            // Définir les limites du jour actuel
+                            const dayStart = new Date(date);
+                            dayStart.setHours(0, 0, 0, 0);
+                            const dayEnd = new Date(date);
+                            dayEnd.setHours(23, 59, 59, 999);
+
+                            // Calculer le début et la fin effectifs pour ce jour
+                            const effectiveStart =
+                              eventStart < dayStart ? dayStart : eventStart;
+                            const effectiveEnd =
+                              eventEnd > dayEnd ? dayEnd : eventEnd;
+
+                            // Calculer la durée pour ce jour spécifique
+                            const durationMs = effectiveEnd - effectiveStart;
+                            const durationHours = durationMs / (1000 * 60 * 60);
+
+                            // Calculer la hauteur en pixels (60px par heure)
+                            const heightPx = Math.max(
+                              60 * durationHours - 4,
+                              50
+                            );
+
+                            // Calculer les minutes de début pour le positionnement précis
+                            const startMinutes = effectiveStart.getMinutes();
+                            const startHour = effectiveStart.getHours();
+                            const topOffset = (startMinutes / 60) * 60;
+
+                            return (
+                              <Box
+                                key={event.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEventClick(event);
+                                }}
                                 sx={{
+                                  position: "absolute",
+                                  top: `${topOffset}px`,
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  width: "92%",
+                                  height: `${heightPx}px`,
+                                  bgcolor: event.color || "#ff6b35",
+                                  color: "white",
+                                  borderRadius: 1,
+                                  p: 0.5,
+                                  cursor: "pointer",
+                                  overflow: "hidden",
                                   fontSize: "0.7rem",
-                                  lineHeight: 1.2,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  zIndex: 10,
+                                  boxShadow: 1,
+                                  "&:hover": {
+                                    filter: "brightness(0.85)",
+                                    boxShadow: 3,
+                                    zIndex: 20,
+                                  },
                                 }}
                               >
-                                {event.title}
-                              </Typography>
-                              {event.location && (
+                                <Typography
+                                  variant="caption"
+                                  fontWeight="bold"
+                                  noWrap
+                                  sx={{
+                                    fontSize: "0.7rem",
+                                    lineHeight: 1.2,
+                                  }}
+                                >
+                                  {event.title}
+                                </Typography>
                                 <Typography
                                   variant="caption"
                                   noWrap
@@ -341,14 +417,39 @@ export default function CalendarWeekView({
                                     fontSize: "0.65rem",
                                     opacity: 0.9,
                                     lineHeight: 1.2,
-                                    mt: 0.25,
                                   }}
                                 >
-                                  📍 {event.location}
+                                  {eventStart.toLocaleTimeString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                  {event.endDate && (
+                                    <>
+                                      {" - "}
+                                      {eventEnd.toLocaleTimeString("fr-FR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </>
+                                  )}
                                 </Typography>
-                              )}
-                            </Box>
-                          ))}
+                                {event.location && (
+                                  <Typography
+                                    variant="caption"
+                                    noWrap
+                                    sx={{
+                                      fontSize: "0.65rem",
+                                      opacity: 0.9,
+                                      lineHeight: 1.2,
+                                      mt: 0.25,
+                                    }}
+                                  >
+                                    📍 {event.location}
+                                  </Typography>
+                                )}
+                              </Box>
+                            );
+                          })}
 
                           {/* Bouton "..." pour les événements supplémentaires */}
                           {hiddenCount > 0 && (
@@ -362,7 +463,11 @@ export default function CalendarWeekView({
                                 setShowMoreEventsModal(true);
                               }}
                               sx={{
-                                flex: 1,
+                                position: "absolute",
+                                right: "4px",
+                                top: "4px",
+                                width: "44%",
+                                height: "50px",
                                 bgcolor: "grey.700",
                                 color: "white",
                                 borderRadius: 1,
@@ -371,7 +476,7 @@ export default function CalendarWeekView({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                minWidth: 0,
+                                zIndex: 10,
                                 "&:hover": {
                                   bgcolor: "grey.800",
                                   boxShadow: 2,

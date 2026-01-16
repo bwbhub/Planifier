@@ -5,7 +5,16 @@ import prisma from "../utils/db.js";
 // @route   POST /api/events
 // @access  Private
 export const createEvent = asyncHandler(async (req, res) => {
-  const { title, description, location, startDate, endDate, coverUrl, settings } = req.body;
+  const {
+    title,
+    description,
+    location,
+    startDate,
+    endDate,
+    coverUrl,
+    color,
+    settings,
+  } = req.body;
 
   if (!title || !startDate) {
     res.status(400);
@@ -23,6 +32,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
         coverUrl,
+        color,
         // 2. Créer les settings par défaut ou personnalisés
         settings: {
           create: {
@@ -128,7 +138,9 @@ export const getEventById = asyncHandler(async (req, res) => {
   // Vérifier si l'utilisateur a le droit de voir cet événement
   // (Ici on suppose que tout participant peut voir, ou un invité avec token - à implémenter plus tard)
   // Pour l'instant : seuls les participants peuvent voir
-  const isParticipant = event.participants.some((p) => p.user.id === req.user.id);
+  const isParticipant = event.participants.some(
+    (p) => p.user.id === req.user.id
+  );
 
   if (!isParticipant) {
     res.status(403);
@@ -143,7 +155,16 @@ export const getEventById = asyncHandler(async (req, res) => {
 // @access  Private (Owner/Organizer only)
 export const updateEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, description, location, startDate, endDate, coverUrl, settings } = req.body;
+  const {
+    title,
+    description,
+    location,
+    startDate,
+    endDate,
+    coverUrl,
+    color,
+    settings,
+  } = req.body;
 
   // Vérifier les droits
   const participant = await prisma.eventParticipant.findUnique({
@@ -155,7 +176,10 @@ export const updateEvent = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!participant || (participant.role !== "OWNER" && participant.role !== "ORGANIZER")) {
+  if (
+    !participant ||
+    (participant.role !== "OWNER" && participant.role !== "ORGANIZER")
+  ) {
     res.status(403);
     throw new Error("Non autorisé à modifier cet événement");
   }
@@ -169,6 +193,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       coverUrl,
+      color,
       settings: settings
         ? {
             update: {

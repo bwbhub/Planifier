@@ -18,6 +18,8 @@ export default function DashboardPage() {
   const { user, token } = useAuth();
   const { stats, loading } = useDashboardStats(token);
 
+  console.log("stats", stats);
+
   return (
     <Box>
       <DashboardHeader userName={user?.name} />

@@ -32,7 +32,12 @@ import { useComments } from "./hooks/useComments";
 import { useChat } from "./hooks/useChat";
 
 // Utils
-import { isOrganizer, getMyParticipation } from "./utils/eventHelpers";
+import {
+  isOrganizer,
+  getMyParticipation,
+  getEventOwner,
+} from "./utils/eventHelpers";
+import ParticipantManagement from "./components/ParticipantManagement";
 
 /**
  * Page de détail d'un événement
@@ -50,8 +55,10 @@ export default function EventDetailPage() {
     newComment,
     setNewComment,
     sendingComment,
+    loading: loadingComments,
     handleSendComment,
-  } = useComments(user);
+    handleDeleteComment,
+  } = useComments(token, id);
   const {
     messages,
     newMessage,
@@ -64,10 +71,57 @@ export default function EventDetailPage() {
   // Modale d'ajout de participant
   const [showAddParticipantModal, setShowAddParticipantModal] = useState(false);
   const [participantEmail, setParticipantEmail] = useState("");
+  const [openDrawer, setOpenDrawer] = useState(false);
+
+  // État d'édition
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedEvent, setEditedEvent] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   // Actions
   const handleBack = () => router.push("/events");
-  const handleEdit = () => router.push(`/events/${id}/edit`);
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedEvent({
+      title: event.title,
+      description: event.description || "",
+      location: event.location || "",
+      startDate: event.startDate,
+      endDate: event.endDate || "",
+      color: event.color || "#ff6b35",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedEvent(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editedEvent) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`http://localhost:4000/api/events/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editedEvent),
+      });
+
+      if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+
+      // Recharger l'événement
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleShare = () => {
     const url = `${window.location.origin}/events/${id}`;
@@ -137,9 +191,7 @@ export default function EventDetailPage() {
     );
   }
 
-  const organizer = event.participants?.find(
-    (p) => p.role === "ORGANIZER"
-  )?.user;
+  const organizer = getEventOwner(event);
   const myParticipation = getMyParticipation(event, user);
   const userIsOrganizer = isOrganizer(event, user);
 
@@ -151,6 +203,12 @@ export default function EventDetailPage() {
         isOrganizer={userIsOrganizer}
         onBack={handleBack}
         onEdit={handleEdit}
+        isEditing={isEditing}
+        editedEvent={editedEvent}
+        onEditChange={setEditedEvent}
+        onSave={handleSaveEdit}
+        onCancel={handleCancelEdit}
+        saving={saving}
       />
 
       {/* Grille principale */}
@@ -163,7 +221,13 @@ export default function EventDetailPage() {
       >
         {/* Colonne gauche */}
         <Stack spacing={3}>
-          <EventInfo event={event} organizer={organizer} />
+          <EventInfo
+            event={event}
+            organizer={organizer}
+            isEditing={isEditing}
+            editedEvent={editedEvent}
+            onEditChange={setEditedEvent}
+          />
 
           <CommentSection
             comments={comments}
@@ -171,6 +235,10 @@ export default function EventDetailPage() {
             onCommentChange={setNewComment}
             onSend={handleSendComment}
             sending={sendingComment}
+            loading={loadingComments}
+            onDelete={handleDeleteComment}
+            currentUserId={user?.id}
+            isOwner={userIsOrganizer}
           />
 
           {/* Section logistique (placeholder) */}
@@ -224,9 +292,7 @@ export default function EventDetailPage() {
             participants={event.participants}
             isOrganizer={userIsOrganizer}
             onAddParticipant={() => setShowAddParticipantModal(true)}
-            onManageInvitations={() =>
-              router.push(`/events/${id}/participants`)
-            }
+            onManageInvitations={() => setOpenDrawer(true)}
           />
 
           <ChatSection
@@ -278,6 +344,11 @@ export default function EventDetailPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ParticipantManagement
+        open={openDrawer}
+        onClose={() => setOpenDrawer(false)}
+        event={event}
+      />
     </Container>
   );
 }

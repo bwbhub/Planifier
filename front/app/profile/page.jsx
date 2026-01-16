@@ -7,6 +7,7 @@ import {
   Typography,
   CircularProgress,
   Divider,
+  Stack,
 } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
 
@@ -16,6 +17,8 @@ import ProfileForm from "./components/ProfileForm.jsx";
 
 // Hooks
 import { useProfile } from "./hooks/useProfile";
+import DeleteButton from "./components/DeleteButton";
+import DisconnectButton from "./components/DisconnectButton";
 
 /**
  * Page de profil utilisateur
@@ -74,6 +77,13 @@ export default function ProfilePage() {
           onErrorClose={() => setError("")}
           onSuccessClose={() => setSuccess("")}
         />
+
+        <Divider sx={{ my: 3 }} />
+
+        <Stack direction="row" spacing={2}>
+          <DisconnectButton />
+          <DeleteButton profile={profile} />
+        </Stack>
       </Paper>
     </Container>
   );

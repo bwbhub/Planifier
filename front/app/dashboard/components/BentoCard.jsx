@@ -7,6 +7,7 @@ import React from "react";
 import { Box, Paper, Typography, useTheme } from "@mui/material";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ComponentVariant } from "@/app/constants/uiConstants";
 
 /**
  * @param {Object} props
@@ -23,20 +24,25 @@ export default function BentoCard({
   icon: Icon,
   href,
   action,
-  variant = "default",
+  variant = ComponentVariant.DEFAULT,
 }) {
   const theme = useTheme();
 
   // Couleur de fond selon la variante
   const getBgColor = () => {
-    if (variant === "primary") return theme.palette.primary.main;
-    if (variant === "secondary") return theme.palette.secondary.main;
+    if (variant === ComponentVariant.PRIMARY) return theme.palette.primary.main;
+    if (variant === ComponentVariant.SECONDARY)
+      return theme.palette.secondary.main;
     return theme.palette.background.paper;
   };
 
   // Couleur du texte selon la variante
   const getTextColor = () => {
-    if (variant === "primary" || variant === "secondary") return "#fff";
+    if (
+      variant === ComponentVariant.PRIMARY ||
+      variant === ComponentVariant.SECONDARY
+    )
+      return "#fff";
     return theme.palette.text.primary;
   };
 
@@ -58,7 +64,7 @@ export default function BentoCard({
           color: getTextColor(),
           borderRadius: 4,
           border:
-            variant === "default"
+            variant === ComponentVariant.DEFAULT
               ? `1px solid ${theme.palette.divider}`
               : "none",
         }}
@@ -76,7 +82,7 @@ export default function BentoCard({
               p: 1.5,
               borderRadius: "14px",
               bgcolor:
-                variant === "default"
+                variant === ComponentVariant.DEFAULT
                   ? theme.palette.mode === "light"
                     ? "#f5f5f5"
                     : "rgba(255,255,255,0.1)"

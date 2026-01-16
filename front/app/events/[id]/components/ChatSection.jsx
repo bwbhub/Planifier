@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { Send } from "lucide-react";
 import { formatDateTime } from "../utils/eventHelpers";
+import { isEnterWithoutShift } from "../../../constants/uiConstants";
 
 /**
  * @param {Object} props
@@ -34,7 +35,7 @@ export default function ChatSection({
   chatEndRef,
 }) {
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (isEnterWithoutShift(e)) {
       e.preventDefault();
       onSend();
     }

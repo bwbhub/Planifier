@@ -14,7 +14,12 @@ import {
   Button,
 } from "@mui/material";
 import { UserPlus } from "lucide-react";
-import { getStatusIcon, getStatusColor } from "../utils/eventHelpers";
+import {
+  getRoleLabel,
+  getStatusLabel,
+  getStatusIcon,
+  getStatusColor,
+} from "../../constants/participantConstants";
 
 /**
  * @param {Object} props
@@ -23,6 +28,7 @@ import { getStatusIcon, getStatusColor } from "../utils/eventHelpers";
  * @param {Function} props.onAddParticipant - Callback ajout participant
  * @param {Function} props.onManageInvitations - Callback gestion invitations
  */
+
 export default function ParticipantsList({
   participants,
   isOrganizer,
@@ -68,19 +74,13 @@ export default function ParticipantsList({
                   {participant.user?.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {participant.role === "ORGANIZER" ? "Organisateur" : "Invité"}
+                  {getRoleLabel(participant.role)}
                 </Typography>
               </Box>
             </Stack>
             <Chip
               icon={getStatusIcon(participant.status)}
-              label={
-                participant.status === "CONFIRMED"
-                  ? "Confirmé"
-                  : participant.status === "DECLINED"
-                  ? "Refusé"
-                  : "Peut-être"
-              }
+              label={getStatusLabel(participant.status)}
               color={getStatusColor(participant.status)}
               size="small"
             />

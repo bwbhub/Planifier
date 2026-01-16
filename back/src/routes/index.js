@@ -1,6 +1,9 @@
 import express from "express";
 import authRoutes from "./authRoutes.js";
 import eventRoutes from "./eventRoutes.js";
+import friendRoutes from "./friends.js";
+import inviteRoutes from "./invites.js";
+import commentRoutes from "./comments.js";
 
 const router = express.Router();
 
@@ -10,8 +13,11 @@ router.get("/", (req, res) => {
     endpoints: {
       health: "/health",
       auth: "/auth",
-      events: "/events"
-    }
+      events: "/events",
+      friends: "/friends",
+      invites: "/invites",
+      comments: "/comments",
+    },
   });
 });
 
@@ -21,5 +27,8 @@ router.get("/health", (req, res) => {
 
 router.use("/auth", authRoutes);
 router.use("/events", eventRoutes);
+router.use("/friends", friendRoutes);
+router.use("/invites", inviteRoutes);
+router.use("/", commentRoutes);
 
 export default router;

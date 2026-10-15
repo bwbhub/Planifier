@@ -13,10 +13,9 @@ description: Architecture du monorepo pnpm/Turborepo (apps vs packages, sens des
 | Rôle                              | Contenu                                                                | Peut dépendre de                                  |
 | --------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------- |
 | `constants`, `tokens`, `*-config` | feuilles du graphe                                                     | rien                                              |
-| `db-types`                        | schémas Zod générés depuis Prisma                                      | `zod`                                             |
-| `api-contract`                    | contrats oRPC et DTO                                                   | `zod`, `@orpc/contract`, `db-types`, `constants`  |
+| `api-contract`                    | contrats oRPC et DTO                                                   | `zod`, `@orpc/contract`, `constants`              |
 | `domain-*`                        | calcul et règles **pures** (droits, récurrence, soldes, doublons iCal) | `zod`, `constants` au plus                        |
-| `db`                              | client Prisma, migrations, seed                                        | `prisma`, `db-types`                              |
+| `db`                              | client Prisma, migrations, seed                                        | `prisma`                                          |
 | `auth`                            | configuration Better Auth                                              | `db`                                              |
 | `mails`                           | gabarits React Email                                                   | `react`, `@react-email/*`                         |
 | `api`                             | implémentation serveur, services                                       | `api-contract`, `db`, `auth`, `mails`, `domain-*` |
@@ -36,7 +35,7 @@ description: Architecture du monorepo pnpm/Turborepo (apps vs packages, sens des
 ## Où mettre ce code ?
 
 1. Existe-t-il déjà quelque chose de similaire ? Le réutiliser ou l'extraire (règle des trois, `code-structure`).
-2. Forme de donnée (schéma, type, contrat) → `db-types` (modèle) ou `api-contract` (API).
+2. Forme de donnée (schéma, type, contrat) → `api-contract` (DTO de l'API).
 3. Calcul ou règle pure utilisée par l'API **et** le front → `domain-*`.
 4. UI sans donnée ni métier → `ui`. Avec métier → `features/<module>/atoms` de l'app.
 5. Spécifique à un écran ou un flux → dans le module, sans sur-généraliser.

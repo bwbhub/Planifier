@@ -22,8 +22,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | design tokens          | `@planifier/tokens`                                        | posé (clair/nuit) |
 | composants sans métier | `@planifier/ui`                                            | `cn` seulement    |
 | lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés             |
-| base + client          | `@planifier/db` (Prisma 7)                                 | à créer           |
-| types DB (Zod générés) | `@planifier/db-types`                                      | à créer           |
+| base + client          | `@planifier/db` (Prisma 7)                                 | posé              |
 | contrats d'API         | `@planifier/api-contract`                                  | à créer           |
 | implémentation API     | `@planifier/api`                                           | à créer           |
 | auth                   | `@planifier/auth`                                          | à créer           |

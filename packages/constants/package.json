@@ -1,0 +1,24 @@
+{
+  "name": "@planifier/constants",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "exports": {
+    "./events": "./src/events.ts",
+    "./spaces": "./src/spaces.ts",
+    "./notifications": "./src/notifications.ts",
+    "./todo": "./src/todo.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@planifier/eslint-config": "workspace:*",
+    "@planifier/typescript-config": "workspace:*",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

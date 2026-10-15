@@ -1,0 +1,13 @@
+{
+  "name": "@planifier/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    "./tokens.css": "./src/tokens.css",
+    "./theme.css": "./src/theme.css"
+  }
+}

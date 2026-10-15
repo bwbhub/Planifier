@@ -1,0 +1,32 @@
+/*
+ * Expose les tokens à Tailwind 4 : `bg-surface`, `text-muted`, `bg-accent`, `bg-tint-trip`…
+ * `inline` : les utilitaires lisent la variable au moment de l'usage (le thème bascule sans recompiler).
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-field: var(--field);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-tint: var(--accent-tint);
+  --color-nav: var(--nav);
+  --color-nav-on: var(--nav-on);
+  --color-nav-off: var(--nav-off);
+  --color-scrim: var(--scrim);
+  --color-today: var(--today);
+
+  --color-tint-general: var(--t-gen);
+  --color-tint-work: var(--t-work);
+  --color-tint-couple: var(--t-couple);
+  --color-tint-trip: var(--t-trip);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 20px;
+  --radius-control: 12px;
+}

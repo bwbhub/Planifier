@@ -1,12 +1,25 @@
 {
-  "name": "event-app-monorepo",
+  "name": "planifier",
   "private": true,
-  "workspaces": [
-    "back",
-    "front"
-  ],
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=10.16.0"
+  },
   "scripts": {
-    "dev:back": "npm --workspace back run dev",
-    "dev:front": "npm --workspace front run dev"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,css}\"",
+    "legacy:back": "npm --prefix back run dev",
+    "legacy:front": "npm --prefix front run dev"
+  },
+  "devDependencies": {
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   }
 }

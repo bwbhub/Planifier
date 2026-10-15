@@ -6,3 +6,11 @@ build
 .next
 back/node_modules
 front/node_modules
+stitch_mobile_login
+# Planifier v2
+.turbo
+coverage
+*.tsbuildinfo
+next-env.d.ts
+.env.*
+!.env.example

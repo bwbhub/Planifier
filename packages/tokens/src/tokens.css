@@ -1,0 +1,80 @@
+/*
+ * Tokens sémantiques de Planifier — direction « Doux et vivant » (maquette Phase 1).
+ * Clair par défaut ; nuit via le thème système ou l'attribut data-theme="dark" sur <html>.
+ * Les composants ne référencent QUE ces variables (jamais de couleur en dur).
+ */
+:root {
+  --bg: #f8f6f9;
+  --surface: #ffffff;
+  --ink: #1c1226;
+  --muted: #645a70;
+  --line: #ece7ef;
+  --field: #f1edf4;
+  --accent: #d11f72;
+  --on-accent: #ffffff;
+  --accent-text: #b3195f;
+  --accent-tint: #fcddeb;
+  --nav: #1c1226;
+  --nav-on: #ffffff;
+  --nav-off: #b9aec6;
+  --scrim: #d9d3de;
+  --today: #fdf1f6;
+
+  /* Teintes de liste / d'agenda */
+  --t-gen: #dde6fb;
+  --t-work: #ffe6c2;
+  --t-couple: #f7d9f0;
+  --t-trip: #d3f0e4;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101216;
+    --surface: #1b1e25;
+    --ink: #f2f3f6;
+    --muted: #a4aab8;
+    --line: #2a2e38;
+    --field: #252932;
+    --accent: #ff8f5a;
+    --on-accent: #1a1208;
+    --accent-text: #ffa072;
+    --accent-tint: #3a2a24;
+    --nav: #262a33;
+    --nav-on: #ffffff;
+    --nav-off: #9aa1b0;
+    --scrim: #07080a;
+    --today: #1f1d22;
+    --t-gen: #1f2d44;
+    --t-work: #3b2e17;
+    --t-couple: #3e2233;
+    --t-trip: #1d3a36;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #101216;
+  --surface: #1b1e25;
+  --ink: #f2f3f6;
+  --muted: #a4aab8;
+  --line: #2a2e38;
+  --field: #252932;
+  --accent: #ff8f5a;
+  --on-accent: #1a1208;
+  --accent-text: #ffa072;
+  --accent-tint: #3a2a24;
+  --nav: #262a33;
+  --nav-on: #ffffff;
+  --nav-off: #9aa1b0;
+  --scrim: #07080a;
+  --today: #1f1d22;
+  --t-gen: #1f2d44;
+  --t-work: #3b2e17;
+  --t-couple: #3e2233;
+  --t-trip: #1d3a36;
+
+  color-scheme: dark;
+}

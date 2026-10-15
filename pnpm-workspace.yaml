@@ -1,0 +1,43 @@
+# Workspace Planifier. `back/` et `front/` (ancien code) sont volontairement HORS workspace :
+# lecture seule, migrés module par module puis retirés (voir docs/adr/0001).
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Versions partagées : tous les package.json référencent `catalog:` (aucune version en dur).
+catalog:
+  # outillage
+  typescript: ~6.0.3 # typescript-eslint n'accepte pas TS >= 6.1 (peer dependency)
+  turbo: ^2.11.0
+  prettier: ^3.9.0
+  eslint: ^9.39.5 # eslint-plugin-react n'accepte pas ESLint 10 (peer dependency)
+  "@eslint/js": ^9.39.5
+  typescript-eslint: ^8.71.0
+  eslint-config-prettier: ^10.1.8
+  eslint-plugin-react: ^7.37.5
+  eslint-plugin-react-hooks: ^7.1.0
+  "@next/eslint-plugin-next": ^16.4.0
+  globals: ^17.13.0
+  "@types/node": ^24.10.0
+  # runtime
+  next: ^16.4.0
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  zod: ^4.6.0
+  server-only: ^0.0.1
+  # styles
+  tailwindcss: ^4.3.0
+  "@tailwindcss/postcss": ^4.3.0
+  postcss: ^8.5.0
+  clsx: ^2.1.1
+  tailwind-merge: ^3.7.0
+
+# Chaîne d'approvisionnement (docs/DEPENDANCES.md, skill dependency-governance)
+# Ne pas installer une version publiée depuis moins de 3 jours (valeur en minutes).
+minimumReleaseAge: 4320
+# Seuls ces paquets peuvent exécuter un script d'installation.
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver

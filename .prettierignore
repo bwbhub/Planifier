@@ -1,0 +1,15 @@
+node_modules
+.next
+.turbo
+dist
+coverage
+pnpm-lock.yaml
+package-lock.json
+back
+front
+stitch_mobile_login
+newContext
+CALENDAR_PAGE_GUIDE.md
+CREATE_EVENT_GUIDE.md
+EVENT_DETAIL_PAGE_GUIDE.md
+PROFILE_QUICK_START.md

@@ -18,6 +18,51 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-17 — Corrections de revue du package `db` (branche `feat/package-db`)
+
+**Fait**
+
+- Alerte GitGuardian « Generic Password » (`docker-compose.yml`, commit `16ed327`) : faux positif, identifiants de dev
+  locaux. Aucun secret réel dans l'historique (recherche par motifs ; ni `gitleaks` ni `trufflehog` installés).
+- `docker-compose.yml` : PostgreSQL publié sur `127.0.0.1:5433` seulement (plus sur toutes les interfaces).
+- Seed : garde `assertSeedAllowed` (`seed/guard.ts`) — refus si l'hôte n'est pas local, en plus de `NODE_ENV=production`.
+- `turbo.json` : `dev` dépend de `@planifier/db#generate` (clone neuf).
+- Client : singleton sur `globalThis` (rechargement à chaud de `next dev`).
+- CLI Prisma : plus d'URL factice ni de chemin `node_modules/prisma/build` ; `prisma.config.ts` lit `.env.local` via
+  `getCliDatabaseUrl()` (`src/env.ts`), l'URL est optionnelle pour `generate`/`validate`/`format`.
+- Schéma : index `events(start_date)`, `events(space_id, start_date)`, `invites(inviter_id)`, `invites(user_id)`,
+  `proposed_invites(proposer_id)`, `notifications(event_id)`, `notifications(user_id, is_read, created_at)`,
+  `friendships(friend_id)` (remplace `friendships(user_id)`, couvert par l'unique).
+- E-mails en minuscules : contraintes `CHECK` ajoutées à la main dans la migration (`users`, `invites`, `proposed_invites`).
+- Seed : l'événement personnel a son participant OWNER et ses réglages, comme un événement créé par le service.
+- Migration `init` régénérée (jamais déployée) : toujours une seule migration dans la PR.
+
+**Décisions**
+
+- Pas de `citext` : les extensions sont expérimentales dans la config Prisma 7 ; la contrainte `CHECK` donne la même
+  garantie sans extension.
+- `Event.owner` reste `onDelete: Restrict` : une cascade supprimerait en silence des événements partagés avec d'autres
+  (principe produit). La suppression de compte passera par un service qui transfère ou supprime d'abord (ticket `auth`).
+- Hash des jetons d'invitation (`Invite.token` en clair) : reporté au ticket `auth`, décision de l'utilisateur.
+
+**Vérifié** (exécuté le 2026-10-17)
+
+- `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` : OK. `pnpm test` ne teste toujours rien.
+- Base locale neuve : `migrate deploy` OK, `migrate diff --exit-code` sans dérive, seed lancé deux fois sans doublon,
+  insertion d'un e-mail en majuscules refusée par la contrainte, seed refusé sur une URL Neon fictive.
+- `turbo run dev --dry` : chaque `dev` dépend bien de `@planifier/db#generate`.
+- **Non testé** : `pnpm dev` réellement lancé ; Windows ; un vrai Neon.
+
+**Ouvert**
+
+- Alerte GitGuardian à classer en faux positif (action de l'utilisateur) pour que le check passe.
+- Revues humaines de l'entrée précédente toujours dues ; s'y ajoutent les contraintes `CHECK` écrites à la main.
+
+**Attendu ensuite**
+
+- Classer l'alerte, revue humaine, puis merge.
+- Ticket `auth` : hash des jetons d'invitation, service de suppression de compte, normalisation des e-mails (Zod).
+
 ## 2026-10-17 — Package `db` : schéma Prisma 7, migration, seed (branche `feat/package-db`)
 
 **Fait**

@@ -4,7 +4,9 @@ services:
   postgres:
     image: postgres:17-alpine
     ports:
-      - "5433:5432" # 5433 côté hôte pour ne pas entrer en conflit avec un PostgreSQL local
+      # Écoute sur la boucle locale uniquement : identifiants de dev connus, jamais exposés au réseau.
+      # 5433 côté hôte pour ne pas entrer en conflit avec un PostgreSQL local.
+      - "127.0.0.1:5433:5432"
     environment:
       POSTGRES_USER: planifier
       POSTGRES_PASSWORD: planifier

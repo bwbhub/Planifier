@@ -1,15 +1,13 @@
 import { getDbEnv } from "../env";
 import { createPrismaClient } from "../factory";
 import { seedEvents } from "./events";
+import { assertSeedAllowed } from "./guard";
 import { seedSpaces } from "./spaces";
 import { seedUsers } from "./users";
 
 // Point d'entrée de `pnpm --filter @planifier/db seed`. Idempotent : peut être relancé sans doublon.
-// Comptes de démo : local uniquement, donc refus net en production.
 const env = getDbEnv();
-if (env.NODE_ENV === "production") {
-  throw new Error("Seed refusé : NODE_ENV=production.");
-}
+assertSeedAllowed(env.DATABASE_URL, env.NODE_ENV);
 
 const db = createPrismaClient(env.DATABASE_URL);
 try {

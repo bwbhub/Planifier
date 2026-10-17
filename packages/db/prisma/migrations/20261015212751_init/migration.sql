@@ -174,10 +174,13 @@ CREATE INDEX "space_members_user_id_idx" ON "space_members"("user_id");
 CREATE UNIQUE INDEX "space_members_space_id_user_id_key" ON "space_members"("space_id", "user_id");
 
 -- CreateIndex
-CREATE INDEX "events_space_id_idx" ON "events"("space_id");
+CREATE INDEX "events_space_id_start_date_idx" ON "events"("space_id", "start_date");
 
 -- CreateIndex
 CREATE INDEX "events_owner_id_idx" ON "events"("owner_id");
+
+-- CreateIndex
+CREATE INDEX "events_start_date_idx" ON "events"("start_date");
 
 -- CreateIndex
 CREATE INDEX "event_participants_event_id_idx" ON "event_participants"("event_id");
@@ -192,13 +195,25 @@ CREATE UNIQUE INDEX "event_settings_event_id_key" ON "event_settings"("event_id"
 CREATE UNIQUE INDEX "invites_token_key" ON "invites"("token");
 
 -- CreateIndex
+CREATE INDEX "invites_inviter_id_idx" ON "invites"("inviter_id");
+
+-- CreateIndex
+CREATE INDEX "invites_user_id_idx" ON "invites"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "invites_event_id_email_key" ON "invites"("event_id", "email");
 
 -- CreateIndex
 CREATE INDEX "proposed_invites_event_id_idx" ON "proposed_invites"("event_id");
 
 -- CreateIndex
-CREATE INDEX "notifications_user_id_is_read_idx" ON "notifications"("user_id", "is_read");
+CREATE INDEX "proposed_invites_proposer_id_idx" ON "proposed_invites"("proposer_id");
+
+-- CreateIndex
+CREATE INDEX "notifications_user_id_is_read_created_at_idx" ON "notifications"("user_id", "is_read", "created_at");
+
+-- CreateIndex
+CREATE INDEX "notifications_event_id_idx" ON "notifications"("event_id");
 
 -- CreateIndex
 CREATE INDEX "comments_event_id_idx" ON "comments"("event_id");
@@ -207,7 +222,7 @@ CREATE INDEX "comments_event_id_idx" ON "comments"("event_id");
 CREATE INDEX "comments_user_id_idx" ON "comments"("user_id");
 
 -- CreateIndex
-CREATE INDEX "friendships_user_id_idx" ON "friendships"("user_id");
+CREATE INDEX "friendships_friend_id_idx" ON "friendships"("friend_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "friendships_user_id_friend_id_key" ON "friendships"("user_id", "friend_id");
@@ -265,3 +280,8 @@ ALTER TABLE "friendships" ADD CONSTRAINT "friendships_user_id_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "friendships" ADD CONSTRAINT "friendships_friend_id_fkey" FOREIGN KEY ("friend_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- E-mails toujours en minuscules : l'unicité devient insensible à la casse (non exprimable dans schema.prisma).
+ALTER TABLE "users" ADD CONSTRAINT "users_email_lowercase_check" CHECK ("email" = lower("email"));
+ALTER TABLE "invites" ADD CONSTRAINT "invites_email_lowercase_check" CHECK ("email" = lower("email"));
+ALTER TABLE "proposed_invites" ADD CONSTRAINT "proposed_invites_suggested_email_lowercase_check" CHECK ("suggested_email" = lower("suggested_email"));

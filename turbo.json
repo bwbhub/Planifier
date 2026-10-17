@@ -17,6 +17,7 @@
       "dependsOn": ["^test", "@planifier/db#generate"]
     },
     "dev": {
+      "dependsOn": ["@planifier/db#generate"],
       "cache": false,
       "persistent": true
     },

@@ -2,6 +2,8 @@
 // Conventions : tables et colonnes en snake_case via @map, ids uuid v7 (triables, pagination par curseur).
 // Les enums sont les miroirs de `@planifier/constants` : toute modification se fait des deux côtés.
 // Annotation `/// @pii <catégorie> <rétention>` : donnée personnelle, jamais dans les journaux.
+// E-mails : toujours en minuscules (contrainte CHECK posée dans la migration, Prisma ne sait pas l'exprimer) ;
+// l'unicité est donc insensible à la casse. Normaliser à la frontière (Zod) avant d'écrire.
 
 generator client {
   provider = "prisma-client"
@@ -171,7 +173,8 @@ model Event {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  /// Créateur de l'événement.
+  /// Créateur de l'événement. Restrict : supprimer un compte ne supprime jamais en silence les événements
+  /// partagés avec d'autres ; le service de suppression de compte transfère ou supprime d'abord (ticket `auth`).
   ownerId String  @map("owner_id")
   owner   User    @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   /// null = événement personnel et privé (ADR 0009).
@@ -185,8 +188,9 @@ model Event {
   notifications   Notification[]
   comments        Comment[]
 
-  @@index([spaceId])
+  @@index([spaceId, startDate])
   @@index([ownerId])
+  @@index([startDate])
   @@map("events")
 }
 
@@ -248,6 +252,8 @@ model Invite {
   user      User?   @relation("InviteReceiver", fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([eventId, email])
+  @@index([inviterId])
+  @@index([userId])
   @@map("invites")
 }
 
@@ -266,6 +272,7 @@ model ProposedInvite {
   proposer   User   @relation("Proposer", fields: [proposerId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
+  @@index([proposerId])
   @@map("proposed_invites")
 }
 
@@ -287,7 +294,8 @@ model Notification {
   eventId String? @map("event_id")
   event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@index([userId, isRead])
+  @@index([userId, isRead, createdAt])
+  @@index([eventId])
   @@map("notifications")
 }
 
@@ -323,6 +331,6 @@ model Friendship {
   friend   User   @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
 
   @@unique([userId, friendId])
-  @@index([userId])
+  @@index([friendId])
   @@map("friendships")
 }

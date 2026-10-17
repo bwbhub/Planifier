@@ -9,14 +9,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "generate": "DATABASE_URL_UNPOOLED=postgresql://unused@localhost/unused prisma generate",
-    "validate": "DATABASE_URL_UNPOOLED=postgresql://unused@localhost/unused prisma validate",
-    "migrate:dev": "node --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate dev",
-    "migrate:deploy": "node --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate deploy",
+    "generate": "prisma generate",
+    "validate": "prisma validate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "node --env-file-if-exists=.env.local --import tsx src/seed/index.ts",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "format": "DATABASE_URL_UNPOOLED=postgresql://unused@localhost/unused prisma format"
+    "format": "prisma format"
   },
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",

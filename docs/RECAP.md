@@ -41,36 +41,45 @@ Modèle d'entrée :
 
 - Pas de `citext` : les extensions sont expérimentales dans la config Prisma 7 ; la contrainte `CHECK` donne la même
   garantie sans extension.
-- `Event.owner` reste `onDelete: Restrict` : une cascade supprimerait en silence des événements partagés avec d'autres
-  (principe produit). La suppression de compte passera par un service qui transfère ou supprime d'abord (ticket `auth`).
+- `Event.ownerId` nullable, `onDelete: SetNull`, avec `ownerLeftAt` (décision de l'utilisateur) : le propriétaire qui
+  supprime son compte laisse l'événement aux participants ; un co-organisateur peut reprendre la propriété, sans
+  obligation ; sans repreneur sous 48 h, un job planifié supprime l'événement. Contrainte `CHECK` écrite à la main :
+  `owner_id` null impose `owner_left_at`, sinon la suppression du compte échoue. Skill `database-prisma` aligné
+  (`ownerId` non nul sauf exception documentée).
 - Hash des jetons d'invitation (`Invite.token` en clair) : reporté au ticket `auth`, décision de l'utilisateur.
 - `Event.space` passe en `onDelete: SetNull` (décision de l'utilisateur) : supprimer un Espace ne détruit rien, ses
   événements deviennent personnels pour leur propriétaire et les participants gardent leur accès. Vérifié sur une base
   temporaire.
 - Visibilité par défaut (décision de l'utilisateur, `CONTEXT.md`) : un membre d'Espace voit tous les éléments de
-  l'Espace ; le propriétaire d'un élément peut restreindre. À implémenter dans `domain-access`.
+  l'Espace ; elle se restreint dans les paramètres de l'Espace (champ à ajouter avec `domain-access`).
 - Scripts d'installation de `prisma`, `@prisma/engines` et `esbuild` autorisés (`onlyBuiltDependencies`).
 
-**Vérifié** (exécuté le 2026-10-17)
+**Vérifié** (exécuté le 2026-10-17, relancé le 2026-10-18 après `SetNull`)
 
 - `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` : OK. `pnpm test` ne teste toujours rien.
 - Base locale neuve : `migrate deploy` OK, `migrate diff --exit-code` sans dérive, seed lancé deux fois sans doublon,
   insertion d'un e-mail en majuscules refusée par la contrainte, seed refusé sur une URL Neon fictive.
 - `turbo run dev --dry` : chaque `dev` dépend bien de `@planifier/db#generate`.
+- Base temporaire : Espace supprimé ⇒ événements personnels, participants conservés ; compte supprimé sans
+  `owner_left_at` ⇒ refusé par la contrainte ; avec ⇒ événements gardés sans propriétaire, autres participants conservés.
 - **Non testé** : `pnpm dev` réellement lancé ; Windows ; un vrai Neon.
 
 **Ouvert**
 
 - Alerte GitGuardian à classer en faux positif (action de l'utilisateur) pour que le check passe.
-- Revues humaines de l'entrée précédente toujours dues ; s'y ajoutent les contraintes `CHECK` écrites à la main.
+- Revues humaines de l'entrée précédente toujours dues ; s'y ajoutent les contraintes `CHECK` écrites à la main et
+  l'exception à la skill `database-prisma`.
+- Événement personnel d'un compte supprimé : il resterait sans participant pendant 48 h ; le service de suppression
+  de compte devrait le supprimer tout de suite (à trancher dans `auth`).
+- Base locale existante : migration `init` modifiée après application, à recréer (`docker compose down -v`).
 
 **Attendu ensuite**
 
 - Classer l'alerte, revue humaine, puis merge.
-- Ticket `auth` : hash des jetons d'invitation, service de suppression de compte, normalisation des e-mails (Zod).
-- Propriétaire d'événement qui quitte (compte supprimé) : un co-organisateur peut reprendre la propriété, sans
-  obligation ; sans repreneur au bout de 48 h, un job planifié supprime l'événement (décision de l'utilisateur, à
-  confirmer : `owner_id` devra alors devenir nullable avec une date de départ).
+- Ticket `auth` : hash des jetons d'invitation, service de suppression de compte (renseigne `owner_left_at`),
+  normalisation des e-mails (Zod).
+- Ticket jobs planifiés (ADR 0007) : suppression des événements sans repreneur 48 h après `owner_left_at`.
+- Ticket `domain-access` : droits, dont la reprise de propriété par un co-organisateur et la visibilité de l'Espace.
 
 ## 2026-10-17 — Package `db` : schéma Prisma 7, migration, seed (branche `feat/package-db`)
 

@@ -69,7 +69,8 @@ CREATE TABLE "events" (
     "version" INTEGER NOT NULL DEFAULT 1,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "owner_id" TEXT NOT NULL,
+    "owner_id" TEXT,
+    "owner_left_at" TIMESTAMP(3),
     "space_id" TEXT,
 
     CONSTRAINT "events_pkey" PRIMARY KEY ("id")
@@ -183,6 +184,9 @@ CREATE INDEX "events_owner_id_idx" ON "events"("owner_id");
 CREATE INDEX "events_start_date_idx" ON "events"("start_date");
 
 -- CreateIndex
+CREATE INDEX "events_owner_left_at_idx" ON "events"("owner_left_at");
+
+-- CreateIndex
 CREATE INDEX "event_participants_event_id_idx" ON "event_participants"("event_id");
 
 -- CreateIndex
@@ -234,7 +238,7 @@ ALTER TABLE "space_members" ADD CONSTRAINT "space_members_space_id_fkey" FOREIGN
 ALTER TABLE "space_members" ADD CONSTRAINT "space_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "events" ADD CONSTRAINT "events_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "events" ADD CONSTRAINT "events_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -285,3 +289,6 @@ ALTER TABLE "friendships" ADD CONSTRAINT "friendships_friend_id_fkey" FOREIGN KE
 ALTER TABLE "users" ADD CONSTRAINT "users_email_lowercase_check" CHECK ("email" = lower("email"));
 ALTER TABLE "invites" ADD CONSTRAINT "invites_email_lowercase_check" CHECK ("email" = lower("email"));
 ALTER TABLE "proposed_invites" ADD CONSTRAINT "proposed_invites_suggested_email_lowercase_check" CHECK ("suggested_email" = lower("suggested_email"));
+
+-- Propriétaire parti : la date de départ est obligatoire, sinon le job des 48 h ne verrait jamais l'événement.
+ALTER TABLE "events" ADD CONSTRAINT "events_owner_left_at_check" CHECK ("owner_id" IS NOT NULL OR "owner_left_at" IS NOT NULL);

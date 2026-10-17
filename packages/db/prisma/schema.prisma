@@ -173,13 +173,15 @@ model Event {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  /// Créateur de l'événement. Restrict : supprimer un compte ne supprime jamais en silence les événements
-  /// partagés avec d'autres ; le service de suppression de compte transfère ou supprime d'abord (ticket `auth`).
-  ownerId String  @map("owner_id")
-  owner   User    @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  /// Propriétaire. null : il a supprimé son compte ; un co-organisateur peut reprendre la propriété, sinon un job
+  /// planifié supprime l'événement 48 h après `ownerLeftAt`. Le service de suppression de compte renseigne
+  /// `ownerLeftAt` dans la même transaction que la suppression (la clé étrangère met `ownerId` à null).
+  ownerId     String?   @map("owner_id")
+  owner       User?     @relation("EventOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerLeftAt DateTime? @map("owner_left_at")
   /// null = événement personnel et privé (ADR 0009).
-  spaceId String? @map("space_id")
-  space   Space?  @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  spaceId     String?   @map("space_id")
+  space       Space?    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
 
   participants    EventParticipant[]
   settings        EventSettings?
@@ -191,6 +193,7 @@ model Event {
   @@index([spaceId, startDate])
   @@index([ownerId])
   @@index([startDate])
+  @@index([ownerLeftAt])
   @@map("events")
 }
 

@@ -37,6 +37,7 @@ Avant toute tâche : lire `.claude/skills/project-context/SKILL.md` (cartographi
     Ne jamais annoncer « prêt » si une étape échoue ou n'a pas tourné. PR petite, un sujet, plan de test.
     **Ni push ni PR sans demande explicite.**
     Avant chaque push et en fin de session : ajouter une entrée à `docs/RECAP.md` (fait, vérifié, ouvert, attendu ensuite).
+16. Quand tu me fais des rapports d'informations, soit extrêmement concis et sacrifie la grammaire pour le bien de la concision.
 
 Revue humaine obligatoire : authentification, droits, cryptographie, envoi d'e-mails ou de push, nouvelle route
 publique, nouvelle intégration, CI, secrets.

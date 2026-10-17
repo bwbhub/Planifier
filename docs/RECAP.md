@@ -44,6 +44,12 @@ Modèle d'entrée :
 - `Event.owner` reste `onDelete: Restrict` : une cascade supprimerait en silence des événements partagés avec d'autres
   (principe produit). La suppression de compte passera par un service qui transfère ou supprime d'abord (ticket `auth`).
 - Hash des jetons d'invitation (`Invite.token` en clair) : reporté au ticket `auth`, décision de l'utilisateur.
+- `Event.space` passe en `onDelete: SetNull` (décision de l'utilisateur) : supprimer un Espace ne détruit rien, ses
+  événements deviennent personnels pour leur propriétaire et les participants gardent leur accès. Vérifié sur une base
+  temporaire.
+- Visibilité par défaut (décision de l'utilisateur, `CONTEXT.md`) : un membre d'Espace voit tous les éléments de
+  l'Espace ; le propriétaire d'un élément peut restreindre. À implémenter dans `domain-access`.
+- Scripts d'installation de `prisma`, `@prisma/engines` et `esbuild` autorisés (`onlyBuiltDependencies`).
 
 **Vérifié** (exécuté le 2026-10-17)
 
@@ -62,6 +68,9 @@ Modèle d'entrée :
 
 - Classer l'alerte, revue humaine, puis merge.
 - Ticket `auth` : hash des jetons d'invitation, service de suppression de compte, normalisation des e-mails (Zod).
+- Propriétaire d'événement qui quitte (compte supprimé) : un co-organisateur peut reprendre la propriété, sans
+  obligation ; sans repreneur au bout de 48 h, un job planifié supprime l'événement (décision de l'utilisateur, à
+  confirmer : `owner_id` devra alors devenir nullable avec une date de départ).
 
 ## 2026-10-17 — Package `db` : schéma Prisma 7, migration, seed (branche `feat/package-db`)
 

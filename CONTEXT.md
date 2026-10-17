@@ -14,6 +14,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres.
 - **Module** : fonction activable à la carte (Todo, Agenda, Événements). Personne n'est obligé de tous les utiliser.
 - **Espace personnel** : ce qui n'est rattaché à aucun espace est privé.
+- **Visibilité dans un espace** : par défaut, un membre voit tous les éléments de l'espace. Le propriétaire d'un élément peut en restreindre la visibilité.
+- **Espace supprimé** : ses événements deviennent personnels pour leur propriétaire ; les participants gardent leur accès.
 
 ## Todo
 

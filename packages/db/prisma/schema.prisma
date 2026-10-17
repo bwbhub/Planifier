@@ -134,7 +134,7 @@ model Space {
   updatedAt DateTime    @updatedAt @map("updated_at")
 
   members SpaceMember[]
-  /// Les ressources d'un Espace supprimé ne sont jamais supprimées en silence : le service décide (Restrict).
+  /// Espace supprimé : ses événements deviennent personnels (SetNull), les participants gardent leur accès.
   events  Event[]
 
   @@map("spaces")
@@ -179,7 +179,7 @@ model Event {
   owner   User    @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   /// null = événement personnel et privé (ADR 0009).
   spaceId String? @map("space_id")
-  space   Space?  @relation(fields: [spaceId], references: [id], onDelete: Restrict)
+  space   Space?  @relation(fields: [spaceId], references: [id], onDelete: SetNull)
 
   participants    EventParticipant[]
   settings        EventSettings?

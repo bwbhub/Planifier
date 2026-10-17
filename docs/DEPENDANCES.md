@@ -86,8 +86,8 @@ Sortie : faible.
 ```
 
 `server-only` (déjà au catalog, fiche « Installées ») est ajouté à `db` : le client Prisma ne doit jamais atteindre le navigateur.
-Pas de `dotenv` : le chargement du `.env` se fait par `node --env-file` et `prisma.config.ts` lit `DATABASE_URL`
-via l'helper `env()` de `prisma/config`, pas via `process.env` (règle 8).
+Pas de `dotenv` : le seed charge `.env.local` par `node --env-file-if-exists`, et `prisma.config.ts` passe par
+`getCliDatabaseUrl()` (`src/env.ts`, `process.loadEnvFile`) : `process.env` n'est lu que dans `env.ts` (règle 8).
 
 **Écarté : génération de Zod depuis Prisma** (`zod-prisma-types`, `prisma-zod-generator`, générateur maison). Le premier
 produisait un fichier inutilisable avec Prisma 7 (import du client Prisma, chemin faux), le deuxième est lourd

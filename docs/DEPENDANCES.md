@@ -51,7 +51,7 @@ Besoin : CLI (generate, migrate, validate, format) du schéma PostgreSQL.
 Doublon ? : non.
 Licence : Apache-2.0
 Maintenance : 7.10.0 publiée le 2026-08-25 (7.10.1 du 2026-10-15 écartée : sous le seuil `minimumReleaseAge`) · Prisma Data, dépôt actif.
-Poids : outil de build uniquement, absent du runtime · scripts d'installation : à vérifier à l'ajout.
+Poids : outil de build uniquement, absent du runtime · scripts d'installation : `prisma` et `@prisma/engines`, autorisés dans `onlyBuiltDependencies`.
 Piège : le tag `latest` du paquet `prisma` est la 8.0.0-rc.23 → épingler `~7.10.0` (ADR 0005), pas de `pnpm add prisma` nu.
 Alternative écartée : Drizzle (ADR 0005 : Prisma décidé).
 Sortie : coût élevé (toute la couche d'accès), mais bornée à `db`.
@@ -79,7 +79,7 @@ Sortie : faible (une ligne dans `client.ts`).
 Dépendance : tsx@~4.23.15                  Cible : packages/db         Type : dev
 Besoin : exécuter le seed TypeScript (`tsx prisma/seed.ts`).
 Doublon ? : non. Licence : MIT. Maintenance : 4.23.15 du 2026-09-20.
-Poids : embarque esbuild (script d'installation : esbuild est à ajouter à `onlyBuiltDependencies` si requis).
+Poids : embarque esbuild (script d'installation d'esbuild autorisé dans `onlyBuiltDependencies`).
 Alternative écartée : `node --experimental-strip-types` (contredit `engines.node >=20.9`, imports en `.ts`
   obligatoires). À reconsidérer si on relève Node à >=22.18 : tsx disparaîtrait.
 Sortie : faible.

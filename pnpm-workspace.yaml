@@ -47,3 +47,7 @@ minimumReleaseAge: 4320
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+  # packages/db : CLI et moteurs Prisma, esbuild (tiré par tsx pour le seed)
+  - "@prisma/engines"
+  - esbuild
+  - prisma

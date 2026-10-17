@@ -14,6 +14,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres.
 - **Module** : fonction activable à la carte (Todo, Agenda, Événements). Personne n'est obligé de tous les utiliser.
 - **Espace personnel** : ce qui n'est rattaché à aucun espace est privé.
+- **Visibilité dans un espace** : par défaut, un membre voit tous les éléments de l'espace. Elle se restreint dans les paramètres de l'espace.
+- **Espace supprimé** : ses événements deviennent personnels pour leur propriétaire ; les participants gardent leur accès.
 
 ## Todo
 
@@ -48,6 +50,7 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Brique** : fonction ajoutée à un événement (agenda, todo, budget).
 - **Propriétaire d'événement** : active et désactive les briques.
 - **Co-organisateur** : active des briques, assigne, valide les propositions.
+- **Propriétaire parti** : le propriétaire a supprimé son compte. Un co-organisateur peut reprendre la propriété, sans obligation ; sans repreneur sous 48 h, l'événement est supprimé.
 - **Invité** : voit l'événement et réagit.
 - **Invitation** : lien lié à une adresse e-mail, rattaché au compte s'il existe.
 - **Proposition d'invité** : un invité propose quelqu'un, un organisateur valide.

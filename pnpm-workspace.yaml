@@ -27,6 +27,12 @@ catalog:
   "@types/react-dom": ^19.3.0
   zod: ^4.6.0
   server-only: ^0.0.1
+  # base de données (Prisma épinglé en 7.x : le tag latest du registre est une RC 8, ADR 0005).
+  # ~7.10.0 et non 7.10.1 : publiée le 2026-10-15, sous le seuil minimumReleaseAge.
+  prisma: ~7.10.0
+  "@prisma/client": ~7.10.0
+  "@prisma/adapter-pg": ~7.10.0
+  tsx: ~4.23.15
   # styles
   tailwindcss: ^4.3.0
   "@tailwindcss/postcss": ^4.3.0
@@ -41,3 +47,7 @@ minimumReleaseAge: 4320
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+  # packages/db : CLI et moteurs Prisma, esbuild (tiré par tsx pour le seed)
+  - "@prisma/engines"
+  - esbuild
+  - prisma

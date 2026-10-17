@@ -12,7 +12,8 @@ description: Conventions Prisma 7 / PostgreSQL pour Planifier (schéma, enums vs
 - Tables et colonnes en `snake_case` via `@map`/`@@map`, modèles en PascalCase. Identifiants non séquentiels (UUID/CUID).
 - Colonnes standard : `createdAt`, `updatedAt` ; `version Int @default(1)` sur les entités éditables (concurrence optimiste).
 - Rattachement : `spaceId` **nullable** et indexé sur les ressources partageables (liste, agenda, événement) ; `null` =
-  personnel et privé (ADR 0009). L'auteur/propriétaire (`ownerId`) est non nul.
+  personnel et privé (ADR 0009). L'auteur/propriétaire (`ownerId`) est non nul, sauf exception
+  documentée dans le schéma (`Event.ownerId` : propriétaire parti, reprise ou suppression sous 48 h).
 - Suppression : décider par entité (réelle, `deletedAt`, archivage). Tâche supprimée avec des clones liés ⇒ les clones
   deviennent **orphelins** (`CONTEXT.md`), jamais supprimés en cascade.
 - Relations toujours réciproques ; `prisma validate` et `prisma format` à chaque PR.

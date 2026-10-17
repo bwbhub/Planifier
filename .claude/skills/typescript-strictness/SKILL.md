@@ -8,10 +8,11 @@ description: Typage de bout en bout (Prisma → Zod → contrat → client), int
 ## Flux des types
 
 ```
-schema.prisma → db-types (Zod générés) → api-contract (DTO dérivés) → client oRPC (inféré)
+schema.prisma (types Prisma) → api-contract (DTO Zod écrits à la main) → client oRPC (inféré)
 ```
 
-Un type métier est **dérivé** (`z.infer`, `.pick`, `.omit`, `.extend`), jamais redéclaré à la main. Un type qui casse un
+Un type métier est **dérivé** (`z.infer`, `.pick`, `.omit`, `.extend`), jamais redéclaré à la main. Les DTO Zod
+décrivent ce qu'on expose (jamais un modèle brut) ; ils sont vérifiés contre les types Prisma (`satisfies`), pas générés. Un type qui casse un
 composant impose de corriger le composant ; pas de cast pour « faire passer ».
 
 ## `any` et `unknown`

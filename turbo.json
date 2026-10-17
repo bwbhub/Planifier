@@ -3,22 +3,26 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@planifier/db#generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint", "@planifier/db#generate"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types", "@planifier/db#generate"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test", "@planifier/db#generate"]
     },
     "dev": {
+      "dependsOn": ["@planifier/db#generate"],
       "cache": false,
       "persistent": true
+    },
+    "generate": {
+      "cache": false
     }
   }
 }

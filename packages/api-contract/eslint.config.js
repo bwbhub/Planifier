@@ -1,4 +1,4 @@
-import { baseConfig, FORBIDDEN_LIBS } from "@planifier/eslint-config/base";
+import { baseConfig, FORBIDDEN_LIBS, SERVER_PACKAGES } from "@planifier/eslint-config/base";
 
 // Le contrat est importé par le navigateur : aucune dépendance serveur (skill workspace-architecture).
 export default baseConfig(import.meta.dirname, [
@@ -10,18 +10,8 @@ export default baseConfig(import.meta.dirname, [
         {
           patterns: [
             ...FORBIDDEN_LIBS,
-            {
-              group: [
-                "@planifier/api",
-                "@planifier/db",
-                "@planifier/auth",
-                "@planifier/mails",
-                "@orpc/server",
-                "@orpc/server/*",
-                "node:*",
-              ],
-              message: "Le contrat n'importe aucune dépendance serveur.",
-            },
+            SERVER_PACKAGES,
+            { group: ["node:*"], message: "Le contrat est importé par le navigateur." },
           ],
         },
       ],

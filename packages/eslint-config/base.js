@@ -18,6 +18,22 @@ export const FORBIDDEN_LIBS = [
 ];
 
 /**
+ * Implémentation serveur : interdite dans tout code livré au navigateur (apps/web, api-contract ; règle 5).
+ * Ajouter ici tout nouveau package serveur.
+ */
+export const SERVER_PACKAGES = {
+  group: [
+    "@planifier/db",
+    "@planifier/api",
+    "@planifier/auth",
+    "@planifier/mails",
+    "@orpc/server",
+    "@orpc/server/*",
+  ],
+  message: "Implémentation serveur interdite dans du code livré au navigateur.",
+};
+
+/**
  * Configuration de base : TypeScript strict, aucun any, config d'environnement centralisée.
  * @param {string} tsconfigRootDir dossier du package (passer `import.meta.dirname`)
  * @param {import("eslint").Linter.Config[]} [extra] règles propres au package

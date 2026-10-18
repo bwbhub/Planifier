@@ -53,6 +53,18 @@ des jetons et suppression de compte hors PR.
   `db` tel quel (à régler au premier service qui lit la base).
 - Limitation de débit du plan public absente (prévue avec l'auth). Pas de Dockerfile pour `apps/api` (`869fhwtcc`).
 
+**Corrections de revue** (`/code-review`, même jour)
+
+- API : cible mal formée ⇒ 400 au lieu d'un plantage du processus ; rejet du routeur rattrapé (500) ; journal sur
+  `close` (requêtes abandonnées incluses) ; arrêt forcé après 10 s ; `NODE_ENV` obligatoire.
+- Proxy web : segments `.`/`..` refusés (404, plus de sortie du préfixe `/rpc`) ; corps limité à 1 Mo en lecture (413) ;
+  délai de 15 s limité à l'attente des en-têtes.
+- Lint : `SERVER_PACKAGES` partagé (`base.js`) entre le web et `api-contract`. Vitest ajouté au web (fiche existante).
+- Reporté au ticket auth (commentaire ClickUp) : relayer l'IP du client pour la limitation de débit.
+- Vérifié : portes OK (51 tests), test de cible mal formée qui échoue sur l'ancien code ; en local via `pnpm dev` :
+  `..` ⇒ 404, 2 Mo ⇒ 413, cible `http://[` ⇒ 400 et API toujours debout, `SIGTERM` ⇒ sortie 0, démarrage sans
+  `NODE_ENV` refusé.
+
 **Attendu ensuite** : voir `docs/SUITE.md`.
 
 ---

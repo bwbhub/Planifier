@@ -3,23 +3,10 @@ import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 
-import { baseConfig, FORBIDDEN_LIBS } from "./base.js";
+import { baseConfig, FORBIDDEN_LIBS, SERVER_PACKAGES } from "./base.js";
 
 /** Les modules (features) de apps/web. Ajouter un module = l'ajouter ici. */
 const FEATURES = ["events", "todo", "agenda"];
-
-/** L'app web n'importe jamais l'implémentation serveur (règle 5) : elle passe par le contrat et le proxy /rpc. */
-const SERVER_PACKAGES = {
-  group: [
-    "@planifier/db",
-    "@planifier/api",
-    "@planifier/auth",
-    "@planifier/mails",
-    "@orpc/server",
-    "@orpc/server/*",
-  ],
-  message: "L'app web n'importe pas l'implémentation serveur.",
-};
 
 /** Une feature n'importe jamais une autre feature, ni app/ (skill feature-first-structure). */
 function featureIsolation() {

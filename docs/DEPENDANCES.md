@@ -85,6 +85,17 @@ Alternative écartée : `node --experimental-strip-types` (contredit `engines.no
 Sortie : faible.
 ```
 
+```
+Dépendance : vitest@~5.0.4                 Cible : packages/db (puis chaque package)   Type : dev
+Besoin : tests de la logique pure (droits, doublons iCal, soldes, récurrence), de `getDbEnv` et du garde du seed.
+Doublon ? : non. Licence : MIT. Dépôt : vitest-dev/vitest.
+Maintenance : 5.0.4 publiée le 2026-10-12 (5.0.5 du 2026-10-15 écartée : sous le seuil `minimumReleaseAge`).
+Poids : environ 2,8 Mo décompressé, 13 dépendances directes · scripts d'installation : non.
+Prérequis : Node ^22.12 || ^24 (Vite en peer, installé par pnpm).
+Alternative écartée : Jest (configuration TypeScript plus lourde, ESM moins bien géré).
+Sortie : faible.
+```
+
 `server-only` (déjà au catalog, fiche « Installées ») est ajouté à `db` : le client Prisma ne doit jamais atteindre le navigateur.
 Pas de `dotenv` : le seed charge `.env.local` par `node --env-file-if-exists`, et `prisma.config.ts` passe par
 `getCliDatabaseUrl()` (`src/env.ts`, `process.loadEnvFile`) : `process.env` n'est lu que dans `env.ts` (règle 8).
@@ -102,4 +113,4 @@ produisait un fichier inutilisable avec Prisma 7 (import du client Prisma, chemi
 | @tanstack/react-query                              | 5.x           | état serveur côté web                                       |
 | better-auth                                        | 1.7.x         | ADR 0004 ; vérifier le plugin d'organisations pour l'Espace |
 | web-push, resend, @react-email/*                   | à choisir     | ADR 0010 ; domaine à acheter pour Resend                    |
-| vitest, @playwright/test                           | à choisir     | tests (décision technique 14)                               |
+| @playwright/test                                   | à choisir     | tests E2E (décision technique 14)                           |

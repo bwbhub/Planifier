@@ -16,7 +16,8 @@
     "seed": "node --env-file-if-exists=.env.local --import tsx src/seed/index.ts",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "format": "prisma format"
+    "format": "prisma format",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
@@ -31,6 +32,7 @@
     "eslint": "catalog:",
     "prisma": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

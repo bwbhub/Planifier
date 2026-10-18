@@ -13,6 +13,7 @@ export type Env = z.infer<typeof envSchema>;
 
 let cached: Env | undefined;
 
+/** Valide l'environnement au premier appel puis réutilise le résultat. */
 export function getEnv(): Env {
   cached ??= envSchema.parse(process.env);
   return cached;

@@ -9,6 +9,7 @@ export async function seedSpaces(db: Db) {
     update: { name: "Alice & Bob", modules: DEMO_MODULES },
   });
 
+  // Les deux membres sont OWNER ; `update` ne touche que le rôle pour ne pas déplacer le membre.
   const members = [
     { id: SEED_IDS.spaceAlice, userId: SEED_IDS.alice },
     { id: SEED_IDS.spaceBob, userId: SEED_IDS.bob },

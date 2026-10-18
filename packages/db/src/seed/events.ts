@@ -41,7 +41,10 @@ const SETTINGS = [
   { id: SEED_IDS.personalEventSettings, eventId: SEED_IDS.personalEvent },
 ];
 
-/** Un événement d'Espace avec ses participants, un événement personnel, une invitation et un commentaire important. */
+/**
+ * Un événement d'Espace avec ses participants, un événement personnel, une invitation et un commentaire important.
+ * Chaque ligne est un upsert sur un id fixe : `create` pose l'id, `update` remet les valeurs de démo.
+ */
 export async function seedEvents(db: Db) {
   const shared = {
     title: "Week-end à la mer",
@@ -57,6 +60,7 @@ export async function seedEvents(db: Db) {
     update: shared,
   });
 
+  // spaceId null : événement personnel et privé (ADR 0009).
   const personal = { title: "Dentiste", startDate: START, ownerId: SEED_IDS.alice, spaceId: null };
   await db.event.upsert({
     where: { id: SEED_IDS.personalEvent },
@@ -68,6 +72,7 @@ export async function seedEvents(db: Db) {
     await db.eventParticipant.upsert({ where: { id }, create: { id, ...data }, update: data });
   }
 
+  // Les réglages ont des valeurs par défaut en base : `update` vide, on ne les écrase pas.
   for (const { id, eventId } of SETTINGS) {
     await db.eventSettings.upsert({ where: { id }, create: { id, eventId }, update: {} });
   }

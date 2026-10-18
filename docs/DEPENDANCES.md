@@ -105,6 +105,19 @@ produisait un fichier inutilisable avec Prisma 7 (import du client Prisma, chemi
 (`postinstall`, express), le troisième est du code à maintenir. Les DTO de l'API sont écrits à la main dans
 `api-contract` ; les enums viennent de `@planifier/constants`. Plus de package `db-types`.
 
+## GitHub Actions (ticket « CI »)
+
+Actions épinglées par SHA de commit, vérifiées le 2026-10-18 (API GitHub). Toutes publiées par des organisations
+officielles, licence MIT.
+
+| Action             | Version | Release    | Besoin                                         |
+| ------------------ | ------- | ---------- | ---------------------------------------------- |
+| actions/checkout   | v7.0.1  | 2026-07-20 | récupérer le code                              |
+| actions/setup-node | v7.1.0  | 2026-10-08 | Node 24 et cache pnpm                          |
+| pnpm/action-setup  | v6.1.0  | 2026-09-05 | installer pnpm (version lue dans package.json) |
+
+Montée de version : vérifier la release, remplacer le SHA et le tag en commentaire ensemble.
+
 ## À venir (ne pas installer avant validation de sa fiche)
 
 | Dépendance                                         | Version visée | Point d'attention                                           |

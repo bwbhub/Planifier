@@ -1,0 +1,53 @@
+import "server-only";
+
+import { getEnv } from "@/config/env";
+
+/** En-têtes relayés vers l'API (liste blanche) : le reste de la requête du navigateur ne passe pas. */
+const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "cookie"];
+/** En-têtes recalculés par le runtime : `fetch` a déjà décompressé et lu le corps. */
+const DROPPED_RESPONSE_HEADERS = [
+  "connection",
+  "content-encoding",
+  "content-length",
+  "transfer-encoding",
+];
+const UPSTREAM_TIMEOUT_MS = 15_000;
+
+function forwardedHeaders(request: Request): Headers {
+  const headers = new Headers();
+  for (const name of FORWARDED_REQUEST_HEADERS) {
+    const value = request.headers.get(name);
+    if (value !== null) headers.set(name, value);
+  }
+  headers.set("x-request-id", crypto.randomUUID());
+  return headers;
+}
+
+/**
+ * Relaie une requête du navigateur vers `/rpc/*` de l'API (même origine pour le navigateur : cookies first-party,
+ * pas de CORS). L'URL de l'API est lue à la requête, jamais au build (skill runtime-configuration).
+ */
+export async function proxyToApi(request: Request, path: readonly string[]): Promise<Response> {
+  const target = new URL(
+    `/rpc/${path.map(encodeURIComponent).join("/")}`,
+    getEnv().API_INTERNAL_URL,
+  );
+  target.search = new URL(request.url).search;
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+
+  try {
+    const upstream = await fetch(target, {
+      method: request.method,
+      headers: forwardedHeaders(request),
+      body: hasBody ? await request.arrayBuffer() : null,
+      redirect: "manual",
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)]),
+    });
+    const headers = new Headers(upstream.headers);
+    for (const name of DROPPED_RESPONSE_HEADERS) headers.delete(name);
+    return new Response(upstream.body, { status: upstream.status, headers });
+  } catch {
+    // API injoignable ou trop lente : le client oRPC reçoit une erreur réseau, sans détail interne.
+    return new Response(null, { status: 502 });
+  }
+}

@@ -14,20 +14,20 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 
 ## 2. Cartographie rôle → package
 
-| Rôle                   | Nom réel                                                   | État              |
-| ---------------------- | ---------------------------------------------------------- | ----------------- |
-| app web                | `apps/web` (`@planifier/web`)                              | squelette posé    |
-| app API                | `apps/api`                                                 | à créer           |
-| constantes métier      | `@planifier/constants`                                     | posé              |
-| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit) |
-| composants sans métier | `@planifier/ui`                                            | `cn` seulement    |
-| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés             |
-| base + client          | `@planifier/db` (Prisma 7)                                 | posé              |
-| contrats d'API         | `@planifier/api-contract`                                  | à créer           |
-| implémentation API     | `@planifier/api`                                           | à créer           |
-| auth                   | `@planifier/auth`                                          | à créer           |
-| droits (logique pure)  | `@planifier/domain-access`                                 | posé              |
-| e-mails                | `@planifier/mails`                                         | à créer           |
+| Rôle                   | Nom réel                                                   | État               |
+| ---------------------- | ---------------------------------------------------------- | ------------------ |
+| app web                | `apps/web` (`@planifier/web`)                              | squelette posé     |
+| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)       |
+| constantes métier      | `@planifier/constants`                                     | posé               |
+| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)  |
+| composants sans métier | `@planifier/ui`                                            | `cn` seulement     |
+| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés              |
+| base + client          | `@planifier/db` (Prisma 7)                                 | posé               |
+| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)       |
+| implémentation API     | `@planifier/api`                                           | posé (plan public) |
+| auth                   | `@planifier/auth`                                          | à créer            |
+| droits (logique pure)  | `@planifier/domain-access`                                 | posé               |
+| e-mails                | `@planifier/mails`                                         | à créer            |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)
 

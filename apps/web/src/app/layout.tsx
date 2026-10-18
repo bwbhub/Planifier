@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { QueryProvider } from "@/lib/query-provider";
+
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -24,7 +26,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={`${bricolage.variable} ${dmSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

@@ -2,55 +2,46 @@
 
 À écraser en fin de session. Sources de vérité : règles (`AGENTS.md`, skills), tickets ClickUp, code. Le reste : demander.
 
-## 1. À faire par l'utilisateur (avant de coder)
+## 1. À faire par l'utilisateur
 
-Ordre de merge conseillé, une revue chacune. Les branches `feat/db-visibilite-espace` et `chore/ci-github-actions` sont
-commitées en local, **pas encore poussées**.
+- Pousser `feat/api-orpc` (commitée en local) puis ouvrir la PR ; revue humaine (proxy = nouvelle route publique).
+- Ajouter `API_INTERNAL_URL=http://localhost:3001` dans `apps/web/.env.local`, lancer `pnpm dev`, vérifier « API
+  joignable. » sur `http://localhost:3000` (non vérifié en navigateur).
+- Après merge : fermer `869fhwtcj` dans ClickUp.
 
-| Branche                      | Contenu                              | Revue humaine               |
-| ---------------------------- | ------------------------------------ | --------------------------- |
-| `feat/domain-access` (PR #3) | droits purs + RECAP/SUITE            | oui (droits)                |
-| `chore/ci-github-actions`    | workflow CI                          | oui (CI) ; vérifier 1er run |
-| `feat/db-visibilite-espace`  | colonne `spaces.restrict_visibility` | oui (migration)             |
-| `chore/nettoyage-depot`      | suppressions, maquette déplacée      | rapide                      |
-| `chore/commentaires`         | commentaires seed, env, next.config  | rapide                      |
+## 2. Prochain ticket : `auth` (`869fhwtf2`)
 
-Après merge : fermer dans ClickUp `869fhwtfj` (droits) et `869fhwtcb` (CI ; les images Docker restent dans `869fhwtcc`).
-`869fhwtuq` (Vitest) reste ouvert : il manque doublons iCal, clonage de todo, soldes, récurrence.
+Cadrage fait (commentaire ClickUp du ticket) : `better-auth@~1.7.10`, pas de plugin d'organisations, télémétrie coupée,
+tables Session/Account/Verification en une migration, secret obligatoire, cookies httpOnly, limitation de débit,
+e-mails en minuscules. Hors PR : hash des jetons d'invitation, service de suppression de compte.
 
-## 2. Prochain ticket : `auth` (`869fhwtf2`) — session neuve, modèle Opus 5.5
+À trancher en début de session :
 
-Revue humaine obligatoire. À cadrer avec l'utilisateur avant d'écrire (skills `auth-authorization`, `database-prisma`,
-`dependency-governance`) :
-
-- Fiche de dépendance `better-auth` (1.7.x) à valider avant installation ; vérifier le plugin d'organisations pour l'Espace.
-- Tables Better Auth (`Session`, `Account`, `Verification`) : une migration pour la PR.
-- Hash des jetons d'invitation (`Invite.token` est en clair aujourd'hui).
-- Service de suppression de compte : renseigne `events.owner_left_at` dans la même transaction ; supprime tout de suite
-  les événements personnels sans autre participant (sinon ils restent 48 h sans propriétaire) : à trancher.
-- E-mails normalisés en minuscules (Zod) avant écriture (contrainte `CHECK` en base).
-- Migration des comptes bcrypt : ticket séparé `869fhwtf4`.
-- Cookies httpOnly, pas de secret par défaut, limitation de débit (connexion, inscription, invitation).
+- `server-only` dans `db` : `apps/api` (Node pur) ne peut pas l'importer tel quel. Options : `--conditions=react-server`
+  au lancement de l'API, ou garde équivalente propre à `db`.
+- Champs `User` vs schéma Better Auth (`name` obligatoire chez Better Auth, `emailVerified`, `image` ↔ `avatarUrl`).
+- Montage : `toNodeHandler` sous `/api/auth` dans `apps/api`, route relayée par le proxy du web (ADR 0015).
+- Plan « utilisateur » dans `api` (garde session) + route protégée d'exemple ; limitation de débit du plan public.
+- Fiche `better-auth` à écrire dans `docs/DEPENDANCES.md` avant installation.
 
 ## 3. Ensuite
 
-1. `api-contract` puis `api` (`869fhwtcj`) : oRPC, chaîne d'accès (`domain-access`), `NOT_FOUND` sans droit.
-2. Modèle Espace (`869fhwtf9`) : vérifier ce qui est déjà couvert par `db` (modèle posé, service absent).
-3. Jobs planifiés (`869fjgrcd`) : suppression des événements sans repreneur 48 h après `owner_left_at`.
-4. Modèles Todo et Agenda : y ajouter le partage par ressource (NONE/READ/WRITE) lu par `domain-access`.
+1. Migration des comptes bcrypt (`869fhwtf4`).
+2. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
+3. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
+4. Modèles Todo et Agenda, avec partage par ressource.
+5. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
 
 ## 4. Questions ouvertes pour l'utilisateur
 
-- Mise à jour de la description du ticket `869fhwtbz` (« Organisation modulaire de apps/web ») dans ClickUp : texte dans
-  `newContext/tickets-a-creer/03-maj-ticket-organisation-apps-web.md`, à appliquer puis supprimer le fichier.
-- `newContext/Decisions techniques.md` : supprimer ? (21 décisions, à comparer aux ADR).
-- Granularité de la visibilité d'Espace (tout l'Espace aujourd'hui ; par module ou par membre plus tard ?).
-- Le propriétaire d'Espace supprime ce qu'il voit seulement (ajout de ma part dans `domain-access`) : à confirmer.
+- Ticket `869fhwtbz` : texte de mise à jour dans `newContext/tickets-a-creer/03-maj-ticket-organisation-apps-web.md`.
+- `newContext/Decisions techniques.md` : supprimer ?
+- Granularité de la visibilité d'Espace ; suppression par le propriétaire d'Espace limitée à ce qu'il voit : à confirmer.
 
 ## 5. Pièges de l'environnement
 
-- Push depuis ma session impossible (agent SSH vide, passphrase) : l'utilisateur pousse depuis son terminal.
-- Le merge de PR est refusé en mode auto : l'utilisateur fusionne.
+- Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).
+- Merge de PR refusé en mode auto : l'utilisateur fusionne.
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
-- Base locale : `docker compose up -d`, port 5433. Bases temporaires pour tester les migrations, jamais la base de dev.
-- Dépendance nouvelle : fiche validée dans `docs/DEPENDANCES.md` avant `pnpm add`.
+- TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
+- Base locale : `docker compose up -d`, port 5433. Dépendance nouvelle : fiche validée avant `pnpm add`.

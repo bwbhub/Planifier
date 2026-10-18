@@ -12,9 +12,13 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
+    "@planifier/api-contract": "workspace:*",
     "@planifier/constants": "workspace:*",
     "@planifier/tokens": "workspace:*",
     "@planifier/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

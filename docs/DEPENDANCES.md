@@ -118,12 +118,43 @@ officielles, licence MIT.
 
 Montée de version : vérifier la release, remplacer le SHA et le tag en commentaire ensemble.
 
+## Fiches validées et installées : API oRPC (ticket « contracts + API oRPC »)
+
+Vérifié le 2026-10-18 (registre npm). Validées par l'utilisateur le 2026-10-18, installées via le `catalog:`.
+
+```
+Dépendances : @orpc/contract, @orpc/server, @orpc/client, @orpc/tanstack-query @ ~1.15.7
+Cibles : api-contract (contract) · api (server) · apps/api (server) · apps/web (client, tanstack-query) · Type : runtime
+Besoin : contrats typés Zod de bout en bout, serveur RPC, client navigateur et intégration TanStack Query (ADR 0003).
+Doublon ? : non (Express abandonné, aucun autre framework HTTP).
+Licence : MIT (middleapi/orpc).
+Maintenance : 1.15.7 publiée le 2026-10-14 ; releases toutes les une à deux semaines.
+Poids : contract 92 Ko (dépend de client, @standard-schema/spec, openapi-types) · client 142 Ko · tanstack-query 52 Ko ·
+server 337 Ko (adaptateurs Node, fetch, fastify, lambda embarqués). Aucun script d'installation.
+Serveur : adaptateur `@orpc/server/node` sur `http.createServer` de Node, sans framework (Hono écarté : deux paquets
+pour un seul besoin).
+Alternative écartée : tRPC (contrat séparé de l'implémentation moins naturel ; ADR 0003).
+Sortie : coût élevé (contrats et client), borné à api-contract, api et queries/ du web.
+```
+
+```
+Dépendance : @tanstack/react-query@~5.104.3     Cible : apps/web     Type : runtime
+Besoin : état serveur côté web (cache, invalidation, hydratation), via les utilitaires oRPC.
+Doublon ? : non.
+Licence : MIT.
+Maintenance : 5.104.3 publiée le 2026-10-15 (5.104.4 du 2026-10-17 écartée : sous `minimumReleaseAge`). Très active.
+Poids : 1,8 Mo décompressé (dépend de @tanstack/query-core, pair de @orpc/tanstack-query). Aucun script d'installation.
+Alternative écartée : SWR (pas d'intégration oRPC).
+Sortie : moyenne (hooks confinés dans `queries/`).
+```
+
+`tsx` (déjà au catalog) devient une dépendance d'exécution de `apps/api` : les packages du workspace exportent du
+TypeScript source, l'API tourne avec `node --import tsx` (pas de bundle).
+
 ## À venir (ne pas installer avant validation de sa fiche)
 
-| Dépendance                                         | Version visée | Point d'attention                                           |
-| -------------------------------------------------- | ------------- | ----------------------------------------------------------- |
-| @orpc/* (server, contract, client, tanstack-query) | 1.15.x        | ADR 0003                                                    |
-| @tanstack/react-query                              | 5.x           | état serveur côté web                                       |
-| better-auth                                        | 1.7.x         | ADR 0004 ; vérifier le plugin d'organisations pour l'Espace |
-| web-push, resend, @react-email/*                   | à choisir     | ADR 0010 ; domaine à acheter pour Resend                    |
-| @playwright/test                                   | à choisir     | tests E2E (décision technique 14)                           |
+| Dépendance                       | Version visée | Point d'attention                                         |
+| -------------------------------- | ------------- | --------------------------------------------------------- |
+| better-auth                      | ~1.7.10       | ADR 0004 ; sans plugin d'organisations, télémétrie coupée |
+| web-push, resend, @react-email/* | à choisir     | ADR 0010 ; domaine à acheter pour Resend                  |
+| @playwright/test                 | à choisir     | tests E2E (décision technique 14)                         |

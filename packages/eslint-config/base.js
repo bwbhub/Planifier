@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 const ENV_FILES = ["**/env.ts", "**/env.*.ts"];
 
 /** Bibliothèques écartées : un seul outil par besoin (docs/DEPENDANCES.md). */
-const FORBIDDEN_LIBS = [
+export const FORBIDDEN_LIBS = [
   {
     group: ["@mui/*", "@emotion/*"],
     message: "MUI est abandonné (ADR 0008) : utiliser packages/ui.",

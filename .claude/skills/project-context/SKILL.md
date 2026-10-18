@@ -26,7 +26,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | contrats d'API         | `@planifier/api-contract`                                  | à créer           |
 | implémentation API     | `@planifier/api`                                           | à créer           |
 | auth                   | `@planifier/auth`                                          | à créer           |
-| droits (logique pure)  | `@planifier/domain-access`                                 | à créer           |
+| droits (logique pure)  | `@planifier/domain-access`                                 | posé              |
 | e-mails                | `@planifier/mails`                                         | à créer           |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)

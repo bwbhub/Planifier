@@ -1,6 +1,6 @@
 ---
 name: api-contracts-orpc
-description: Créer ou modifier une procédure d'API oRPC (contrat Zod, implémentation, chaîne d'accès, erreurs, pagination, compatibilité, idempotence). À lire pour toute nouvelle procédure, tout changement de contrat ou la relecture d'un routeur. Conventions visées : les packages api n'existent pas encore.
+description: Créer ou modifier une procédure d'API oRPC (contrat Zod, implémentation, chaîne d'accès, erreurs, pagination, compatibilité, idempotence). À lire pour toute nouvelle procédure, tout changement de contrat ou la relecture d'un routeur. Packages posés : api-contract, api, apps/api (ADR 0015).
 ---
 
 # API : contrats et implémentation oRPC

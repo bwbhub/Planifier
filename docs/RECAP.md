@@ -18,6 +18,57 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-18 — Contrats et API oRPC (branche `feat/api-orpc`, ticket `869fhwtcj`)
+
+**Fait**
+
+- `packages/api-contract` : contrat `system.health.get` (`.input()` strict vide, `.output()` `{ status: "ok" }`), type
+  `ApiClient`. Lint : aucune dépendance serveur.
+- `packages/api` : `implement(contract)`, plan public (`publicGuard`, `publicProcedure`), routeur, test qui parcourt le
+  routeur et échoue si une procédure ne commence pas par une garde de plan.
+- `apps/api` (`@planifier/api-server`) : `http.createServer` + `@orpc/server/node` sous `/rpc`, 404 ailleurs, corps
+  limité à 1 Mo, journal JSON par requête (chemin sans query), `x-request-id`, arrêt propre. `node --import tsx`.
+- `apps/web` : proxy `/rpc/[...path]` vers `API_INTERNAL_URL` (lue à la requête, en-têtes en liste blanche, 502 si API
+  injoignable), client oRPC + TanStack Query, `features/_shared/queries/health.queries.ts`, statut affiché sur l'accueil.
+- Lint : le web entier (plus seulement `features/`) interdit `db`, `api`, `auth`, `mails`, `@orpc/server`.
+- ADR 0015 ; fiches oRPC 1.15.7 et `@tanstack/react-query` 5.104.3 validées et installées ; READMEs ; `.env.example`.
+- Ticket auth `869fhwtf2` : décisions en commentaire ClickUp, dépendance « en attente de `869fhwtcj` ».
+
+**Décisions** (utilisateur) : API avant auth ; Node natif, pas de Hono ; proxy même origine ; tsx à l'exécution, pas de
+bundle ; découpage `api-contract` + `api` + `apps/api`. Auth : sans plugin d'organisations, `better-auth@~1.7.10`, hash
+des jetons et suppression de compte hors PR.
+
+**Vérifié** (2026-10-18)
+
+- `pnpm format:check`, `pnpm check-types`, `pnpm lint`, `pnpm test` (38 tests), `pnpm build` : OK.
+- Mutation : procédure sans garde ⇒ le test des gardes échoue.
+- Local, `next start` + API : POST via le proxy ⇒ `{"status":"ok"}` ; entrée hors contrat ⇒ 400 ; route inconnue ⇒ 404 ;
+  API arrêtée ⇒ 502 ; page servie avec l'état de chargement.
+- `pnpm dev` avec `API_INTERNAL_URL` : « API joignable. » affiché dans le navigateur (vérifié par l'utilisateur, Brave).
+
+**Ouvert**
+
+- Revue humaine : nouvelle route publique (proxy), lint, ADR.
+- `server-only` (importé par `db`) lève une erreur hors condition `react-server` : `apps/api` ne pourra pas importer
+  `db` tel quel (à régler au premier service qui lit la base).
+- Limitation de débit du plan public absente (prévue avec l'auth). Pas de Dockerfile pour `apps/api` (`869fhwtcc`).
+
+**Corrections de revue** (`/code-review`, même jour)
+
+- API : cible mal formée ⇒ 400 au lieu d'un plantage du processus ; rejet du routeur rattrapé (500) ; journal sur
+  `close` (requêtes abandonnées incluses) ; arrêt forcé après 10 s ; `NODE_ENV` obligatoire.
+- Proxy web : segments `.`/`..` refusés (404, plus de sortie du préfixe `/rpc`) ; corps limité à 1 Mo en lecture (413) ;
+  délai de 15 s limité à l'attente des en-têtes.
+- Lint : `SERVER_PACKAGES` partagé (`base.js`) entre le web et `api-contract`. Vitest ajouté au web (fiche existante).
+- Reporté au ticket auth (commentaire ClickUp) : relayer l'IP du client pour la limitation de débit.
+- Vérifié : portes OK (51 tests), test de cible mal formée qui échoue sur l'ancien code ; en local via `pnpm dev` :
+  `..` ⇒ 404, 2 Mo ⇒ 413, cible `http://[` ⇒ 400 et API toujours debout, `SIGTERM` ⇒ sortie 0, démarrage sans
+  `NODE_ENV` refusé.
+
+**Attendu ensuite** : voir `docs/SUITE.md`.
+
+---
+
 ## 2026-10-18 — Nettoyage, commentaires, visibilité d'Espace, CI (branches `chore/nettoyage-depot`, `chore/commentaires`, `feat/db-visibilite-espace`, `chore/ci-github-actions`)
 
 **Fait**

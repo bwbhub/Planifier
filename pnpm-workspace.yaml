@@ -33,6 +33,13 @@ catalog:
   "@prisma/client": ~7.10.0
   "@prisma/adapter-pg": ~7.10.0
   tsx: ~4.23.15
+  # API (ADR 0003)
+  "@orpc/contract": ~1.15.7
+  "@orpc/server": ~1.15.7
+  "@orpc/client": ~1.15.7
+  "@orpc/tanstack-query": ~1.15.7
+  # ~5.104.3 et non 5.104.4 : publiée le 2026-10-17, sous le seuil minimumReleaseAge
+  "@tanstack/react-query": ~5.104.3
   # tests (~5.0.4 et non 5.0.5 : publiée le 2026-10-15, sous le seuil minimumReleaseAge)
   vitest: ~5.0.4
   # styles

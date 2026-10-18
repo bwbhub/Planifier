@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 const ENV_FILES = ["**/env.ts", "**/env.*.ts"];
 
 /** Bibliothèques écartées : un seul outil par besoin (docs/DEPENDANCES.md). */
-const FORBIDDEN_LIBS = [
+export const FORBIDDEN_LIBS = [
   {
     group: ["@mui/*", "@emotion/*"],
     message: "MUI est abandonné (ADR 0008) : utiliser packages/ui.",
@@ -16,6 +16,22 @@ const FORBIDDEN_LIBS = [
     message: "Remplacés par oRPC et Better Auth (ADR 0003, 0004).",
   },
 ];
+
+/**
+ * Implémentation serveur : interdite dans tout code livré au navigateur (apps/web, api-contract ; règle 5).
+ * Ajouter ici tout nouveau package serveur.
+ */
+export const SERVER_PACKAGES = {
+  group: [
+    "@planifier/db",
+    "@planifier/api",
+    "@planifier/auth",
+    "@planifier/mails",
+    "@orpc/server",
+    "@orpc/server/*",
+  ],
+  message: "Implémentation serveur interdite dans du code livré au navigateur.",
+};
 
 /**
  * Configuration de base : TypeScript strict, aucun any, config d'environnement centralisée.

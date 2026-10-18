@@ -17,6 +17,12 @@ src/
 Règles détaillées : `.claude/skills/feature-first-structure`. Ajouter un module : créer le dossier **et** l'ajouter à
 `FEATURES` dans `packages/eslint-config/next.js`.
 
+## API
+
+Le navigateur appelle `/rpc/*` sur l'origine du web ; `src/app/rpc/[...path]/route.ts` relaie vers `API_INTERNAL_URL`,
+lue à la requête (ADR 0015). Client typé par le contrat : `src/lib/orpc.ts`, utilisé uniquement dans les `queries/`.
+Pour développer : `pnpm dev` à la racine lance le web et l'API.
+
 ## Règles clés (vérifiées par le lint)
 
 - Un module n'importe jamais un autre module ni `app/` ; l'app n'importe jamais `api`, `db`, `auth`, `mails`.

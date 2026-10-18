@@ -3,7 +3,7 @@ import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 
-import { baseConfig } from "./base.js";
+import { baseConfig, FORBIDDEN_LIBS, SERVER_PACKAGES } from "./base.js";
 
 /** Les modules (features) de apps/web. Ajouter un module = l'ajouter ici. */
 const FEATURES = ["events", "todo", "agenda"];
@@ -28,11 +28,8 @@ function featureIsolation() {
               group: ["@/app", "@/app/*"],
               message: "Une feature n'importe jamais app/ (sens : app → features → packages).",
             },
-            {
-              group: ["@planifier/db", "@planifier/api", "@planifier/auth", "@planifier/mails"],
-              message: "L'app web n'importe pas l'implémentation serveur.",
-            },
-            { group: ["@mui/*", "@emotion/*"], message: "MUI est abandonné (ADR 0008)." },
+            SERVER_PACKAGES,
+            ...FORBIDDEN_LIBS,
           ],
         },
       ],
@@ -82,6 +79,12 @@ export function nextConfig(tsconfigRootDir) {
         "**/*.config.{js,mjs,ts}",
       ],
       rules: { "no-restricted-exports": "off" },
+    },
+    {
+      files: ["src/**/*.{ts,tsx}"],
+      rules: {
+        "no-restricted-imports": ["error", { patterns: [SERVER_PACKAGES, ...FORBIDDEN_LIBS] }],
+      },
     },
     ...featureIsolation(),
   ]);

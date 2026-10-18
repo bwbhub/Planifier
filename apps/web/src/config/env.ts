@@ -7,6 +7,8 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   PORT: z.coerce.number().int().positive().default(3000),
+  /** Origine de l'API vue depuis le serveur web (réseau interne), cible du proxy /rpc. */
+  API_INTERNAL_URL: z.url(),
 });
 
 export type Env = z.infer<typeof envSchema>;

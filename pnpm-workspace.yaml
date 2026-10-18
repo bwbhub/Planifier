@@ -33,6 +33,8 @@ catalog:
   "@prisma/client": ~7.10.0
   "@prisma/adapter-pg": ~7.10.0
   tsx: ~4.23.15
+  # tests (~5.0.4 et non 5.0.5 : publiée le 2026-10-15, sous le seuil minimumReleaseAge)
+  vitest: ~5.0.4
   # styles
   tailwindcss: ^4.3.0
   "@tailwindcss/postcss": ^4.3.0

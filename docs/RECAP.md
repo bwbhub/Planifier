@@ -18,6 +18,18 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-18 — Tests Vitest sur `db` (branche `feat/tests-vitest`)
+
+**Fait** : `vitest@~5.0.4` (fiche validée par l'utilisateur) au `catalog:` et dans `db` ; script `test` ; tests de
+`getDbEnv` (4) et `assertSeedAllowed` (6). Ticket TypeScript strict + ESLint fermé dans ClickUp (déjà livré).
+**Décisions** : 5.0.4 et non 5.0.5 (sous `minimumReleaseAge`). `getCliDatabaseUrl` non testée (lit `.env.local` du
+dossier courant).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (10 tests OK), `pnpm build` : OK, exécutés le 2026-10-18.
+**Ouvert** : rien commité ni poussé. Tests du seed sur vraie base : avec la CI.
+**Attendu ensuite** : voir `docs/SUITE.md`.
+
+---
+
 ## 2026-10-17 — Corrections de revue du package `db` (branche `feat/package-db`)
 
 **Fait**

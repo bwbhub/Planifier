@@ -44,12 +44,11 @@ des jetons et suppression de compte hors PR.
 - Mutation : procédure sans garde ⇒ le test des gardes échoue.
 - Local, `next start` + API : POST via le proxy ⇒ `{"status":"ok"}` ; entrée hors contrat ⇒ 400 ; route inconnue ⇒ 404 ;
   API arrêtée ⇒ 502 ; page servie avec l'état de chargement.
-- **Non vérifié** : rendu final « API joignable. » dans un vrai navigateur (pas de test E2E ni de navigateur lancé).
+- `pnpm dev` avec `API_INTERNAL_URL` : « API joignable. » affiché dans le navigateur (vérifié par l'utilisateur, Brave).
 
 **Ouvert**
 
 - Revue humaine : nouvelle route publique (proxy), lint, ADR.
-- `apps/web/.env.local` doit recevoir `API_INTERNAL_URL=http://localhost:3001`, sinon le proxy répond 500.
 - `server-only` (importé par `db`) lève une erreur hors condition `react-server` : `apps/api` ne pourra pas importer
   `db` tel quel (à régler au premier service qui lit la base).
 - Limitation de débit du plan public absente (prévue avec l'auth). Pas de Dockerfile pour `apps/api` (`869fhwtcc`).

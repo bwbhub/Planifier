@@ -5,8 +5,6 @@
 ## 1. À faire par l'utilisateur
 
 - Pousser `feat/api-orpc` (commitée en local) puis ouvrir la PR ; revue humaine (proxy = nouvelle route publique).
-- Ajouter `API_INTERNAL_URL=http://localhost:3001` dans `apps/web/.env.local`, lancer `pnpm dev`, vérifier « API
-  joignable. » sur `http://localhost:3000` (non vérifié en navigateur).
 - Après merge : fermer `869fhwtcj` dans ClickUp.
 
 ## 2. Prochain ticket : `auth` (`869fhwtf2`)
@@ -44,4 +42,5 @@ e-mails en minuscules. Hors PR : hash des jetons d'invitation, service de suppre
 - Merge de PR refusé en mode auto : l'utilisateur fusionne.
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
 - TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
+- Navigateur : Brave seulement, pas de Chrome ⇒ pas d'extension Claude in Chrome ; vérif visuelle par l'utilisateur.
 - Base locale : `docker compose up -d`, port 5433. Dépendance nouvelle : fiche validée avant `pnpm add`.

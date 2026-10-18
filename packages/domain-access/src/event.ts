@@ -54,9 +54,13 @@ const ROLE_ACTIONS: Record<EventRole, readonly EventAction[]> = {
 
 /** `view` faux ⇒ l'API répond NOT_FOUND. */
 export function canAccessEvent(access: EventAccess, action: EventAction): boolean {
+  // Un membre de l'Espace voit l'événement sans y participer ; rien d'autre.
   if (action === "view" && access.viaSpace) return true;
+  // Sans rôle de participant, aucune autre action.
   if (access.role === null) return false;
+  // Reprise de propriété : seulement un co-organisateur, et seulement si le propriétaire est parti.
   if (action === "take_ownership") return access.role === "ORGANIZER" && !access.hasOwner;
+  // Invité : invite directement si le réglage l'autorise, sinon il propose et un organisateur valide.
   if (access.role === "GUEST" && action === "invite") return access.allowGuestInvite;
   if (access.role === "GUEST" && action === "propose_invite") return !access.allowGuestInvite;
   return ROLE_ACTIONS[access.role].includes(action);

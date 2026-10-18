@@ -23,6 +23,7 @@ const maxLevel = (a: ShareLevel, b: ShareLevel) => (rank(a) >= rank(b) ? a : b);
 /** Niveau effectif de l'appelant : propriétaire, ou le plus élevé du partage direct et de l'Espace. */
 export function resourceLevel(access: ResourceAccess): ShareLevel {
   if (access.userId === access.ownerId) return "WRITE";
+  // Le niveau de l'Espace ne vaut que pour un membre.
   const viaSpace = access.spaceRole === null ? "NONE" : access.spaceLevel;
   return maxLevel(access.shareLevel, viaSpace);
 }

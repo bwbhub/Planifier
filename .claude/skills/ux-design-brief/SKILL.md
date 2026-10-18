@@ -5,7 +5,7 @@ description: Direction « Doux et vivant » de Planifier (principes produit, ton
 
 # Design brief : Planifier
 
-Source : maquette `newContext/Planifier v2 — Phase 1.html` (Aujourd'hui, Todo, Création de tâche, Agenda jour/semaine ;
+Source : maquette `docs/maquettes/phase-1.html` (Aujourd'hui, Todo, Création de tâche, Agenda jour/semaine ;
 clair et nuit ; mobile et PC).
 
 ## Principes produit (non négociables)

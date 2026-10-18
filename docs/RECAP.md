@@ -18,6 +18,57 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-18 — Nettoyage, commentaires, visibilité d'Espace, CI (branches `chore/nettoyage-depot`, `chore/commentaires`, `feat/db-visibilite-espace`, `chore/ci-github-actions`)
+
+**Fait**
+
+- Nettoyage : `newContext/` allégé (doublon de `CONTEXT.md`, ADR déjà éclatés, tickets 00/01/02 déjà dans ClickUp) ;
+  maquette déplacée dans `docs/maquettes/phase-1.html` (skill `ux-design-brief` et `.prettierignore` mis à jour).
+- Commentaires aux endroits non évidents (seed, `env.ts`, `next.config.ts`, droits).
+- Migration `visibilite_espace` : colonne `spaces.restrict_visibility` (booléen, défaut `false`), additive.
+- CI `.github/workflows/ci.yml` : format, types, lint, tests, build, migrations sur base vide, dérive, seed. Actions épinglées
+  par SHA (fiche dans `docs/DEPENDANCES.md`).
+- Tickets fermés dans ClickUp : TypeScript strict + ESLint (`869fhwtc5`).
+
+**Décisions**
+
+- Partage par ressource (NONE/READ/WRITE) **pas modélisé** : aucun modèle liste ni agenda n'existe encore, une table
+  polymorphe sans clé étrangère serait fragile. Il viendra avec les modèles Todo et Agenda.
+- Visibilité d'Espace = un booléen pour tout l'Espace (granularité par module ou par membre non décidée).
+- CI : pas de construction d'images Docker (aucun Dockerfile ; ticket Docker `869fhwtcc`).
+
+**Vérifié** (2026-10-18)
+
+- Chaque branche : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK, sauf `chore/nettoyage-depot` (seulement
+  `format:check`, suppressions et déplacement) et `feat/db-visibilite-espace` (tout OK).
+- Migration : appliquée sur base temporaire, pas de dérive, seed lancé deux fois sans erreur.
+- CI : YAML valide ; étapes migrations, dérive et seed rejouées en local sur une base vide. **Le workflow n'a pas tourné
+  sur GitHub.**
+
+**Ouvert**
+
+- Revue humaine : droits (PR #3), CI, migration.
+- Base locale existante : lancer `pnpm --filter @planifier/db migrate:deploy` (colonne `restrict_visibility`).
+- Après un changement de branche touchant le schéma : `pnpm --filter @planifier/db generate` (client Prisma gitignored).
+
+**Attendu ensuite** : voir `docs/SUITE.md`.
+
+---
+
+## 2026-10-18 — Package `domain-access` (branche `feat/domain-access`)
+
+**Fait** : `packages/domain-access` (`resource.ts`, `event.ts`, README) : droits purs sur ressource (propriétaire, Espace,
+partage direct) et sur événement (OWNER, ORGANIZER, GUEST, reprise de propriété). 23 tests Vitest.
+**Décisions** (utilisateur) : membre d'Espace en lecture, écriture sur liste partagée ; suppression par le propriétaire
+ou le propriétaire d'Espace ; matrice d'événement OK telle quelle (ORGANIZER n'est pas autorisé à désactiver une brique).
+Ajout : le propriétaire d'Espace ne supprime que ce qu'il voit.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (33 tests), `pnpm build` ; mutations du code : 9 tests échouent.
+**Ouvert** : revue humaine (droits). Champ de visibilité de l'Espace absent du schéma : `spaceLevel` est fourni par
+l'appelant, le champ viendra avec une migration. Pas de partage par ressource en base (NONE/READ/WRITE) : à modéliser.
+**Attendu ensuite** : voir `docs/SUITE.md`.
+
+---
+
 ## 2026-10-18 — Tests Vitest sur `db` (branche `feat/tests-vitest`)
 
 **Fait** : `vitest@~5.0.4` (fiche validée par l'utilisateur) au `catalog:` et dans `db` ; script `test` ; tests de

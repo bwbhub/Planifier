@@ -9,6 +9,7 @@ const DEMO_USERS = [
 
 /** Trois comptes de démo, locaux uniquement. Chacun active les trois modules. */
 export async function seedUsers(db: Db) {
+  // `id` sort du profil : il sert de clé d'upsert, et n'est écrit qu'à la création.
   for (const { id, ...profile } of DEMO_USERS) {
     const data = { ...profile, modules: DEMO_MODULES };
     await db.user.upsert({ where: { id }, create: { id, ...data }, update: data });

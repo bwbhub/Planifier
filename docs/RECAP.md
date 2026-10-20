@@ -83,6 +83,8 @@ Modèle d'entrée :
   généralisée (`assertLocalDatabase`). CI sur `planifier_test`. `testing-standards` complété (parcours HTTP).
 - Vérifié : `test:integration` 5/5 deux fois de suite sur `planifier_test` ; refusé sur `planifier` (base de dev).
 
+**Merge** : PR #9 mergée le 2026-10-20 ; CI `verify` verte (migrations, dérive, seed, tests d'intégration compris).
+
 **Seconde revue (règle 16), corrections**
 
 - IP posée par le proxy obligatoire dans tous les environnements (400 sinon) : `clientIp: string`, plus de compteur

@@ -31,6 +31,9 @@ dans `constants`). Changement d'e-mail : après `mails` (vérification). Navigat
 - Granularité de la visibilité d'Espace ; suppression par le propriétaire d'Espace limitée à ce qu'il voit : à confirmer.
 - Hébergeur : son relais ajoute-t-il `x-forwarded-for` (fiabilité de l'IP, ADR 0016) ?
 - Après connexion, revenir à la page demandée (`?suite=`, chemin interne seulement) : utile ?
+- Ancien formulaire : remettre « afficher le mot de passe » et la confirmation à l'inscription ? Invitation par
+  lien (e-mail pré-rempli) : avec le module Événements.
+- Token d'erreur distinct de l'accent (aujourd'hui erreurs et liens partagent `accent-text`) : ticket design system ?
 
 ## 5. Pièges de l'environnement
 

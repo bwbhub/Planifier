@@ -8,3 +8,6 @@ export const AUTH_BASE_PATH = "/api/auth";
  * l'écrit toujours lui-même : une valeur envoyée par le navigateur n'est jamais relayée.
  */
 export const CLIENT_IP_HEADER = "x-planifier-client-ip";
+
+/** Identifiant de corrélation d'une requête, posé par le web et repris dans les journaux de l'API. */
+export const REQUEST_ID_HEADER = "x-request-id";

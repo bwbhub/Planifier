@@ -58,6 +58,20 @@ Playwright dans un ticket dédié (`869fkd81n`).
 - Pas de redirection vers la page demandée après connexion (évite une redirection ouverte ; à concevoir si utile).
 - Pas de maquette pour ces écrans : composition déduite du brief.
 
+**Corrections de revue** (`/code-review`, même jour, validées par l'utilisateur)
+
+- Règle des trois : `AuthErrorAlert` (atome), `useSessionRedirect`, aide de test `@planifier/ui/testing/axe`.
+- `REQUEST_ID_HEADER` dans `constants/http` (web, proxy, API) ; `AUTH_BASE_PATH` dans le test d'intégration.
+- `AuthRequestError` dans son fichier ; `forms/invalid-fields.ts` → `utils/form-validation.ts` ; raison du `fetch`
+  direct écrite dans `auth.queries.ts` ; note `tsx` (seed d'`auth`) dans `DEPENDANCES.md`.
+- `app/error.tsx` : API injoignable au rendu ⇒ message + « Réessayer » (au lieu de la page par défaut de Next).
+- Liens connexion ↔ inscription : cible 44 px.
+- Non repris de l'ancien formulaire, à décider : afficher le mot de passe, confirmation du mot de passe à
+  l'inscription, parcours d'invitation (`inviteToken`, e-mail pré-rempli ; attend le module Événements).
+- Non retenu : double garde layout/page (la page a besoin de `user`, `cache` évite le second appel) ; alias
+  `InvalidFields` ; `handleSubmit` dupliqué deux fois (règle des trois) ; pas de token d'erreur distinct (ticket design
+  system) ; contraste non mesuré (E2E navigateur).
+
 **Attendu ensuite**
 
 - Vérif visuelle par l'utilisateur, puis push et PR (sur demande).

@@ -3,7 +3,7 @@ import { AUTH_ERROR_CODES } from "@planifier/api-contract";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import axe from "axe-core";
+import { axeViolations } from "@planifier/ui/testing/axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SignInForm } from "./sign-in-form";
@@ -79,9 +79,6 @@ describe("SignInForm", () => {
   it("ne présente aucune violation d'accessibilité, erreurs affichées", async () => {
     const { container } = renderForm();
     await fill("", "");
-    const { violations } = await axe.run(container, {
-      rules: { "color-contrast": { enabled: false } },
-    });
-    expect(violations).toEqual([]);
+    await expect(axeViolations(container)).resolves.toEqual([]);
   });
 });

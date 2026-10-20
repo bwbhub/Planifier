@@ -1,6 +1,6 @@
 import { AUTH_ERROR_CODES } from "@planifier/api-contract";
 
-import { AuthRequestError } from "../queries/auth.queries";
+import { AuthRequestError } from "./auth-request-error";
 
 const TOO_MANY_REQUESTS = 429;
 

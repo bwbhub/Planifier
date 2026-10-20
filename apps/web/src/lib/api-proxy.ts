@@ -1,6 +1,6 @@
 import "server-only";
 
-import { CLIENT_IP_HEADER } from "@planifier/constants/http";
+import { CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@planifier/constants/http";
 
 import { getEnv } from "@/config/env";
 
@@ -41,7 +41,7 @@ function forwardedHeaders(request: Request): Headers {
     const value = request.headers.get(name);
     if (value !== null) headers.set(name, value);
   }
-  headers.set("x-request-id", crypto.randomUUID());
+  headers.set(REQUEST_ID_HEADER, crypto.randomUUID());
   // Toujours posé par le proxy : la liste blanche écarte celui qu'enverrait le navigateur.
   const clientIp = lastHopIpOf(request.headers);
   if (clientIp !== null) headers.set(CLIENT_IP_HEADER, clientIp);

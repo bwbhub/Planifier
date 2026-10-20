@@ -3,7 +3,7 @@ import "server-only";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ApiClient } from "@planifier/api-contract";
-import { CLIENT_IP_HEADER } from "@planifier/constants/http";
+import { CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@planifier/constants/http";
 import { headers } from "next/headers";
 
 import { getEnv } from "@/config/env";
@@ -16,7 +16,7 @@ import { lastHopIpOf } from "./last-hop-ip";
  */
 export async function createServerApiClient(): Promise<ApiClient> {
   const incoming = await headers();
-  const forwarded: Record<string, string> = { "x-request-id": crypto.randomUUID() };
+  const forwarded: Record<string, string> = { [REQUEST_ID_HEADER]: crypto.randomUUID() };
   const cookie = incoming.get("cookie");
   if (cookie !== null) forwarded.cookie = cookie;
   const clientIp = lastHopIpOf(incoming);

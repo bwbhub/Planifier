@@ -153,6 +153,9 @@ Sortie : moyenne (hooks confinés dans `queries/`).
 `tsx` (déjà au catalog) devient une dépendance d'exécution de `apps/api` : les packages du workspace exportent du
 TypeScript source, l'API tourne avec `node --import tsx` (pas de bundle).
 
+`tsx` sert aussi au seed de `packages/auth` (mots de passe de démo, dépendance de développement) : même usage que
+le seed de `db`, aucune version nouvelle.
+
 ## Fiche validée et installée : Better Auth (ticket `auth`, `869fhwtf2`)
 
 Vérifié le 2026-10-20 (registre npm). Version validée par l'utilisateur au cadrage (commentaire ClickUp du 2026-10-18),

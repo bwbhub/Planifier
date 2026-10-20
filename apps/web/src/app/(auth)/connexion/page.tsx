@@ -14,7 +14,10 @@ export default function SignInPage() {
       footer={
         <>
           Pas encore de compte ?{" "}
-          <Link href={ROUTES.signUp} className="font-semibold text-accent-text underline">
+          <Link
+            href={ROUTES.signUp}
+            className="inline-flex min-h-11 items-center font-semibold text-accent-text underline"
+          >
             Créer un compte
           </Link>
         </>

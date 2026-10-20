@@ -8,7 +8,7 @@ import { BodyLimitPlugin, RPCHandler } from "@orpc/server/node";
 import type { ApiContext } from "@planifier/api";
 import { createRateLimiter, PLAN_RATE_LIMIT, router } from "@planifier/api";
 import type { SessionUser } from "@planifier/auth";
-import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
+import { AUTH_BASE_PATH, CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@planifier/constants/http";
 
 import type { Env } from "./config/env";
 
@@ -18,7 +18,7 @@ const MAX_BODY_BYTES = 1024 * 1024;
 const REQUEST_ID_PATTERN = /^[\w-]{1,64}$/;
 
 function requestIdOf(request: IncomingMessage): string {
-  const header = request.headers["x-request-id"];
+  const header = request.headers[REQUEST_ID_HEADER];
   return typeof header === "string" && REQUEST_ID_PATTERN.test(header) ? header : randomUUID();
 }
 

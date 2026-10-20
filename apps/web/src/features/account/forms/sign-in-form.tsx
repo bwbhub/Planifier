@@ -3,14 +3,14 @@
 import { signInInputSchema } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { TextField } from "@planifier/ui/components/text-field";
-import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 
 import { ROUTES } from "@/lib/routes";
 
+import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSignIn } from "../queries/auth.queries";
-import { authErrorMessage } from "../utils/auth-error-message";
-import { focusFirstInvalid, type InvalidFields, invalidFieldsOf } from "./invalid-fields";
+import { focusFirstInvalid, type InvalidFields, invalidFieldsOf } from "../utils/form-validation";
+import { useSessionRedirect } from "../utils/use-session-redirect";
 
 const FIELDS = ["email", "password"] as const;
 type Field = (typeof FIELDS)[number];
@@ -21,7 +21,7 @@ const FIELD_ERRORS: Record<Field, string> = {
 };
 
 export function SignInForm() {
-  const router = useRouter();
+  const redirectTo = useSessionRedirect();
   const signIn = useSignIn();
   const [invalid, setInvalid] = useState<InvalidFields<Field>>(new Set());
 
@@ -42,8 +42,7 @@ export function SignInForm() {
     setInvalid(new Set());
     signIn.mutate(parsed.data, {
       onSuccess: () => {
-        router.replace(ROUTES.home);
-        router.refresh();
+        redirectTo(ROUTES.home);
       },
     });
   }
@@ -68,11 +67,7 @@ export function SignInForm() {
         required
         error={errorOf("password")}
       />
-      {signIn.isError ? (
-        <p role="alert" className="text-sm text-accent-text">
-          {authErrorMessage(signIn.error)}
-        </p>
-      ) : null}
+      {signIn.isError ? <AuthErrorAlert error={signIn.error} /> : null}
       <Button type="submit" disabled={signIn.isPending}>
         {signIn.isPending ? "Connexion…" : "Se connecter"}
       </Button>

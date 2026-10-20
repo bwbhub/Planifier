@@ -1,8 +1,8 @@
 import { AUTH_ERROR_CODES } from "@planifier/api-contract";
 import { describe, expect, it } from "vitest";
 
-import { AuthRequestError } from "../queries/auth.queries";
 import { authErrorMessage } from "./auth-error-message";
+import { AuthRequestError } from "./auth-request-error";
 
 describe("authErrorMessage", () => {
   it("ne dit pas lequel de l'e-mail ou du mot de passe est faux", () => {

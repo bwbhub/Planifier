@@ -10,7 +10,7 @@ import {
   getSessionUser,
   parseAuthEnv,
 } from "@planifier/auth";
-import { CLIENT_IP_HEADER } from "@planifier/constants/http";
+import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import { createTestDatabase } from "@planifier/db/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -40,7 +40,7 @@ let baseUrl = "";
 
 /** Appel d'une route de Better Auth comme le ferait le proxy du web (origine, IP du client). */
 function authPost(route: string, body: object, ip: string, cookie?: string) {
-  return fetch(`${baseUrl}/api/auth${route}`, {
+  return fetch(`${baseUrl}${AUTH_BASE_PATH}${route}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -152,7 +152,7 @@ describe("refus d'inscription (base réelle)", () => {
   });
 
   it("refuse une inscription venue d'une autre origine", async () => {
-    const response = await fetch(`${baseUrl}/api/auth${AUTH_ROUTES.signUp}`, {
+    const response = await fetch(`${baseUrl}${AUTH_BASE_PATH}${AUTH_ROUTES.signUp}`, {
       method: "POST",
       headers: {
         "content-type": "application/json",

@@ -7,18 +7,13 @@ import {
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-/** Refus d'une route d'authentification : statut HTTP et code de Better Auth s'il est lisible. */
-export class AuthRequestError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string | null,
-  ) {
-    super(`Authentification refusée (${String(status)})`);
-    this.name = "AuthRequestError";
-  }
-}
+import { AuthRequestError } from "../utils/auth-request-error";
 
-/** Appel d'une route de Better Auth par le proxy même origine (`/api/auth/*`) ; le cookie suit seul. */
+/**
+ * Appel d'une route de Better Auth par le proxy même origine (`/api/auth/*`) ; le cookie suit seul. `fetch` direct :
+ * ces routes sont hors oRPC, et `better-auth/client` ajouterait la bibliothèque au navigateur sans typage fin (le
+ * type de l'instance serveur vit dans `@planifier/auth`, interdit au web). Corps décrits par `api-contract`.
+ */
 async function postAuth(route: string, body: object): Promise<void> {
   const response = await fetch(`${AUTH_BASE_PATH}${route}`, {
     method: "POST",

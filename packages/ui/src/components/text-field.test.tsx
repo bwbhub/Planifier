@@ -1,12 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import axe from "axe-core";
 import { describe, expect, it } from "vitest";
 
+import { axeViolations } from "../testing/axe";
 import { TextField } from "./text-field";
-
-// jsdom ne calcule pas les couleurs : le contraste est garanti par les tokens, pas vérifié ici.
-const AXE_OPTIONS = { rules: { "color-contrast": { enabled: false } } };
 
 describe("TextField", () => {
   it("relie le libellé au champ et reçoit la saisie", async () => {
@@ -43,7 +40,6 @@ describe("TextField", () => {
         <TextField label="Mot de passe" type="password" error="Trop court" />
       </>,
     );
-    const { violations } = await axe.run(container, AXE_OPTIONS);
-    expect(violations).toEqual([]);
+    await expect(axeViolations(container)).resolves.toEqual([]);
   });
 });

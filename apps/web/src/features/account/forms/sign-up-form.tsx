@@ -8,14 +8,14 @@ import {
 } from "@planifier/constants/account";
 import { Button } from "@planifier/ui/components/button";
 import { TextField } from "@planifier/ui/components/text-field";
-import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 
 import { ROUTES } from "@/lib/routes";
 
+import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSignUp } from "../queries/auth.queries";
-import { authErrorMessage } from "../utils/auth-error-message";
-import { focusFirstInvalid, type InvalidFields, invalidFieldsOf } from "./invalid-fields";
+import { focusFirstInvalid, type InvalidFields, invalidFieldsOf } from "../utils/form-validation";
+import { useSessionRedirect } from "../utils/use-session-redirect";
 
 const FIELDS = ["name", "email", "password"] as const;
 type Field = (typeof FIELDS)[number];
@@ -27,7 +27,7 @@ const FIELD_ERRORS: Record<Field, string> = {
 };
 
 export function SignUpForm() {
-  const router = useRouter();
+  const redirectTo = useSessionRedirect();
   const signUp = useSignUp();
   const [invalid, setInvalid] = useState<InvalidFields<Field>>(new Set());
 
@@ -49,8 +49,7 @@ export function SignUpForm() {
     setInvalid(new Set());
     signUp.mutate(parsed.data, {
       onSuccess: () => {
-        router.replace(ROUTES.home);
-        router.refresh();
+        redirectTo(ROUTES.home);
       },
     });
   }
@@ -86,11 +85,7 @@ export function SignUpForm() {
         required
         error={errorOf("password")}
       />
-      {signUp.isError ? (
-        <p role="alert" className="text-sm text-accent-text">
-          {authErrorMessage(signUp.error)}
-        </p>
-      ) : null}
+      {signUp.isError ? <AuthErrorAlert error={signUp.error} /> : null}
       <Button type="submit" disabled={signUp.isPending}>
         {signUp.isPending ? "Création du compte…" : "Créer mon compte"}
       </Button>

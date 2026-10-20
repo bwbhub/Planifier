@@ -7,7 +7,8 @@
   "sideEffects": false,
   "exports": {
     "./components/*": "./src/components/*.tsx",
-    "./lib/*": "./src/lib/*.ts"
+    "./lib/*": "./src/lib/*.ts",
+    "./testing/*": "./src/testing/*.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

@@ -14,7 +14,10 @@ export default function SignUpPage() {
       footer={
         <>
           Déjà un compte ?{" "}
-          <Link href={ROUTES.signIn} className="font-semibold text-accent-text underline">
+          <Link
+            href={ROUTES.signIn}
+            className="inline-flex min-h-11 items-center font-semibold text-accent-text underline"
+          >
             Se connecter
           </Link>
         </>

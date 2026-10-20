@@ -13,6 +13,9 @@ liste 02), d'après la maquette « Doux et vivant ».
 
 ## Tests
 
+`@planifier/ui/testing/axe` : `axeViolations(container)`, aide de test partagée (jamais livrée ; le package qui
+l'importe déclare `axe-core` en dépendance de développement, ou passe par `ui` comme le web).
+
 `pnpm --filter @planifier/ui test` : Vitest + jsdom + Testing Library ; un test d'interaction et un contrôle axe-core
 par composant (contraste exclu : jsdom ne calcule pas les couleurs, il est garanti par les tokens).
 

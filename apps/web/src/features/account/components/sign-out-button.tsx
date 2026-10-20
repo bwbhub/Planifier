@@ -1,15 +1,15 @@
 "use client";
 
 import { Button } from "@planifier/ui/components/button";
-import { useRouter } from "next/navigation";
 
 import { ROUTES } from "@/lib/routes";
 
+import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSignOut } from "../queries/auth.queries";
-import { authErrorMessage } from "../utils/auth-error-message";
+import { useSessionRedirect } from "../utils/use-session-redirect";
 
 export function SignOutButton() {
-  const router = useRouter();
+  const redirectTo = useSessionRedirect();
   const signOut = useSignOut();
 
   return (
@@ -20,19 +20,14 @@ export function SignOutButton() {
         onClick={() => {
           signOut.mutate(undefined, {
             onSuccess: () => {
-              router.replace(ROUTES.signIn);
-              router.refresh();
+              redirectTo(ROUTES.signIn);
             },
           });
         }}
       >
         {signOut.isPending ? "Déconnexion…" : "Se déconnecter"}
       </Button>
-      {signOut.isError ? (
-        <p role="alert" className="text-sm text-accent-text">
-          {authErrorMessage(signOut.error)}
-        </p>
-      ) : null}
+      {signOut.isError ? <AuthErrorAlert error={signOut.error} /> : null}
     </div>
   );
 }

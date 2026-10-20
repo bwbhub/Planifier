@@ -1,12 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import axe from "axe-core";
 import { describe, expect, it, vi } from "vitest";
 
+import { axeViolations } from "../testing/axe";
 import { Button } from "./button";
-
-// jsdom ne calcule pas les couleurs : le contraste est garanti par les tokens, pas vérifié ici.
-const AXE_OPTIONS = { rules: { "color-contrast": { enabled: false } } };
 
 describe("Button", () => {
   it("déclenche l'action au clic et au clavier", async () => {
@@ -39,7 +36,6 @@ describe("Button", () => {
 
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = render(<Button variant="secondary">Annuler</Button>);
-    const { violations } = await axe.run(container, AXE_OPTIONS);
-    expect(violations).toEqual([]);
+    await expect(axeViolations(container)).resolves.toEqual([]);
   });
 });

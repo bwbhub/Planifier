@@ -17,7 +17,7 @@
       "dependsOn": ["^test", "@planifier/db#generate"]
     },
     "test:integration": {
-      "dependsOn": ["@planifier/db#generate"],
+      "dependsOn": ["^test:integration", "@planifier/db#generate"],
       "env": ["DATABASE_URL"],
       "cache": false
     },
@@ -27,6 +27,10 @@
       "persistent": true
     },
     "generate": {
+      "cache": false
+    },
+    "seed": {
+      "dependsOn": ["^seed", "@planifier/db#generate"],
       "cache": false
     }
   }

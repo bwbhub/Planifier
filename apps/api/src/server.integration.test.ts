@@ -2,7 +2,7 @@ import type { AddressInfo } from "node:net";
 
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import type { ApiClient } from "@planifier/api-contract";
+import { AUTH_ERROR_CODES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
 import {
   AUTH_COOKIE_PREFIX,
   createAuth,
@@ -39,8 +39,8 @@ const PASSWORD = "mot-de-passe-de-test";
 let baseUrl = "";
 
 /** Appel d'une route de Better Auth comme le ferait le proxy du web (origine, IP du client). */
-function authPost(path: string, body: object, ip: string, cookie?: string) {
-  return fetch(`${baseUrl}/api/auth/${path}`, {
+function authPost(route: string, body: object, ip: string, cookie?: string) {
+  return fetch(`${baseUrl}/api/auth${route}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -79,10 +79,10 @@ afterAll(async () => {
   await db.$disconnect();
 });
 
-describe("authentification (base réelle)", () => {
+describe("session (base réelle)", () => {
   it("inscrit, garde la session, déconnecte puis reconnecte", async () => {
     const signUp = await authPost(
-      "sign-up/email",
+      AUTH_ROUTES.signUp,
       { email: EMAIL.toUpperCase(), password: PASSWORD, name: "Intégration" },
       "192.0.2.10",
     );
@@ -96,14 +96,14 @@ describe("authentification (base réelle)", () => {
     // E-mail ramené en minuscules à l'inscription.
     expect(me).toMatchObject({ name: "Intégration", email: EMAIL });
 
-    const signOut = await authPost("sign-out", {}, "192.0.2.10", session);
+    const signOut = await authPost(AUTH_ROUTES.signOut, {}, "192.0.2.10", session);
     expect(signOut.status).toBe(200);
     await expect(clientWith(session).account.me.get({})).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
 
     const signIn = await authPost(
-      "sign-in/email",
+      AUTH_ROUTES.signIn,
       { email: EMAIL, password: PASSWORD },
       "192.0.2.11",
     );
@@ -115,17 +115,21 @@ describe("authentification (base réelle)", () => {
 
   it("refuse un mauvais mot de passe sans ouvrir de session", async () => {
     const response = await authPost(
-      "sign-in/email",
+      AUTH_ROUTES.signIn,
       { email: EMAIL, password: "pas-le-bon-mot-de-passe" },
       "192.0.2.20",
     );
     expect(response.status).toBe(401);
+    // Code lu par le web pour choisir son message (contrat `AUTH_ERROR_CODES`).
+    await expect(response.json()).resolves.toMatchObject({
+      code: AUTH_ERROR_CODES.invalidCredentials,
+    });
     expect(cookiesOf(response)).not.toMatch(/session_token/);
   });
 
   it("limite les tentatives de connexion par IP", async () => {
     const attempt = (ip: string) =>
-      authPost("sign-in/email", { email: EMAIL, password: "x".repeat(10) }, ip).then(
+      authPost(AUTH_ROUTES.signIn, { email: EMAIL, password: "x".repeat(10) }, ip).then(
         (response) => response.status,
       );
     const statuses = [];
@@ -134,9 +138,21 @@ describe("authentification (base réelle)", () => {
     // Une autre IP n'est pas bloquée par la première.
     expect(await attempt("192.0.2.31")).toBe(401);
   });
+});
+
+describe("refus d'inscription (base réelle)", () => {
+  it("refuse une seconde inscription sur le même e-mail avec le code du contrat", async () => {
+    const response = await authPost(
+      AUTH_ROUTES.signUp,
+      { email: EMAIL, password: PASSWORD, name: "Doublon" },
+      "192.0.2.21",
+    );
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({ code: AUTH_ERROR_CODES.emailTaken });
+  });
 
   it("refuse une inscription venue d'une autre origine", async () => {
-    const response = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
+    const response = await fetch(`${baseUrl}/api/auth${AUTH_ROUTES.signUp}`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -154,7 +170,7 @@ describe("authentification (base réelle)", () => {
   it("refuse un nom affiché vide sans créer de compte", async () => {
     const email = "nom-vide@example.test";
     const response = await authPost(
-      "sign-up/email",
+      AUTH_ROUTES.signUp,
       { email, password: PASSWORD, name: "   " },
       "192.0.2.50",
     );

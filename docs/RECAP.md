@@ -18,6 +18,52 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-20 — Écrans de connexion et d'inscription (branche `feat/ecrans-connexion`, ticket `869fhwtf7`, partie 1)
+
+**Fait**
+
+- `packages/ui` : `Button`, `TextField` (libellé, aide, erreur reliés, `aria-invalid`), tests d'interaction + axe-core.
+- `@planifier/constants/account` : bornes du nom et du mot de passe, lues par `auth` (Better Auth) et le web.
+- `api-contract` : `AUTH_ROUTES`, `AUTH_ERROR_CODES`, schémas d'inscription et de connexion (routes Better Auth).
+- `apps/web` : module `account` (formulaires, `fetch` maison dans `queries/`, messages d'erreur, déconnexion) ;
+  pages `/connexion`, `/inscription` ; groupe `(app)` réservé aux connectés via `getCurrentUser()` (appel serveur de
+  `account.me.get` avec cookie + IP) ; `UNAUTHORIZED` global ⇒ cache vidé, retour à la connexion.
+- Seed : `pnpm seed` (racine) = seed `db` puis mots de passe de démo (`auth`, hash Better Auth, `planifier-demo`) ;
+  `@planifier/db/seeding` (comptes de démo, base locale gardée).
+- Intégration : codes d'erreur du contrat vérifiés contre Better Auth ; inscription en double ⇒ 422 ; suites
+  d'intégration sérialisées (`^test:integration`, même base).
+- Fiches : jsdom, Testing Library, axe-core (dev) ; dérogations D4 (jsdom 29, Node 24.11) et D5 (licence MPL-2.0).
+
+**Décisions** (utilisateur, 2026-10-20) : profil en PR 2 ; tutoiement chaleureux, jamais familier (`ux-design-brief`) ;
+`fetch` maison plutôt que `better-auth/client` ; seed dans `auth` ; jsdom + Testing Library + axe-core ; smoke
+Playwright dans un ticket dédié (`869fkd81n`).
+
+**Vérifié** (2026-10-20)
+
+- `pnpm format:check`, `check-types`, `lint`, `test` (102 tests), `build` : OK.
+- `test:integration` : auth 1/1 (seed relancé ×2, connexion des 3 comptes), api 6/6.
+- `pnpm seed` sur la base locale : OK. `pnpm dev`, parcours HTTP via le proxy : `/` anonyme ⇒ 307 `/connexion` ;
+  connexion `alice@example.test` ⇒ 200 ; `/` ⇒ « Bonjour Alice » ; `/connexion` connecté ⇒ 307 `/` ; déconnexion ⇒
+  `/` ⇒ 307 `/connexion`. Aucun mot de passe dans les journaux.
+- Mutation : sans le focus du premier champ invalide, le test du formulaire échoue.
+- **Non vérifié** : rendu dans un navigateur (JS des formulaires, clair/nuit, mobile/PC : pas de Chrome, à voir par
+  l'utilisateur dans Brave) ; CI réelle (non poussé) ; contraste mesuré (axe ne le calcule pas en jsdom).
+
+**Ouvert**
+
+- Revue humaine obligatoire : auth (garde serveur, seed de mots de passe), `turbo.json`, dépendances, dérogation D5.
+- Énumération des comptes : l'inscription dit « un compte existe déjà » (sans e-mail de vérification, inévitable ;
+  à revoir avec `mails`, `requireEmailVerification` rend une réponse générique).
+- Chaque rendu d'une page `(app)` appelle `me` : compté dans la limite 120/min/IP des plans.
+- Pas de redirection vers la page demandée après connexion (évite une redirection ouverte ; à concevoir si utile).
+- Pas de maquette pour ces écrans : composition déduite du brief.
+
+**Attendu ensuite**
+
+- Vérif visuelle par l'utilisateur, puis push et PR (sur demande).
+- PR 2 du ticket `869fhwtf7` : profil (nom, mot de passe, thème) ; e-mail après `mails`.
+- Ticket E2E Playwright `869fkd81n`.
+
 ## 2026-10-20 — Authentification Better Auth (branche `feat/auth`, ticket `869fhwtf2`)
 
 **Fait**

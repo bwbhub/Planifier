@@ -19,7 +19,8 @@ clair et nuit ; mobile et PC).
 
 ## Ton
 
-Vouvoiement ou tutoiement : **à trancher** (la maquette est neutre). Français simple, chaleureux, sans jargon ; un terme
+**Tutoiement** (décision de l'utilisateur, 2026-10-20) : proche et chaleureux, jamais familier (pas d'argot, pas
+d'emoji, pas de « coucou »). Français simple, chaleureux, sans jargon ; un terme
 technique s'explique en une phrase au point d'usage. Pas de culpabilisation, pas de ton impératif sur les retards.
 
 ## Direction visuelle

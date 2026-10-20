@@ -4,12 +4,19 @@
 
 ## 1. À faire par l'utilisateur
 
-- Vérifier dans Brave (`pnpm dev`, `pnpm seed` si la base est neuve) : `/inscription`, `/connexion` (compte
-  `alice@example.test` / `planifier-demo`), accueil, déconnexion ; clair et nuit ; mobile et PC.
+- **Vérif Brave à faire** (rien n'a été vu dans un navigateur) : formulaires de connexion et d'inscription (erreurs
+  de champ, focus, message de refus), accueil, déconnexion ; clair et nuit ; mobile et PC. Page d'erreur : lancer le
+  web seul (`pnpm --filter @planifier/web dev`, API arrêtée), ouvrir `/connexion`, voir « Réessayer ».
+- **Deux nouveaux fichiers de maquettes** à déposer dans `docs/maquettes/` (absents du dépôt au 2026-10-20). Les lire
+  avant la suite : écarts avec les écrans de connexion/inscription déjà faits, puis profil (partie 2).
+- Compte de démo pour la vérif : `pnpm seed` si la base est neuve, puis `alice@example.test` / `planifier-demo`.
 - Puis demander push + PR de `feat/ecrans-connexion` (inclut le commit docs de `docs/suite-apres-auth`, branche
   devenue inutile). Revue humaine : auth, `turbo.json`, dépendances de test, dérogation D5 (axe-core MPL-2.0).
 
 ## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
+
+D'abord : lire les deux nouvelles maquettes, mettre à jour `ux-design-brief` (source des écrans) et corriger les
+écrans de connexion/inscription s'ils s'en écartent (même branche si la PR n'est pas ouverte).
 
 Nom affiché, mot de passe (Better Auth `change-password`), thème préféré (`preferredTheme`, liste fermée à créer
 dans `constants`). Changement d'e-mail : après `mails` (vérification). Navigation vers le profil à concevoir

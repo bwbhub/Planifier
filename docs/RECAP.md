@@ -74,7 +74,9 @@ Playwright dans un ticket dédié (`869fkd81n`).
 
 **Attendu ensuite**
 
-- Vérif visuelle par l'utilisateur, puis push et PR (sur demande).
+- Vérif visuelle par l'utilisateur dans Brave (non faite), puis push et PR (sur demande).
+- Deux nouveaux fichiers de maquettes annoncés par l'utilisateur (pas encore dans `docs/maquettes/`) : à lire avant
+  la partie 2, écarts avec ces écrans à corriger.
 - PR 2 du ticket `869fhwtf7` : profil (nom, mot de passe, thème) ; e-mail après `mails`.
 - Ticket E2E Playwright `869fkd81n`.
 

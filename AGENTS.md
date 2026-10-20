@@ -23,8 +23,9 @@ Avant toute tâche : lire `.claude/skills/project-context/SKILL.md` (cartographi
    testées (ADR 0014).
 8. **Build once, run everywhere** : pas de `NEXT_PUBLIC_*`, pas de `process.env` hors `env.ts`, aucune valeur
    d'environnement dans le build. Nouvelle variable ⇒ `.env.example` + schéma Zod dans `env.ts`.
-9. Migrations Prisma : une par PR, relue, compatible ancienne/nouvelle version. Jamais `db push` ni `reset` sur un
-   environnement partagé.
+9. Migrations Prisma : une par PR, relue, compatible ancienne/nouvelle version dès qu'une version tourne sur un
+   environnement partagé (avant la première mise en ligne, le schéma se modifie directement). Jamais `db push` ni
+   `reset` sur un environnement partagé.
 10. Contrats d'API additifs ; une rupture se déclare et se déploie en deux temps.
 11. Fichiers générés : jamais édités à la main. Corriger la source et régénérer.
 12. Données personnelles minimales, jamais dans les journaux. Montants en entiers (unités mineures).
@@ -37,7 +38,11 @@ Avant toute tâche : lire `.claude/skills/project-context/SKILL.md` (cartographi
     Ne jamais annoncer « prêt » si une étape échoue ou n'a pas tourné. PR petite, un sujet, plan de test.
     **Ni push ni PR sans demande explicite.**
     Avant chaque push et en fin de session : ajouter une entrée à `docs/RECAP.md` (fait, vérifié, ouvert, attendu ensuite).
-16. Quand tu me fais des rapports d'informations, soit extrêmement concis et sacrifie la grammaire pour le bien de la concision.
+16. **Produit neuf, code propre** : aucune concession à l'existant (ancien code, données et comptes de l'ancienne
+    app). Préférer écrire et réfléchir davantage plutôt que poser une dérogation, un contournement ou une rustine.
+    Une dérogation n'est admise que face à une contrainte externe (outil, bibliothèque), avec raison et date de
+    réexamen (`project-context` §6) ; une règle mal calibrée se corrige à la source, elle ne se contourne pas.
+17. Quand tu me fais des rapports d'informations, soit extrêmement concis et sacrifie la grammaire pour le bien de la concision.
 
 Revue humaine obligatoire : authentification, droits, cryptographie, envoi d'e-mails ou de push, nouvelle route
 publique, nouvelle intégration, CI, secrets.

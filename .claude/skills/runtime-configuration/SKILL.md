@@ -24,7 +24,7 @@ Une image est construite **une fois** ; seules les variables injectées au déma
 ## Règles
 
 1. Interdits : `NEXT_PUBLIC_*` ; `process.env` en dehors des fichiers `env.ts` ; valeur d'environnement dans `next.config.ts`.
-2. Un point d'entrée par app : `src/config/env.ts` (`import "server-only"`) avec un schéma Zod, accès **paresseux**
+2. Un point d'entrée par app : `src/config/env.ts` (avec `import "server-only"` dans `apps/web`) et un schéma Zod, accès **paresseux**
    (`getEnv()`), pour que `next build` n'exige ni secret ni réseau.
 3. Échec rapide au démarrage si une variable manque ou est invalide.
 4. Moindre privilège : un conteneur ne reçoit que les variables de son `env.ts` (le web n'a pas `DATABASE_URL`).

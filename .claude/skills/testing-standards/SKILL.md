@@ -13,6 +13,7 @@ Principe : **couvrir les risques, pas les lignes.** Ce qui peut coûter cher (dr
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------- |
 | Logique pure `domain-*` : droits, récurrence, clones de tâches, soldes, doublons iCal | Vitest : cas d'or + tests par propriétés                                              | oui, seuil élevé  |
 | Services d'API touchant la base                                                       | intégration sur un **vrai PostgreSQL** (conteneur), isolation par transaction annulée | oui               |
+| Parcours HTTP de bout en bout (auth)                                                  | vrai PostgreSQL ; base vidée avant chaque fichier de test (`TRUNCATE`)                | oui               |
 | Droits                                                                                | matrice par procédure : anonyme / autre utilisateur / rôle insuffisant / autorisé     | oui, bloquant     |
 | Contrats d'API                                                                        | snapshot de la spec + détection de rupture                                            | oui               |
 | Composants de `ui`                                                                    | test d'interaction + vérification d'accessibilité                                     | oui               |

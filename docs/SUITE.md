@@ -4,17 +4,15 @@
 
 ## 1. À faire par l'utilisateur
 
-- Relire puis pousser `feat/auth` (commitée en local) et ouvrir la PR ; revue humaine (auth, route publique, CI,
-  migration). Vérifier que l'étape CI « Tests d'intégration » passe.
-- Base locale : `docker compose down -v && docker compose up -d`, puis `migrate:deploy` et seed (dérive de `init`).
-- Base de test : créer et migrer `planifier_test` (README de `db`).
-- `apps/api/.env.local` : ajouter `DATABASE_URL`, `BETTER_AUTH_SECRET` (`openssl rand -base64 32`), `BETTER_AUTH_URL`.
-- Après merge : fermer `869fhwtf2` dans ClickUp (lien PR).
+- Rien en attente. Tickets `869fhwtf2` (auth) et `869fhwtf4` (bcrypt, sans objet) fermés dans ClickUp le 2026-10-20.
+- Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
+  et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
 
 ## 2. Prochain ticket : écrans connexion / inscription (`apps/web`)
 
 À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
-(seed passant par Better Auth, sans dépendance `db` → `auth`). Ticket bcrypt `869fhwtf4` sans objet : à fermer.
+(seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
+pas de rustine) ; aucun environnement déployé (`project-context` §5).
 
 ## 3. Ensuite
 

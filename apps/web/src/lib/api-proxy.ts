@@ -2,8 +2,8 @@ import "server-only";
 
 import { getEnv } from "@/config/env";
 
+import { type ApiPrefix, apiTarget } from "./api-target";
 import { readLimitedBody } from "./limited-body";
-import { rpcTarget } from "./rpc-target";
 
 /** En-têtes relayés vers l'API (liste blanche) : le reste de la requête du navigateur ne passe pas. */
 const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "cookie"];
@@ -49,11 +49,15 @@ async function fetchUpstream(target: URL, request: Request, body: Uint8Array<Arr
 }
 
 /**
- * Relaie une requête du navigateur vers `/rpc/*` de l'API (même origine pour le navigateur : cookies first-party,
- * pas de CORS). L'URL de l'API est lue à la requête, jamais au build (skill runtime-configuration).
+ * Relaie une requête du navigateur vers `prefix/*` de l'API (même origine pour le navigateur : cookies
+ * first-party, pas de CORS). L'URL de l'API est lue à la requête, jamais au build (skill runtime-configuration).
  */
-export async function proxyToApi(request: Request, path: readonly string[]): Promise<Response> {
-  const target = rpcTarget(path, new URL(request.url).search, getEnv().API_INTERNAL_URL);
+export async function proxyToApi(
+  request: Request,
+  prefix: ApiPrefix,
+  path: readonly string[],
+): Promise<Response> {
+  const target = apiTarget(prefix, path, new URL(request.url).search, getEnv().API_INTERNAL_URL);
   if (target === null) return new Response(null, { status: 404 });
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";

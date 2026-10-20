@@ -16,6 +16,11 @@
     "test": {
       "dependsOn": ["^test", "@planifier/db#generate"]
     },
+    "test:integration": {
+      "dependsOn": ["@planifier/db#generate"],
+      "env": ["DATABASE_URL"],
+      "cache": false
+    },
     "dev": {
       "dependsOn": ["@planifier/db#generate"],
       "cache": false,

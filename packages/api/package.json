@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@orpc/server": "catalog:",
-    "@planifier/api-contract": "workspace:*"
+    "@planifier/api-contract": "workspace:*",
+    "@planifier/auth": "workspace:*"
   },
   "devDependencies": {
     "@planifier/eslint-config": "workspace:*",

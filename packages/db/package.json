@@ -6,7 +6,8 @@
   "license": "UNLICENSED",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "generate": "prisma generate",
@@ -22,7 +23,6 @@
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
-    "server-only": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

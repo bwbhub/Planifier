@@ -18,6 +18,87 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-20 — Authentification Better Auth (branche `feat/auth`, ticket `869fhwtf2`)
+
+**Fait**
+
+- `packages/auth` : Better Auth 1.7.10 (adaptateur Prisma, e-mail + mot de passe, cookie httpOnly `planifier.*`,
+  `Secure` en prod, télémétrie coupée, contrôle d'origine forcé, limitation de débit en mémoire), `env.ts` (secret
+  ≥ 32 car., non trivial et https en prod), `getSessionUser`, gestionnaire Node.
+- `db` : tables `sessions`, `accounts`, `verifications` ; `User.name` obligatoire (remplissage depuis l'e-mail),
+  `email_verified`, `modules` par défaut vide ; migration unique `auth_better_auth`. `server-only` retiré de `db`.
+- `api` : `userGuard` / `userProcedure` (débit puis session, `UNAUTHORIZED` sinon), débit 120/min/IP sur les plans,
+  route protégée `account.me.get` (liste blanche). Contexte : `clientIp`, `getSessionUser` injectés.
+- `apps/api` : `/api/auth/*` → Better Auth ; IP lue dans `x-planifier-client-ip`.
+- `apps/web` : proxy `/api/auth/*` ; IP = entrée la plus à droite de `x-forwarded-for`, posée dans
+  `x-planifier-client-ip` ; en-têtes relayés : + `origin`, `referer`, `sec-fetch-*`, `user-agent`.
+- `@planifier/constants/http` (`AUTH_BASE_PATH`, `CLIENT_IP_HEADER`) ; tâche `test:integration` (Turbo, CI après les
+  migrations) ; ADR 0016 ; fiche `better-auth` ; READMEs, `project-context`, `workspace-architecture`, `.env.example`.
+
+**Décisions** (utilisateur, 2026-10-20) : `server-only` retiré de `db` ; `name` obligatoire, `image` ↔ `avatarUrl`,
+`emailVerified` ajouté ; pas de vérification d'e-mail (attend `mails`) ; débit en mémoire + relais d'IP assaini.
+
+**Vérifié** (2026-10-20)
+
+- `pnpm format:check`, `check-types`, `lint`, `test` (70 tests), `build` : OK.
+- `pnpm test:integration` (4 tests, base réelle) : inscription (e-mail ramené en minuscules, cookie HttpOnly),
+  `me`, déconnexion ⇒ `UNAUTHORIZED`, reconnexion, mauvais mot de passe ⇒ 401 sans session, 4ᵉ essai ⇒ 429 (autre IP
+  libre), origine étrangère ⇒ 403.
+- Base neuve : migrations, aucune dérive, seed ×2 ; remplissage de `name` testé sur une ligne sans nom.
+- Local via le proxy web (`next dev` + API) : flux complet OK ; `x-planifier-client-ip` envoyé par le client ignoré
+  (429 au 4ᵉ essai) ; origine étrangère ⇒ 403 `INVALID_ORIGIN` ; aucun mot de passe ni jeton dans les journaux.
+- `pnpm audit --prod` : 4 alertes (mysql2 et deepmerge-ts via prisma, braces via next) **déjà présentes sur master**.
+- **Non testé** : UI (aucun écran de connexion dans cette PR) ; CI réelle (non poussé) ; derrière un vrai relais.
+
+**Ouvert**
+
+- Revue humaine obligatoire : auth, nouvelle route publique `/api/auth/*`, CI, migration, ADR 0016.
+- IP fiable seulement si un relais de l'hébergeur ajoute `x-forwarded-for` devant le web (sinon falsifiable).
+- Débit en mémoire ⇒ une seule instance d'API. Pas de limite de corps sur `/api/auth/*` côté API (le proxy borne à 1 Mo).
+- Base locale `planifier` toujours en dérive (init modifiée) : `docker compose down -v` puis `migrate:deploy` + seed.
+- Comptes du seed sans mot de passe : connexion impossible avec eux (à traiter avec les écrans de connexion).
+
+**Corrections de revue** (`/code-review`, même jour, décisions de l'utilisateur)
+
+- Nom affiché validé à chaque écriture (`parseDisplayName` + `databaseHooks`) : `""` ou espaces ⇒ 400, rien n'est créé.
+- Production : requête sans IP valide posée par le proxy ⇒ 400 (plus de compteur `unknown` partagé).
+- `SessionUser` dérivé de Prisma (`Pick<User, …>`, type `User` exporté par `db`) ; constantes de débit et préfixe de
+  cookie importés dans les tests ; `clientIpOf` renommés (`lastHopIpOf` côté web, `proxiedClientIpOf` côté API).
+- Renommage `rpc-target` → `api-target` isolé dans son propre commit.
+- Vérifié : portes OK (77 tests) ; `test:integration` 5/5 sur base neuve, aucune ligne restante ; test du nom vide
+  rouge sans la validation (mutation), vert avec.
+- Non retenu : façades `createAuthNodeHandler`/`parseAuthEnv` gardées (évitent d'importer `better-auth` dans
+  `apps/api`) ; câblage auth dupliqué deux fois (règle des trois).
+
+**Principe « produit neuf, code propre »** (décision de l'utilisateur, même jour)
+
+- Règle 16 d'`AGENTS.md` : aucune concession à l'existant ; une dérogation seulement face à une contrainte externe ;
+  une règle mal calibrée se corrige à la source.
+- Aucune reprise des comptes de l'ancienne app (amendement d'ADR 0004 ; skills `auth-authorization` et
+  `database-prisma` alignés). Ticket bcrypt `869fhwtf4` devenu sans objet (à fermer dans ClickUp par l'utilisateur).
+- Migration `auth_better_auth` sans remplissage de `name` ; dérogations D4/D5 retirées. `database-prisma` précise :
+  expand/contract dès qu'une version tourne sur un environnement partagé, pas avant la première mise en ligne.
+- Tests d'intégration : base locale dédiée en `_test`, vidée avant le fichier (`resetTestDatabase`, export
+  `@planifier/db/testing`, SQL constant) ; garde `assertTestDatabase` (hôte local + suffixe `_test`), garde du seed
+  généralisée (`assertLocalDatabase`). CI sur `planifier_test`. `testing-standards` complété (parcours HTTP).
+- Vérifié : `test:integration` 5/5 deux fois de suite sur `planifier_test` ; refusé sur `planifier` (base de dev).
+
+**Seconde revue (règle 16), corrections**
+
+- IP posée par le proxy obligatoire dans tous les environnements (400 sinon) : `clientIp: string`, plus de compteur
+  `unknown` ni de branche `NODE_ENV`. Limiteur injecté par le serveur dans le contexte (`consumeRateLimit`), un par
+  instance ; tests sans état partagé.
+- `createTestDatabase()` : garde et client sur la même URL (remplace `resetTestDatabase`).
+- `apps/api` : `vitest.config.ts` à deux projets (`unit`, `integration`) au lieu de filtres par chaîne.
+- Règles alignées : `AGENTS.md` règle 9, `database-prisma` (import `auth`), `runtime-configuration` (`server-only`
+  réservé au web) ; `.env.example` (`DATABASE_URL` de l'API) ; dette n°4 avec réexamen.
+- Non retenu : `SessionUser` reste dans `auth` (dépendance `api` → `auth` permise, import de type seul, un seul
+  endroit qui le dérive de Prisma).
+
+**Attendu ensuite** : voir `docs/SUITE.md`.
+
+---
+
 ## 2026-10-18 — Contrats et API oRPC (branche `feat/api-orpc`, ticket `869fhwtcj`)
 
 **Fait**
@@ -65,6 +146,31 @@ des jetons et suppression de compte hors PR.
   `..` ⇒ 404, 2 Mo ⇒ 413, cible `http://[` ⇒ 400 et API toujours debout, `SIGTERM` ⇒ sortie 0, démarrage sans
   `NODE_ENV` refusé.
 
+**Principe « produit neuf, code propre »** (décision de l'utilisateur, même jour)
+
+- Règle 16 d'`AGENTS.md` : aucune concession à l'existant ; une dérogation seulement face à une contrainte externe ;
+  une règle mal calibrée se corrige à la source.
+- Aucune reprise des comptes de l'ancienne app (amendement d'ADR 0004 ; skills `auth-authorization` et
+  `database-prisma` alignés). Ticket bcrypt `869fhwtf4` devenu sans objet (à fermer dans ClickUp par l'utilisateur).
+- Migration `auth_better_auth` sans remplissage de `name` ; dérogations D4/D5 retirées. `database-prisma` précise :
+  expand/contract dès qu'une version tourne sur un environnement partagé, pas avant la première mise en ligne.
+- Tests d'intégration : base locale dédiée en `_test`, vidée avant le fichier (`resetTestDatabase`, export
+  `@planifier/db/testing`, SQL constant) ; garde `assertTestDatabase` (hôte local + suffixe `_test`), garde du seed
+  généralisée (`assertLocalDatabase`). CI sur `planifier_test`. `testing-standards` complété (parcours HTTP).
+- Vérifié : `test:integration` 5/5 deux fois de suite sur `planifier_test` ; refusé sur `planifier` (base de dev).
+
+**Seconde revue (règle 16), corrections**
+
+- IP posée par le proxy obligatoire dans tous les environnements (400 sinon) : `clientIp: string`, plus de compteur
+  `unknown` ni de branche `NODE_ENV`. Limiteur injecté par le serveur dans le contexte (`consumeRateLimit`), un par
+  instance ; tests sans état partagé.
+- `createTestDatabase()` : garde et client sur la même URL (remplace `resetTestDatabase`).
+- `apps/api` : `vitest.config.ts` à deux projets (`unit`, `integration`) au lieu de filtres par chaîne.
+- Règles alignées : `AGENTS.md` règle 9, `database-prisma` (import `auth`), `runtime-configuration` (`server-only`
+  réservé au web) ; `.env.example` (`DATABASE_URL` de l'API) ; dette n°4 avec réexamen.
+- Non retenu : `SessionUser` reste dans `auth` (dépendance `api` → `auth` permise, import de type seul, un seul
+  endroit qui le dérive de Prisma).
+
 **Attendu ensuite** : voir `docs/SUITE.md`.
 
 ---
@@ -102,6 +208,31 @@ des jetons et suppression de compte hors PR.
 - Base locale existante : lancer `pnpm --filter @planifier/db migrate:deploy` (colonne `restrict_visibility`).
 - Après un changement de branche touchant le schéma : `pnpm --filter @planifier/db generate` (client Prisma gitignored).
 
+**Principe « produit neuf, code propre »** (décision de l'utilisateur, même jour)
+
+- Règle 16 d'`AGENTS.md` : aucune concession à l'existant ; une dérogation seulement face à une contrainte externe ;
+  une règle mal calibrée se corrige à la source.
+- Aucune reprise des comptes de l'ancienne app (amendement d'ADR 0004 ; skills `auth-authorization` et
+  `database-prisma` alignés). Ticket bcrypt `869fhwtf4` devenu sans objet (à fermer dans ClickUp par l'utilisateur).
+- Migration `auth_better_auth` sans remplissage de `name` ; dérogations D4/D5 retirées. `database-prisma` précise :
+  expand/contract dès qu'une version tourne sur un environnement partagé, pas avant la première mise en ligne.
+- Tests d'intégration : base locale dédiée en `_test`, vidée avant le fichier (`resetTestDatabase`, export
+  `@planifier/db/testing`, SQL constant) ; garde `assertTestDatabase` (hôte local + suffixe `_test`), garde du seed
+  généralisée (`assertLocalDatabase`). CI sur `planifier_test`. `testing-standards` complété (parcours HTTP).
+- Vérifié : `test:integration` 5/5 deux fois de suite sur `planifier_test` ; refusé sur `planifier` (base de dev).
+
+**Seconde revue (règle 16), corrections**
+
+- IP posée par le proxy obligatoire dans tous les environnements (400 sinon) : `clientIp: string`, plus de compteur
+  `unknown` ni de branche `NODE_ENV`. Limiteur injecté par le serveur dans le contexte (`consumeRateLimit`), un par
+  instance ; tests sans état partagé.
+- `createTestDatabase()` : garde et client sur la même URL (remplace `resetTestDatabase`).
+- `apps/api` : `vitest.config.ts` à deux projets (`unit`, `integration`) au lieu de filtres par chaîne.
+- Règles alignées : `AGENTS.md` règle 9, `database-prisma` (import `auth`), `runtime-configuration` (`server-only`
+  réservé au web) ; `.env.example` (`DATABASE_URL` de l'API) ; dette n°4 avec réexamen.
+- Non retenu : `SessionUser` reste dans `auth` (dépendance `api` → `auth` permise, import de type seul, un seul
+  endroit qui le dérive de Prisma).
+
 **Attendu ensuite** : voir `docs/SUITE.md`.
 
 ---
@@ -116,6 +247,31 @@ Ajout : le propriétaire d'Espace ne supprime que ce qu'il voit.
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (33 tests), `pnpm build` ; mutations du code : 9 tests échouent.
 **Ouvert** : revue humaine (droits). Champ de visibilité de l'Espace absent du schéma : `spaceLevel` est fourni par
 l'appelant, le champ viendra avec une migration. Pas de partage par ressource en base (NONE/READ/WRITE) : à modéliser.
+**Principe « produit neuf, code propre »** (décision de l'utilisateur, même jour)
+
+- Règle 16 d'`AGENTS.md` : aucune concession à l'existant ; une dérogation seulement face à une contrainte externe ;
+  une règle mal calibrée se corrige à la source.
+- Aucune reprise des comptes de l'ancienne app (amendement d'ADR 0004 ; skills `auth-authorization` et
+  `database-prisma` alignés). Ticket bcrypt `869fhwtf4` devenu sans objet (à fermer dans ClickUp par l'utilisateur).
+- Migration `auth_better_auth` sans remplissage de `name` ; dérogations D4/D5 retirées. `database-prisma` précise :
+  expand/contract dès qu'une version tourne sur un environnement partagé, pas avant la première mise en ligne.
+- Tests d'intégration : base locale dédiée en `_test`, vidée avant le fichier (`resetTestDatabase`, export
+  `@planifier/db/testing`, SQL constant) ; garde `assertTestDatabase` (hôte local + suffixe `_test`), garde du seed
+  généralisée (`assertLocalDatabase`). CI sur `planifier_test`. `testing-standards` complété (parcours HTTP).
+- Vérifié : `test:integration` 5/5 deux fois de suite sur `planifier_test` ; refusé sur `planifier` (base de dev).
+
+**Seconde revue (règle 16), corrections**
+
+- IP posée par le proxy obligatoire dans tous les environnements (400 sinon) : `clientIp: string`, plus de compteur
+  `unknown` ni de branche `NODE_ENV`. Limiteur injecté par le serveur dans le contexte (`consumeRateLimit`), un par
+  instance ; tests sans état partagé.
+- `createTestDatabase()` : garde et client sur la même URL (remplace `resetTestDatabase`).
+- `apps/api` : `vitest.config.ts` à deux projets (`unit`, `integration`) au lieu de filtres par chaîne.
+- Règles alignées : `AGENTS.md` règle 9, `database-prisma` (import `auth`), `runtime-configuration` (`server-only`
+  réservé au web) ; `.env.example` (`DATABASE_URL` de l'API) ; dette n°4 avec réexamen.
+- Non retenu : `SessionUser` reste dans `auth` (dépendance `api` → `auth` permise, import de type seul, un seul
+  endroit qui le dérive de Prisma).
+
 **Attendu ensuite** : voir `docs/SUITE.md`.
 
 ---

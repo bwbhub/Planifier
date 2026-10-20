@@ -1,13 +1,13 @@
 import { getDbEnv } from "../env";
 import { createPrismaClient } from "../factory";
 import { seedEvents } from "./events";
-import { assertSeedAllowed } from "./guard";
+import { assertLocalDatabase } from "../local-guard";
 import { seedSpaces } from "./spaces";
 import { seedUsers } from "./users";
 
 // Point d'entrée de `pnpm --filter @planifier/db seed`. Idempotent : peut être relancé sans doublon.
 const env = getDbEnv();
-assertSeedAllowed(env.DATABASE_URL, env.NODE_ENV);
+assertLocalDatabase(env.DATABASE_URL, env.NODE_ENV, "Seed");
 
 const db = createPrismaClient(env.DATABASE_URL);
 try {

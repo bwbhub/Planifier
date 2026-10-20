@@ -1,8 +1,16 @@
+import { createAuthNodeHandler, getAuth, getSessionUser } from "@planifier/auth";
+
 import { getEnv } from "./config/env";
 import { createApiServer } from "./server";
 
 const env = getEnv();
-const server = createApiServer(env);
+// Valide l'environnement de l'authentification et de la base dès le démarrage (échec rapide).
+const auth = getAuth();
+const server = createApiServer({
+  env,
+  authHandler: createAuthNodeHandler(auth),
+  getSessionUser: (headers) => getSessionUser(auth, headers),
+});
 
 server.listen(env.PORT, () => {
   console.log(JSON.stringify({ level: "info", message: "api prête", port: env.PORT }));

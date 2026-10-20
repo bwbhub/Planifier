@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { API_PREFIXES, apiTarget } from "./api-target";
 
 const API = "http://api.internal:3001";
-const { rpc } = API_PREFIXES;
+const { rpc, auth } = API_PREFIXES;
 
 describe("apiTarget", () => {
   it("construit l'URL /rpc/* et garde la query", () => {
@@ -12,10 +12,17 @@ describe("apiTarget", () => {
     );
   });
 
+  it("construit l'URL /api/auth/*", () => {
+    expect(apiTarget(auth, ["sign-in", "email"], "", API)?.href).toBe(
+      "http://api.internal:3001/api/auth/sign-in/email",
+    );
+  });
+
   it.each([[[".."]], [["..", "metrics"]], [["system", "..", "..", "x"]], [["."]], [[]]])(
     "refuse %j (sortie du préfixe)",
     (path) => {
       expect(apiTarget(rpc, path, "", API)).toBeNull();
+      expect(apiTarget(auth, path, "", API)).toBeNull();
     },
   );
 

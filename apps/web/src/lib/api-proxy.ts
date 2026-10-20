@@ -1,12 +1,28 @@
 import "server-only";
 
+import { CLIENT_IP_HEADER } from "@planifier/constants/http";
+
 import { getEnv } from "@/config/env";
 
 import { type ApiPrefix, apiTarget } from "./api-target";
+import { lastHopIpOf } from "./last-hop-ip";
 import { readLimitedBody } from "./limited-body";
 
-/** En-têtes relayés vers l'API (liste blanche) : le reste de la requête du navigateur ne passe pas. */
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "cookie"];
+/**
+ * En-têtes relayés vers l'API (liste blanche) : le reste de la requête du navigateur ne passe pas.
+ * `origin`, `referer` et `sec-fetch-*` servent au contrôle CSRF de Better Auth ; `user-agent` à ses sessions.
+ */
+const FORWARDED_REQUEST_HEADERS = [
+  "accept",
+  "content-type",
+  "cookie",
+  "origin",
+  "referer",
+  "sec-fetch-dest",
+  "sec-fetch-mode",
+  "sec-fetch-site",
+  "user-agent",
+];
 /** En-têtes recalculés par le runtime : `fetch` a déjà décompressé et lu le corps. */
 const DROPPED_RESPONSE_HEADERS = [
   "connection",
@@ -26,6 +42,9 @@ function forwardedHeaders(request: Request): Headers {
     if (value !== null) headers.set(name, value);
   }
   headers.set("x-request-id", crypto.randomUUID());
+  // Toujours posé par le proxy : la liste blanche écarte celui qu'enverrait le navigateur.
+  const clientIp = lastHopIpOf(request.headers);
+  if (clientIp !== null) headers.set(CLIENT_IP_HEADER, clientIp);
   return headers;
 }
 

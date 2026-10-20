@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getDbEnv } from "./env";
 import { createPrismaClient, type Db } from "./factory";
 

@@ -19,25 +19,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # Base vide, locale au job : sert aux migrations et au seed (l'hôte `localhost` passe le garde du seed).
+    # Base vide, locale au job, dédiée aux tests (`_test`) : migrations, seed, puis tests d'intégration qui la vident.
     services:
       postgres:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: planifier
           POSTGRES_PASSWORD: planifier
-          POSTGRES_DB: planifier
+          POSTGRES_DB: planifier_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U planifier -d planifier"
+          --health-cmd "pg_isready -U planifier -d planifier_test"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://planifier:planifier@localhost:5432/planifier
-      DATABASE_URL_UNPOOLED: postgresql://planifier:planifier@localhost:5432/planifier
+      DATABASE_URL: postgresql://planifier:planifier@localhost:5432/planifier_test
+      DATABASE_URL_UNPOOLED: postgresql://planifier:planifier@localhost:5432/planifier_test
 
     # Actions épinglées par SHA (chaîne d'approvisionnement) ; le tag est en commentaire.
     steps:
@@ -69,3 +69,6 @@ jobs:
         run: pnpm --filter @planifier/db exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - name: Seed
         run: pnpm --filter @planifier/db seed
+      # Tests sur la base migrée (inscription, connexion, session) : après les migrations, pas avant.
+      - name: Tests d'intégration
+        run: pnpm test:integration

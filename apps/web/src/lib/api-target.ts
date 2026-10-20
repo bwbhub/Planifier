@@ -1,5 +1,7 @@
-/** Préfixes de l'API relayés par le web (ADR 0015). */
-export const API_PREFIXES = { rpc: "/rpc" } as const;
+import { AUTH_BASE_PATH } from "@planifier/constants/http";
+
+/** Préfixes de l'API relayés par le web : oRPC et Better Auth (ADR 0015). */
+export const API_PREFIXES = { rpc: "/rpc", auth: AUTH_BASE_PATH } as const;
 export type ApiPrefix = (typeof API_PREFIXES)[keyof typeof API_PREFIXES];
 
 const DOT_SEGMENTS = new Set([".", ".."]);

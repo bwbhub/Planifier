@@ -151,10 +151,30 @@ Sortie : moyenne (hooks confinés dans `queries/`).
 `tsx` (déjà au catalog) devient une dépendance d'exécution de `apps/api` : les packages du workspace exportent du
 TypeScript source, l'API tourne avec `node --import tsx` (pas de bundle).
 
+## Fiche validée et installée : Better Auth (ticket `auth`, `869fhwtf2`)
+
+Vérifié le 2026-10-20 (registre npm). Version validée par l'utilisateur au cadrage (commentaire ClickUp du 2026-10-18),
+plan d'installation validé le 2026-10-20.
+
+```
+Dépendance : better-auth@~1.7.10     Cible : packages/auth     Type : runtime
+Besoin : authentification e-mail + mot de passe, session par cookie httpOnly, limitation de débit (ADR 0004).
+Doublon ? : non (jsonwebtoken et bcryptjs de l'ancien code interdits par lint).
+Licence : MIT, ainsi que ses paquets @better-auth/*, better-call, @better-fetch/fetch, jose, kysely, nanostores, @noble/*.
+Maintenance : 1.7.10 publiée le 2026-10-15 (1.7.11 du 2026-10-19 et 1.7.12 du 2026-10-20 écartées : sous le seuil
+`minimumReleaseAge`). Releases plusieurs fois par semaine, dépôt better-auth/better-auth actif.
+Compatibilité : pairs optionnels prisma / @prisma/client ^7, next ^16, react ^19, zod ^4 (dépendance directe).
+Poids : 2,1 Mo décompressé ; embarque tous ses adaptateurs (mongo, drizzle, kysely, mémoire, prisma) et un paquet de
+télémétrie, coupée dans la configuration (`telemetry.enabled: false`). Aucun script d'installation.
+Périmètre : serveur uniquement (`packages/auth`, jamais importé par le web, lint). Pas de plugin d'organisations :
+l'Espace est maison (ADR 0009, 0014).
+Alternative écartée : Auth.js (orienté OAuth, e-mail + mot de passe découragé ; ADR 0004).
+Sortie : coût élevé (tables Session/Account/Verification, format de hash), borné à `packages/auth` et au montage HTTP.
+```
+
 ## À venir (ne pas installer avant validation de sa fiche)
 
-| Dépendance                       | Version visée | Point d'attention                                         |
-| -------------------------------- | ------------- | --------------------------------------------------------- |
-| better-auth                      | ~1.7.10       | ADR 0004 ; sans plugin d'organisations, télémétrie coupée |
-| web-push, resend, @react-email/* | à choisir     | ADR 0010 ; domaine à acheter pour Resend                  |
-| @playwright/test                 | à choisir     | tests E2E (décision technique 14)                         |
+| Dépendance                       | Version visée | Point d'attention                        |
+| -------------------------------- | ------------- | ---------------------------------------- |
+| web-push, resend, @react-email/* | à choisir     | ADR 0010 ; domaine à acheter pour Resend |
+| @playwright/test                 | à choisir     | tests E2E (décision technique 14)        |

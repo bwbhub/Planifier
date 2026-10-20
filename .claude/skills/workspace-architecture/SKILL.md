@@ -25,7 +25,8 @@ description: Architecture du monorepo pnpm/Turborepo (apps vs packages, sens des
 
 1. Les packages de contrat/types n'importent aucune dépendance lourde (Prisma client, auth, Next, `node:*`, mails).
 2. `apps/web` n'importe que contrats, types, `domain-*`, `constants`, `tokens`, `ui`. Jamais `api`, `db`, `auth`, `mails`.
-3. Le client Prisma n'est importé que par `db` et `api`. Tout module qui touche la base commence par `import "server-only"`.
+3. Le client Prisma n'est importé que par `db`, `auth` et `api`. Le lint (`SERVER_PACKAGES`) les interdit au code livré
+   au navigateur ; `server-only` reste réservé à `apps/web` (Node pur côté API, sans condition `react-server`).
 4. Dépendances internes en `workspace:*`, import via les `exports` publics du package. Jamais `../../packages/x/src/...`.
 5. Pas d'import circulaire. Sens : `api-contract ← api ← app serveur`.
 6. Une app ne contient pas de logique métier réutilisable au-delà de l'orchestration : elle va dans un package `domain-*`.

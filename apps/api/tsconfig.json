@@ -4,5 +4,5 @@
     // TypeScript 6 n'inclut plus @types/* par défaut : serveur Node, types déclarés explicitement.
     "types": ["node"]
   },
-  "include": ["src", "eslint.config.js"]
+  "include": ["src", "eslint.config.js", "vitest.config.ts"]
 }

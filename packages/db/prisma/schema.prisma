@@ -91,21 +91,26 @@ enum AppModule {
 // Utilisateurs
 // ---------------------------------------------------------------------------
 
-/// Les identifiants de connexion (mot de passe, sessions) appartiennent à Better Auth (ADR 0004).
+/// Compte. Champs lus et écrits par Better Auth (ADR 0004) : `name`, `email`, `emailVerified`, `avatarUrl`
+/// (son champ `image`), `createdAt`, `updatedAt`. Les identifiants de connexion vivent dans `Account`.
 model User {
   id             String      @id @default(uuid(7))
   /// @pii identité durée-du-compte
   email          String      @unique
+  /// Nom affiché, obligatoire (exigé par Better Auth à l'inscription).
   /// @pii identité durée-du-compte
-  name           String?
+  name           String
+  emailVerified  Boolean     @default(false) @map("email_verified")
   /// @pii identité durée-du-compte
   avatarUrl      String?     @map("avatar_url")
   preferredTheme String?     @map("preferred_theme")
   /// Modules activés par cet utilisateur pour son espace personnel.
-  modules        AppModule[]
+  modules        AppModule[] @default([])
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
+  sessions            Session[]
+  accounts            Account[]
   spaces              SpaceMember[]
   ownedEvents         Event[]            @relation("EventOwner")
   eventParticipations EventParticipant[]
@@ -118,6 +123,70 @@ model User {
   friendOf            Friendship[]       @relation("FriendOf")
 
   @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Authentification (Better Auth, ADR 0004) : tables possédées par la bibliothèque, jamais écrites par l'API
+// ---------------------------------------------------------------------------
+
+/// Session ouverte, désignée par le jeton du cookie httpOnly.
+model Session {
+  id        String   @id @default(uuid(7))
+  userId    String   @map("user_id")
+  /// Secret de session : jamais journalisé ni renvoyé par l'API.
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  /// @pii technique durée-de-la-session
+  ipAddress String?  @map("ip_address")
+  /// @pii technique durée-de-la-session
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Moyen de connexion d'un compte : `credential` (mot de passe haché) aujourd'hui, Google plus tard.
+model Account {
+  id                    String    @id @default(uuid(7))
+  userId                String    @map("user_id")
+  /// Identifiant chez le fournisseur (pour `credential` : l'id de l'utilisateur).
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  /// Secrets : jamais journalisés ni renvoyés par l'API.
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  /// Hash du mot de passe (format Better Auth) ; jamais en clair.
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Un compte fournisseur ne se rattache qu'à un seul utilisateur.
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// Jeton à usage unique de Better Auth (vérification d'e-mail, réinitialisation de mot de passe).
+model Verification {
+  id         String   @id @default(uuid(7))
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
 }
 
 // ---------------------------------------------------------------------------

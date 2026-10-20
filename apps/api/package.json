@@ -9,17 +9,21 @@
     "start": "node --import tsx src/main.ts",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration"
   },
   "dependencies": {
     "@orpc/server": "catalog:",
     "@planifier/api": "workspace:*",
+    "@planifier/auth": "workspace:*",
+    "@planifier/constants": "workspace:*",
     "tsx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@orpc/client": "catalog:",
     "@planifier/api-contract": "workspace:*",
+    "@planifier/db": "workspace:*",
     "@planifier/eslint-config": "workspace:*",
     "@planifier/typescript-config": "workspace:*",
     "@types/node": "catalog:",

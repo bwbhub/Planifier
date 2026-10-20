@@ -39,7 +39,9 @@ Zod valide la **forme**. Une règle qui dépend de l'état en base (transition d
 4. Environnements partagés : `migrate deploy` uniquement. Jamais `db push`, `migrate reset`, `--accept-data-loss`. Jamais
    au démarrage d'un service répliqué.
 5. Compatibilité ancienne/nouvelle version (_expand / contract_) : ajouter nullable → déployer → backfill → `NOT NULL`
-   → retirer l'ancien dans une release ultérieure. Renommer = ajouter + copier + basculer + supprimer.
+   → retirer l'ancien dans une release ultérieure. Renommer = ajouter + copier + basculer + supprimer. S'applique dès
+   qu'une version tourne sur un environnement partagé ; avant la première mise en ligne, le schéma se modifie
+   directement (aucune version précédente ni donnée à protéger, pas de remplissage de complaisance).
 6. Migration destructive : label dédié, sauvegarde vérifiée, validation humaine.
 
 ## Seed
@@ -49,14 +51,14 @@ Obligatoire pour toute fonctionnalité, **idempotent**, déterministe, un module
 
 ## Requêtes
 
-Un client Prisma par processus (singleton), import réservé à `db`/`api`. `select` explicite en sortie, pas d'`include`
+Un client Prisma par processus (singleton), import réservé à `db`, `auth` et `api`. `select` explicite en sortie, pas d'`include`
 profond, pagination par curseur, `$transaction` pour toute écriture multiple. SQL brut : paramétré uniquement.
 Neon : connexions poolées (à vérifier avec Prisma 7). Montants en entiers.
 
-## Migration de l'existant
+## Ancien code
 
-Le schéma actuel (`back/prisma/schema.prisma`) est la base : User, Event, EventParticipant, EventSettings, Invite,
-ProposedInvite, Notification, Comment, Friendship. Comptes : hash bcrypt à migrer vers Better Auth (ADR 0004).
+`back/prisma/schema.prisma` sert de référence de modèle, pas de contrainte : aucune donnée ni aucun compte de
+l'ancienne app n'est repris (règle 16 d'`AGENTS.md`, ADR 0004).
 
 ## Données personnelles
 

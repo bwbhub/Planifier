@@ -24,8 +24,8 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés              |
 | base + client          | `@planifier/db` (Prisma 7)                                 | posé               |
 | contrats d'API         | `@planifier/api-contract`                                  | posé (santé)       |
-| implémentation API     | `@planifier/api`                                           | posé (plan public) |
-| auth                   | `@planifier/auth`                                          | à créer            |
+| implémentation API     | `@planifier/api`                                           | plans public, user |
+| auth                   | `@planifier/auth`                                          | posé (Better Auth) |
 | droits (logique pure)  | `@planifier/domain-access`                                 | posé               |
 | e-mails                | `@planifier/mails`                                         | à créer            |
 
@@ -36,17 +36,23 @@ PostgreSQL + Prisma 7 · React Email + Resend · web-push · Vitest · Playwrigh
 
 ## 4. Commandes
 
-| Action                       | Commande                                                      |
-| ---------------------------- | ------------------------------------------------------------- |
-| Installer                    | `pnpm install`                                                |
-| Développer                   | `pnpm dev` (ou `pnpm --filter @planifier/web dev`)            |
-| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build` |
-| Formater                     | `pnpm format`                                                 |
-| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                      |
+| Action                       | Commande                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Installer                    | `pnpm install`                                                                                   |
+| Développer                   | `pnpm dev` (ou `pnpm --filter @planifier/web dev`)                                               |
+| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build`                                    |
+| Tests sur base réelle        | `DATABASE_URL=…/planifier_test pnpm test:integration` (base `_test` migrée, voir README de `db`) |
+| Formater                     | `pnpm format`                                                                                    |
+| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                                                         |
 
 ## 5. Environnement
 
 `.env.example` à la racine ; `env.ts` par app avec schéma Zod ; aucun `NEXT_PUBLIC_*`. Voir `runtime-configuration`.
+
+Aucun environnement déployé (ni prod ni preprod, état au 2026-10-20) : aucune donnée ni version à préserver. Les
+règles de compatibilité de déploiement (expand/contract, contrats en deux temps) s'appliquent à partir de la
+première mise en ligne. D'ici là, priorité à la simplicité et à la lisibilité : modifier directement plutôt que
+contourner.
 
 ## 6. Dérogations
 
@@ -60,5 +66,7 @@ PostgreSQL + Prisma 7 · React Email + Resend · web-push · Vitest · Playwrigh
 
 1. Ancien code (`back/`, `front/`) : JS, MUI, Express, JWT en localStorage, secret JWT par défaut codé en dur.
 2. Racine : `package-lock.json` (npm) conservé pour l'ancien code ; à retirer avec lui.
-3. Aucun test, aucune CI pour l'instant (tickets « Tests » et « CI »).
-4. `packages/ui` ne contient pas encore de composants (ticket design system).
+3. `packages/ui` ne contient pas encore de composants (ticket design system).
+4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
+   partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
+5. Pas de vérification d'e-mail ni de réinitialisation de mot de passe (attend le package `mails`).

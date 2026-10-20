@@ -4,7 +4,8 @@ Schéma Prisma 7 (PostgreSQL), migrations, client et seed. Aucune fonction propr
 
 ## API publique
 
-`getDb()` : client Prisma unique du processus (module `server-only`). Importé par `api` uniquement.
+`getDb()` : client Prisma unique du processus. Importé par `api` et `auth` uniquement ; le lint l'interdit au web
+(`SERVER_PACKAGES`). Pas de `server-only` : `apps/api` est du Node pur, sans la condition `react-server`.
 
 ## Commandes
 
@@ -21,7 +22,19 @@ Base locale : `docker compose up -d` (racine, PostgreSQL 17 sur `127.0.0.1:5433`
 `generate`, `validate` et `format` n'ouvrent aucune connexion et n'exigent aucune URL. La CLI lit `.env.local`
 s'il existe (`getCliDatabaseUrl()` dans `src/env.ts`).
 
-Le seed refuse toute base dont l'hôte n'est pas `localhost`, `127.0.0.1` ou `[::1]`, et `NODE_ENV=production`.
+Le seed refuse toute base dont l'hôte n'est pas `localhost`, `127.0.0.1` ou `[::1]`, et `NODE_ENV=production`
+(`assertLocalDatabase`).
+
+## Tests d'intégration
+
+`@planifier/db/testing` : `createTestDatabase()` rend `{ db, reset }` sur `DATABASE_URL`, refusé hors d'une base
+locale dont le nom finit par `_test` (`assertTestDatabase`) ; `reset()` vide toutes les tables de cette même base
+(historique des migrations gardé). Préparer la base une fois :
+
+```
+docker compose exec postgres createdb -U planifier planifier_test
+DATABASE_URL_UNPOOLED=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm --filter @planifier/db migrate:deploy
+```
 
 ## Neon (connexions)
 

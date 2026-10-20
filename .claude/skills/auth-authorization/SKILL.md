@@ -10,7 +10,7 @@ Relecture humaine obligatoire pour toute PR qui touche ce sujet.
 ## Authentification (ADR 0004)
 
 Better Auth, session par **cookie httpOnly**, aucun JWT en `localStorage`, aucun secret par défaut dans le code.
-Google OAuth ajouté plus tard via la même bibliothèque. Comptes existants : hash bcrypt migré. Mots de passe : jamais
+Google OAuth ajouté plus tard via la même bibliothèque. Aucun compte de l'ancienne app n'est repris. Mots de passe : jamais
 journalisés ni renvoyés.
 
 ## Modèle de droits (ADR 0009, 0014)

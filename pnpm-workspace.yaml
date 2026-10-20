@@ -40,6 +40,8 @@ catalog:
   "@orpc/tanstack-query": ~1.15.7
   # ~5.104.3 et non 5.104.4 : publiée le 2026-10-17, sous le seuil minimumReleaseAge
   "@tanstack/react-query": ~5.104.3
+  # auth (ADR 0004). ~1.7.10 et non 1.7.12 : publiée le 2026-10-20, sous le seuil minimumReleaseAge.
+  better-auth: ~1.7.10
   # tests (~5.0.4 et non 5.0.5 : publiée le 2026-10-15, sous le seuil minimumReleaseAge)
   vitest: ~5.0.4
   # styles

@@ -5,8 +5,9 @@ description: Direction « Doux et vivant » de Planifier (principes produit, ton
 
 # Design brief : Planifier
 
-Source : maquette `docs/maquettes/phase-1.html` (Aujourd'hui, Todo, Création de tâche, Agenda jour/semaine ;
-clair et nuit ; mobile et PC).
+Sources : maquettes `docs/maquettes/Planifier v2 — Phase 1-light.html` et `…-dark.html` (2026-10-20, de référence :
+Aujourd'hui, Todo, Création de tâche, Agenda jour/semaine, **Journal** ; clair et nuit ; mobile et PC).
+`phase-1.html` est l'ancienne version, sans le Journal. Fichiers empaquetés : ouvrir dans un navigateur.
 
 ## Principes produit (non négociables)
 
@@ -30,22 +31,33 @@ technique s'explique en une phrase au point d'usage. Pas de culpabilisation, pas
 - Teintes de liste/agenda : général (bleu), boulot (orange), couple (rose), vacances (vert). Tokens dans `packages/tokens`.
 - Titres : Bricolage Grotesque ; texte : DM Sans.
 - Densité : aérée, un objectif par écran, mobile d'abord pour la saisie, PC pour la vue d'ensemble.
+- Contrôles (relevés dans la maquette) : action principale en pastille pleine, 50 px de haut, 15 px gras ; action
+  secondaire en pastille neutre. Champ : 48 px, fond `field`, bordure 2 px transparente, `accent` au focus (fond
+  `surface`). Libellé 14 px gras ; « (obligatoire) » / « (facultative) » en `muted` quand le formulaire mélange les deux.
+- Erreur : texte `ink` ou `accent-text` avec icône, phrase rassurante (« rien n'est perdu ») et action (« Réessayer
+  maintenant ») ; pas de rouge distinct. Confirmation destructive : feuille du bas sur voile sombre, action nommée
+  (« Supprimer définitivement ») et sortie douce (« Garder la page »).
 
 ## Écrans de la Phase 1
 
-| Écran          | Contenu clé                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aujourd'hui    | « Au fil de la journée » (créneaux, « Peut-être » en pointillé), « Sans horaire » (tâches du jour), « Quelques tâches à reprendre » + report, rappel du jour                              |
-| Todo           | onglets par liste, en-tête teinté (nom, type, dates, membres), option « Atténuer les tâches qui ne me sont pas assignées », tâche avec assigné, compteur de sous-tâches, « Cochée par … » |
-| Nouvelle tâche | titre obligatoire, description, « Paramètres avancés », date, heure ou sans heure, récurrence, liste, assignation, rappel **proposé** si récurrente                                       |
-| Agenda         | précédent / aujourd'hui / suivant, Jour-Semaine-Mois, « Nouvelle entrée », filtres d'agendas par personne, grille horaire avec chevauchements                                             |
+| Écran          | Contenu clé                                                                                                                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aujourd'hui    | « Au fil de la journée » (créneaux, « Peut-être » en pointillé), « Sans horaire » (tâches du jour), « Quelques tâches à reprendre » + report, rappel du jour                                    |
+| Todo           | onglets par liste, en-tête teinté (nom, type, dates, membres), option « Atténuer les tâches qui ne me sont pas assignées », tâche avec assigné, compteur de sous-tâches, « Cochée par … »       |
+| Nouvelle tâche | titre obligatoire, description, « Paramètres avancés », date, heure ou sans heure, récurrence, liste, assignation, rappel **proposé** si récurrente                                             |
+| Agenda         | précédent / aujourd'hui / suivant, Jour-Semaine-Mois, « Nouvelle entrée », filtres d'agendas par personne, grille horaire avec chevauchements                                                   |
+| Journal        | liste par mois (recherche, filtres par tag), lecture, écriture (brouillon enregistré, tags), gabarits, réglages (code, rappel d'écriture désactivé par défaut, export Markdown, tout supprimer) |
+| États Journal  | vide, chargement, brouillon retrouvé (hors-ligne), erreur d'enregistrement, conflit entre deux appareils, verrouillé, code non reconnu, confirmations de suppression                            |
 
-Navigation PC : Aujourd'hui, Todo, Agenda, Événements, Notifications, Profil. **Navigation mobile : à maquetter.**
+Navigation PC (barre latérale) : Aujourd'hui, Todo, Agenda, Événements, Journal, Notifications, Profil.
+Navigation mobile : barre flottante en bas (fond `nav`), cinq entrées : Aujourd'hui, Todo, Agenda, Événements, Journal.
+Profil et Notifications sur mobile : pas maquettés (l'initiale ronde en haut d'Aujourd'hui en est le candidat).
+Aujourd'hui avec le Journal actif : bouton « Écrire une page ».
 
 ## À maquetter (Phase 2)
 
-Événements (liste, création, détail), Espaces (création, invitation, modules), Notifications, Profil, barre mobile,
-Agenda mois, états vides et d'erreur.
+Événements (liste, création, détail), Espaces (création, invitation, modules), Notifications, Profil, connexion et
+inscription, Agenda mois, états vides et d'erreur hors Journal.
 
 ## Fiche d'écran (avant tout code d'UI)
 

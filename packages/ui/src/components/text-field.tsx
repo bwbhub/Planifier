@@ -21,7 +21,7 @@ export function TextField({ label, hint, error, className, ...input }: TextField
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-semibold">
         {label}
       </label>
       <input
@@ -29,8 +29,9 @@ export function TextField({ label, hint, error, className, ...input }: TextField
         aria-invalid={error === undefined ? undefined : true}
         aria-describedby={describedBy === "" ? undefined : describedBy}
         className={cn(
-          "min-h-11 rounded-control border border-line bg-field px-3.5 text-ink",
-          "placeholder:text-muted aria-invalid:border-accent disabled:opacity-60",
+          "min-h-12 rounded-control border-2 border-transparent bg-field px-3.5 text-base text-ink",
+          "placeholder:text-muted focus:border-accent focus:bg-surface aria-invalid:border-accent",
+          "disabled:opacity-60",
         )}
         {...input}
       />

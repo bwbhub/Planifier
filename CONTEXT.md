@@ -12,7 +12,7 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 
 - **Espace** (Space) : ensemble de personnes qui partagent des choses. Un couple, une colocation ou des vacances sont chacun un espace. Une seule notion pour tous. Tous les membres sont égaux par défaut ; des droits plus fins sont possibles mais optionnels.
 - **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres.
-- **Module** : fonction activable à la carte (Todo, Agenda, Événements). Personne n'est obligé de tous les utiliser.
+- **Module** : fonction activable à la carte (Todo, Agenda, Événements, Journal). Personne n'est obligé de tous les utiliser.
 - **Espace personnel** : ce qui n'est rattaché à aucun espace est privé.
 - **Visibilité dans un espace** : par défaut, un membre voit tous les éléments de l'espace. Elle se restreint dans les paramètres de l'espace.
 - **Espace supprimé** : ses événements deviennent personnels pour leur propriétaire ; les participants gardent leur accès.
@@ -70,3 +70,16 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 ## Principe
 
 L'outil aide la planification, point. Pas de rotation, d'équilibrage, de score ni de jugement. Rien ne se coche ni ne s'ajoute à l'insu de l'utilisateur.
+
+## Journal
+
+D'après la maquette du 2026-10-20 ; règles fines à confirmer.
+
+- **Journal** : pages strictement personnelles, jamais partagées ni visibles dans un espace.
+- **Page** : date, titre, texte, tags. Supprimée définitivement, sans corbeille.
+- **Gabarit** : modèle de page fait de sections (chacune devient un titre). Gabarits proposés ou créés par l'utilisateur ; « Page libre » sans gabarit.
+- **Tag** : étiquette libre d'une page, pour filtrer.
+- **Verrou** : code à 6 chiffres demandé à l'ouverture du Journal, optionnel, proposé à la première ouverture.
+- **Rappel d'écriture** : proposition d'écrire à une heure choisie, désactivée par défaut ; le message ne contient jamais le contenu d'une page.
+- **Brouillon** : texte gardé sur l'appareil tant qu'il n'est pas enregistré.
+- **Conflit** : page modifiée sur deux appareils ; la version la plus récente est gardée, l'autre reste récupérable une semaine.

@@ -18,6 +18,26 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-21 — Maquettes v2 lues, écrans de connexion alignés (branche `feat/ecrans-connexion`)
+
+**Fait**
+
+- Maquettes `Planifier v2 — Phase 1-light/dark.html` déplacées de `newContext/` vers `docs/maquettes/`. Contenu :
+  Phase 1 inchangée + module **Journal** (33 écrans par thème) ; aucun écran connexion, inscription ni profil.
+- Tokens de couleur identiques à `packages/tokens`. Écarts corrigés : bouton principal en pastille 50 px
+  (`--radius-pill` ajouté), champ 48 px à bordure 2 px (accent au focus), libellé gras.
+- **Bug corrigé** : Tailwind ne scannait pas `packages/ui` ; les classes de `Button` et `TextField` manquaient du CSS
+  construit (boutons et champs sans style). `@source` ajouté dans `globals.css`.
+- `ux-design-brief` : sources, contrôles, erreurs, Journal, navigation mobile (barre du bas, maquettée).
+  `CONTEXT.md` : section Journal (d'après la maquette, à confirmer).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; classes présentes dans le CSS construit.
+Rien vu dans un navigateur.
+
+**Ouvert** : revue humaine (auth, tokens) ; glossaire Journal à valider ; vérif Brave toujours due.
+
+**Attendu ensuite** : vérif Brave, push + PR, puis profil (`869fhwtf7`).
+
 ## 2026-10-20 — Écrans de connexion et d'inscription (branche `feat/ecrans-connexion`, ticket `869fhwtf7`, partie 1)
 
 **Fait**

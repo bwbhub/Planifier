@@ -4,23 +4,19 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Vérif Brave à faire** (rien n'a été vu dans un navigateur) : formulaires de connexion et d'inscription (erreurs
-  de champ, focus, message de refus), accueil, déconnexion ; clair et nuit ; mobile et PC. Page d'erreur : lancer le
-  web seul (`pnpm --filter @planifier/web dev`, API arrêtée), ouvrir `/connexion`, voir « Réessayer ».
-- **Deux nouveaux fichiers de maquettes** à déposer dans `docs/maquettes/` (absents du dépôt au 2026-10-20). Les lire
-  avant la suite : écarts avec les écrans de connexion/inscription déjà faits, puis profil (partie 2).
+- **Vérif Brave à faire** (rien vu dans un navigateur ; boutons et champs n'avaient aucun style avant le correctif
+  `@source` du 2026-10-21) : formulaires de connexion et d'inscription (erreurs de champ, focus, message de refus),
+  accueil, déconnexion ; clair et nuit ; mobile et PC. Page d'erreur : lancer le web seul (`pnpm --filter
+  @planifier/web dev`, API arrêtée), ouvrir `/connexion`, voir « Réessayer ».
 - Compte de démo pour la vérif : `pnpm seed` si la base est neuve, puis `alice@example.test` / `planifier-demo`.
 - Puis demander push + PR de `feat/ecrans-connexion` (inclut le commit docs de `docs/suite-apres-auth`, branche
   devenue inutile). Revue humaine : auth, `turbo.json`, dépendances de test, dérogation D5 (axe-core MPL-2.0).
 
 ## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
 
-D'abord : lire les deux nouvelles maquettes, mettre à jour `ux-design-brief` (source des écrans) et corriger les
-écrans de connexion/inscription s'ils s'en écartent (même branche si la PR n'est pas ouverte).
-
 Nom affiché, mot de passe (Better Auth `change-password`), thème préféré (`preferredTheme`, liste fermée à créer
-dans `constants`). Changement d'e-mail : après `mails` (vérification). Navigation vers le profil à concevoir
-(navigation mobile non maquettée).
+dans `constants`). Changement d'e-mail : après `mails` (vérification). Accès mobile au profil non maquetté (barre
+du bas : 5 modules, sans Profil) ; candidat : l'initiale ronde en haut d'Aujourd'hui. À faire valider.
 
 ## 3. Ensuite
 
@@ -40,7 +36,9 @@ dans `constants`). Changement d'e-mail : après `mails` (vérification). Navigat
 - Après connexion, revenir à la page demandée (`?suite=`, chemin interne seulement) : utile ?
 - Ancien formulaire : remettre « afficher le mot de passe » et la confirmation à l'inscription ? Invitation par
   lien (e-mail pré-rempli) : avec le module Événements.
-- Token d'erreur distinct de l'accent (aujourd'hui erreurs et liens partagent `accent-text`) : ticket design system ?
+- Token d'erreur : la maquette v2 n'en a pas (erreurs en `ink`/`accent-text` + icône). Question close sauf avis contraire.
+- Module Journal (nouveau dans la maquette) : ticket à créer ? Glossaire posé dans `CONTEXT.md`, à valider. Verrou à
+  6 chiffres + « Utiliser mon mot de passe » : revue sécurité à prévoir.
 
 ## 5. Pièges de l'environnement
 

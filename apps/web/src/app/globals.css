@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Les composants partagés vivent hors de l'app : Tailwind ne les détecte pas seul. */
+@source "../../../../packages/ui/src";
 @import "@planifier/tokens/tokens.css";
 @import "@planifier/tokens/theme.css";
 

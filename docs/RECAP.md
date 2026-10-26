@@ -18,6 +18,24 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Vérification des écrans de connexion, PR (branche `feat/ecrans-connexion`)
+
+**Fait** : parcours testés contre `pnpm dev` (base locale migrée et seedée) ; PR ouverte.
+
+**Vérifié**
+
+- HTTP : `/` sans session ⇒ 307 vers `/connexion` ; avec session ⇒ 200 ; `/connexion` avec session ⇒ 307 vers `/`.
+- Connexion `alice@example.test` OK ; mauvais mot de passe ⇒ 401 `INVALID_EMAIL_OR_PASSWORD` ; inscription OK ;
+  doublon ⇒ 422 `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` (codes traduits par `auth-error-message`, testé).
+- `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK.
+- **Non vérifié** : rendu visuel. Extension Chrome non connectée, Brave headless bloqué par le bac à sable (même sur
+  une page vide).
+
+**Ouvert** : vérif visuelle Brave (clair/nuit, mobile) par l'utilisateur ; revue humaine (auth, tokens) ; glossaire
+Journal ; l'inscription révèle qu'un e-mail existe (inhérent sans vérification d'e-mail, à revoir avec `mails`).
+
+**Attendu ensuite** : revue + merge (PR #10 incluse), puis profil (`869fhwtf7`, partie 2).
+
 ## 2026-10-21 — Maquettes v2 lues, écrans de connexion alignés (branche `feat/ecrans-connexion`)
 
 **Fait**

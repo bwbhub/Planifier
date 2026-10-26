@@ -4,19 +4,15 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Vérif Brave à faire** (rien vu dans un navigateur ; boutons et champs n'avaient aucun style avant le correctif
-  `@source` du 2026-10-21) : formulaires de connexion et d'inscription (erreurs de champ, focus, message de refus),
-  accueil, déconnexion ; clair et nuit ; mobile et PC. Page d'erreur : lancer le web seul (`pnpm --filter
-  @planifier/web dev`, API arrêtée), ouvrir `/connexion`, voir « Réessayer ».
-- Compte de démo pour la vérif : `pnpm seed` si la base est neuve, puis `alice@example.test` / `planifier-demo`.
-- Puis demander push + PR de `feat/ecrans-connexion` (inclut le commit docs de `docs/suite-apres-auth`, branche
-  devenue inutile). Revue humaine : auth, `turbo.json`, dépendances de test, dérogation D5 (axe-core MPL-2.0).
+- Rien en attente. Tickets `869fhwtf2` (auth) et `869fhwtf4` (bcrypt, sans objet) fermés dans ClickUp le 2026-10-20.
+- Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
+  et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
 
 ## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
 
-Nom affiché, mot de passe (Better Auth `change-password`), thème préféré (`preferredTheme`, liste fermée à créer
-dans `constants`). Changement d'e-mail : après `mails` (vérification). Accès mobile au profil non maquetté (barre
-du bas : 5 modules, sans Profil) ; candidat : l'initiale ronde en haut d'Aujourd'hui. À faire valider.
+À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
+(seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
+pas de rustine) ; aucun environnement déployé (`project-context` §5).
 
 ## 3. Ensuite
 

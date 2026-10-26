@@ -33,7 +33,10 @@ function hasField(body: unknown, field: string): boolean {
 
 /** Instance Better Auth configurée pour Planifier (ADR 0004). */
 export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
-  const mails = createAuthMails(sendMail);
+  const mails = createAuthMails(sendMail, {
+    secret: env.BETTER_AUTH_SECRET,
+    webOrigin: env.BETTER_AUTH_URL,
+  });
   return betterAuth({
     appName: "Planifier",
     baseURL: env.BETTER_AUTH_URL,
@@ -43,6 +46,8 @@ export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
     trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
     database: prismaAdapter(db, { provider: "postgresql", transaction: true }),
     telemetry: { enabled: false },
+    // Explicite : au niveau `info`, Better Auth journalise des adresses e-mail (inscription en double).
+    logger: { level: "warn" },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: PASSWORD_MIN_LENGTH,
@@ -50,6 +55,8 @@ export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
       // Pas de session avant l'adresse confirmée. Effet voulu : l'inscription répond pareil, que l'adresse ait déjà
       // un compte ou non (elle ne révèle plus qui est inscrit).
       requireEmailVerification: true,
+      // Adresse déjà inscrite : l'écran ne le dit pas, l'e-mail à son propriétaire donne la suite.
+      onExistingUserSignUp: mails.sendExistingAccount,
       sendResetPassword: mails.sendResetPassword,
       resetPasswordTokenExpiresIn: EMAIL_LINK_TTL_SECONDS,
       // Mot de passe oublié : celui qui l'avait peut-être volé perd ses sessions.

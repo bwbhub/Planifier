@@ -5,6 +5,19 @@ const commonSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   /** Adresse d'expédition, sur le domaine vérifié chez Resend en production. */
   MAIL_FROM: z.email(),
+  /**
+   * Bac à sable (preprod) : domaines destinataires admis, séparés par des virgules. Absent : tous. Un e-mail vers un
+   * autre domaine est écarté (journalisé sans adresse).
+   */
+  MAIL_ALLOWED_DOMAINS: z
+    .string()
+    .optional()
+    .transform((list) =>
+      list
+        ?.split(",")
+        .map((domain) => domain.trim().toLowerCase())
+        .filter((domain) => domain !== ""),
+    ),
 });
 
 const transportSchema = z.discriminatedUnion("MAIL_TRANSPORT", [

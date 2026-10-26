@@ -21,16 +21,6 @@ export const AUTH_ROUTES = {
   resetPassword: "/reset-password",
 } as const;
 
-/**
- * Pages du web où mènent les liens des e-mails : passées à Better Auth (`callbackURL`, `redirectTo`), qui y renvoie
- * avec `?error=…` quand le lien ne vaut plus rien. Après la vérification d'adresse, la session est ouverte : la page
- * de connexion renvoie alors à l'accueil.
- */
-export const AUTH_PAGES = {
-  signIn: "/connexion",
-  resetPassword: "/nouveau-mot-de-passe",
-} as const;
-
 /** Codes d'erreur de Better Auth que l'interface distingue ; les autres reçoivent un message générique. */
 export const AUTH_ERROR_CODES = {
   invalidCredentials: "INVALID_EMAIL_OR_PASSWORD",
@@ -93,3 +83,19 @@ export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;
 export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetInputSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
+
+/**
+ * Corps envoyés à chaque route de Better Auth : l'entrée validée du formulaire, plus, pour les routes qui envoient un
+ * e-mail, la page où ramène son lien (`AUTH_PAGES`, `@planifier/constants/account`).
+ */
+export interface AuthRequestBodies {
+  [AUTH_ROUTES.signUp]: SignUpInput & { callbackURL: string };
+  [AUTH_ROUTES.signIn]: SignInInput & { callbackURL: string };
+  [AUTH_ROUTES.signOut]: Record<string, never>;
+  [AUTH_ROUTES.updateUser]: UpdateProfileInput;
+  [AUTH_ROUTES.changePassword]: ChangePasswordInput;
+  [AUTH_ROUTES.requestPasswordReset]: RequestPasswordResetInput & { redirectTo: string };
+  [AUTH_ROUTES.resetPassword]: ResetPasswordInput;
+}
+
+export type AuthRoute = keyof AuthRequestBodies;

@@ -47,13 +47,13 @@ describe("SignUpForm", () => {
     expect(screen.getByLabelText("Mot de passe").getAttribute("aria-invalid")).toBe("true");
   });
 
-  it("crée le compte avec le nom nettoyé, puis annonce l'e-mail de confirmation", async () => {
+  it("crée le compte avec le nom nettoyé, puis annonce l'e-mail", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderForm();
     await fill({ name: " Alice ", email: "alice@example.test", password: "mot-de-passe" });
 
     expect((await screen.findByRole("status")).textContent).toContain(
-      "Un lien de confirmation est parti à alice@example.test",
+      "Un e-mail vient de partir à alice@example.test",
     );
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/auth/sign-up/email");

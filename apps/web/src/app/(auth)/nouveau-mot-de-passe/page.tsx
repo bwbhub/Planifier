@@ -1,3 +1,4 @@
+import { textLinkClassName } from "@planifier/ui/lib/text-link";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -5,8 +6,6 @@ import { AuthShell, LinkErrorNotice, ResetPasswordForm } from "@/features/accoun
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Nouveau mot de passe · Planifier" };
-
-const linkClassName = "inline-flex min-h-11 items-center font-semibold text-accent-text underline";
 
 /** Page où mène le lien de l'e-mail : `?token=…` s'il est valable, `?error=…` sinon (Better Auth). */
 export default async function ResetPasswordPage({
@@ -19,7 +18,7 @@ export default async function ResetPasswordPage({
       title="Nouveau mot de passe"
       intro="Choisis le mot de passe que tu utiliseras désormais."
       footer={
-        <Link href={ROUTES.signIn} className={linkClassName}>
+        <Link href={ROUTES.signIn} className={textLinkClassName()}>
           Retour à la connexion
         </Link>
       }
@@ -29,7 +28,7 @@ export default async function ResetPasswordPage({
       ) : (
         <LinkErrorNotice>
           Ce lien n'est plus valable.{" "}
-          <Link href={ROUTES.forgotPassword} className={linkClassName}>
+          <Link href={ROUTES.forgotPassword} className={textLinkClassName()}>
             Demander un nouveau lien
           </Link>
         </LinkErrorNotice>

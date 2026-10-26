@@ -1,4 +1,5 @@
-import { type SendMail, SENDER_NAME } from "../mail";
+import type { SendMail } from "../mail";
+import { SENDER_NAME } from "../sender";
 import { type Fetch, postJson } from "./post-json";
 
 const RESEND_EMAILS_URL = "https://api.resend.com/emails";

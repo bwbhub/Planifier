@@ -1,6 +1,7 @@
 import {
-  AUTH_PAGES,
   AUTH_ROUTES,
+  type AuthRequestBodies,
+  type AuthRoute,
   authErrorBodySchema,
   type ChangePasswordInput,
   type RequestPasswordResetInput,
@@ -9,6 +10,7 @@ import {
   type SignUpInput,
   type UpdateProfileInput,
 } from "@planifier/api-contract";
+import { AUTH_PAGES } from "@planifier/constants/account";
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -20,7 +22,10 @@ import { AuthRequestError } from "../utils/auth-request-error";
  * ces routes sont hors oRPC, et `better-auth/client` ajouterait la bibliothèque au navigateur sans typage fin (le
  * type de l'instance serveur vit dans `@planifier/auth`, interdit au web). Corps décrits par `api-contract`.
  */
-async function postAuth(route: string, body: object): Promise<void> {
+async function postAuth<TRoute extends AuthRoute>(
+  route: TRoute,
+  body: AuthRequestBodies[TRoute],
+): Promise<void> {
   const response = await fetch(`${AUTH_BASE_PATH}${route}`, {
     method: "POST",
     headers: { "content-type": "application/json" },

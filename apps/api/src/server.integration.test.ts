@@ -2,7 +2,7 @@ import type { AddressInfo } from "node:net";
 
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import { AUTH_ERROR_CODES, AUTH_PAGES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
+import { AUTH_ERROR_CODES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
 import {
   AUTH_COOKIE_PREFIX,
   createAuth,
@@ -10,10 +10,11 @@ import {
   getSessionUser,
   parseAuthEnv,
 } from "@planifier/auth";
+import { AUTH_PAGES } from "@planifier/constants/account";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import { createTestDatabase } from "@planifier/db/testing";
 import type { Mail } from "@planifier/mails";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { createApiServer } from "./server";
 
@@ -117,27 +118,6 @@ afterAll(async () => {
 });
 
 describe("session (base réelle)", () => {
-  it("n'ouvre pas de session à l'inscription, et refuse la connexion avant la vérification", async () => {
-    const email = "pas-encore-verifie@example.test";
-    const signUp = await authPost(
-      AUTH_ROUTES.signUp,
-      { email, password: PASSWORD, name: "Pas vérifié" },
-      "192.0.2.12",
-    );
-    expect(signUp.status).toBe(200);
-    expect(cookiesOf(signUp)).not.toMatch(/session_token/);
-    const sentTo = () => sentMails.filter((mail) => mail.to === email).length;
-    expect(sentTo()).toBe(1);
-
-    const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.12");
-    expect(signIn.status).toBe(403);
-    await expect(signIn.json()).resolves.toMatchObject({
-      code: AUTH_ERROR_CODES.emailNotVerified,
-    });
-    // Un nouveau lien part à chaque tentative.
-    expect(sentTo()).toBe(2);
-  });
-
   it("vérifie l'adresse par le lien reçu, qui ouvre la session, puis déconnecte et reconnecte", async () => {
     const signUp = await authPost(
       AUTH_ROUTES.signUp,
@@ -206,18 +186,55 @@ describe("session (base réelle)", () => {
   });
 });
 
+describe("vérification d'adresse (base réelle)", () => {
+  it("n'ouvre pas de session à l'inscription, et refuse la connexion avant la vérification", async () => {
+    const email = "pas-encore-verifie@example.test";
+    const signUp = await authPost(
+      AUTH_ROUTES.signUp,
+      { email, password: PASSWORD, name: "Pas vérifié" },
+      "192.0.2.12",
+    );
+    expect(signUp.status).toBe(200);
+    expect(cookiesOf(signUp)).not.toMatch(/session_token/);
+    const sentTo = () => sentMails.filter((mail) => mail.to === email).length;
+    expect(sentTo()).toBe(1);
+
+    const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.12");
+    expect(signIn.status).toBe(403);
+    await expect(signIn.json()).resolves.toMatchObject({
+      code: AUTH_ERROR_CODES.emailNotVerified,
+    });
+    // Un nouveau lien part à chaque tentative.
+    expect(sentTo()).toBe(2);
+
+    // Réinscription sur l'adresse non vérifiée : un lien de vérification, qui ouvre bien la session.
+    await authPost(
+      AUTH_ROUTES.signUp,
+      { email, password: PASSWORD, name: "Pas vérifié", callbackURL: AUTH_PAGES.signIn },
+      "192.0.2.13",
+    );
+    await vi.waitFor(() => {
+      expect(sentTo()).toBe(3);
+    });
+    const verified = await openLink(lastLinkSentTo(email), "192.0.2.13");
+    expect(verified.status).toBe(302);
+    expect(cookiesOf(verified)).toMatch(/session_token/);
+  });
+});
+
 describe("refus d'inscription (base réelle)", () => {
-  it("répond comme une inscription neuve sur un e-mail déjà inscrit, sans rien créer ni envoyer", async () => {
-    const mailsBefore = sentMails.length;
+  it("répond comme une inscription neuve sur un e-mail déjà inscrit, et renvoie son propriétaire à la connexion", async () => {
     const response = await authPost(
       AUTH_ROUTES.signUp,
-      { email: EMAIL, password: PASSWORD, name: "Doublon" },
+      { email: EMAIL, password: PASSWORD, name: "Doublon", callbackURL: AUTH_PAGES.signIn },
       "192.0.2.21",
     );
     expect(response.status).toBe(200);
     expect(cookiesOf(response)).not.toMatch(/session_token/);
     await expect(db.user.count({ where: { email: EMAIL } })).resolves.toBe(1);
-    expect(sentMails.length).toBe(mailsBefore);
+    await vi.waitFor(() => {
+      expect(lastLinkSentTo(EMAIL)).toBe(`${WEB_ORIGIN}${AUTH_PAGES.signIn}`);
+    });
   });
 
   it("refuse une inscription venue d'une autre origine", async () => {

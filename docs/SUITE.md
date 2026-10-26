@@ -16,7 +16,8 @@ Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
 
 ## 3. Ensuite
 
-1. Changement d'e-mail (vérification de la nouvelle adresse par `mails`).
+1. Changement d'e-mail (vérification de la nouvelle adresse par `mails`). Gabarit d'invitation (ancien
+   `emailService`) : avec le module Événements.
 2. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
 3. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).
 4. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).

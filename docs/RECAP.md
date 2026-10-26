@@ -43,7 +43,13 @@ dev : inscription ⇒ e-mail dans Mailpit. **Non vérifié** : Resend réel (pas
 client mail.
 
 **Ouvert** : revue humaine (auth, e-mails, CI) ; domaine à acheter puis vérifier chez Resend ; changement d'e-mail ;
-e-mail « tu as déjà un compte » à l'inscription en double (`onExistingUserSignUp`) non fait.
+écart de durée de réponse résiduel à l'inscription (compte neuf écrit en base, pas un doublon).
+
+**Corrections de revue** (décisions de l'utilisateur) : nom retiré de l'e-mail de vérification (hameçonnage) ;
+inscription sur une adresse inscrite ⇒ e-mail « Tu as déjà un compte » (connexion, ou nouveau lien si non vérifiée) ;
+bac à sable `MAIL_ALLOWED_DOMAINS`. Aussi : `textLinkClassName` (`packages/ui`), `EMAIL_RADII` testés contre
+`theme.css`, `EMAIL_LINK_VALIDITY`, corps des routes d'auth typés (`AuthRequestBodies`), `AUTH_PAGES` dans
+`constants`, gabarits réduits à leurs données (`actionMail`), journal de Better Auth figé à `warn`.
 
 **Attendu ensuite** : push + PR, vérif Brave (inscription → Mailpit `localhost:8025` → lien), modèle Espace.
 

@@ -41,11 +41,12 @@ export function SignUpForm() {
     signUp.mutate(input);
   }
 
-  // Même réponse, que l'adresse ait déjà un compte ou non : rien ne dit qui est inscrit.
+  // Même réponse, que l'adresse ait déjà un compte ou non (rien ne dit qui est inscrit) : l'e-mail donne la suite,
+  // lien de confirmation pour un compte neuf, lien de connexion pour un compte existant.
   if (signUp.isSuccess) {
     return (
       <MailSentNotice title="Vérifie ta boîte mail">
-        Un lien de confirmation est parti à {signUp.variables.email}. Il ouvre ton espace.
+        Un e-mail vient de partir à {signUp.variables.email} : suis son lien pour continuer.
       </MailSentNotice>
     );
   }

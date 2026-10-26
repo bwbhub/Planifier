@@ -1,4 +1,4 @@
-import { AUTH_PAGES } from "@planifier/api-contract";
+import { AUTH_PAGES } from "@planifier/constants/account";
 
 /** Chemins des pages, partagés par les redirections (gardes serveur, session expirée) et les liens. */
 export const ROUTES = {

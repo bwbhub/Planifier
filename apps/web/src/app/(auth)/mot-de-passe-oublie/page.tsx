@@ -1,3 +1,4 @@
+import { textLinkClassName } from "@planifier/ui/lib/text-link";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -12,10 +13,7 @@ export default function ForgotPasswordPage() {
       title="Mot de passe oublié"
       intro="Indique ton e-mail : tu recevras un lien pour en choisir un nouveau."
       footer={
-        <Link
-          href={ROUTES.signIn}
-          className="inline-flex min-h-11 items-center font-semibold text-accent-text underline"
-        >
+        <Link href={ROUTES.signIn} className={textLinkClassName()}>
           Retour à la connexion
         </Link>
       }

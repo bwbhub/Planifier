@@ -54,9 +54,7 @@ test.describe.serial("parcours d'un compte", () => {
     await page.getByLabel("Ton nom", { exact: true }).fill(DISPLAY_NAME);
     await fillCredentials(page, email, password);
     await page.getByRole("button", { name: "Créer mon compte" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      `Un lien de confirmation est parti à ${email}`,
-    );
+    await expect(page.getByRole("status")).toContainText(`Un e-mail vient de partir à ${email}`);
   });
 
   test("ouvre l'accueil quand on suit le lien de confirmation", async ({ page, request }) => {

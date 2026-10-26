@@ -11,6 +11,3 @@ export type MailContent = Omit<Mail, "to">;
 
 /** Envoi d'un e-mail. Rejette si le fournisseur refuse ; le message d'erreur ne contient jamais l'adresse. */
 export type SendMail = (mail: Mail) => Promise<void>;
-
-/** Expéditeur affiché. */
-export const SENDER_NAME = "Planifier";

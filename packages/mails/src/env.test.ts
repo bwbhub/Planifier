@@ -22,6 +22,11 @@ describe("parseMailEnv", () => {
     expect(() => parseMailEnv({ ...MAILPIT, MAIL_TRANSPORT: "resend" })).toThrow();
   });
 
+  it("lit la liste des domaines du bac à sable, sans espaces ni casse", () => {
+    const env = parseMailEnv({ ...MAILPIT, MAIL_ALLOWED_DOMAINS: " Planifier.test, ,exemple.fr" });
+    expect(env.MAIL_ALLOWED_DOMAINS).toEqual(["planifier.test", "exemple.fr"]);
+  });
+
   it("refuse une adresse d'expédition invalide", () => {
     expect(() => parseMailEnv({ ...MAILPIT, MAIL_FROM: "Planifier" })).toThrow();
   });

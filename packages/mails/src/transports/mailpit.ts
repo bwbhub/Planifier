@@ -1,4 +1,5 @@
-import { type SendMail, SENDER_NAME } from "../mail";
+import type { SendMail } from "../mail";
+import { SENDER_NAME } from "../sender";
 import { type Fetch, postJson } from "./post-json";
 
 /** Dépôt dans Mailpit par son API HTTP (`/api/v1/send`) : boîte locale, consultable sur son interface web. */

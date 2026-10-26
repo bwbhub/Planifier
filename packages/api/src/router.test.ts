@@ -23,7 +23,12 @@ function proceduresWithoutGuard(node: unknown, path: readonly string[] = []): st
   );
 }
 
-const ALICE: SessionUser = { id: "u-alice", name: "Alice", email: "alice@example.test" };
+const ALICE: SessionUser = {
+  id: "u-alice",
+  name: "Alice",
+  email: "alice@example.test",
+  preferredTheme: "SYSTEM",
+};
 
 /** Contexte neuf à chaque appel : chaque test a son propre limiteur, aucun état partagé. */
 function contextFor(user: SessionUser | null): ApiContext {

@@ -7,5 +7,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  test: { setupFiles: ["./vitest.setup.ts"] },
+  // e2e/ appartient à Playwright (`pnpm test:e2e`).
+  test: { setupFiles: ["./vitest.setup.ts"], include: ["src/**/*.test.{ts,tsx}"] },
 });

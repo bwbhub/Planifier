@@ -18,6 +18,83 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Smoke E2E Playwright (branche `feat/e2e-playwright`, ticket `869fkd81n`)
+
+**Fait** : fiche `@playwright/test` ~1.64.1 validée par l'utilisateur (Chromium seul) et installée via `catalog:`.
+`apps/web/e2e/` : inscription → accueil → déconnexion → connexion, accueil sans session ⇒ `/connexion`, thème
+clair/nuit selon le système ; projets PC et mobile (Pixel 7) ; pas de débordement horizontal. Web construit
+(`next start`, ports 3100/3101) + API, base `_test` imposée (Zod), secret Better Auth tiré à chaque run. Tâche turbo
+`test:e2e` (après `build`), étapes CI après les tests d'intégration. Vitest limité à `src/` dans le web.
+GitGuardian : les faux positifs viennent du check de PR ; exclusions à poser dans le tableau de bord (branche
+`chore/gitguardian`, note dans `project-context`).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `pnpm test:e2e` sur
+`planifier_test` : 6/6 OK ; refusé sur `planifier`. **Non vérifié** : CI (rien poussé).
+
+**Ouvert** : revue humaine (CI) ; serveur autonome (`output: standalone`) non testé, attend l'image Docker.
+
+**Attendu ensuite** : exclusions GitGuardian par l'utilisateur ; push + PR (empilée sur `feat/profil`).
+
+## 2026-10-26 — Décisions sur le profil (branche `feat/profil`)
+
+**Fait** (décisions de l'utilisateur) : changement de mot de passe avec case « Déconnecter mes autres appareils »,
+décochée par défaut (contrat : `revokeOtherSessions: boolean`) ; barre du haut des pages connectées (`AppHeader`) avec
+un bouton « Profil » à part (`aria-current` sur `/profil`) ; lien provisoire de l'accueil et « Retour » du profil
+retirés. `packages/ui` : `Checkbox`, `buttonClassName` (allure de bouton pour un lien). `me.get` du layout racine
+gardé tel quel (pas de cookie de thème : une copie à synchroniser de plus). Tests d'intégration du mot de passe dans
+leur propre `describe` (limite de longueur de fonction).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `pnpm test:integration` OK (10 tests API,
+dont mot de passe changé sans révoquer, puis avec). Rendu visuel toujours non vu.
+
+**Attendu ensuite** : push des branches par l'utilisateur, PR, vérif Brave.
+
+## 2026-10-26 — Corrections de revue du profil (branche `feat/profil`)
+
+**Fait** : `/update-user` refuse `image` (avatar non géré) ; `themePreferenceSchema` partagé dans `api-contract` ;
+`revokeOtherSessions` fixé par le contrat (`.default(true)`), plus par le formulaire ; `getThemePreference` ne
+rattrape que les refus d'API et les coupures réseau ; token `--text-control` (15 px) à la place de `text-[15px]`.
+**Bug trouvé en passant** : tailwind-merge prenait `text-control` pour une couleur et l'effaçait devant `text-ink` ;
+déclaré dans `cn`, testé.
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `pnpm test:integration` OK (avatar
+refusé, `avatarUrl` resté nul) ; `.text-control{font-size:15px}` présent dans le CSS construit.
+
+**Ouvert (décisions de l'utilisateur)** : autres sessions toujours fermées au changement de mot de passe, ou au choix ?
+Initiale ronde et accès au profil (mobile, PC) ? `me.get` appelé aussi sur `/connexion` par le layout racine : garder ?
+
+## 2026-10-26 — Profil : nom, thème, mot de passe (branche `feat/profil`, ticket `869fhwtf7`, partie 2)
+
+**Fait**
+
+- `ThemePreference` (`SYSTEM`/`LIGHT`/`DARK`) : enum Prisma + miroir `THEME_PREFERENCES` dans `constants` ; migration
+  `theme_prefere` (colonne libre recréée, non nulle, défaut `SYSTEM`).
+- Auth : `preferredTheme` champ additionnel de Better Auth, validé par Zod ; exposé par la session et `account.me.get`.
+- Contrat : `/update-user` (nom + thème) et `/change-password` (actuel exigé, autres sessions toujours fermées) décrits
+  dans `api-contract` ; code `INVALID_PASSWORD`.
+- Web : page `/profil` (deux formulaires), lien depuis l'accueil, `data-theme` posé par le layout racine (rendu
+  serveur, sans éclair). `ChoiceGroup` (radios en pastilles) dans `packages/ui`. Hook `useFormValidation` extrait des
+  quatre formulaires (règle des trois).
+
+**Décisions** : tout passe par Better Auth, comme connexion et inscription (pas d'accès base dans `api`). Changement
+d'e-mail et suppression de compte hors périmètre (vérification par e-mail, service `owner_left_at`). Thème : en cas
+d'API injoignable, le layout racine retombe sur `SYSTEM` plutôt que de casser la page d'erreur.
+
+**Vérifié**
+
+- `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` OK ; `pnpm test:integration` OK
+  (9 tests API dont 3 de profil : thème par défaut puis enregistré, thème inconnu et e-mail refusés, mot de passe
+  avec l'actuel et révocation des autres sessions).
+- `pnpm dev` + curl : `/profil` sans session ⇒ 307 ; avec ⇒ page rendue ; après choix « Nuit » ⇒
+  `<html data-theme="dark">` ; `/connexion` sans attribut. Seed relancé après migration.
+- **Non vérifié** : rendu visuel (pas de navigateur pilotable).
+
+**Ouvert** : revue humaine (auth, migration, `packages/ui`) ; branche empilée sur `feat/ecrans-connexion` (non poussée,
+non mergée) ; `/update-user` accepte `image` sans contrôle (préexistant) ; le conteneur Postgres s'est arrêté seul
+pendant les portes (relancé).
+
+**Attendu ensuite** : push des deux branches par l'utilisateur, PR, vérif Brave.
+
 ## 2026-10-26 — Vérification des écrans de connexion, PR (branche `feat/ecrans-connexion`)
 
 **Fait** : parcours testés contre `pnpm dev` (base locale migrée et seedée) ; PR ouverte.

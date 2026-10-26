@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { getThemePreference, themeAttribute } from "@/features/account";
 import { QueryProvider } from "@/lib/query-provider";
 
 import "./globals.css";
@@ -23,9 +24,11 @@ export const metadata: Metadata = {
   description: "Todo, agenda et événements, à la carte.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Rendu serveur avec le thème du compte : aucun éclair de l'autre thème au chargement.
+  const theme = themeAttribute(await getThemePreference());
   return (
-    <html lang="fr" className={`${bricolage.variable} ${dmSans.variable}`}>
+    <html lang="fr" data-theme={theme} className={`${bricolage.variable} ${dmSans.variable}`}>
       <body>
         <QueryProvider>{children}</QueryProvider>
       </body>

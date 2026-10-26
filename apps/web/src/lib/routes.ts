@@ -3,4 +3,5 @@ export const ROUTES = {
   home: "/",
   signIn: "/connexion",
   signUp: "/inscription",
+  profile: "/profil",
 } as const;

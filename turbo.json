@@ -21,6 +21,12 @@
       "env": ["DATABASE_URL"],
       "cache": false
     },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "env": ["DATABASE_URL", "CI"],
+      "passThroughEnv": ["PLAYWRIGHT_*"],
+      "cache": false
+    },
     "dev": {
       "dependsOn": ["@planifier/db#generate"],
       "cache": false,

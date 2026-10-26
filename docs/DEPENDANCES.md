@@ -196,9 +196,29 @@ Poids : jsdom 7 Mo (20 dépendances), axe-core 3,4 Mo (aucune) ; aucun script d'
 axe-core y est moins éprouvé) ; mode navigateur de Vitest (navigateurs à télécharger, plus lourd).
 ```
 
+## Fiche validée et installée : tests E2E (ticket `869fkd81n`)
+
+Vérifié le 2026-10-26 (registre npm). Validée par l'utilisateur le 2026-10-26 (Chromium seul).
+
+```
+Dépendance : @playwright/test@~1.64.1 (tire playwright et playwright-core, même version)
+Cible : apps/web (dossier e2e/)     Type : dev uniquement (rien n'est livré)
+Besoin : parcours critique de bout en bout (inscription → accueil → déconnexion → connexion), clair/nuit,
+         mobile/PC (skill testing-standards, décision technique 14).
+Doublon ? : non. Vitest + jsdom testent des composants isolés, sans serveur ni vrai navigateur.
+Licence : Apache-2.0 (autorisée).
+Maintenance : Microsoft, versions mensuelles (1.63.0 le 2026-09-04, 1.64.0 le 2026-10-07, 1.64.1 le 2026-10-14) ;
+              1.64.1 passe le seuil minimumReleaseAge (3 jours).
+Poids : @playwright/test 29 ko, playwright 5 Mo, playwright-core 14 Mo ; aucune autre dépendance ; aucun script
+        d'installation. Navigateur téléchargé à part (`playwright install chromium`, ~170 Mo, cache hors dépôt).
+Navigateurs : Chromium seul (Brave et Chrome en dérivent), en deux formats : PC et mobile émulé.
+CI : étapes après les tests d'intégration (même base `_test`), `playwright install --with-deps chromium`.
+Écartés : Cypress (un seul onglet, plus lourd, modèle d'exécution propre) ; mode navigateur de Vitest (pas fait
+          pour piloter web + API ensemble).
+```
+
 ## À venir (ne pas installer avant validation de sa fiche)
 
 | Dépendance                       | Version visée | Point d'attention                        |
 | -------------------------------- | ------------- | ---------------------------------------- |
 | web-push, resend, @react-email/* | à choisir     | ADR 0010 ; domaine à acheter pour Resend |
-| @playwright/test                 | à choisir     | tests E2E (décision technique 14)        |

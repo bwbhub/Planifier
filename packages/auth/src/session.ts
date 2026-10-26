@@ -6,7 +6,7 @@ import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import type { Auth } from "./auth";
 
 /** Utilisateur de la session, tel que l'API le reçoit dans son contexte (jamais depuis l'entrée). */
-export type SessionUser = Pick<User, "id" | "name" | "email">;
+export type SessionUser = Pick<User, "id" | "name" | "email" | "preferredTheme">;
 
 /** Utilisateur de la session portée par le cookie, ou `null` (absente, expirée ou révoquée). */
 export async function getSessionUser(
@@ -15,8 +15,8 @@ export async function getSessionUser(
 ): Promise<SessionUser | null> {
   const session = await auth.api.getSession({ headers: fromNodeHeaders(headers) });
   if (session === null) return null;
-  const { id, name, email } = session.user;
-  return { id, name, email };
+  const { id, name, email, preferredTheme } = session.user;
+  return { id, name, email, preferredTheme };
 }
 
 /** Gestionnaire HTTP Node des routes de Better Auth (`AUTH_BASE_PATH`), monté par `apps/api`. */

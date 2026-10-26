@@ -8,7 +8,7 @@
 - Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
   et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
 
-## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
+## 2. Prochain ticket
 
 À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
 (seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
@@ -16,8 +16,8 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 
 ## 3. Ensuite
 
-1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion, CI.
-2. Package `mails` : vérification d'e-mail, réinitialisation de mot de passe (réponse générique à l'inscription).
+1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion/profil, CI.
+2. Package `mails` : vérification d'e-mail, réinitialisation, changement d'e-mail.
 3. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
 4. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
 5. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
@@ -49,4 +49,6 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 - Tests sur base : `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm test:integration`
   (suites sérialisées : `auth` puis `api-server`, même base).
 - Node local 24.11 : jsdom 30 refusé (D4). Tests de composants web : `// @vitest-environment jsdom` en tête de fichier.
+- `/update-user` de Better Auth accepte aussi `image` (→ `avatarUrl`) sans contrôle : à fermer avec les avatars.
+- jsdom n'a pas `CSS.escape` : `userEvent.keyboard` sur des radios plante ; tester au clic.
 - Le tsconfig de Next garde le JSX (`preserve`) : `oxc.jsx` dans `apps/web/vitest.config.ts`.

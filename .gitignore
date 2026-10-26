@@ -16,3 +16,7 @@ next-env.d.ts
 !.env.example
 # Client Prisma produit par `prisma generate`
 packages/db/src/generated
+
+# Playwright (tests E2E)
+test-results
+playwright-report

@@ -1,11 +1,14 @@
 import {
   AUTH_ROUTES,
   authErrorBodySchema,
+  type ChangePasswordInput,
   type SignInInput,
   type SignUpInput,
+  type UpdateProfileInput,
 } from "@planifier/api-contract";
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { AuthRequestError } from "../utils/auth-request-error";
 
@@ -47,4 +50,28 @@ export function useSignUp() {
 
 export function useSignOut() {
   return useAuthMutation(() => postAuth(AUTH_ROUTES.signOut, {}));
+}
+
+/**
+ * Nom et thème. Pas `useAuthMutation` : la session reste la même, le cache est gardé ; seules les pages serveur
+ * (nom affiché, thème du `<html>`) sont relues.
+ */
+export function useUpdateProfile() {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) => postAuth(AUTH_ROUTES.updateUser, input),
+    onSuccess: () => {
+      router.refresh();
+    },
+  });
+}
+
+/**
+ * Ni `useAuthMutation` ni vidage du cache : la session courante reste ouverte (les autres sont fermées si
+ * l'utilisateur l'a demandé, `revokeOtherSessions`).
+ */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: ChangePasswordInput) => postAuth(AUTH_ROUTES.changePassword, input),
+  });
 }

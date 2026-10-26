@@ -2,6 +2,7 @@ import "server-only";
 
 import { ORPCError } from "@orpc/client";
 import type { MeOutput } from "@planifier/api-contract";
+import type { ThemePreference } from "@planifier/constants/account";
 import { cache } from "react";
 
 import { createServerApiClient } from "@/lib/orpc.server";
@@ -19,3 +20,17 @@ export const getCurrentUser = cache(async (): Promise<MeOutput | null> => {
     throw error;
   }
 });
+
+/**
+ * Thème préféré de la session, pour le layout racine. `SYSTEM` sans session, et aussi si l'API ne répond pas : le
+ * thème est cosmétique, et une erreur ici empêcherait d'afficher la page d'erreur elle-même (elle vit sous ce layout).
+ */
+export async function getThemePreference(): Promise<ThemePreference> {
+  try {
+    return (await getCurrentUser())?.preferredTheme ?? "SYSTEM";
+  } catch (error: unknown) {
+    // Refus de l'API ou réseau coupé : thème par défaut. Toute autre erreur est un bug et remonte.
+    if (error instanceof ORPCError || error instanceof TypeError) return "SYSTEM";
+    throw error;
+  }
+}

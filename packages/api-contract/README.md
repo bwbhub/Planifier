@@ -8,6 +8,9 @@ types côté serveur (`api`) et côté client (`apps/web`).
 - `contract` : contrat complet (`system.health.get`…).
 - `ApiClient` : type du client, dérivé du contrat.
 - Types de sortie (`HealthOutput`…).
+- Routes de Better Auth (hors oRPC) : `AUTH_ROUTES`, `AUTH_ERROR_CODES`, `signUpInputSchema`, `signInInputSchema`,
+  `authErrorBodySchema` (`features/account/auth`). Les codes sont vérifiés contre Better Auth par l'intégration de
+  `apps/api`.
 
 Arborescence : `src/features/<domaine>/<feature>/<feature>.schemas.ts` puis `<feature>.contract.ts`, assemblés dans
 `src/index.ts`.

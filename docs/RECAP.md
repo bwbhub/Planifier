@@ -18,6 +18,106 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Vérification des écrans de connexion, PR (branche `feat/ecrans-connexion`)
+
+**Fait** : parcours testés contre `pnpm dev` (base locale migrée et seedée) ; PR ouverte.
+
+**Vérifié**
+
+- HTTP : `/` sans session ⇒ 307 vers `/connexion` ; avec session ⇒ 200 ; `/connexion` avec session ⇒ 307 vers `/`.
+- Connexion `alice@example.test` OK ; mauvais mot de passe ⇒ 401 `INVALID_EMAIL_OR_PASSWORD` ; inscription OK ;
+  doublon ⇒ 422 `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` (codes traduits par `auth-error-message`, testé).
+- `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK.
+- **Non vérifié** : rendu visuel. Extension Chrome non connectée, Brave headless bloqué par le bac à sable (même sur
+  une page vide).
+
+**Ouvert** : vérif visuelle Brave (clair/nuit, mobile) par l'utilisateur ; revue humaine (auth, tokens) ; glossaire
+Journal ; l'inscription révèle qu'un e-mail existe (inhérent sans vérification d'e-mail, à revoir avec `mails`).
+
+**Attendu ensuite** : revue + merge (PR #10 incluse), puis profil (`869fhwtf7`, partie 2).
+
+## 2026-10-21 — Maquettes v2 lues, écrans de connexion alignés (branche `feat/ecrans-connexion`)
+
+**Fait**
+
+- Maquettes `Planifier v2 — Phase 1-light/dark.html` déplacées de `newContext/` vers `docs/maquettes/`. Contenu :
+  Phase 1 inchangée + module **Journal** (33 écrans par thème) ; aucun écran connexion, inscription ni profil.
+- Tokens de couleur identiques à `packages/tokens`. Écarts corrigés : bouton principal en pastille 50 px
+  (`--radius-pill` ajouté), champ 48 px à bordure 2 px (accent au focus), libellé gras.
+- **Bug corrigé** : Tailwind ne scannait pas `packages/ui` ; les classes de `Button` et `TextField` manquaient du CSS
+  construit (boutons et champs sans style). `@source` ajouté dans `globals.css`.
+- `ux-design-brief` : sources, contrôles, erreurs, Journal, navigation mobile (barre du bas, maquettée).
+  `CONTEXT.md` : section Journal (d'après la maquette, à confirmer).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; classes présentes dans le CSS construit.
+Rien vu dans un navigateur.
+
+**Ouvert** : revue humaine (auth, tokens) ; glossaire Journal à valider ; vérif Brave toujours due.
+
+**Attendu ensuite** : vérif Brave, push + PR, puis profil (`869fhwtf7`).
+
+## 2026-10-20 — Écrans de connexion et d'inscription (branche `feat/ecrans-connexion`, ticket `869fhwtf7`, partie 1)
+
+**Fait**
+
+- `packages/ui` : `Button`, `TextField` (libellé, aide, erreur reliés, `aria-invalid`), tests d'interaction + axe-core.
+- `@planifier/constants/account` : bornes du nom et du mot de passe, lues par `auth` (Better Auth) et le web.
+- `api-contract` : `AUTH_ROUTES`, `AUTH_ERROR_CODES`, schémas d'inscription et de connexion (routes Better Auth).
+- `apps/web` : module `account` (formulaires, `fetch` maison dans `queries/`, messages d'erreur, déconnexion) ;
+  pages `/connexion`, `/inscription` ; groupe `(app)` réservé aux connectés via `getCurrentUser()` (appel serveur de
+  `account.me.get` avec cookie + IP) ; `UNAUTHORIZED` global ⇒ cache vidé, retour à la connexion.
+- Seed : `pnpm seed` (racine) = seed `db` puis mots de passe de démo (`auth`, hash Better Auth, `planifier-demo`) ;
+  `@planifier/db/seeding` (comptes de démo, base locale gardée).
+- Intégration : codes d'erreur du contrat vérifiés contre Better Auth ; inscription en double ⇒ 422 ; suites
+  d'intégration sérialisées (`^test:integration`, même base).
+- Fiches : jsdom, Testing Library, axe-core (dev) ; dérogations D4 (jsdom 29, Node 24.11) et D5 (licence MPL-2.0).
+
+**Décisions** (utilisateur, 2026-10-20) : profil en PR 2 ; tutoiement chaleureux, jamais familier (`ux-design-brief`) ;
+`fetch` maison plutôt que `better-auth/client` ; seed dans `auth` ; jsdom + Testing Library + axe-core ; smoke
+Playwright dans un ticket dédié (`869fkd81n`).
+
+**Vérifié** (2026-10-20)
+
+- `pnpm format:check`, `check-types`, `lint`, `test` (102 tests), `build` : OK.
+- `test:integration` : auth 1/1 (seed relancé ×2, connexion des 3 comptes), api 6/6.
+- `pnpm seed` sur la base locale : OK. `pnpm dev`, parcours HTTP via le proxy : `/` anonyme ⇒ 307 `/connexion` ;
+  connexion `alice@example.test` ⇒ 200 ; `/` ⇒ « Bonjour Alice » ; `/connexion` connecté ⇒ 307 `/` ; déconnexion ⇒
+  `/` ⇒ 307 `/connexion`. Aucun mot de passe dans les journaux.
+- Mutation : sans le focus du premier champ invalide, le test du formulaire échoue.
+- **Non vérifié** : rendu dans un navigateur (JS des formulaires, clair/nuit, mobile/PC : pas de Chrome, à voir par
+  l'utilisateur dans Brave) ; CI réelle (non poussé) ; contraste mesuré (axe ne le calcule pas en jsdom).
+
+**Ouvert**
+
+- Revue humaine obligatoire : auth (garde serveur, seed de mots de passe), `turbo.json`, dépendances, dérogation D5.
+- Énumération des comptes : l'inscription dit « un compte existe déjà » (sans e-mail de vérification, inévitable ;
+  à revoir avec `mails`, `requireEmailVerification` rend une réponse générique).
+- Chaque rendu d'une page `(app)` appelle `me` : compté dans la limite 120/min/IP des plans.
+- Pas de redirection vers la page demandée après connexion (évite une redirection ouverte ; à concevoir si utile).
+- Pas de maquette pour ces écrans : composition déduite du brief.
+
+**Corrections de revue** (`/code-review`, même jour, validées par l'utilisateur)
+
+- Règle des trois : `AuthErrorAlert` (atome), `useSessionRedirect`, aide de test `@planifier/ui/testing/axe`.
+- `REQUEST_ID_HEADER` dans `constants/http` (web, proxy, API) ; `AUTH_BASE_PATH` dans le test d'intégration.
+- `AuthRequestError` dans son fichier ; `forms/invalid-fields.ts` → `utils/form-validation.ts` ; raison du `fetch`
+  direct écrite dans `auth.queries.ts` ; note `tsx` (seed d'`auth`) dans `DEPENDANCES.md`.
+- `app/error.tsx` : API injoignable au rendu ⇒ message + « Réessayer » (au lieu de la page par défaut de Next).
+- Liens connexion ↔ inscription : cible 44 px.
+- Non repris de l'ancien formulaire, à décider : afficher le mot de passe, confirmation du mot de passe à
+  l'inscription, parcours d'invitation (`inviteToken`, e-mail pré-rempli ; attend le module Événements).
+- Non retenu : double garde layout/page (la page a besoin de `user`, `cache` évite le second appel) ; alias
+  `InvalidFields` ; `handleSubmit` dupliqué deux fois (règle des trois) ; pas de token d'erreur distinct (ticket design
+  system) ; contraste non mesuré (E2E navigateur).
+
+**Attendu ensuite**
+
+- Vérif visuelle par l'utilisateur dans Brave (non faite), puis push et PR (sur demande).
+- Deux nouveaux fichiers de maquettes annoncés par l'utilisateur (pas encore dans `docs/maquettes/`) : à lire avant
+  la partie 2, écarts avec ces écrans à corriger.
+- PR 2 du ticket `869fhwtf7` : profil (nom, mot de passe, thème) ; e-mail après `mails`.
+- Ticket E2E Playwright `869fkd81n`.
+
 ## 2026-10-20 — Authentification Better Auth (branche `feat/auth`, ticket `869fhwtf2`)
 
 **Fait**

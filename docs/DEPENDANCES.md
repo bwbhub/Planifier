@@ -40,6 +40,8 @@ L'isolation des modules est faite avec `no-restricted-imports`, déjà fourni pa
 | --- | ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | D1  | TypeScript 6.0 (pas 7) | `typescript-eslint` : `typescript <6.1`                                  | à la prochaine version de `typescript-eslint`                           |
 | D2  | ESLint 9 (pas 10)      | `eslint-plugin-react` : peer ESLint ≤ 9 ; npm signale 9.x « deprecated » | à la sortie d'une version de `eslint-plugin-react` compatible ESLint 10 |
+| D4  | jsdom 29 (pas 30)      | jsdom 30 exige Node ≥ 24.15 (machine en 24.11)                           | passage de la machine et de la CI à Node ≥ 24.15                        |
+| D5  | axe-core (MPL-2.0)     | licence hors liste ; outil de test seulement, non modifié, jamais livré  | à l'ajout d'un outil d'accessibilité sous licence autorisée             |
 
 ## Fiches validées et installées : `packages/db` (ticket « Package db »)
 
@@ -151,6 +153,9 @@ Sortie : moyenne (hooks confinés dans `queries/`).
 `tsx` (déjà au catalog) devient une dépendance d'exécution de `apps/api` : les packages du workspace exportent du
 TypeScript source, l'API tourne avec `node --import tsx` (pas de bundle).
 
+`tsx` sert aussi au seed de `packages/auth` (mots de passe de démo, dépendance de développement) : même usage que
+le seed de `db`, aucune version nouvelle.
+
 ## Fiche validée et installée : Better Auth (ticket `auth`, `869fhwtf2`)
 
 Vérifié le 2026-10-20 (registre npm). Version validée par l'utilisateur au cadrage (commentaire ClickUp du 2026-10-18),
@@ -170,6 +175,25 @@ Périmètre : serveur uniquement (`packages/auth`, jamais importé par le web, l
 l'Espace est maison (ADR 0009, 0014).
 Alternative écartée : Auth.js (orienté OAuth, e-mail + mot de passe découragé ; ADR 0004).
 Sortie : coût élevé (tables Session/Account/Verification, format de hash), borné à `packages/auth` et au montage HTTP.
+```
+
+## Fiche validée et installée : tests de composants (ticket écrans de connexion, `869fhwtf7`)
+
+Vérifié le 2026-10-20 (registre npm). Outils validés par l'utilisateur le 2026-10-20 (jsdom + Testing Library + axe-core).
+
+```
+Dépendances : jsdom@~29.1.1, @testing-library/react@~16.3.3, @testing-library/dom@~10.4.2,
+              @testing-library/user-event@~14.6.8, axe-core@~4.14.0
+Cible : packages/ui, apps/web     Type : dev uniquement (rien n'est livré au navigateur)
+Besoin : test d'interaction + vérification d'accessibilité par composant (skill testing-standards).
+Doublon ? : non (aucun outil de DOM ni d'accessibilité installé).
+Licences : MIT, sauf axe-core en MPL-2.0 (hors liste autorisée : dérogation D5).
+Maintenance : jsdom 29.1.1 du 2026-04-30, Testing Library react 16.3.3 du 2026-08-27, dom 10.4.2 du 2026-09-13,
+user-event 14.6.8 du 2026-10-13, axe-core 4.14.0 du 2026-10-05 ; dépôts actifs.
+Compatibilité : react ^19, vitest 5. jsdom 30 écarté : exige Node ≥ 24.15 (machine en 24.11, `engines` ≥ 20.9).
+Poids : jsdom 7 Mo (20 dépendances), axe-core 3,4 Mo (aucune) ; aucun script d'installation.
+Écartés : vitest-axe (dernière version 2025-01, inactif : axe appelé directement) ; happy-dom (moins fidèle,
+axe-core y est moins éprouvé) ; mode navigateur de Vitest (navigateurs à télécharger, plus lourd).
 ```
 
 ## À venir (ne pas installer avant validation de sa fiche)

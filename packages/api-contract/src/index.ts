@@ -14,3 +14,12 @@ export type ApiClient = ContractRouterClient<typeof contract>;
 
 export type { HealthOutput } from "./features/system/health/health.schemas";
 export type { MeOutput } from "./features/account/me/me.schemas";
+export {
+  AUTH_ERROR_CODES,
+  AUTH_ROUTES,
+  authErrorBodySchema,
+  signInInputSchema,
+  signUpInputSchema,
+  type SignInInput,
+  type SignUpInput,
+} from "./features/account/auth/auth.schemas";

@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "sideEffects": false,
   "exports": {
+    "./account": "./src/account.ts",
     "./events": "./src/events.ts",
     "./spaces": "./src/spaces.ts",
     "./notifications": "./src/notifications.ts",

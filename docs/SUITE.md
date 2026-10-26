@@ -8,7 +8,7 @@
 - Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
   et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
 
-## 2. Prochain ticket : écrans connexion / inscription (`apps/web`)
+## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
 
 À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
 (seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
@@ -16,11 +16,12 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 
 ## 3. Ensuite
 
-1. Package `mails` : vérification d'e-mail, réinitialisation de mot de passe.
-2. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
-3. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
-4. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
-5. Hors PR auth : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
+1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion, CI.
+2. Package `mails` : vérification d'e-mail, réinitialisation de mot de passe (réponse générique à l'inscription).
+3. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
+4. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
+5. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
+6. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
 
 ## 4. Questions ouvertes pour l'utilisateur
 
@@ -28,6 +29,12 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 - `newContext/Decisions techniques.md` : supprimer ?
 - Granularité de la visibilité d'Espace ; suppression par le propriétaire d'Espace limitée à ce qu'il voit : à confirmer.
 - Hébergeur : son relais ajoute-t-il `x-forwarded-for` (fiabilité de l'IP, ADR 0016) ?
+- Après connexion, revenir à la page demandée (`?suite=`, chemin interne seulement) : utile ?
+- Ancien formulaire : remettre « afficher le mot de passe » et la confirmation à l'inscription ? Invitation par
+  lien (e-mail pré-rempli) : avec le module Événements.
+- Token d'erreur : la maquette v2 n'en a pas (erreurs en `ink`/`accent-text` + icône). Question close sauf avis contraire.
+- Module Journal (nouveau dans la maquette) : ticket à créer ? Glossaire posé dans `CONTEXT.md`, à valider. Verrou à
+  6 chiffres + « Utiliser mon mot de passe » : revue sécurité à prévoir.
 
 ## 5. Pièges de l'environnement
 
@@ -40,4 +47,6 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 - `pnpm --filter X add` peut délier les `node_modules` d'autres packages : relancer `pnpm install` ensuite.
 - Better Auth coupe son contrôle d'origine en environnement de test : `disableOriginCheck: false` le garde actif.
 - Tests sur base : `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm test:integration`
-  (base `planifier_test` créée et migrée en local ; Turbo filtre l'environnement : variable déclarée dans `turbo.json`).
+  (suites sérialisées : `auth` puis `api-server`, même base).
+- Node local 24.11 : jsdom 30 refusé (D4). Tests de composants web : `// @vitest-environment jsdom` en tête de fichier.
+- Le tsconfig de Next garde le JSX (`preserve`) : `oxc.jsx` dans `apps/web/vitest.config.ts`.

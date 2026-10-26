@@ -44,6 +44,13 @@ catalog:
   better-auth: ~1.7.10
   # tests (~5.0.4 et non 5.0.5 : publiée le 2026-10-15, sous le seuil minimumReleaseAge)
   vitest: ~5.0.4
+  # tests de composants (docs/DEPENDANCES.md). jsdom 29 et non 30 : jsdom 30 exige Node >= 24.15 (dérogation D4).
+  jsdom: ~29.1.1
+  "@testing-library/react": ~16.3.3
+  "@testing-library/dom": ~10.4.2
+  "@testing-library/user-event": ~14.6.8
+  # MPL-2.0, outil de test seulement (dérogation D5)
+  axe-core: ~4.14.0
   # styles
   tailwindcss: ^4.3.0
   "@tailwindcss/postcss": ^4.3.0

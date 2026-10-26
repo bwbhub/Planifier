@@ -18,12 +18,14 @@ Base locale : `docker compose up -d` (racine, PostgreSQL 17 sur `127.0.0.1:5433`
 | `pnpm --filter @planifier/db migrate:dev`    | crée et applique une migration en local             |
 | `pnpm --filter @planifier/db migrate:deploy` | applique les migrations (environnements partagés)   |
 | `pnpm --filter @planifier/db seed`           | données de démo, idempotent, base locale uniquement |
+| `pnpm seed` (racine)                         | seed de `db` puis mots de passe de démo (`auth`)    |
 
 `generate`, `validate` et `format` n'ouvrent aucune connexion et n'exigent aucune URL. La CLI lit `.env.local`
 s'il existe (`getCliDatabaseUrl()` dans `src/env.ts`).
 
 Le seed refuse toute base dont l'hôte n'est pas `localhost`, `127.0.0.1` ou `[::1]`, et `NODE_ENV=production`
-(`assertLocalDatabase`).
+(`assertLocalDatabase`). `@planifier/db/seeding` expose `DEMO_USERS` et `openLocalSeedDatabase()` (même garde) au
+seed de `auth`, qui pose les mots de passe : `db` ne dépend pas de Better Auth.
 
 ## Tests d'intégration
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { DISPLAY_NAME_MAX_LENGTH, parseDisplayName } from "./display-name";
+import { DISPLAY_NAME_MAX_LENGTH } from "@planifier/constants/account";
+
+import { parseDisplayName } from "./display-name";
 
 describe("parseDisplayName", () => {
   it("retire les espaces de bord", () => {

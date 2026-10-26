@@ -1,3 +1,4 @@
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@planifier/constants/account";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import type { Db } from "@planifier/db";
 import { betterAuth } from "better-auth";
@@ -6,8 +7,6 @@ import { APIError } from "better-auth/api";
 
 import { parseDisplayName } from "./display-name";
 import type { AuthEnv } from "./env";
-
-const MAX_PASSWORD_LENGTH = 128;
 
 /** Préfixe des cookies (`planifier.session_token`…). */
 export const AUTH_COOKIE_PREFIX = "planifier";
@@ -31,7 +30,11 @@ export function createAuth(db: Db, env: AuthEnv) {
     database: prismaAdapter(db, { provider: "postgresql", transaction: true }),
     telemetry: { enabled: false },
     // Vérification d'e-mail et réinitialisation : avec le package `mails` (aucun envoi pour l'instant).
-    emailAndPassword: { enabled: true, maxPasswordLength: MAX_PASSWORD_LENGTH },
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: PASSWORD_MIN_LENGTH,
+      maxPasswordLength: PASSWORD_MAX_LENGTH,
+    },
     user: { fields: { image: "avatarUrl" } },
     // Le nom est validé à chaque écriture (inscription, modification du profil).
     databaseHooks: {

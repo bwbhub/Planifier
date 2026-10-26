@@ -24,16 +24,17 @@ Modèle d'entrée :
 `apps/web/e2e/` : inscription → accueil → déconnexion → connexion, accueil sans session ⇒ `/connexion`, thème
 clair/nuit selon le système ; projets PC et mobile (Pixel 7) ; pas de débordement horizontal. Web construit
 (`next start`, ports 3100/3101) + API, base `_test` imposée (Zod), secret Better Auth tiré à chaque run. Tâche turbo
-`test:e2e` (après `build`), étapes CI après les tests d'intégration. Vitest limité à `src/` dans le web.
-GitGuardian : les faux positifs viennent du check de PR ; exclusions à poser dans le tableau de bord (branche
-`chore/gitguardian`, note dans `project-context`).
+`test:e2e` (après `build`), job CI `e2e` séparé (décision : la fiche validée). Corrections de revue : aucun nouvel
+essai, un comportement par test, nuit comparée au token, débordement vérifié sur les trois pages.
+Parcours du compte en série (un compte et une connexion par format, session passée par cookies) : un compte par test
+déclenchait la limitation de débit de Better Auth. Vitest limité à `src/` dans le web.
 
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `pnpm test:e2e` sur
-`planifier_test` : 6/6 OK ; refusé sur `planifier`. **Non vérifié** : CI (rien poussé).
+`planifier_test` : 18/18 OK, deux fois de suite ; refusé sur `planifier`. **Non vérifié** : CI (rien poussé).
 
 **Ouvert** : revue humaine (CI) ; serveur autonome (`output: standalone`) non testé, attend l'image Docker.
 
-**Attendu ensuite** : exclusions GitGuardian par l'utilisateur ; push + PR (empilée sur `feat/profil`).
+**Attendu ensuite** : push + PR (empilée sur `feat/profil`).
 
 ## 2026-10-26 — Décisions sur le profil (branche `feat/profil`)
 

@@ -212,7 +212,7 @@ Maintenance : Microsoft, versions mensuelles (1.63.0 le 2026-09-04, 1.64.0 le 20
 Poids : @playwright/test 29 ko, playwright 5 Mo, playwright-core 14 Mo ; aucune autre dépendance ; aucun script
         d'installation. Navigateur téléchargé à part (`playwright install chromium`, ~170 Mo, cache hors dépôt).
 Navigateurs : Chromium seul (Brave et Chrome en dérivent), en deux formats : PC et mobile émulé.
-CI : étapes après les tests d'intégration (même base `_test`), `playwright install --with-deps chromium`.
+CI : job séparé, `playwright install --with-deps chromium`, base `_test` du service Postgres (revue humaine).
 Écartés : Cypress (un seul onglet, plus lourd, modèle d'exécution propre) ; mode navigateur de Vitest (pas fait
           pour piloter web + API ensemble).
 ```

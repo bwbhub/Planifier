@@ -213,14 +213,19 @@ describe("profil (base réelle)", () => {
     });
   });
 
-  it("refuse un thème inconnu et un changement d'e-mail sans rien écrire", async () => {
+  it("refuse un thème inconnu, un changement d'e-mail et un avatar sans rien écrire", async () => {
     const session = await signedUp("192.0.2.61");
-    for (const body of [{ preferredTheme: "ROSE" }, { email: "autre@example.test" }]) {
+    for (const body of [
+      { preferredTheme: "ROSE" },
+      { email: "autre@example.test" },
+      { name: "Profil", image: "https://malveillant.example/a.png" },
+    ]) {
       const response = await authPost(AUTH_ROUTES.updateUser, body, "192.0.2.61", session);
       expect(response.status).toBe(400);
     }
     await expect(db.user.findUnique({ where: { email } })).resolves.toMatchObject({
       preferredTheme: "SYSTEM",
+      avatarUrl: null,
     });
   });
 

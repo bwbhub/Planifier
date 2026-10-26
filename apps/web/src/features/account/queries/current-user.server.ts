@@ -28,7 +28,9 @@ export const getCurrentUser = cache(async (): Promise<MeOutput | null> => {
 export async function getThemePreference(): Promise<ThemePreference> {
   try {
     return (await getCurrentUser())?.preferredTheme ?? "SYSTEM";
-  } catch {
-    return "SYSTEM";
+  } catch (error: unknown) {
+    // Refus de l'API ou réseau coupé : thème par défaut. Toute autre erreur est un bug et remonte.
+    if (error instanceof ORPCError || error instanceof TypeError) return "SYSTEM";
+    throw error;
   }
 }

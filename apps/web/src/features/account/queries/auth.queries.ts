@@ -52,7 +52,10 @@ export function useSignOut() {
   return useAuthMutation(() => postAuth(AUTH_ROUTES.signOut, {}));
 }
 
-/** Nom et thème : la session reste la même ; les pages serveur (nom affiché, thème du `<html>`) sont relues. */
+/**
+ * Nom et thème. Pas `useAuthMutation` : la session reste la même, le cache est gardé ; seules les pages serveur
+ * (nom affiché, thème du `<html>`) sont relues.
+ */
 export function useUpdateProfile() {
   const router = useRouter();
   return useMutation({
@@ -63,7 +66,10 @@ export function useUpdateProfile() {
   });
 }
 
-/** Les autres sessions sont fermées par le serveur ; celle-ci reste ouverte. */
+/**
+ * Ni `useAuthMutation` ni vidage du cache : la session courante reste ouverte (le serveur ferme les autres,
+ * `revokeOtherSessions` posé par le contrat).
+ */
 export function useChangePassword() {
   return useMutation({
     mutationFn: (input: ChangePasswordInput) => postAuth(AUTH_ROUTES.changePassword, input),

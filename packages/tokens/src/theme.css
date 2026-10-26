@@ -27,6 +27,9 @@
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 
+  /* Texte des contrôles en pastille (bouton, choix), relevé dans la maquette. */
+  --text-control: 15px;
+
   --radius-card: 20px;
   --radius-control: 12px;
   --radius-pill: 999px;

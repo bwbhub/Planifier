@@ -18,6 +18,21 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Corrections de revue du profil (branche `feat/profil`)
+
+**Fait** : `/update-user` refuse `image` (avatar non géré) ; `themePreferenceSchema` partagé dans `api-contract` ;
+`revokeOtherSessions` fixé par le contrat (`.default(true)`), plus par le formulaire ; `getThemePreference` ne
+rattrape que les refus d'API et les coupures réseau ; token `--text-control` (15 px) à la place de `text-[15px]`.
+**Bug trouvé en passant** : tailwind-merge prenait `text-control` pour une couleur et l'effaçait devant `text-ink` ;
+déclaré dans `cn`, testé.
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `pnpm test:integration` OK (avatar
+refusé, `avatarUrl` resté nul) ; `.text-control{font-size:15px}` présent dans le CSS construit.
+
+**Ouvert (décisions de l'utilisateur)** : autres sessions toujours fermées au changement de mot de passe, ou au choix ?
+Initiale ronde et accès au profil (mobile, PC) ? `me.get` appelé aussi sur `/connexion` par le layout racine : garder ?
+Non repris de la revue : `disabled` sur `ChoiceGroup` (sans besoin), fixture `ALICE` (2 paquets distincts).
+
 ## 2026-10-26 — Profil : nom, thème, mot de passe (branche `feat/profil`, ticket `869fhwtf7`, partie 2)
 
 **Fait**

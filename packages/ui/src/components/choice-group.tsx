@@ -32,7 +32,7 @@ export function ChoiceGroup<TValue extends string>({
           <label
             key={option.value}
             className={cn(
-              "inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-field px-4 text-[15px] font-semibold",
+              "inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-field px-4 text-control font-semibold",
               "text-ink hover:bg-line has-checked:bg-ink has-checked:text-surface",
               "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent",
             )}

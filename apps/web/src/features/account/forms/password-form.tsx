@@ -29,7 +29,6 @@ export function PasswordForm() {
     const input = validate(form, changePasswordInputSchema, {
       currentPassword: data.get("currentPassword"),
       newPassword: data.get("newPassword"),
-      revokeOtherSessions: true,
     });
     if (input === null) return;
     changePassword.mutate(input, {

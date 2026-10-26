@@ -4,24 +4,24 @@
 
 ## 1. À faire par l'utilisateur
 
-- Rien en attente. Tickets `869fhwtf2` (auth) et `869fhwtf4` (bcrypt, sans objet) fermés dans ClickUp le 2026-10-20.
-- Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
-  et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
+- PR des corrections de revue E2E (`fix/e2e-corrections-revue`) : la #13 a été mergée sans elles. Merge une fois la
+  CI verte (job `e2e` neuf : revue humaine).
+- **Vérif Brave** : profil (`/profil` : nom, thème, mot de passe, case « Déconnecter mes autres appareils », bouton
+  « Profil »), clair et nuit, mobile et PC. Compte de démo : `pnpm seed`, puis `alice@example.test` / `planifier-demo`.
+- Revue humaine : auth (`preferredTheme`, `/update-user`, `/change-password`), migration `theme_prefere`, CI.
 
 ## 2. Prochain ticket
 
-À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
-(seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
-pas de rustine) ; aucun environnement déployé (`project-context` §5).
+Package `mails` : vérification d'e-mail, réinitialisation et changement d'e-mail (fiches Resend / React Email à
+valider, domaine à acheter, ADR 0010).
 
 ## 3. Ensuite
 
-1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion/profil, CI.
-2. Package `mails` : vérification d'e-mail, réinitialisation, changement d'e-mail.
-3. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
-4. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
-5. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
-6. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
+1. Package `mails` : vérification d'e-mail, réinitialisation, changement d'e-mail.
+2. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
+3. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
+4. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).
+5. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
 
 ## 4. Questions ouvertes pour l'utilisateur
 
@@ -52,3 +52,6 @@ pas de rustine) ; aucun environnement déployé (`project-context` §5).
 - `/update-user` de Better Auth accepte aussi `image` (→ `avatarUrl`) sans contrôle : à fermer avec les avatars.
 - jsdom n'a pas `CSS.escape` : `userEvent.keyboard` sur des radios plante ; tester au clic.
 - Le tsconfig de Next garde le JSX (`preserve`) : `oxc.jsx` dans `apps/web/vitest.config.ts`.
+- Tests E2E : `DATABASE_URL=…/planifier_test pnpm test:e2e` ; la limitation de débit de Better Auth (par IP, 10 s)
+  refuse un compte par test : partager un compte en série.
+- GitGuardian : exclusions dans le tableau de bord (`project-context` §5), pas dans le dépôt.

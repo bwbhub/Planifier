@@ -8,6 +8,7 @@ import { getE2eEnv } from "./e2e/env";
 const WEB_PORT = 3100;
 const API_PORT = 3101;
 const WEB_URL = `http://localhost:${String(WEB_PORT)}`;
+const API_URL = `http://localhost:${String(API_PORT)}`;
 
 const { DATABASE_URL, CI } = getE2eEnv();
 
@@ -18,7 +19,8 @@ const { DATABASE_URL, CI } = getE2eEnv();
 export default defineConfig({
   testDir: "./e2e",
   forbidOnly: CI,
-  retries: CI ? 1 : 0,
+  // Pas de nouvel essai : un test instable se voit, se tracke et se corrige (testing-standards).
+  retries: 0,
   // Un seul navigateur à la fois : la limitation de débit de l'API compte par IP, et tout vient de localhost.
   workers: 1,
   reporter: CI ? "github" : "list",
@@ -45,7 +47,7 @@ export default defineConfig({
       // copiés à côté de lui, ce que fera l'image Docker (ticket 869fhwtcc). Next le signale par un avertissement.
       command: `pnpm exec next start --port ${String(WEB_PORT)}`,
       url: `${WEB_URL}/connexion`,
-      env: { API_INTERNAL_URL: `http://localhost:${String(API_PORT)}` },
+      env: { API_INTERNAL_URL: API_URL },
     },
   ],
 });

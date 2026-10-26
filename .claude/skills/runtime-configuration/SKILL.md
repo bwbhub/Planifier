@@ -25,7 +25,8 @@ Une image est construite **une fois** ; seules les variables injectées au déma
 
 1. Interdits : `NEXT_PUBLIC_*` ; `process.env` en dehors des fichiers `env.ts` ; valeur d'environnement dans `next.config.ts`.
 2. Un point d'entrée par app : `src/config/env.ts` (avec `import "server-only"` dans `apps/web`) et un schéma Zod, accès **paresseux**
-   (`getEnv()`), pour que `next build` n'exige ni secret ni réseau.
+   (`getEnv()`), pour que `next build` n'exige ni secret ni réseau. Seule autre entrée admise : l'outillage de test qui
+   démarre l'app (`apps/web/e2e/env.ts`, lu par la config Playwright, jamais embarqué dans le build).
 3. Échec rapide au démarrage si une variable manque ou est invalide.
 4. Moindre privilège : un conteneur ne reçoit que les variables de son `env.ts` (le web n'a pas `DATABASE_URL`).
 5. **Jamais de valeur de repli pour un secret** (`process.env.X ?? "secret"`). Absente ⇒ échec. En production, le schéma

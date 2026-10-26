@@ -1,10 +1,15 @@
 import { randomUUID } from "node:crypto";
 
-import { expect, type Page, test } from "@playwright/test";
+import { type Cookie, expect, type Page, test } from "@playwright/test";
 
-const NAME = "Eve";
+const DISPLAY_NAME = "Eve";
+const GREETING = `Bonjour ${DISPLAY_NAME}`;
+/** `--bg` de nuit dans packages/tokens/src/tokens.css (#101216), tel que le navigateur le calcule. */
+const DARK_BACKGROUND = "rgb(16, 18, 22)";
+/** `--bg` clair (#f8f6f9). */
+const LIGHT_BACKGROUND = "rgb(248, 246, 249)";
 
-/** Compte neuf par test : la base `_test` est partagée avec les tests d'intégration, qui la vident. */
+/** Compte neuf par lancement : la base `_test` est partagée avec les tests d'intégration, qui la vident. */
 function newAccount() {
   return { email: `e2e-${randomUUID()}@example.test`, password: randomUUID() };
 }
@@ -14,42 +19,81 @@ async function fillCredentials(page: Page, email: string, password: string) {
   await page.getByLabel("Mot de passe", { exact: true }).fill(password);
 }
 
-test("inscription, accueil, déconnexion puis connexion", async ({ page }) => {
-  const { email, password } = newAccount();
-  const greeting = page.getByRole("heading", { name: `Bonjour ${NAME}` });
-
-  await page.goto("/inscription");
-  await page.getByLabel("Ton nom", { exact: true }).fill(NAME);
-  await fillCredentials(page, email, password);
-  await page.getByRole("button", { name: "Créer mon compte" }).click();
-  await expect(greeting).toBeVisible();
-
-  // Rien ne déborde en largeur, en PC comme en mobile.
-  const overflow = await page.evaluate(
+function horizontalOverflow(page: Page) {
+  return page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
-  expect(overflow).toBeLessThanOrEqual(0);
+}
 
-  await page.getByRole("button", { name: "Se déconnecter" }).click();
-  await expect(page).toHaveURL("/connexion");
+function bodyBackground(page: Page) {
+  return page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+}
 
-  await fillCredentials(page, email, password);
-  await page.getByRole("button", { name: "Se connecter" }).click();
-  await expect(greeting).toBeVisible();
+/**
+ * Parcours d'un même compte, dans l'ordre : une inscription et une connexion par format, la session passant d'un test
+ * à l'autre par ses cookies. La limitation de débit de Better Auth (quelques essais par IP et par route sur 10 s)
+ * refuserait un compte par test, tout venant de localhost.
+ */
+test.describe.serial("parcours d'un compte", () => {
+  const { email, password } = newAccount();
+  let session: Cookie[] = [];
+
+  const greeting = (page: Page) => page.getByRole("heading", { name: GREETING });
+
+  async function openHomeSignedIn(page: Page) {
+    await page.context().addCookies(session);
+    await page.goto("/");
+    await expect(greeting(page)).toBeVisible();
+  }
+
+  test("ouvre l'accueil quand l'inscription réussit", async ({ page }) => {
+    await page.goto("/inscription");
+    await page.getByLabel("Ton nom", { exact: true }).fill(DISPLAY_NAME);
+    await fillCredentials(page, email, password);
+    await page.getByRole("button", { name: "Créer mon compte" }).click();
+    await expect(greeting(page)).toBeVisible();
+    session = await page.context().cookies();
+  });
+
+  test("ne déborde pas en largeur quand on ouvre l'accueil", async ({ page }) => {
+    await openHomeSignedIn(page);
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  });
+
+  test("revient à la connexion quand on se déconnecte", async ({ page }) => {
+    await openHomeSignedIn(page);
+    await page.getByRole("button", { name: "Se déconnecter" }).click();
+    await expect(page).toHaveURL("/connexion");
+  });
+
+  test("ouvre l'accueil quand la connexion réussit", async ({ page }) => {
+    await page.goto("/connexion");
+    await fillCredentials(page, email, password);
+    await page.getByRole("button", { name: "Se connecter" }).click();
+    await expect(greeting(page)).toBeVisible();
+  });
 });
 
-test("sans session, l'accueil renvoie à la connexion", async ({ page }) => {
+test("renvoie à la connexion quand on ouvre l'accueil sans session", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL("/connexion");
 });
 
-test("le thème suit le système, clair puis nuit", async ({ page }) => {
-  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+for (const path of ["/connexion", "/inscription"]) {
+  test(`ne déborde pas en largeur quand on ouvre ${path}`, async ({ page }) => {
+    await page.goto(path);
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  });
+}
 
+test("applique le thème clair quand le système est en clair", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/connexion");
-  const light = await background();
+  expect(await bodyBackground(page)).toBe(LIGHT_BACKGROUND);
+});
 
+test("applique le thème nuit quand le système est en nuit", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  expect(await background()).not.toBe(light);
+  await page.goto("/connexion");
+  expect(await bodyBackground(page)).toBe(DARK_BACKGROUND);
 });

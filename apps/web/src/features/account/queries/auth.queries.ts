@@ -1,7 +1,10 @@
 import {
+  AUTH_PAGES,
   AUTH_ROUTES,
   authErrorBodySchema,
   type ChangePasswordInput,
+  type RequestPasswordResetInput,
+  type ResetPasswordInput,
   type SignInInput,
   type SignUpInput,
   type UpdateProfileInput,
@@ -40,12 +43,36 @@ function useAuthMutation<TInput>(mutationFn: (input: TInput) => Promise<void>) {
   });
 }
 
+// `callbackURL` : page où ramène le lien de vérification d'adresse, envoyé à l'inscription et à chaque connexion
+// tentée avant la vérification.
 export function useSignIn() {
-  return useAuthMutation((input: SignInInput) => postAuth(AUTH_ROUTES.signIn, input));
+  return useAuthMutation((input: SignInInput) =>
+    postAuth(AUTH_ROUTES.signIn, { ...input, callbackURL: AUTH_PAGES.signIn }),
+  );
 }
 
+/** Inscription : aucune session ne s'ouvre, un lien de vérification part à l'adresse donnée. */
 export function useSignUp() {
-  return useAuthMutation((input: SignUpInput) => postAuth(AUTH_ROUTES.signUp, input));
+  return useMutation({
+    mutationFn: (input: SignUpInput) =>
+      postAuth(AUTH_ROUTES.signUp, { ...input, callbackURL: AUTH_PAGES.signIn }),
+  });
+}
+
+/** Mot de passe oublié : même réponse qu'un compte existe ou non. */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (input: RequestPasswordResetInput) =>
+      postAuth(AUTH_ROUTES.requestPasswordReset, {
+        ...input,
+        redirectTo: AUTH_PAGES.resetPassword,
+      }),
+  });
+}
+
+/** Nouveau mot de passe : les sessions ouvertes sont fermées (`revokeSessionsOnPasswordReset`). */
+export function useResetPassword() {
+  return useAuthMutation((input: ResetPasswordInput) => postAuth(AUTH_ROUTES.resetPassword, input));
 }
 
 export function useSignOut() {

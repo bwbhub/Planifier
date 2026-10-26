@@ -11,9 +11,15 @@ describe("authErrorMessage", () => {
     );
   });
 
-  it("propose de se connecter quand l'e-mail a déjà un compte", () => {
-    expect(authErrorMessage(new AuthRequestError(422, AUTH_ERROR_CODES.emailTaken))).toContain(
-      "Tu peux te connecter",
+  it("annonce le nouveau lien quand l'adresse n'est pas encore confirmée", () => {
+    expect(
+      authErrorMessage(new AuthRequestError(403, AUTH_ERROR_CODES.emailNotVerified)),
+    ).toContain("un nouveau lien vient de partir");
+  });
+
+  it("propose un nouveau lien quand celui du mot de passe ne vaut plus rien", () => {
+    expect(authErrorMessage(new AuthRequestError(400, AUTH_ERROR_CODES.invalidToken))).toContain(
+      "Demande-en un nouveau",
     );
   });
 

@@ -4,24 +4,22 @@
 
 ## 1. À faire par l'utilisateur
 
-- PR des corrections de revue E2E (`fix/e2e-corrections-revue`) : la #13 a été mergée sans elles. Merge une fois la
-  CI verte (job `e2e` neuf : revue humaine).
-- **Vérif Brave** : profil (`/profil` : nom, thème, mot de passe, case « Déconnecter mes autres appareils », bouton
-  « Profil »), clair et nuit, mobile et PC. Compte de démo : `pnpm seed`, puis `alice@example.test` / `planifier-demo`.
-- Revue humaine : auth (`preferredTheme`, `/update-user`, `/change-password`), migration `theme_prefere`, CI.
+- **Push** de `feat/mails`, puis me demander la PR ; merge une fois la CI verte (revue humaine : auth, e-mails, CI).
+- **Vérif Brave** : `docker compose up -d` (Mailpit), `pnpm dev`, inscription → e-mail sur `localhost:8025` → lien ⇒
+  accueil ; « Mot de passe oublié ? » → lien → nouveau mot de passe ; profil ; clair et nuit ; mobile et PC.
+- Comptes de démo : `pnpm seed` (adresses vérifiées), puis `alice@example.test` / `planifier-demo`.
+- **Domaine** à acheter et vérifier chez Resend (tarif à confirmer sur leur page) : sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
-Package `mails` : vérification d'e-mail, réinitialisation et changement d'e-mail (fiches Resend / React Email à
-valider, domaine à acheter, ADR 0010).
+Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
 
 ## 3. Ensuite
 
-1. Package `mails` : vérification d'e-mail, réinitialisation, changement d'e-mail.
-2. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
-3. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
-4. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).
-5. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
+1. Changement d'e-mail (vérification de la nouvelle adresse par `mails`).
+2. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
+3. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).
+4. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
 
 ## 4. Questions ouvertes pour l'utilisateur
 

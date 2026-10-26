@@ -1,15 +1,18 @@
 import {
+  EMAIL_LINK_TTL_SECONDS,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   THEME_PREFERENCES,
 } from "@planifier/constants/account";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import type { Db } from "@planifier/db";
+import type { SendMail } from "@planifier/mails";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { z } from "zod";
 
+import { createAuthMails } from "./auth-mails";
 import { parseDisplayName } from "./display-name";
 import type { AuthEnv } from "./env";
 
@@ -29,7 +32,8 @@ function hasField(body: unknown, field: string): boolean {
 }
 
 /** Instance Better Auth configurée pour Planifier (ADR 0004). */
-export function createAuth(db: Db, env: AuthEnv) {
+export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
+  const mails = createAuthMails(sendMail);
   return betterAuth({
     appName: "Planifier",
     baseURL: env.BETTER_AUTH_URL,
@@ -39,11 +43,26 @@ export function createAuth(db: Db, env: AuthEnv) {
     trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
     database: prismaAdapter(db, { provider: "postgresql", transaction: true }),
     telemetry: { enabled: false },
-    // Vérification d'e-mail et réinitialisation : avec le package `mails` (aucun envoi pour l'instant).
     emailAndPassword: {
       enabled: true,
       minPasswordLength: PASSWORD_MIN_LENGTH,
       maxPasswordLength: PASSWORD_MAX_LENGTH,
+      // Pas de session avant l'adresse confirmée. Effet voulu : l'inscription répond pareil, que l'adresse ait déjà
+      // un compte ou non (elle ne révèle plus qui est inscrit).
+      requireEmailVerification: true,
+      sendResetPassword: mails.sendResetPassword,
+      resetPasswordTokenExpiresIn: EMAIL_LINK_TTL_SECONDS,
+      // Mot de passe oublié : celui qui l'avait peut-être volé perd ses sessions.
+      revokeSessionsOnPasswordReset: true,
+    },
+    emailVerification: {
+      sendVerificationEmail: mails.sendVerificationEmail,
+      sendOnSignUp: true,
+      // Connexion tentée avant confirmation : un nouveau lien part (le premier a pu expirer ou se perdre).
+      sendOnSignIn: true,
+      // Le lien ouvre la session : pas de mot de passe à retaper juste après.
+      autoSignInAfterVerification: true,
+      expiresIn: EMAIL_LINK_TTL_SECONDS,
     },
     user: {
       fields: { image: "avatarUrl" },

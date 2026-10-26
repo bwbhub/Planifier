@@ -6,7 +6,8 @@ Serveur uniquement : importé par `api` (type `SessionUser`) et `apps/api`, jama
 ## API publique
 
 - `getAuth()` : instance unique du processus (environnement et base validés au premier appel).
-- `createAuth(db, env)`, `parseAuthEnv(source)` : pour les tests d'intégration.
+- `createAuth(db, env, sendMail)`, `parseAuthEnv(source)` : pour les tests d'intégration (`sendMail` factice qui
+  garde les e-mails).
 - `getSessionUser(auth, headers)` : utilisateur de la session du cookie, ou `null`.
 - `createAuthNodeHandler(auth)` : gestionnaire HTTP des routes `/api/auth/*`, monté par `apps/api`.
 
@@ -30,10 +31,18 @@ identifiants générés par Prisma ; e-mails ramenés en minuscules par Better A
 nom affiché validé à chaque écriture (`parseDisplayName`, crochets `databaseHooks`). Bornes du nom et du mot de
 passe : `@planifier/constants/account`, partagées avec les formulaires du web.
 
+## E-mails (package `mails`)
+
+- Adresse vérifiée **avant** toute session (`requireEmailVerification`) : l'inscription répond pareil, que l'adresse
+  ait un compte ou non. Le lien (valable `EMAIL_LINK_TTL_SECONDS`) ouvre la session ; une connexion tentée avant en
+  renvoie un neuf.
+- Mot de passe oublié : lien vers `AUTH_PAGES.resetPassword` (contrat) ; le nouveau mot de passe ferme les sessions.
+- Envoi en arrière-plan (`auth-mails.ts`) : la durée de réponse ne trahit pas l'existence d'un compte, un échec
+  d'envoi est journalisé sans adresse ni lien.
+
 ## Pas encore
 
-Vérification d'e-mail, réinitialisation de mot de passe (package `mails`), Google OAuth, hash des jetons
-d'invitation, suppression de compte. Aucune reprise des comptes de l'ancienne app (ADR 0004).
+Changement d'e-mail, Google OAuth, hash des jetons d'invitation, suppression de compte. Aucune reprise des comptes de l'ancienne app (ADR 0004).
 
 ## Interdits
 

@@ -2,7 +2,7 @@ import type { AddressInfo } from "node:net";
 
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import { AUTH_ERROR_CODES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
+import { AUTH_ERROR_CODES, AUTH_PAGES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
 import {
   AUTH_COOKIE_PREFIX,
   createAuth,
@@ -12,6 +12,7 @@ import {
 } from "@planifier/auth";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import { createTestDatabase } from "@planifier/db/testing";
+import type { Mail } from "@planifier/mails";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiServer } from "./server";
@@ -20,6 +21,8 @@ import { createApiServer } from "./server";
 // (`createTestDatabase` refuse toute autre base). Lancement : `pnpm test:integration`.
 const WEB_ORIGIN = "http://localhost:3000";
 const { db, reset } = createTestDatabase();
+/** E-mails « envoyés » par Better Auth, dans l'ordre. */
+const sentMails: Mail[] = [];
 const auth = createAuth(
   db,
   parseAuthEnv({
@@ -27,6 +30,10 @@ const auth = createAuth(
     BETTER_AUTH_SECRET: "secret-de-test-integration-0123456789abcdef",
     BETTER_AUTH_URL: WEB_ORIGIN,
   }),
+  (mail) => {
+    sentMails.push(mail);
+    return Promise.resolve();
+  },
 );
 const server = createApiServer({
   env: { NODE_ENV: "test" },
@@ -60,6 +67,36 @@ function cookiesOf(response: Response): string {
     .join("; ");
 }
 
+/** Lien du dernier e-mail reçu par `email` (version texte). */
+function lastLinkSentTo(email: string): string {
+  const mail = sentMails.findLast((sent) => sent.to === email);
+  const link = /https?:\/\/\S+/.exec(mail?.text ?? "")?.[0];
+  if (link === undefined) throw new Error(`aucun lien envoyé à ${email}`);
+  return link;
+}
+
+/** Ouvre un lien d'e-mail (adressé au web) directement sur l'API, sans suivre la redirection. */
+function openLink(link: string, ip: string, cookie?: string) {
+  const url = new URL(link);
+  return fetch(`${baseUrl}${url.pathname}${url.search}`, {
+    redirect: "manual",
+    headers: { [CLIENT_IP_HEADER]: ip, ...(cookie === undefined ? {} : { cookie }) },
+  });
+}
+
+/** Inscrit `email`, puis ouvre le lien de vérification reçu : renvoie la session qu'il ouvre. */
+async function signUpAndVerify(email: string, name: string, ip: string): Promise<string> {
+  const signUp = await authPost(
+    AUTH_ROUTES.signUp,
+    { email, password: PASSWORD, name, callbackURL: AUTH_PAGES.signIn },
+    ip,
+  );
+  expect(signUp.status).toBe(200);
+  const verified = await openLink(lastLinkSentTo(email.toLowerCase()), ip);
+  expect(verified.status).toBe(302);
+  return cookiesOf(verified);
+}
+
 function clientWith(cookie: string): ApiClient {
   return createORPCClient(
     new RPCLink({ url: `${baseUrl}/rpc`, headers: { cookie, [CLIENT_IP_HEADER]: "192.0.2.99" } }),
@@ -80,20 +117,49 @@ afterAll(async () => {
 });
 
 describe("session (base réelle)", () => {
-  it("inscrit, garde la session, déconnecte puis reconnecte", async () => {
+  it("n'ouvre pas de session à l'inscription, et refuse la connexion avant la vérification", async () => {
+    const email = "pas-encore-verifie@example.test";
     const signUp = await authPost(
       AUTH_ROUTES.signUp,
-      { email: EMAIL.toUpperCase(), password: PASSWORD, name: "Intégration" },
+      { email, password: PASSWORD, name: "Pas vérifié" },
+      "192.0.2.12",
+    );
+    expect(signUp.status).toBe(200);
+    expect(cookiesOf(signUp)).not.toMatch(/session_token/);
+    const sentTo = () => sentMails.filter((mail) => mail.to === email).length;
+    expect(sentTo()).toBe(1);
+
+    const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.12");
+    expect(signIn.status).toBe(403);
+    await expect(signIn.json()).resolves.toMatchObject({
+      code: AUTH_ERROR_CODES.emailNotVerified,
+    });
+    // Un nouveau lien part à chaque tentative.
+    expect(sentTo()).toBe(2);
+  });
+
+  it("vérifie l'adresse par le lien reçu, qui ouvre la session, puis déconnecte et reconnecte", async () => {
+    const signUp = await authPost(
+      AUTH_ROUTES.signUp,
+      {
+        email: EMAIL.toUpperCase(),
+        password: PASSWORD,
+        name: "Intégration",
+        callbackURL: AUTH_PAGES.signIn,
+      },
       "192.0.2.10",
     );
     expect(signUp.status).toBe(200);
-    const setCookie = signUp.headers.getSetCookie().join("\n");
+    // E-mail ramené en minuscules à l'inscription.
+    const verified = await openLink(lastLinkSentTo(EMAIL), "192.0.2.10");
+    expect(verified.status).toBe(302);
+    expect(verified.headers.get("location")).toBe("/connexion");
+    const setCookie = verified.headers.getSetCookie().join("\n");
     expect(setCookie).toContain(`${AUTH_COOKIE_PREFIX}.session_token=`);
     expect(setCookie).toMatch(/HttpOnly/i);
 
-    const session = cookiesOf(signUp);
+    const session = cookiesOf(verified);
     const me = await clientWith(session).account.me.get({});
-    // E-mail ramené en minuscules à l'inscription.
     expect(me).toMatchObject({ name: "Intégration", email: EMAIL });
 
     const signOut = await authPost(AUTH_ROUTES.signOut, {}, "192.0.2.10", session);
@@ -141,14 +207,17 @@ describe("session (base réelle)", () => {
 });
 
 describe("refus d'inscription (base réelle)", () => {
-  it("refuse une seconde inscription sur le même e-mail avec le code du contrat", async () => {
+  it("répond comme une inscription neuve sur un e-mail déjà inscrit, sans rien créer ni envoyer", async () => {
+    const mailsBefore = sentMails.length;
     const response = await authPost(
       AUTH_ROUTES.signUp,
       { email: EMAIL, password: PASSWORD, name: "Doublon" },
       "192.0.2.21",
     );
-    expect(response.status).toBe(422);
-    await expect(response.json()).resolves.toMatchObject({ code: AUTH_ERROR_CODES.emailTaken });
+    expect(response.status).toBe(200);
+    expect(cookiesOf(response)).not.toMatch(/session_token/);
+    await expect(db.user.count({ where: { email: EMAIL } })).resolves.toBe(1);
+    expect(sentMails.length).toBe(mailsBefore);
   });
 
   it("refuse une inscription venue d'une autre origine", async () => {
@@ -181,16 +250,10 @@ describe("refus d'inscription (base réelle)", () => {
 
 const PROFILE_EMAIL = "profil@example.test";
 
-/** Compte de profil neuf, connecté ; chaque test a son IP pour ne pas cumuler les limites de débit. */
+/** Compte de profil neuf, vérifié et connecté ; chaque test a son IP pour ne pas cumuler les limites de débit. */
 async function signedUpProfile(ip: string): Promise<string> {
   await db.user.deleteMany({ where: { email: PROFILE_EMAIL } });
-  const response = await authPost(
-    AUTH_ROUTES.signUp,
-    { email: PROFILE_EMAIL, password: PASSWORD, name: "Profil" },
-    ip,
-  );
-  expect(response.status).toBe(200);
-  return cookiesOf(response);
+  return signUpAndVerify(PROFILE_EMAIL, "Profil", ip);
 }
 
 describe("profil (base réelle)", () => {
@@ -285,5 +348,59 @@ describe("changement de mot de passe (base réelle)", () => {
       "192.0.2.64",
     );
     expect(again.status).toBe(200);
+  });
+});
+
+describe("mot de passe oublié (base réelle)", () => {
+  const email = "oubli@example.test";
+  const newPassword = "mot-de-passe-retrouve";
+
+  it("n'envoie rien pour une adresse inconnue, avec la même réponse", async () => {
+    const mailsBefore = sentMails.length;
+    const response = await authPost(
+      AUTH_ROUTES.requestPasswordReset,
+      { email: "inconnu@example.test", redirectTo: AUTH_PAGES.resetPassword },
+      "192.0.2.80",
+    );
+    expect(response.status).toBe(200);
+    expect(sentMails.length).toBe(mailsBefore);
+  });
+
+  it("envoie un lien qui mène à la page du nouveau mot de passe, puis ferme les sessions ouvertes", async () => {
+    const before = await signUpAndVerify(email, "Oubli", "192.0.2.81");
+    const request = await authPost(
+      AUTH_ROUTES.requestPasswordReset,
+      { email, redirectTo: AUTH_PAGES.resetPassword },
+      "192.0.2.81",
+    );
+    expect(request.status).toBe(200);
+
+    const opened = await openLink(lastLinkSentTo(email), "192.0.2.81");
+    expect(opened.status).toBe(302);
+    const target = new URL(opened.headers.get("location") ?? "", WEB_ORIGIN);
+    expect(target.pathname).toBe(AUTH_PAGES.resetPassword);
+    const token = target.searchParams.get("token") ?? "";
+
+    const reset = await authPost(AUTH_ROUTES.resetPassword, { newPassword, token }, "192.0.2.81");
+    expect(reset.status).toBe(200);
+    await expect(clientWith(before).account.me.get({})).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+    const signIn = await authPost(
+      AUTH_ROUTES.signIn,
+      { email, password: newPassword },
+      "192.0.2.82",
+    );
+    expect(signIn.status).toBe(200);
+  });
+
+  it("refuse un lien déjà servi avec le code du contrat", async () => {
+    const response = await authPost(
+      AUTH_ROUTES.resetPassword,
+      { newPassword, token: "jeton-inconnu" },
+      "192.0.2.83",
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ code: AUTH_ERROR_CODES.invalidToken });
   });
 });

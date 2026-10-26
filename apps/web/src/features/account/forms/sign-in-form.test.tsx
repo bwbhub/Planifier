@@ -58,7 +58,11 @@ describe("SignInForm", () => {
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/auth/sign-in/email");
     expect(init?.body).toBe(
-      JSON.stringify({ email: "alice@example.test", password: "mot-de-passe" }),
+      JSON.stringify({
+        email: "alice@example.test",
+        password: "mot-de-passe",
+        callbackURL: "/connexion",
+      }),
     );
   });
 

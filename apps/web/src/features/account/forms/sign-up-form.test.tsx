@@ -1,15 +1,11 @@
 // @vitest-environment jsdom
-import { AUTH_ERROR_CODES } from "@planifier/api-contract";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SignUpForm } from "./sign-up-form";
-
-const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 // Seule frontière simulée : le réseau (route de Better Auth derrière le proxy).
 const fetchMock = vi.fn<typeof fetch>();
@@ -51,30 +47,24 @@ describe("SignUpForm", () => {
     expect(screen.getByLabelText("Mot de passe").getAttribute("aria-invalid")).toBe("true");
   });
 
-  it("crée le compte avec le nom nettoyé puis ouvre l'accueil", async () => {
+  it("crée le compte avec le nom nettoyé, puis annonce l'e-mail de confirmation", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderForm();
     await fill({ name: " Alice ", email: "alice@example.test", password: "mot-de-passe" });
 
-    await waitFor(() => {
-      expect(router.replace).toHaveBeenCalledWith("/");
-    });
+    expect((await screen.findByRole("status")).textContent).toContain(
+      "Un lien de confirmation est parti à alice@example.test",
+    );
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("/api/auth/sign-up/email");
     expect(init?.body).toBe(
-      JSON.stringify({ name: "Alice", email: "alice@example.test", password: "mot-de-passe" }),
+      JSON.stringify({
+        name: "Alice",
+        email: "alice@example.test",
+        password: "mot-de-passe",
+        callbackURL: "/connexion",
+      }),
     );
-  });
-
-  it("propose de se connecter quand l'e-mail a déjà un compte", async () => {
-    fetchMock.mockResolvedValue(
-      Response.json({ code: AUTH_ERROR_CODES.emailTaken }, { status: 422 }),
-    );
-    renderForm();
-    await fill({ name: "Alice", email: "alice@example.test", password: "mot-de-passe" });
-
-    expect((await screen.findByRole("alert")).textContent).toContain("Tu peux te connecter");
-    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it("ne présente aucune violation d'accessibilité, erreurs affichées", async () => {

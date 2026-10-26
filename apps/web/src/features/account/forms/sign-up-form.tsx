@@ -10,12 +10,10 @@ import { Button } from "@planifier/ui/components/button";
 import { TextField } from "@planifier/ui/components/text-field";
 import type { SubmitEvent } from "react";
 
-import { ROUTES } from "@/lib/routes";
-
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
+import { MailSentNotice } from "../atoms/mail-sent-notice";
 import { useSignUp } from "../queries/auth.queries";
 import { useFormValidation } from "../utils/use-form-validation";
-import { useSessionRedirect } from "../utils/use-session-redirect";
 
 const FIELDS = ["name", "email", "password"] as const;
 type Field = (typeof FIELDS)[number];
@@ -27,7 +25,6 @@ const FIELD_ERRORS: Record<Field, string> = {
 };
 
 export function SignUpForm() {
-  const redirectTo = useSessionRedirect();
   const signUp = useSignUp();
   const { invalid, validate } = useFormValidation(FIELDS);
 
@@ -41,11 +38,16 @@ export function SignUpForm() {
       password: data.get("password"),
     });
     if (input === null) return;
-    signUp.mutate(input, {
-      onSuccess: () => {
-        redirectTo(ROUTES.home);
-      },
-    });
+    signUp.mutate(input);
+  }
+
+  // Même réponse, que l'adresse ait déjà un compte ou non : rien ne dit qui est inscrit.
+  if (signUp.isSuccess) {
+    return (
+      <MailSentNotice title="Vérifie ta boîte mail">
+        Un lien de confirmation est parti à {signUp.variables.email}. Il ouvre ton espace.
+      </MailSentNotice>
+    );
   }
 
   const errorOf = (field: Field) => (invalid.has(field) ? FIELD_ERRORS[field] : undefined);

@@ -25,6 +25,7 @@
     "@planifier/api-contract": "workspace:*",
     "@planifier/db": "workspace:*",
     "@planifier/eslint-config": "workspace:*",
+    "@planifier/mails": "workspace:*",
     "@planifier/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",

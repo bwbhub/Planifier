@@ -16,10 +16,15 @@ export type { HealthOutput } from "./features/system/health/health.schemas";
 export type { MeOutput } from "./features/account/me/me.schemas";
 export {
   AUTH_ERROR_CODES,
+  AUTH_PAGES,
   AUTH_ROUTES,
   authErrorBodySchema,
   type ChangePasswordInput,
   changePasswordInputSchema,
+  type RequestPasswordResetInput,
+  requestPasswordResetInputSchema,
+  type ResetPasswordInput,
+  resetPasswordInputSchema,
   signInInputSchema,
   signUpInputSchema,
   type SignInInput,

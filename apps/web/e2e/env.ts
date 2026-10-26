@@ -6,6 +6,8 @@ const e2eEnvSchema = z.object({
   DATABASE_URL: z.url().refine((url) => new URL(url).pathname.endsWith("_test"), {
     message: "les tests E2E n'écrivent que dans une base dont le nom finit par _test",
   }),
+  /** Boîte Mailpit où l'API dépose ses e-mails, lue par les parcours (liens de vérification et de mot de passe). */
+  MAILPIT_URL: z.url(),
   CI: z.stringbool().default(false),
 });
 

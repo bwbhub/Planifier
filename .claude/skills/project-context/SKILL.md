@@ -51,8 +51,9 @@ PostgreSQL + Prisma 7 · React Email + Resend · web-push · Vitest · Playwrigh
 
 GitGuardian (check des PR) : les tests, le `docker-compose.yml`, la CI et les mots de passe de démo sont exclus dans
 le tableau de bord (Settings → Secrets detection → Filepath exclusions), pas dans le dépôt : l'app GitHub ne lit pas
-de fichier de configuration. Un faux positif hors de ces chemins se classe dans le tableau de bord, sans réécrire le
-code pour tromper le détecteur.
+de fichier de configuration. Les messages d'interface pris pour des mots de passe (« Saisis ton mot de passe actuel. »)
+sont exclus par motif (Secret pattern exclusions : `^(Saisis|Choisis) `). Un autre faux positif se classe dans le
+tableau de bord, sans réécrire le code pour tromper le détecteur.
 
 Aucun environnement déployé (ni prod ni preprod, état au 2026-10-20) : aucune donnée ni version à préserver. Les
 règles de compatibilité de déploiement (expand/contract, contrats en deux temps) s'appliquent à partir de la

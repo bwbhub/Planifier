@@ -53,6 +53,10 @@ bac à sable `MAIL_ALLOWED_DOMAINS`. Aussi : `textLinkClassName` (`packages/ui`)
 
 **Attendu ensuite** : push + PR, vérif Brave (inscription → Mailpit `localhost:8025` → lien), modèle Espace.
 
+**Suites (utilisateur)** : domaine Resend à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ;
+changement d'e-mail ⇒ ticket `869fmk5dw` ; écart de durée ⇒ dette long terme (`project-context` §7.6) ; `jsx` dans le
+commit du package : exception acceptée (config transverse à isoler dans son propre commit à l'avenir).
+
 ## 2026-10-26 — Smoke E2E Playwright (branche `feat/e2e-playwright`, ticket `869fkd81n`)
 
 **Fait** : fiche `@playwright/test` ~1.64.1 validée par l'utilisateur (Chromium seul) et installée via `catalog:`.

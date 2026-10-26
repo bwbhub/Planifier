@@ -8,7 +8,7 @@
 - **Vérif Brave** : `docker compose up -d` (Mailpit), `pnpm dev`, inscription → e-mail sur `localhost:8025` → lien ⇒
   accueil ; « Mot de passe oublié ? » → lien → nouveau mot de passe ; profil ; clair et nuit ; mobile et PC.
 - Comptes de démo : `pnpm seed` (adresses vérifiées), puis `alice@example.test` / `planifier-demo`.
-- **Domaine** à acheter et vérifier chez Resend (tarif à confirmer sur leur page) : sans lui, aucun e-mail réel.
+- **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
@@ -16,7 +16,7 @@ Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
 
 ## 3. Ensuite
 
-1. Changement d'e-mail (vérification de la nouvelle adresse par `mails`). Gabarit d'invitation (ancien
+1. Changement d'e-mail (`869fmk5dw`). Gabarit d'invitation (ancien
    `emailService`) : avec le module Événements.
 2. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
 3. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).

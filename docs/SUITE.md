@@ -8,7 +8,7 @@
   refusé depuis ma session, et un second essai a été bloqué par le mode auto. Ensuite me demander les PR.
 - **Vérif Brave** (toujours rien vu dans un navigateur ; Brave headless bloqué par le bac à sable) : connexion,
   inscription, accueil, déconnexion, **profil** (`/profil` : nom, thème, mot de passe ; le thème doit basculer dès
-  « Enregistrer ») ; clair et nuit ; mobile et PC. Page d'erreur : web seul (API arrêtée), `/connexion`, « Réessayer ».
+  « Enregistrer » ; bouton « Profil » de la barre du haut ; case « Déconnecter mes autres appareils ») ; clair et nuit ; mobile et PC. Page d'erreur : web seul (API arrêtée), `/connexion`, « Réessayer ».
 - Compte de démo : `pnpm seed`, puis `alice@example.test` / `planifier-demo`.
 - Revue humaine : auth (champ `preferredTheme` de Better Auth, `/update-user`, `/change-password`), migration
   `theme_prefere` (colonne recréée), `ChoiceGroup` dans `packages/ui`.
@@ -16,8 +16,8 @@
 ## 2. Prochain ticket
 
 Profil livré sur `feat/profil` (`869fhwtf7`, partie 2) sauf : changement d'e-mail (attend `mails`), suppression
-de compte (service `owner_left_at`), accès mobile au profil (lien provisoire sur l'accueil ; candidat : initiale
-ronde en haut d'Aujourd'hui, à valider).
+de compte (service `owner_left_at`). Accès au profil : bouton « Profil » à part dans la barre du haut (décision du
+2026-10-26), hors de la future navigation des modules.
 
 ## 3. Ensuite
 

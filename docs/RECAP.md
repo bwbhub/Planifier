@@ -18,6 +18,20 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Décisions sur le profil (branche `feat/profil`)
+
+**Fait** (décisions de l'utilisateur) : changement de mot de passe avec case « Déconnecter mes autres appareils »,
+décochée par défaut (contrat : `revokeOtherSessions: boolean`) ; barre du haut des pages connectées (`AppHeader`) avec
+un bouton « Profil » à part (`aria-current` sur `/profil`) ; lien provisoire de l'accueil et « Retour » du profil
+retirés. `packages/ui` : `Checkbox`, `buttonClassName` (allure de bouton pour un lien). `me.get` du layout racine
+gardé tel quel (pas de cookie de thème : une copie à synchroniser de plus). Tests d'intégration du mot de passe dans
+leur propre `describe` (limite de longueur de fonction).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `pnpm test:integration` OK (10 tests API,
+dont mot de passe changé sans révoquer, puis avec). Rendu visuel toujours non vu.
+
+**Attendu ensuite** : push des branches par l'utilisateur, PR, vérif Brave.
+
 ## 2026-10-26 — Corrections de revue du profil (branche `feat/profil`)
 
 **Fait** : `/update-user` refuse `image` (avatar non géré) ; `themePreferenceSchema` partagé dans `api-contract` ;
@@ -31,7 +45,6 @@ refusé, `avatarUrl` resté nul) ; `.text-control{font-size:15px}` présent dans
 
 **Ouvert (décisions de l'utilisateur)** : autres sessions toujours fermées au changement de mot de passe, ou au choix ?
 Initiale ronde et accès au profil (mobile, PC) ? `me.get` appelé aussi sur `/connexion` par le layout racine : garder ?
-Non repris de la revue : `disabled` sur `ChoiceGroup` (sans besoin), fixture `ALICE` (2 paquets distincts).
 
 ## 2026-10-26 — Profil : nom, thème, mot de passe (branche `feat/profil`, ticket `869fhwtf7`, partie 2)
 

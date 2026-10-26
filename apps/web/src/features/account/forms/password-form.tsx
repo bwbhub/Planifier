@@ -3,6 +3,7 @@
 import { changePasswordInputSchema } from "@planifier/api-contract";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@planifier/constants/account";
 import { Button } from "@planifier/ui/components/button";
+import { Checkbox } from "@planifier/ui/components/checkbox";
 import { TextField } from "@planifier/ui/components/text-field";
 import type { SubmitEvent } from "react";
 
@@ -29,6 +30,7 @@ export function PasswordForm() {
     const input = validate(form, changePasswordInputSchema, {
       currentPassword: data.get("currentPassword"),
       newPassword: data.get("newPassword"),
+      revokeOtherSessions: data.get("revokeOtherSessions") === "on",
     });
     if (input === null) return;
     changePassword.mutate(input, {
@@ -61,10 +63,17 @@ export function PasswordForm() {
         required
         error={errorOf("newPassword")}
       />
+      <Checkbox
+        label="Déconnecter mes autres appareils"
+        name="revokeOtherSessions"
+        hint="Utile si tu penses que quelqu'un d'autre connaît ton mot de passe."
+      />
       {changePassword.isError ? <AuthErrorAlert error={changePassword.error} /> : null}
       {changePassword.isSuccess ? (
         <p role="status" className="text-sm text-muted">
-          Mot de passe changé. Tes autres appareils ont été déconnectés.
+          {changePassword.variables.revokeOtherSessions
+            ? "Mot de passe changé. Tes autres appareils ont été déconnectés."
+            : "Mot de passe changé."}
         </p>
       ) : null}
       <Button type="submit" variant="secondary" disabled={changePassword.isPending}>

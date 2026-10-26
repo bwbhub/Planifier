@@ -26,12 +26,15 @@ function renderForm() {
   );
 }
 
-async function fill(values: { current: string; next: string }) {
+async function fill(values: { current: string; next: string; revokeOthers?: boolean }) {
   if (values.current !== "") {
     await userEvent.type(screen.getByLabelText("Mot de passe actuel"), values.current);
   }
   if (values.next !== "") {
     await userEvent.type(screen.getByLabelText("Nouveau mot de passe"), values.next);
+  }
+  if (values.revokeOthers === true) {
+    await userEvent.click(screen.getByText("Déconnecter mes autres appareils"));
   }
   await userEvent.click(screen.getByRole("button", { name: "Changer le mot de passe" }));
 }
@@ -47,10 +50,21 @@ describe("PasswordForm", () => {
     expect(document.activeElement).toBe(next);
   });
 
-  it("change le mot de passe en fermant les autres sessions, puis vide les champs", async () => {
+  it("garde les autres sessions sauf demande : la case est décochée", async () => {
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
     renderForm();
+    expect(screen.getByRole("checkbox")).toHaveProperty("checked", false);
     await fill({ current: "mot-de-passe", next: "nouveau-mot-de-passe" });
+
+    expect((await screen.findByRole("status")).textContent).toBe("Mot de passe changé.");
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(init?.body).toContain('"revokeOtherSessions":false');
+  });
+
+  it("ferme les autres sessions sur demande, puis vide les champs", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    renderForm();
+    await fill({ current: "mot-de-passe", next: "nouveau-mot-de-passe", revokeOthers: true });
 
     expect((await screen.findByRole("status")).textContent).toContain("autres appareils");
     const [url, init] = fetchMock.mock.calls[0] ?? [];

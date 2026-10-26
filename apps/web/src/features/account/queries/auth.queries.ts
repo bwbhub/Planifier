@@ -67,8 +67,8 @@ export function useUpdateProfile() {
 }
 
 /**
- * Ni `useAuthMutation` ni vidage du cache : la session courante reste ouverte (le serveur ferme les autres,
- * `revokeOtherSessions` posé par le contrat).
+ * Ni `useAuthMutation` ni vidage du cache : la session courante reste ouverte (les autres sont fermées si
+ * l'utilisateur l'a demandé, `revokeOtherSessions`).
  */
 export function useChangePassword() {
   return useMutation({

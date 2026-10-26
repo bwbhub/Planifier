@@ -13,18 +13,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
 }
 
+/** Classes d'un bouton, pour donner son allure à un lien (`<Link>` de l'app) sans en faire un `<button>`. */
+export function buttonClassName(variant: ButtonVariant = "primary", className?: string): string {
+  return cn(
+    "inline-flex min-h-12.5 items-center justify-center gap-2 rounded-pill px-6 text-control font-semibold",
+    "transition-opacity motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60",
+    VARIANTS[variant],
+    className,
+  );
+}
+
 /** Bouton d'action. `type="button"` par défaut : un envoi de formulaire se déclare (`type="submit"`). */
 export function Button({ variant = "primary", type = "button", className, ...props }: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={cn(
-        "inline-flex min-h-12.5 items-center justify-center gap-2 rounded-pill px-6 text-control font-semibold",
-        "transition-opacity motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60",
-        VARIANTS[variant],
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <button type={type} className={buttonClassName(variant, className)} {...props} />;
 }

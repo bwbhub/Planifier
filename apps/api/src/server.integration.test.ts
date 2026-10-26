@@ -179,20 +179,23 @@ describe("refus d'inscription (base réelle)", () => {
   });
 });
 
-describe("profil (base réelle)", () => {
-  const email = "profil@example.test";
+const PROFILE_EMAIL = "profil@example.test";
 
-  /** Compte neuf, connecté ; chaque test a son IP pour ne pas cumuler les limites de débit. */
-  async function signedUp(ip: string): Promise<string> {
-    await db.user.deleteMany({ where: { email } });
-    const response = await authPost(
-      AUTH_ROUTES.signUp,
-      { email, password: PASSWORD, name: "Profil" },
-      ip,
-    );
-    expect(response.status).toBe(200);
-    return cookiesOf(response);
-  }
+/** Compte de profil neuf, connecté ; chaque test a son IP pour ne pas cumuler les limites de débit. */
+async function signedUpProfile(ip: string): Promise<string> {
+  await db.user.deleteMany({ where: { email: PROFILE_EMAIL } });
+  const response = await authPost(
+    AUTH_ROUTES.signUp,
+    { email: PROFILE_EMAIL, password: PASSWORD, name: "Profil" },
+    ip,
+  );
+  expect(response.status).toBe(200);
+  return cookiesOf(response);
+}
+
+describe("profil (base réelle)", () => {
+  const email = PROFILE_EMAIL;
+  const signedUp = signedUpProfile;
 
   it("suit le thème de l'appareil par défaut, puis enregistre le nom et le thème choisis", async () => {
     const session = await signedUp("192.0.2.60");
@@ -228,8 +231,30 @@ describe("profil (base réelle)", () => {
       avatarUrl: null,
     });
   });
+});
 
-  it("change le mot de passe avec l'actuel et ferme les autres sessions", async () => {
+describe("changement de mot de passe (base réelle)", () => {
+  const email = PROFILE_EMAIL;
+  const signedUp = signedUpProfile;
+
+  it("change le mot de passe sans toucher aux autres sessions si on ne le demande pas", async () => {
+    const other = await signedUp("192.0.2.65");
+    const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.66");
+    const change = await authPost(
+      AUTH_ROUTES.changePassword,
+      {
+        currentPassword: PASSWORD,
+        newPassword: "nouveau-mot-de-passe",
+        revokeOtherSessions: false,
+      },
+      "192.0.2.66",
+      cookiesOf(signIn),
+    );
+    expect(change.status).toBe(200);
+    await expect(clientWith(other).account.me.get({})).resolves.toMatchObject({ email });
+  });
+
+  it("change le mot de passe avec l'actuel et ferme les autres sessions sur demande", async () => {
     const other = await signedUp("192.0.2.62");
     const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.63");
     const current = cookiesOf(signIn);

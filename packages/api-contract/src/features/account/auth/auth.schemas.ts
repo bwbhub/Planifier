@@ -49,14 +49,11 @@ export const updateProfileInputSchema = z.strictObject({
   preferredTheme: themePreferenceSchema,
 });
 
-/**
- * Changement de mot de passe : l'actuel est exigé. Politique fixée ici, pas par le formulaire : les autres sessions
- * sont toujours fermées (un mot de passe changé par crainte d'une fuite ne laisse aucune session ouverte ailleurs).
- */
+/** Changement de mot de passe : l'actuel est exigé ; fermer les autres sessions est le choix de l'utilisateur. */
 export const changePasswordInputSchema = z.strictObject({
   currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
   newPassword: newPasswordSchema,
-  revokeOtherSessions: z.literal(true).default(true),
+  revokeOtherSessions: z.boolean(),
 });
 
 /** Corps d'erreur de Better Auth : seuls ces champs sont lus, les autres sont ignorés. */

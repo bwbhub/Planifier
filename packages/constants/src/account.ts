@@ -10,3 +10,6 @@ export const PASSWORD_MAX_LENGTH = 128;
 /** Thème préféré : `SYSTEM` suit le réglage de l'appareil. Miroir de l'enum Prisma `ThemePreference`. */
 export const THEME_PREFERENCES = ["SYSTEM", "LIGHT", "DARK"] as const;
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];
+
+/** Durée de validité des liens envoyés par e-mail (vérification d'adresse, nouveau mot de passe), en secondes. */
+export const EMAIL_LINK_TTL_SECONDS = 60 * 60;

@@ -4,20 +4,15 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Push** de `feat/ecrans-connexion` (1 commit local en avance) puis de `feat/profil` (empilée dessus) : SSH
-  refusé depuis ma session, et un second essai a été bloqué par le mode auto. Ensuite me demander les PR.
-- **Vérif Brave** (toujours rien vu dans un navigateur ; Brave headless bloqué par le bac à sable) : connexion,
-  inscription, accueil, déconnexion, **profil** (`/profil` : nom, thème, mot de passe ; le thème doit basculer dès
-  « Enregistrer » ; bouton « Profil » de la barre du haut ; case « Déconnecter mes autres appareils ») ; clair et nuit ; mobile et PC. Page d'erreur : web seul (API arrêtée), `/connexion`, « Réessayer ».
-- Compte de démo : `pnpm seed`, puis `alice@example.test` / `planifier-demo`.
-- Revue humaine : auth (champ `preferredTheme` de Better Auth, `/update-user`, `/change-password`), migration
-  `theme_prefere` (colonne recréée), `ChoiceGroup` dans `packages/ui`.
+- Rien en attente. Tickets `869fhwtf2` (auth) et `869fhwtf4` (bcrypt, sans objet) fermés dans ClickUp le 2026-10-20.
+- Local prêt (2026-10-20) : base `planifier` recréée, migrée et seedée ; `planifier_test` migrée ; `apps/api/.env.local`
+  et `apps/web/.env.local` remplis ; `pnpm dev` vérifié (inscription + `me` via le proxy).
 
 ## 2. Prochain ticket
 
-Profil livré sur `feat/profil` (`869fhwtf7`, partie 2) sauf : changement d'e-mail (attend `mails`), suppression
-de compte (service `owner_left_at`). Accès au profil : bouton « Profil » à part dans la barre du haut (décision du
-2026-10-26), hors de la future navigation des modules.
+À cadrer : module (`features/_shared` ou `account`), formulaires, états complets, comptes du seed avec mot de passe
+(seed passant par Better Auth, sans dépendance `db` → `auth`). Rappel : règle 16 d'`AGENTS.md` (code neuf et propre,
+pas de rustine) ; aucun environnement déployé (`project-context` §5).
 
 ## 3. Ensuite
 

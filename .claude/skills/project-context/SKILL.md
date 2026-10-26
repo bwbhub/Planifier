@@ -36,15 +36,16 @@ PostgreSQL + Prisma 7 · React Email + Resend · web-push · Vitest · Playwrigh
 
 ## 4. Commandes
 
-| Action                       | Commande                                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| Installer                    | `pnpm install`                                                                                   |
-| Développer                   | `pnpm dev` (ou `pnpm --filter @planifier/web dev`)                                               |
-| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build`                                    |
-| Tests sur base réelle        | `DATABASE_URL=…/planifier_test pnpm test:integration` (base `_test` migrée, voir README de `db`) |
-| Formater                     | `pnpm format`                                                                                    |
-| Données de démo              | `pnpm seed` (base locale ; comptes `alice@example.test`… mot de passe `planifier-demo`)          |
-| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                                                         |
+| Action                       | Commande                                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Installer                    | `pnpm install`                                                                                                                                |
+| Développer                   | `pnpm dev` (ou `pnpm --filter @planifier/web dev`)                                                                                            |
+| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build`                                                                                 |
+| Tests sur base réelle        | `DATABASE_URL=…/planifier_test pnpm test:integration` (base `_test` migrée, voir README de `db`)                                              |
+| Tests E2E (Playwright)       | `DATABASE_URL=…/planifier_test pnpm test:e2e` (construit le web ; 1re fois : `pnpm --filter @planifier/web exec playwright install chromium`) |
+| Formater                     | `pnpm format`                                                                                                                                 |
+| Données de démo              | `pnpm seed` (base locale ; comptes `alice@example.test`… mot de passe `planifier-demo`)                                                       |
+| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                                                                                                      |
 
 ## 5. Environnement
 

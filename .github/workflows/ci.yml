@@ -72,3 +72,8 @@ jobs:
       # Tests sur la base migrée (inscription, connexion, session) : après les migrations, pas avant.
       - name: Tests d'intégration
         run: pnpm test:integration
+      # Parcours de bout en bout (web construit + API) sur la même base, Chromium seul (docs/DEPENDANCES.md).
+      - name: Navigateur E2E
+        run: pnpm --filter @planifier/web exec playwright install --with-deps chromium
+      - name: Tests E2E
+        run: pnpm test:e2e

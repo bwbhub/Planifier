@@ -18,6 +18,23 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Smoke E2E Playwright (branche `feat/e2e-playwright`, ticket `869fkd81n`)
+
+**Fait** : fiche `@playwright/test` ~1.64.1 validée par l'utilisateur (Chromium seul) et installée via `catalog:`.
+`apps/web/e2e/` : inscription → accueil → déconnexion → connexion, accueil sans session ⇒ `/connexion`, thème
+clair/nuit selon le système ; projets PC et mobile (Pixel 7) ; pas de débordement horizontal. Web construit
+(`next start`, ports 3100/3101) + API, base `_test` imposée (Zod), secret Better Auth tiré à chaque run. Tâche turbo
+`test:e2e` (après `build`), étapes CI après les tests d'intégration. Vitest limité à `src/` dans le web.
+GitGuardian : les faux positifs viennent du check de PR ; exclusions à poser dans le tableau de bord (branche
+`chore/gitguardian`, note dans `project-context`).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `pnpm test:e2e` sur
+`planifier_test` : 6/6 OK ; refusé sur `planifier`. **Non vérifié** : CI (rien poussé).
+
+**Ouvert** : revue humaine (CI) ; serveur autonome (`output: standalone`) non testé, attend l'image Docker.
+
+**Attendu ensuite** : exclusions GitGuardian par l'utilisateur ; push + PR (empilée sur `feat/profil`).
+
 ## 2026-10-26 — Décisions sur le profil (branche `feat/profil`)
 
 **Fait** (décisions de l'utilisateur) : changement de mot de passe avec case « Déconnecter mes autres appareils »,

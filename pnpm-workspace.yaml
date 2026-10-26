@@ -51,6 +51,8 @@ catalog:
   "@testing-library/user-event": ~14.6.8
   # MPL-2.0, outil de test seulement (dérogation D5)
   axe-core: ~4.14.0
+  # tests E2E (docs/DEPENDANCES.md), Chromium seul
+  "@playwright/test": ~1.64.1
   # styles
   tailwindcss: ^4.3.0
   "@tailwindcss/postcss": ^4.3.0

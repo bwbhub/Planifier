@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@orpc/client": "catalog:",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@planifier/eslint-config": "workspace:*",
     "@planifier/typescript-config": "workspace:*",
+    "@playwright/test": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",

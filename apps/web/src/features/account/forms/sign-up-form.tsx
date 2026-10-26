@@ -8,13 +8,13 @@ import {
 } from "@planifier/constants/account";
 import { Button } from "@planifier/ui/components/button";
 import { TextField } from "@planifier/ui/components/text-field";
-import { type SubmitEvent, useState } from "react";
+import type { SubmitEvent } from "react";
 
 import { ROUTES } from "@/lib/routes";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSignUp } from "../queries/auth.queries";
-import { focusFirstInvalid, type InvalidFields, invalidFieldsOf } from "../utils/form-validation";
+import { useFormValidation } from "../utils/use-form-validation";
 import { useSessionRedirect } from "../utils/use-session-redirect";
 
 const FIELDS = ["name", "email", "password"] as const;
@@ -29,25 +29,19 @@ const FIELD_ERRORS: Record<Field, string> = {
 export function SignUpForm() {
   const redirectTo = useSessionRedirect();
   const signUp = useSignUp();
-  const [invalid, setInvalid] = useState<InvalidFields<Field>>(new Set());
+  const { invalid, validate } = useFormValidation(FIELDS);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const parsed = signUpInputSchema.safeParse({
+    const input = validate(form, signUpInputSchema, {
       name: data.get("name"),
       email: data.get("email"),
       password: data.get("password"),
     });
-    if (!parsed.success) {
-      const fields = invalidFieldsOf(parsed.error, FIELDS);
-      setInvalid(fields);
-      focusFirstInvalid(form, FIELDS, fields);
-      return;
-    }
-    setInvalid(new Set());
-    signUp.mutate(parsed.data, {
+    if (input === null) return;
+    signUp.mutate(input, {
       onSuccess: () => {
         redirectTo(ROUTES.home);
       },

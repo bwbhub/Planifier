@@ -20,5 +20,7 @@ Design tokens de la direction « Doux et vivant » (source : maquette Phase 1, c
 - Les composants n'utilisent que des classes issues de ces tokens (`bg-surface`, `text-muted`…).
   Aucune couleur, ombre ou rayon en dur.
 - Ajouter un token = l'ajouter en clair **et** en nuit (deux blocs dans `tokens.css`), puis dans `theme.css`.
+- Taille de texte ajoutée (`--text-*`) : la déclarer aussi dans `cn` (`packages/ui/src/lib/cn.ts`), sinon
+  tailwind-merge la prend pour une couleur.
 - Polices : Bricolage Grotesque (titres, `font-display`) et DM Sans (texte). Elles sont chargées par l'app
   (`next/font`) et branchées sur `--font-bricolage` / `--font-dm-sans`.

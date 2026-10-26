@@ -14,20 +14,20 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 
 ## 2. Cartographie rôle → package
 
-| Rôle                   | Nom réel                                                   | État                  |
-| ---------------------- | ---------------------------------------------------------- | --------------------- |
-| app web                | `apps/web` (`@planifier/web`)                              | squelette posé        |
-| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)          |
-| constantes métier      | `@planifier/constants`                                     | posé                  |
-| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)     |
-| composants sans métier | `@planifier/ui`                                            | `Button`, `TextField` |
-| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                 |
-| base + client          | `@planifier/db` (Prisma 7)                                 | posé                  |
-| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)          |
-| implémentation API     | `@planifier/api`                                           | plans public, user    |
-| auth                   | `@planifier/auth`                                          | posé (Better Auth)    |
-| droits (logique pure)  | `@planifier/domain-access`                                 | posé                  |
-| e-mails                | `@planifier/mails`                                         | à créer               |
+| Rôle                   | Nom réel                                                   | État                                             |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
+| app web                | `apps/web` (`@planifier/web`)                              | squelette posé                                   |
+| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)                                     |
+| constantes métier      | `@planifier/constants`                                     | posé                                             |
+| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)                                |
+| composants sans métier | `@planifier/ui`                                            | `Button`, `TextField`, `ChoiceGroup`, `Checkbox` |
+| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                            |
+| base + client          | `@planifier/db` (Prisma 7)                                 | posé                                             |
+| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                     |
+| implémentation API     | `@planifier/api`                                           | plans public, user                               |
+| auth                   | `@planifier/auth`                                          | posé (Better Auth)                               |
+| droits (logique pure)  | `@planifier/domain-access`                                 | posé                                             |
+| e-mails                | `@planifier/mails`                                         | à créer                                          |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)
 
@@ -69,7 +69,8 @@ contourner.
 
 1. Ancien code (`back/`, `front/`) : JS, MUI, Express, JWT en localStorage, secret JWT par défaut codé en dur.
 2. Racine : `package-lock.json` (npm) conservé pour l'ancien code ; à retirer avec lui.
-3. `packages/ui` : `Button` et `TextField` seulement (le reste avec le ticket design system).
+3. `packages/ui` : `Button`, `TextField`, `ChoiceGroup`, `Checkbox` seulement (le reste avec le ticket design system).
 4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
    partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
-5. Pas de vérification d'e-mail ni de réinitialisation de mot de passe (attend le package `mails`).
+5. Pas de vérification d'e-mail, de réinitialisation de mot de passe ni de changement d'e-mail (attend le package
+   `mails`).

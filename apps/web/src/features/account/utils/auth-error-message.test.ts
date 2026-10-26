@@ -17,6 +17,12 @@ describe("authErrorMessage", () => {
     );
   });
 
+  it("dit au compte connecté que son mot de passe actuel est faux", () => {
+    expect(authErrorMessage(new AuthRequestError(400, AUTH_ERROR_CODES.invalidPassword))).toBe(
+      "Mot de passe actuel incorrect.",
+    );
+  });
+
   it("demande de patienter quand le débit est dépassé, quel que soit le code", () => {
     expect(authErrorMessage(new AuthRequestError(429, null))).toContain("Patiente");
   });

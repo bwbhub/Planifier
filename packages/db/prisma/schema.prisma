@@ -87,6 +87,15 @@ enum AppModule {
   @@map("app_module")
 }
 
+/// Thème préféré ; SYSTEM suit le réglage de l'appareil.
+enum ThemePreference {
+  SYSTEM
+  LIGHT
+  DARK
+
+  @@map("theme_preference")
+}
+
 // ---------------------------------------------------------------------------
 // Utilisateurs
 // ---------------------------------------------------------------------------
@@ -94,20 +103,20 @@ enum AppModule {
 /// Compte. Champs lus et écrits par Better Auth (ADR 0004) : `name`, `email`, `emailVerified`, `avatarUrl`
 /// (son champ `image`), `createdAt`, `updatedAt`. Les identifiants de connexion vivent dans `Account`.
 model User {
-  id             String      @id @default(uuid(7))
+  id             String          @id @default(uuid(7))
   /// @pii identité durée-du-compte
-  email          String      @unique
+  email          String          @unique
   /// Nom affiché, obligatoire (exigé par Better Auth à l'inscription).
   /// @pii identité durée-du-compte
   name           String
-  emailVerified  Boolean     @default(false) @map("email_verified")
+  emailVerified  Boolean         @default(false) @map("email_verified")
   /// @pii identité durée-du-compte
-  avatarUrl      String?     @map("avatar_url")
-  preferredTheme String?     @map("preferred_theme")
+  avatarUrl      String?         @map("avatar_url")
+  preferredTheme ThemePreference @default(SYSTEM) @map("preferred_theme")
   /// Modules activés par cet utilisateur pour son espace personnel.
-  modules        AppModule[] @default([])
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  modules        AppModule[]     @default([])
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
   sessions            Session[]
   accounts            Account[]

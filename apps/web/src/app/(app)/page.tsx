@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser, SignOutButton } from "@/features/account";
@@ -14,7 +15,13 @@ export default async function HomePage() {
         <h1 className="font-display text-3xl font-bold tracking-tight">Bonjour {user.name}</h1>
         <p className="mt-2 text-muted">Ton espace est en cours de construction.</p>
         <ApiStatus />
-        <div className="mt-6">
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Link
+            href={ROUTES.profile}
+            className="inline-flex min-h-11 items-center font-semibold text-accent-text underline"
+          >
+            Mon profil
+          </Link>
           <SignOutButton />
         </div>
       </section>

@@ -69,7 +69,8 @@ contourner.
 
 1. Ancien code (`back/`, `front/`) : JS, MUI, Express, JWT en localStorage, secret JWT par défaut codé en dur.
 2. Racine : `package-lock.json` (npm) conservé pour l'ancien code ; à retirer avec lui.
-3. `packages/ui` : `Button` et `TextField` seulement (le reste avec le ticket design system).
+3. `packages/ui` : `Button`, `TextField`, `ChoiceGroup` seulement (le reste avec le ticket design system).
 4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
    partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
-5. Pas de vérification d'e-mail ni de réinitialisation de mot de passe (attend le package `mails`).
+5. Pas de vérification d'e-mail, de réinitialisation de mot de passe ni de changement d'e-mail (attend le package
+   `mails`).

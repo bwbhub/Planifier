@@ -18,6 +18,38 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Profil : nom, thème, mot de passe (branche `feat/profil`, ticket `869fhwtf7`, partie 2)
+
+**Fait**
+
+- `ThemePreference` (`SYSTEM`/`LIGHT`/`DARK`) : enum Prisma + miroir `THEME_PREFERENCES` dans `constants` ; migration
+  `theme_prefere` (colonne libre recréée, non nulle, défaut `SYSTEM`).
+- Auth : `preferredTheme` champ additionnel de Better Auth, validé par Zod ; exposé par la session et `account.me.get`.
+- Contrat : `/update-user` (nom + thème) et `/change-password` (actuel exigé, autres sessions toujours fermées) décrits
+  dans `api-contract` ; code `INVALID_PASSWORD`.
+- Web : page `/profil` (deux formulaires), lien depuis l'accueil, `data-theme` posé par le layout racine (rendu
+  serveur, sans éclair). `ChoiceGroup` (radios en pastilles) dans `packages/ui`. Hook `useFormValidation` extrait des
+  quatre formulaires (règle des trois).
+
+**Décisions** : tout passe par Better Auth, comme connexion et inscription (pas d'accès base dans `api`). Changement
+d'e-mail et suppression de compte hors périmètre (vérification par e-mail, service `owner_left_at`). Thème : en cas
+d'API injoignable, le layout racine retombe sur `SYSTEM` plutôt que de casser la page d'erreur.
+
+**Vérifié**
+
+- `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` OK ; `pnpm test:integration` OK
+  (9 tests API dont 3 de profil : thème par défaut puis enregistré, thème inconnu et e-mail refusés, mot de passe
+  avec l'actuel et révocation des autres sessions).
+- `pnpm dev` + curl : `/profil` sans session ⇒ 307 ; avec ⇒ page rendue ; après choix « Nuit » ⇒
+  `<html data-theme="dark">` ; `/connexion` sans attribut. Seed relancé après migration.
+- **Non vérifié** : rendu visuel (pas de navigateur pilotable).
+
+**Ouvert** : revue humaine (auth, migration, `packages/ui`) ; branche empilée sur `feat/ecrans-connexion` (non poussée,
+non mergée) ; `/update-user` accepte `image` sans contrôle (préexistant) ; le conteneur Postgres s'est arrêté seul
+pendant les portes (relancé).
+
+**Attendu ensuite** : push des deux branches par l'utilisateur, PR, vérif Brave.
+
 ## 2026-10-26 — Vérification des écrans de connexion, PR (branche `feat/ecrans-connexion`)
 
 **Fait** : parcours testés contre `pnpm dev` (base locale migrée et seedée) ; PR ouverte.

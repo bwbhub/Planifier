@@ -6,5 +6,6 @@ export const meRouter = {
     id: user.id,
     name: user.name,
     email: user.email,
+    preferredTheme: user.preferredTheme,
   })),
 };

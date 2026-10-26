@@ -18,8 +18,12 @@ export {
   AUTH_ERROR_CODES,
   AUTH_ROUTES,
   authErrorBodySchema,
+  type ChangePasswordInput,
+  changePasswordInputSchema,
   signInInputSchema,
   signUpInputSchema,
   type SignInInput,
   type SignUpInput,
+  type UpdateProfileInput,
+  updateProfileInputSchema,
 } from "./features/account/auth/auth.schemas";

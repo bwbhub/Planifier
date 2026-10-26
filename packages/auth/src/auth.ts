@@ -1,9 +1,14 @@
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@planifier/constants/account";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  THEME_PREFERENCES,
+} from "@planifier/constants/account";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER } from "@planifier/constants/http";
 import type { Db } from "@planifier/db";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
+import { z } from "zod";
 
 import { parseDisplayName } from "./display-name";
 import type { AuthEnv } from "./env";
@@ -35,7 +40,19 @@ export function createAuth(db: Db, env: AuthEnv) {
       minPasswordLength: PASSWORD_MIN_LENGTH,
       maxPasswordLength: PASSWORD_MAX_LENGTH,
     },
-    user: { fields: { image: "avatarUrl" } },
+    user: {
+      fields: { image: "avatarUrl" },
+      // Modifiable par l'utilisateur (`/update-user`) ; toute autre valeur est refusée avant écriture.
+      additionalFields: {
+        preferredTheme: {
+          type: [...THEME_PREFERENCES],
+          // Toujours présent : posé à la création quand l'inscription ne le donne pas.
+          required: true,
+          defaultValue: "SYSTEM",
+          validator: { input: z.enum(THEME_PREFERENCES) },
+        },
+      },
+    },
     // Le nom est validé à chaque écriture (inscription, modification du profil).
     databaseHooks: {
       user: {

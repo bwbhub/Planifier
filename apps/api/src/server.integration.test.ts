@@ -178,3 +178,82 @@ describe("refus d'inscription (base réelle)", () => {
     await expect(db.user.count({ where: { email } })).resolves.toBe(0);
   });
 });
+
+describe("profil (base réelle)", () => {
+  const email = "profil@example.test";
+
+  /** Compte neuf, connecté ; chaque test a son IP pour ne pas cumuler les limites de débit. */
+  async function signedUp(ip: string): Promise<string> {
+    await db.user.deleteMany({ where: { email } });
+    const response = await authPost(
+      AUTH_ROUTES.signUp,
+      { email, password: PASSWORD, name: "Profil" },
+      ip,
+    );
+    expect(response.status).toBe(200);
+    return cookiesOf(response);
+  }
+
+  it("suit le thème de l'appareil par défaut, puis enregistre le nom et le thème choisis", async () => {
+    const session = await signedUp("192.0.2.60");
+    await expect(clientWith(session).account.me.get({})).resolves.toMatchObject({
+      preferredTheme: "SYSTEM",
+    });
+
+    const update = await authPost(
+      AUTH_ROUTES.updateUser,
+      { name: "Profil modifié", preferredTheme: "DARK" },
+      "192.0.2.60",
+      session,
+    );
+    expect(update.status).toBe(200);
+    await expect(clientWith(session).account.me.get({})).resolves.toMatchObject({
+      name: "Profil modifié",
+      preferredTheme: "DARK",
+    });
+  });
+
+  it("refuse un thème inconnu et un changement d'e-mail sans rien écrire", async () => {
+    const session = await signedUp("192.0.2.61");
+    for (const body of [{ preferredTheme: "ROSE" }, { email: "autre@example.test" }]) {
+      const response = await authPost(AUTH_ROUTES.updateUser, body, "192.0.2.61", session);
+      expect(response.status).toBe(400);
+    }
+    await expect(db.user.findUnique({ where: { email } })).resolves.toMatchObject({
+      preferredTheme: "SYSTEM",
+    });
+  });
+
+  it("change le mot de passe avec l'actuel et ferme les autres sessions", async () => {
+    const other = await signedUp("192.0.2.62");
+    const signIn = await authPost(AUTH_ROUTES.signIn, { email, password: PASSWORD }, "192.0.2.63");
+    const current = cookiesOf(signIn);
+    const newPassword = "nouveau-mot-de-passe";
+
+    const wrong = await authPost(
+      AUTH_ROUTES.changePassword,
+      { currentPassword: "pas-le-bon", newPassword, revokeOtherSessions: true },
+      "192.0.2.63",
+      current,
+    );
+    expect(wrong.status).toBe(400);
+    await expect(wrong.json()).resolves.toMatchObject({ code: AUTH_ERROR_CODES.invalidPassword });
+
+    const change = await authPost(
+      AUTH_ROUTES.changePassword,
+      { currentPassword: PASSWORD, newPassword, revokeOtherSessions: true },
+      "192.0.2.63",
+      current,
+    );
+    expect(change.status).toBe(200);
+    await expect(clientWith(other).account.me.get({})).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+    const again = await authPost(
+      AUTH_ROUTES.signIn,
+      { email, password: newPassword },
+      "192.0.2.64",
+    );
+    expect(again.status).toBe(200);
+  });
+});

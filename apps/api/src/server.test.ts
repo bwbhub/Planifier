@@ -4,12 +4,18 @@ import { connect } from "node:net";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ApiClient } from "@planifier/api-contract";
+import type { SessionUser } from "@planifier/auth";
 import { CLIENT_IP_HEADER } from "@planifier/constants/http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiServer } from "./server";
 
-const ALICE = { id: "u-alice", name: "Alice", email: "alice@example.test" };
+const ALICE: SessionUser = {
+  id: "u-alice",
+  name: "Alice",
+  email: "alice@example.test",
+  preferredTheme: "SYSTEM",
+};
 /** Cookie que la session factice reconnaît (la vraie session est testée dans server.integration.test.ts). */
 const SESSION_COOKIE = "session-factice=alice";
 

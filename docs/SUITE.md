@@ -4,24 +4,25 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Vérif Brave à faire** (rien vu dans un navigateur ; boutons et champs n'avaient aucun style avant le correctif
-  `@source` du 2026-10-21) : formulaires de connexion et d'inscription (erreurs de champ, focus, message de refus),
-  accueil, déconnexion ; clair et nuit ; mobile et PC. Page d'erreur : lancer le web seul (`pnpm --filter
-  @planifier/web dev`, API arrêtée), ouvrir `/connexion`, voir « Réessayer ».
-- Compte de démo pour la vérif : `pnpm seed` si la base est neuve, puis `alice@example.test` / `planifier-demo`.
-- Puis demander push + PR de `feat/ecrans-connexion` (inclut le commit docs de `docs/suite-apres-auth`, branche
-  devenue inutile). Revue humaine : auth, `turbo.json`, dépendances de test, dérogation D5 (axe-core MPL-2.0).
+- **Push** de `feat/ecrans-connexion` (1 commit local en avance) puis de `feat/profil` (empilée dessus) : SSH
+  refusé depuis ma session, et un second essai a été bloqué par le mode auto. Ensuite me demander les PR.
+- **Vérif Brave** (toujours rien vu dans un navigateur ; Brave headless bloqué par le bac à sable) : connexion,
+  inscription, accueil, déconnexion, **profil** (`/profil` : nom, thème, mot de passe ; le thème doit basculer dès
+  « Enregistrer ») ; clair et nuit ; mobile et PC. Page d'erreur : web seul (API arrêtée), `/connexion`, « Réessayer ».
+- Compte de démo : `pnpm seed`, puis `alice@example.test` / `planifier-demo`.
+- Revue humaine : auth (champ `preferredTheme` de Better Auth, `/update-user`, `/change-password`), migration
+  `theme_prefere` (colonne recréée), `ChoiceGroup` dans `packages/ui`.
 
-## 2. Prochain ticket : profil (`869fhwtf7`, partie 2)
+## 2. Prochain ticket
 
-Nom affiché, mot de passe (Better Auth `change-password`), thème préféré (`preferredTheme`, liste fermée à créer
-dans `constants`). Changement d'e-mail : après `mails` (vérification). Accès mobile au profil non maquetté (barre
-du bas : 5 modules, sans Profil) ; candidat : l'initiale ronde en haut d'Aujourd'hui. À faire valider.
+Profil livré sur `feat/profil` (`869fhwtf7`, partie 2) sauf : changement d'e-mail (attend `mails`), suppression
+de compte (service `owner_left_at`), accès mobile au profil (lien provisoire sur l'accueil ; candidat : initiale
+ronde en haut d'Aujourd'hui, à valider).
 
 ## 3. Ensuite
 
-1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion, CI.
-2. Package `mails` : vérification d'e-mail, réinitialisation de mot de passe (réponse générique à l'inscription).
+1. E2E Playwright (`869fkd81n`) : fiche, smoke inscription/connexion/profil, CI.
+2. Package `mails` : vérification d'e-mail, réinitialisation, changement d'e-mail.
 3. Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
 4. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
 5. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web.
@@ -53,4 +54,6 @@ du bas : 5 modules, sans Profil) ; candidat : l'initiale ronde en haut d'Aujourd
 - Tests sur base : `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm test:integration`
   (suites sérialisées : `auth` puis `api-server`, même base).
 - Node local 24.11 : jsdom 30 refusé (D4). Tests de composants web : `// @vitest-environment jsdom` en tête de fichier.
+- `/update-user` de Better Auth accepte aussi `image` (→ `avatarUrl`) sans contrôle : à fermer avec les avatars.
+- jsdom n'a pas `CSS.escape` : `userEvent.keyboard` sur des radios plante ; tester au clic.
 - Le tsconfig de Next garde le JSX (`preserve`) : `oxc.jsx` dans `apps/web/vitest.config.ts`.

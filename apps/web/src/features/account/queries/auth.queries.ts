@@ -1,11 +1,14 @@
 import {
   AUTH_ROUTES,
   authErrorBodySchema,
+  type ChangePasswordInput,
   type SignInInput,
   type SignUpInput,
+  type UpdateProfileInput,
 } from "@planifier/api-contract";
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { AuthRequestError } from "../utils/auth-request-error";
 
@@ -47,4 +50,22 @@ export function useSignUp() {
 
 export function useSignOut() {
   return useAuthMutation(() => postAuth(AUTH_ROUTES.signOut, {}));
+}
+
+/** Nom et thème : la session reste la même ; les pages serveur (nom affiché, thème du `<html>`) sont relues. */
+export function useUpdateProfile() {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) => postAuth(AUTH_ROUTES.updateUser, input),
+    onSuccess: () => {
+      router.refresh();
+    },
+  });
+}
+
+/** Les autres sessions sont fermées par le serveur ; celle-ci reste ouverte. */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: ChangePasswordInput) => postAuth(AUTH_ROUTES.changePassword, input),
+  });
 }

@@ -16,8 +16,11 @@ export function authErrorMessage(error: unknown): string {
     if (error.code === AUTH_ERROR_CODES.invalidCredentials) {
       return "E-mail ou mot de passe incorrect.";
     }
-    if (error.code === AUTH_ERROR_CODES.emailTaken) {
-      return "Un compte existe déjà avec cet e-mail. Tu peux te connecter.";
+    if (error.code === AUTH_ERROR_CODES.emailNotVerified) {
+      return "Confirme d'abord ton adresse : un nouveau lien vient de partir par e-mail.";
+    }
+    if (error.code === AUTH_ERROR_CODES.invalidToken) {
+      return "Ce lien n'est plus valable. Demande-en un nouveau.";
     }
     if (error.code === AUTH_ERROR_CODES.invalidPassword) {
       return "Mot de passe actuel incorrect.";

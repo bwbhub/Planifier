@@ -53,6 +53,16 @@ catalog:
   axe-core: ~4.14.0
   # tests E2E (docs/DEPENDANCES.md), Chromium seul
   "@playwright/test": ~1.64.1
+  # gabarits d'e-mail (docs/DEPENDANCES.md) : composants seuls, sans @react-email/render
+  "@react-email/html": ~0.0.12
+  "@react-email/head": ~0.0.13
+  "@react-email/body": ~0.3.0
+  "@react-email/container": ~0.0.16
+  "@react-email/heading": ~0.0.16
+  "@react-email/text": ~0.1.6
+  "@react-email/button": ~0.2.1
+  "@react-email/preview": ~0.0.14
+  "@react-email/hr": ~0.0.12
   # styles
   tailwindcss: ^4.3.0
   "@tailwindcss/postcss": ^4.3.0

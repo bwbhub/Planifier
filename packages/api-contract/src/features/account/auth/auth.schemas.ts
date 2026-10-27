@@ -17,12 +17,17 @@ export const AUTH_ROUTES = {
   signOut: "/sign-out",
   updateUser: "/update-user",
   changePassword: "/change-password",
+  requestPasswordReset: "/request-password-reset",
+  resetPassword: "/reset-password",
 } as const;
 
 /** Codes d'erreur de Better Auth que l'interface distingue ; les autres reçoivent un message générique. */
 export const AUTH_ERROR_CODES = {
   invalidCredentials: "INVALID_EMAIL_OR_PASSWORD",
-  emailTaken: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+  /** Connexion avant d'avoir confirmé l'adresse : un nouveau lien vient de partir. */
+  emailNotVerified: "EMAIL_NOT_VERIFIED",
+  /** Lien de nouveau mot de passe inconnu, déjà servi ou expiré. */
+  invalidToken: "INVALID_TOKEN",
   /** Mot de passe actuel faux, au changement de mot de passe. */
   invalidPassword: "INVALID_PASSWORD",
 } as const;
@@ -56,6 +61,17 @@ export const changePasswordInputSchema = z.strictObject({
   revokeOtherSessions: z.boolean(),
 });
 
+/** Mot de passe oublié : l'e-mail seul. La réponse est la même, qu'un compte existe ou non. */
+export const requestPasswordResetInputSchema = z.strictObject({
+  email: emailSchema,
+});
+
+/** Nouveau mot de passe, avec le jeton reçu par e-mail (lu dans l'URL du lien). */
+export const resetPasswordInputSchema = z.strictObject({
+  newPassword: newPasswordSchema,
+  token: z.string().min(1),
+});
+
 /** Corps d'erreur de Better Auth : seuls ces champs sont lus, les autres sont ignorés. */
 export const authErrorBodySchema = z.object({
   code: z.string().optional(),
@@ -65,3 +81,21 @@ export type SignUpInput = z.infer<typeof signUpInputSchema>;
 export type SignInInput = z.infer<typeof signInInputSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetInputSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
+
+/**
+ * Corps envoyés à chaque route de Better Auth : l'entrée validée du formulaire, plus, pour les routes qui envoient un
+ * e-mail, la page où ramène son lien (`AUTH_PAGES`, `@planifier/constants/account`).
+ */
+export interface AuthRequestBodies {
+  [AUTH_ROUTES.signUp]: SignUpInput & { callbackURL: string };
+  [AUTH_ROUTES.signIn]: SignInInput & { callbackURL: string };
+  [AUTH_ROUTES.signOut]: Record<string, never>;
+  [AUTH_ROUTES.updateUser]: UpdateProfileInput;
+  [AUTH_ROUTES.changePassword]: ChangePasswordInput;
+  [AUTH_ROUTES.requestPasswordReset]: RequestPasswordResetInput & { redirectTo: string };
+  [AUTH_ROUTES.resetPassword]: ResetPasswordInput;
+}
+
+export type AuthRoute = keyof AuthRequestBodies;

@@ -27,7 +27,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | implémentation API     | `@planifier/api`                                           | plans public, user                               |
 | auth                   | `@planifier/auth`                                          | posé (Better Auth)                               |
 | droits (logique pure)  | `@planifier/domain-access`                                 | posé                                             |
-| e-mails                | `@planifier/mails`                                         | à créer                                          |
+| e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)    |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)
 
@@ -36,16 +36,16 @@ PostgreSQL + Prisma 7 · React Email + Resend · web-push · Vitest · Playwrigh
 
 ## 4. Commandes
 
-| Action                       | Commande                                                                                                                                      |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Installer                    | `pnpm install`                                                                                                                                |
-| Développer                   | `pnpm dev` (ou `pnpm --filter @planifier/web dev`)                                                                                            |
-| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build`                                                                                 |
-| Tests sur base réelle        | `DATABASE_URL=…/planifier_test pnpm test:integration` (base `_test` migrée, voir README de `db`)                                              |
-| Tests E2E (Playwright)       | `DATABASE_URL=…/planifier_test pnpm test:e2e` (construit le web ; 1re fois : `pnpm --filter @planifier/web exec playwright install chromium`) |
-| Formater                     | `pnpm format`                                                                                                                                 |
-| Données de démo              | `pnpm seed` (base locale ; comptes `alice@example.test`… mot de passe `planifier-demo`)                                                       |
-| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                                                                                                      |
+| Action                       | Commande                                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Installer                    | `pnpm install`                                                                                                                                                                  |
+| Développer                   | `docker compose up -d` (Postgres 5433, Mailpit 8025) puis `pnpm dev`                                                                                                            |
+| Types · lint · tests · build | `pnpm check-types` · `pnpm lint` · `pnpm test` · `pnpm build`                                                                                                                   |
+| Tests sur base réelle        | `DATABASE_URL=…/planifier_test pnpm test:integration` (base `_test` migrée, voir README de `db`)                                                                                |
+| Tests E2E (Playwright)       | `DATABASE_URL=…/planifier_test MAILPIT_URL=http://localhost:8025 pnpm test:e2e` (construit le web ; 1re fois : `pnpm --filter @planifier/web exec playwright install chromium`) |
+| Formater                     | `pnpm format`                                                                                                                                                                   |
+| Données de démo              | `pnpm seed` (base locale ; comptes `alice@example.test`… mot de passe `planifier-demo`)                                                                                         |
+| Ancien code                  | `pnpm legacy:back` · `pnpm legacy:front`                                                                                                                                        |
 
 ## 5. Environnement
 
@@ -79,5 +79,8 @@ contourner.
 3. `packages/ui` : `Button`, `TextField`, `ChoiceGroup`, `Checkbox` seulement (le reste avec le ticket design system).
 4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
    partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
-5. Pas de vérification d'e-mail, de réinitialisation de mot de passe ni de changement d'e-mail (attend le package
-   `mails`).
+5. Pas de changement d'e-mail (ticket `869fmk5dw`). Domaine à acheter pour Resend : aucun e-mail réel ne part tant
+   qu'il n'est pas vérifié (`docs/A-DISCUTER-domaine-resend.md`).
+6. Sécurité, long terme : à l'inscription, un compte neuf est écrit en base, pas un doublon ; l'écart de durée de
+   réponse laisse deviner les adresses inscrites. Accepté pour l'instant (limitation de débit) ; réexamen avant
+   ouverture publique large.

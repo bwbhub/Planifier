@@ -217,8 +217,27 @@ CI : job séparé, `playwright install --with-deps chromium`, base `_test` du se
           pour piloter web + API ensemble).
 ```
 
+## Fiche validée et installée : gabarits d'e-mail (ticket `869fhwtm6`)
+
+Vérifié le 2026-10-26 (registre npm). Choix validés par l'utilisateur le 2026-10-26 : composants React Email sans
+`@react-email/render`, rendu par `react-dom/server`, envoi par `fetch` (ni SDK `resend` ni nodemailer).
+
+```
+Dépendances : @react-email/{html@~0.0.12, head@~0.0.13, body@~0.3.0, container@~0.0.16, heading@~0.0.16,
+              text@~0.1.6, button@~0.2.1, preview@~0.0.14, hr@~0.0.12}
+Cible : packages/mails     Type : exécution (API)
+Besoin : gabarits d'e-mail compatibles avec les clients mail (tableaux, styles en ligne), ADR 0010.
+Doublon ? : non. react et react-dom (déjà au catalog) font le rendu (`renderToStaticMarkup`).
+Licence : MIT. Maintenance : Resend (dépôt resend/react-email actif), versions de 2025-12 à 2026-03.
+Poids : 8 à 28 ko chacun, aucune dépendance, aucun script d'installation ; react en pair.
+Écartés : l'agrégat @react-email/components (tire @react-email/render, donc prettier 10 Mo et html-to-text à
+          l'exécution) ; le SDK resend (postal-mime, standardwebhooks inutiles : une requête POST suffit) ;
+          nodemailer (Mailpit reçoit par son API HTTP).
+Outil de dev (hors npm) : image Docker axllent/mailpit:v1.32.0 (MIT), boîte de réception locale (docker-compose).
+```
+
 ## À venir (ne pas installer avant validation de sa fiche)
 
-| Dépendance                       | Version visée | Point d'attention                        |
-| -------------------------------- | ------------- | ---------------------------------------- |
-| web-push, resend, @react-email/* | à choisir     | ADR 0010 ; domaine à acheter pour Resend |
+| Dépendance | Version visée | Point d'attention |
+| ---------- | ------------- | ----------------- |
+| web-push   | à choisir     | ADR 0010          |

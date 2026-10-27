@@ -10,7 +10,7 @@ const API_PORT = 3101;
 const WEB_URL = `http://localhost:${String(WEB_PORT)}`;
 const API_URL = `http://localhost:${String(API_PORT)}`;
 
-const { DATABASE_URL, CI } = getE2eEnv();
+const { DATABASE_URL, MAILPIT_URL, CI } = getE2eEnv();
 
 /**
  * Parcours de bout en bout sur le web construit (`next start`) et l'API, contre la base `_test`. Chromium seul
@@ -40,6 +40,9 @@ export default defineConfig({
         // Secret jetable, tiré à chaque lancement : les sessions ne survivent pas au run.
         BETTER_AUTH_SECRET: randomBytes(32).toString("base64"),
         BETTER_AUTH_URL: WEB_URL,
+        MAIL_TRANSPORT: "mailpit",
+        MAILPIT_URL,
+        MAIL_FROM: "bonjour@planifier.test",
       },
     },
     {

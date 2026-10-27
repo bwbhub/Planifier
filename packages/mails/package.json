@@ -1,0 +1,42 @@
+{
+  "name": "@planifier/mails",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@planifier/constants": "workspace:*",
+    "@planifier/tokens": "workspace:*",
+    "@react-email/body": "catalog:",
+    "@react-email/button": "catalog:",
+    "@react-email/container": "catalog:",
+    "@react-email/head": "catalog:",
+    "@react-email/heading": "catalog:",
+    "@react-email/hr": "catalog:",
+    "@react-email/html": "catalog:",
+    "@react-email/preview": "catalog:",
+    "@react-email/text": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@planifier/eslint-config": "workspace:*",
+    "@planifier/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

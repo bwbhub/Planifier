@@ -3,6 +3,8 @@
 import { signInInputSchema } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { TextField } from "@planifier/ui/components/text-field";
+import { textLinkClassName } from "@planifier/ui/lib/text-link";
+import Link from "next/link";
 import type { SubmitEvent } from "react";
 
 import { ROUTES } from "@/lib/routes";
@@ -61,6 +63,9 @@ export function SignInForm() {
         required
         error={errorOf("password")}
       />
+      <Link href={ROUTES.forgotPassword} className={textLinkClassName("self-end text-sm")}>
+        Mot de passe oublié ?
+      </Link>
       {signIn.isError ? <AuthErrorAlert error={signIn.error} /> : null}
       <Button type="submit" disabled={signIn.isPending}>
         {signIn.isPending ? "Connexion…" : "Se connecter"}

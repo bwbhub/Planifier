@@ -1,4 +1,5 @@
 import { getDb } from "@planifier/db";
+import { getSendMail } from "@planifier/mails";
 
 import { type Auth, createAuth } from "./auth";
 import { getAuthEnv } from "./env";
@@ -11,6 +12,6 @@ let cached: Auth | undefined;
 
 /** Instance unique du processus, créée au premier appel (environnement validé à ce moment). */
 export function getAuth(): Auth {
-  cached ??= createAuth(getDb(), getAuthEnv());
+  cached ??= createAuth(getDb(), getAuthEnv(), getSendMail());
   return cached;
 }

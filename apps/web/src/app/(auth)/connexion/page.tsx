@@ -1,12 +1,15 @@
+import { textLinkClassName } from "@planifier/ui/lib/text-link";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AuthShell, SignInForm } from "@/features/account";
+import { AuthShell, LinkErrorNotice, SignInForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Connexion · Planifier" };
 
-export default function SignInPage() {
+export default async function SignInPage({ searchParams }: PageProps<"/connexion">) {
+  // Lien de vérification d'adresse expiré ou faux : Better Auth renvoie ici avec `?error=…`.
+  const { error } = await searchParams;
   return (
     <AuthShell
       title="Connexion"
@@ -14,15 +17,17 @@ export default function SignInPage() {
       footer={
         <>
           Pas encore de compte ?{" "}
-          <Link
-            href={ROUTES.signUp}
-            className="inline-flex min-h-11 items-center font-semibold text-accent-text underline"
-          >
+          <Link href={ROUTES.signUp} className={textLinkClassName()}>
             Créer un compte
           </Link>
         </>
       }
     >
+      {error === undefined ? null : (
+        <LinkErrorNotice>
+          Ce lien de confirmation n'est plus valable. Connecte-toi : un nouveau lien te sera envoyé.
+        </LinkErrorNotice>
+      )}
       <SignInForm />
     </AuthShell>
   );

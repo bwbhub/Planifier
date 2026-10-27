@@ -18,6 +18,45 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-26 — Package `mails`, vérification d'adresse, mot de passe oublié (branche `feat/mails`, ticket `869fhwtm6`)
+
+**Fait**
+
+- `packages/mails` : interface `SendMail`, transports Resend et Mailpit en `fetch` (aucun SDK), gabarits
+  vérification d'adresse et mot de passe oublié (composants `@react-email/*` rendus par `react-dom/server`, version
+  texte écrite), `env.ts` (Mailpit refusé en production). Couleurs : `@planifier/tokens/email`, testées contre
+  `tokens.css`.
+- Auth : adresse vérifiée avant toute session (le lien ouvre la session, une connexion tentée avant renvoie un lien),
+  inscription muette sur un e-mail déjà inscrit, mot de passe oublié (sessions fermées au changement), envoi en
+  arrière-plan journalisé sans adresse ni lien. Contrat : `AUTH_PAGES`, routes et codes ; `emailTaken` retiré.
+- Web : « Vérifie ta boîte mail » après inscription, « Mot de passe oublié ? », pages `/mot-de-passe-oublie` et
+  `/nouveau-mot-de-passe`, lien expiré signalé sur `/connexion`.
+- Mailpit v1.32.0 dans `docker-compose.yml` et dans le job CI `e2e` ; E2E sur les vrais e-mails (Mailpit).
+- Seed : comptes de démo vérifiés. TS : `jsx: react-jsx` dans la config de base (packages consommés en source).
+
+**Décisions (utilisateur)** : rendu par `react-dom/server`, `fetch` direct, vérification obligatoire, branchement
+auth dans cette PR. Composants unitaires `@react-email/*` plutôt que l'agrégat, qui tire `@react-email/render`.
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `test:integration`
+15/15 (vérification, renvoi du lien, doublon muet, mot de passe oublié) ; `test:e2e` 24/24 avec Mailpit ; API de
+dev : inscription ⇒ e-mail dans Mailpit. **Non vérifié** : Resend réel (pas de domaine), CI, rendu dans un vrai
+client mail.
+
+**Ouvert** : revue humaine (auth, e-mails, CI) ; domaine à acheter puis vérifier chez Resend ; changement d'e-mail ;
+écart de durée de réponse résiduel à l'inscription (compte neuf écrit en base, pas un doublon).
+
+**Corrections de revue** (décisions de l'utilisateur) : nom retiré de l'e-mail de vérification (hameçonnage) ;
+inscription sur une adresse inscrite ⇒ e-mail « Tu as déjà un compte » (connexion, ou nouveau lien si non vérifiée) ;
+bac à sable `MAIL_ALLOWED_DOMAINS`. Aussi : `textLinkClassName` (`packages/ui`), `EMAIL_RADII` testés contre
+`theme.css`, `EMAIL_LINK_VALIDITY`, corps des routes d'auth typés (`AuthRequestBodies`), `AUTH_PAGES` dans
+`constants`, gabarits réduits à leurs données (`actionMail`), journal de Better Auth figé à `warn`.
+
+**Attendu ensuite** : push + PR, vérif Brave (inscription → Mailpit `localhost:8025` → lien), modèle Espace.
+
+**Suites (utilisateur)** : domaine Resend à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ;
+changement d'e-mail ⇒ ticket `869fmk5dw` ; écart de durée ⇒ dette long terme (`project-context` §7.6) ; `jsx` dans le
+commit du package : exception acceptée (config transverse à isoler dans son propre commit à l'avenir).
+
 ## 2026-10-26 — Smoke E2E Playwright (branche `feat/e2e-playwright`, ticket `869fkd81n`)
 
 **Fait** : fiche `@playwright/test` ~1.64.1 validée par l'utilisateur (Chromium seul) et installée via `catalog:`.

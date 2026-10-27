@@ -12,7 +12,8 @@ export const DEMO_USERS = [
 export async function seedUsers(db: Db) {
   // `id` sort du profil : il sert de clé d'upsert, et n'est écrit qu'à la création.
   for (const { id, ...profile } of DEMO_USERS) {
-    const data = { ...profile, modules: DEMO_MODULES };
+    // Adresses tenues pour vérifiées : la connexion l'exige, et aucun e-mail n'arrive à `example.test`.
+    const data = { ...profile, emailVerified: true, modules: DEMO_MODULES };
     await db.user.upsert({ where: { id }, create: { id, ...data }, update: data });
   }
 }

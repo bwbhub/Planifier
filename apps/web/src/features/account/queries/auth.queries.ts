@@ -1,11 +1,16 @@
 import {
   AUTH_ROUTES,
+  type AuthRequestBodies,
+  type AuthRoute,
   authErrorBodySchema,
   type ChangePasswordInput,
+  type RequestPasswordResetInput,
+  type ResetPasswordInput,
   type SignInInput,
   type SignUpInput,
   type UpdateProfileInput,
 } from "@planifier/api-contract";
+import { AUTH_PAGES } from "@planifier/constants/account";
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -17,7 +22,10 @@ import { AuthRequestError } from "../utils/auth-request-error";
  * ces routes sont hors oRPC, et `better-auth/client` ajouterait la bibliothèque au navigateur sans typage fin (le
  * type de l'instance serveur vit dans `@planifier/auth`, interdit au web). Corps décrits par `api-contract`.
  */
-async function postAuth(route: string, body: object): Promise<void> {
+async function postAuth<TRoute extends AuthRoute>(
+  route: TRoute,
+  body: AuthRequestBodies[TRoute],
+): Promise<void> {
   const response = await fetch(`${AUTH_BASE_PATH}${route}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -40,12 +48,36 @@ function useAuthMutation<TInput>(mutationFn: (input: TInput) => Promise<void>) {
   });
 }
 
+// `callbackURL` : page où ramène le lien de vérification d'adresse, envoyé à l'inscription et à chaque connexion
+// tentée avant la vérification.
 export function useSignIn() {
-  return useAuthMutation((input: SignInInput) => postAuth(AUTH_ROUTES.signIn, input));
+  return useAuthMutation((input: SignInInput) =>
+    postAuth(AUTH_ROUTES.signIn, { ...input, callbackURL: AUTH_PAGES.signIn }),
+  );
 }
 
+/** Inscription : aucune session ne s'ouvre, un lien de vérification part à l'adresse donnée. */
 export function useSignUp() {
-  return useAuthMutation((input: SignUpInput) => postAuth(AUTH_ROUTES.signUp, input));
+  return useMutation({
+    mutationFn: (input: SignUpInput) =>
+      postAuth(AUTH_ROUTES.signUp, { ...input, callbackURL: AUTH_PAGES.signIn }),
+  });
+}
+
+/** Mot de passe oublié : même réponse qu'un compte existe ou non. */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (input: RequestPasswordResetInput) =>
+      postAuth(AUTH_ROUTES.requestPasswordReset, {
+        ...input,
+        redirectTo: AUTH_PAGES.resetPassword,
+      }),
+  });
+}
+
+/** Nouveau mot de passe : les sessions ouvertes sont fermées (`revokeSessionsOnPasswordReset`). */
+export function useResetPassword() {
+  return useAuthMutation((input: ResetPasswordInput) => postAuth(AUTH_ROUTES.resetPassword, input));
 }
 
 export function useSignOut() {

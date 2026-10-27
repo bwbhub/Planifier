@@ -16,11 +16,13 @@ const auth = createAuth(
     BETTER_AUTH_SECRET: "secret-de-test-integration-0123456789abcdef",
     BETTER_AUTH_URL: "http://localhost:3000",
   }),
+  () => Promise.resolve(),
 );
 
 beforeAll(async () => {
   await reset();
-  await db.user.createMany({ data: DEMO_USERS.map((user) => ({ ...user })) });
+  // Adresses vérifiées, comme dans le seed de `db` : la connexion l'exige.
+  await db.user.createMany({ data: DEMO_USERS.map((user) => ({ ...user, emailVerified: true })) });
 });
 
 afterAll(async () => {

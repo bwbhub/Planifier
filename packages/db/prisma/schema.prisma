@@ -121,6 +121,7 @@ model User {
   sessions            Session[]
   accounts            Account[]
   spaces              SpaceMember[]
+  createdSpaceInvites SpaceInvite[]      @relation("SpaceInviteCreator")
   ownedEvents         Event[]            @relation("EventOwner")
   eventParticipations EventParticipant[]
   sentInvites         Invite[]           @relation("InviteSender")
@@ -214,6 +215,7 @@ model Space {
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
   members SpaceMember[]
+  invites SpaceInvite[]
   /// Espace supprimé : ses événements deviennent personnels (SetNull), les participants gardent leur accès.
   events  Event[]
 
@@ -233,6 +235,25 @@ model SpaceMember {
   @@unique([spaceId, userId])
   @@index([userId])
   @@map("space_members")
+}
+
+/// Lien d'invitation à un Espace, créé par un propriétaire : à usage unique, à durée limitée. Le jeton n'est jamais
+/// stocké, seulement son empreinte ; quiconque a un compte et le lien rejoint l'Espace.
+model SpaceInvite {
+  id        String   @id @default(uuid(7))
+  /// Empreinte SHA-256 (hex) du jeton du lien.
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  spaceId     String @map("space_id")
+  space       Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  createdById String @map("created_by_id")
+  createdBy   User   @relation("SpaceInviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@index([createdById])
+  @@map("space_invites")
 }
 
 // ---------------------------------------------------------------------------

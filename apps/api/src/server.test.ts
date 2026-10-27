@@ -27,6 +27,9 @@ const server = createApiServer({
     return Promise.resolve();
   },
   getSessionUser: (headers) => Promise.resolve(headers.cookie === SESSION_COOKIE ? ALICE : null),
+  getDb: () => {
+    throw new Error("Pas de base dans les tests unitaires : voir server.integration.test.ts.");
+  },
 });
 /** En-tête que pose le proxy du web devant chaque requête. */
 const PROXIED = { [CLIENT_IP_HEADER]: "192.0.2.1" };

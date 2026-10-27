@@ -2,6 +2,7 @@ import type { AnyMiddleware } from "@orpc/server";
 import { implement, ORPCError } from "@orpc/server";
 import { contract } from "@planifier/api-contract";
 import type { SessionUser } from "@planifier/auth";
+import type { Db } from "@planifier/db";
 
 /** Contexte fourni par le serveur HTTP à chaque requête. */
 export interface ApiContext {
@@ -13,7 +14,12 @@ export interface ApiContext {
   consumeRateLimit: (key: string) => boolean;
   /** Lit la session portée par le cookie. Appelée uniquement par la garde du plan utilisateur. */
   getSessionUser: () => Promise<SessionUser | null>;
+  /** Client de la base, lu à la demande : les tests sans base passent une fonction qui échoue. */
+  getDb: () => Db;
 }
+
+/** Contexte après la garde du plan utilisateur. */
+export type UserContext = ApiContext & { user: SessionUser };
 
 const base = implement(contract).$context<ApiContext>();
 

@@ -37,6 +37,9 @@ function contextFor(user: SessionUser | null): ApiContext {
     clientIp: "192.0.2.1",
     consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
     getSessionUser: () => Promise.resolve(user),
+    getDb: () => {
+      throw new Error("Pas de base dans les tests unitaires : voir *.integration.test.ts.");
+    },
   };
 }
 

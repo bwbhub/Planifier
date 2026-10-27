@@ -17,13 +17,13 @@
     "@planifier/api": "workspace:*",
     "@planifier/auth": "workspace:*",
     "@planifier/constants": "workspace:*",
+    "@planifier/db": "workspace:*",
     "tsx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@orpc/client": "catalog:",
     "@planifier/api-contract": "workspace:*",
-    "@planifier/db": "workspace:*",
     "@planifier/eslint-config": "workspace:*",
     "@planifier/mails": "workspace:*",
     "@planifier/typescript-config": "workspace:*",

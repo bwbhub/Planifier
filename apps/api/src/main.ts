@@ -1,4 +1,5 @@
 import { createAuthNodeHandler, getAuth, getSessionUser } from "@planifier/auth";
+import { getDb } from "@planifier/db";
 
 import { getEnv } from "./config/env";
 import { createApiServer } from "./server";
@@ -10,6 +11,7 @@ const server = createApiServer({
   env,
   authHandler: createAuthNodeHandler(auth),
   getSessionUser: (headers) => getSessionUser(auth, headers),
+  getDb,
 });
 
 server.listen(env.PORT, () => {

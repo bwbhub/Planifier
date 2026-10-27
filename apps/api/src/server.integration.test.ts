@@ -40,6 +40,7 @@ const server = createApiServer({
   env: { NODE_ENV: "test" },
   authHandler: createAuthNodeHandler(auth),
   getSessionUser: (headers) => getSessionUser(auth, headers),
+  getDb: () => db,
 });
 
 const EMAIL = "integration@example.test";

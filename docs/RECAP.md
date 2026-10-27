@@ -38,14 +38,26 @@ supprimé. **Décisions (agent, à valider)** : lien à usage unique, non lié �
 membres exposés par nom seul (pas d'e-mail) ; skill `api-contracts-orpc` corrigée : validation d'entrée **avant**
 les droits (un droit de ressource lit l'identifiant validé).
 
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `test:integration`
+**Vérifié** (avant revue) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `test:integration`
 36/36 (dont 21 Espaces : droits par rôle, dernier propriétaire, lien consommé, expiré, concurrence sur un même lien,
 Espace plein). **Non vérifié** : CI, E2E (aucun écran), Neon.
 
 **Ouvert** : revue humaine (droits, nouvelle route d'invitation, skill modifiée). Garde puis verrou : un rôle changé
 entre les deux n'est revérifié que pour les règles d'état. Pas d'UI (ticket `869fhwtfk`). Seed sans lien d'invitation.
 
-**Attendu ensuite** : revue, push + PR sur demande ; UI de gestion des Espaces (`869fhwtfk`).
+**Corrections de revue (`/code-review`, 2026-10-27)** : `members.remove` déclare `CONFLICT` ; `canRemoveMember`
+(règle dédiée, `isLastOwner` partagé) ; `spaceConflict` sorti dans `space-errors.ts`, `MEMBER_SELECT` /
+`toMemberOutput` partagés ; matrice de droits complète sur les 9 procédures gardées (sans session, hors Espace, rôle
+insuffisant, autorisé) ; horloge injectée pour l'expiration ; test unitaire prouvant la validation avant la garde ;
+skill `testing-standards` alignée (base vidée, pas de transaction annulée, raison écrite). Portes OK,
+`test:integration` 71/71 (Espaces 56).
+
+**À trancher (utilisateur)** : garantie du créateur (pas de `createdById`) ; invariant « à 2 ⇒ double propriétaire »
+après des départs ; `FORBIDDEN` vs `NOT_FOUND` pour un membre sans droit (règle 7) ; lien lié ou non à l'e-mail
+(`auth-authorization` §6) ; bornes 50 / 20 / 7 j. Hors périmètre, non noté avant : rattacher un événement à un Espace
+(aucune procédure).
+
+**Attendu ensuite** : décisions ci-dessus, push + PR sur demande ; UI de gestion des Espaces (`869fhwtfk`).
 
 ## 2026-10-26 — Package `mails`, vérification d'adresse, mot de passe oublié (branche `feat/mails`, ticket `869fhwtm6`)
 

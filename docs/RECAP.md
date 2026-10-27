@@ -52,12 +52,16 @@ insuffisant, autorisé) ; horloge injectée pour l'expiration ; test unitaire pr
 skill `testing-standards` alignée (base vidée, pas de transaction annulée, raison écrite). Portes OK,
 `test:integration` 71/71 (Espaces 56).
 
-**À trancher (utilisateur)** : garantie du créateur (pas de `createdById`) ; invariant « à 2 ⇒ double propriétaire »
-après des départs ; `FORBIDDEN` vs `NOT_FOUND` pour un membre sans droit (règle 7) ; lien lié ou non à l'e-mail
-(`auth-authorization` §6) ; bornes 50 / 20 / 7 j. Hors périmètre, non noté avant : rattacher un événement à un Espace
-(aucune procédure).
+**Décisions (utilisateur, 2026-10-27, après revue)** : créateur protégé (`spaces.created_by_id`, effacé quand il part
+ou supprime son compte ; `CONFLICT CREATOR`, `isCreator` sur les membres) ; Espace retombé à deux avec un seul
+propriétaire : proposition de nommer l'autre, jamais automatique (`suggestsOwnerPromotion`, pour l'UI) ; `FORBIDDEN`
+pour une ressource visible mais une action refusée (règle 7, ADR 0014, skills auth et API précisés) ; lien d'Espace
+non lié à une adresse (`auth-authorization` §6 précisée) ; bornes 50 / 20 / 7 j gardées. Migration de la PR régénérée
+en une seule (`espaces_createur_invitations`) : l'ancienne défaite à la main en local (table et ligne d'historique),
+sans `reset`. `test:integration` 73/73 (Espaces 58). Hors périmètre : rattacher un événement à un Espace (aucune
+procédure).
 
-**Attendu ensuite** : décisions ci-dessus, push + PR sur demande ; UI de gestion des Espaces (`869fhwtfk`).
+**Attendu ensuite** : push + PR sur demande ; UI de gestion des Espaces (`869fhwtfk`).
 
 ## 2026-10-26 — Package `mails`, vérification d'adresse, mot de passe oublié (branche `feat/mails`, ticket `869fhwtm6`)
 

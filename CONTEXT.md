@@ -11,7 +11,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 ## Espaces et modules
 
 - **Espace** (Space) : ensemble de personnes qui partagent des choses. Un couple, une colocation ou des vacances sont chacun un espace. Une seule notion pour tous. Tous les membres sont égaux par défaut ; des droits plus fins sont possibles mais optionnels.
-- **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres.
+- **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres. Le rôle est fixé à l'arrivée : un espace retombé à 2 avec un seul propriétaire le reste, et l'app propose à ce propriétaire de nommer l'autre, sans rien changer d'elle-même.
+- **Créateur d'espace** : propriétaire protégé tant qu'il est membre ; personne ne le rétrograde ni ne le retire. S'il part, la protection s'arrête.
 - **Module** : fonction activable à la carte (Todo, Agenda, Événements, Journal). Personne n'est obligé de tous les utiliser.
 - **Espace personnel** : ce qui n'est rattaché à aucun espace est privé.
 - **Lien d'invitation d'espace** : lien créé par un propriétaire, à usage unique, valable 7 jours. Rien n'est envoyé : le propriétaire le partage lui-même ; la personne connectée qui l'ouvre voit l'espace, puis le rejoint.

@@ -45,7 +45,7 @@ middleware de ressource (`spaceGuard`), jamais sur l'entrée brute.
 ## Erreurs
 
 Codes stables : `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `TOO_MANY_REQUESTS`,
-`INTERNAL_SERVER_ERROR`. Ressource sans droit ⇒ `NOT_FOUND`. Jamais de stack ni de message d'ORM vers le client ; traduire
+`INTERNAL_SERVER_ERROR`. Ressource sans droit de lecture ⇒ `NOT_FOUND` ; visible mais action refusée ⇒ `FORBIDDEN`. Jamais de stack ni de message d'ORM vers le client ; traduire
 `P2002` → `CONFLICT`, `P2025` → `NOT_FOUND`.
 
 ## Compatibilité

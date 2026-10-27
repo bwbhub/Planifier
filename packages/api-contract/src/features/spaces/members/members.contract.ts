@@ -10,7 +10,7 @@ export const membersContract = {
     .route({
       summary: "Changer le rôle d'un membre",
       description:
-        "Nommer ou rétrograder un propriétaire. Laisser l'Espace sans propriétaire : CONFLICT `LAST_OWNER`.",
+        "Nommer ou rétrograder un propriétaire. Rétrograder le créateur : CONFLICT `CREATOR` ; laisser l'Espace sans propriétaire : CONFLICT `LAST_OWNER`.",
     })
     .errors(SPACE_ERRORS)
     .input(setMemberRoleInputSchema)
@@ -19,7 +19,7 @@ export const membersContract = {
     .route({
       summary: "Retirer un membre",
       description:
-        "Retire un autre membre de l'Espace. Se viser soi-même : BAD_REQUEST (quitter l'Espace). Laisser l'Espace sans propriétaire : CONFLICT `LAST_OWNER`.",
+        "Retire un autre membre de l'Espace. Se viser soi-même : BAD_REQUEST (quitter l'Espace). Retirer le créateur : CONFLICT `CREATOR` ; laisser l'Espace sans propriétaire : CONFLICT `LAST_OWNER`.",
     })
     .errors(SPACE_ERRORS)
     .input(removeMemberInputSchema)

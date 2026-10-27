@@ -50,6 +50,8 @@ export const spaceMemberSchema = z.strictObject({
   name: z.string(),
   role: spaceRoleSchema,
   joinedAt: z.date(),
+  /** Créateur de l'Espace : propriétaire protégé, ni rétrogradé ni retiré par un autre. */
+  isCreator: z.boolean(),
 });
 
 /** Espace vu par un de ses membres : `myRole` est le rôle de l'appelant. */

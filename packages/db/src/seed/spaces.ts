@@ -1,12 +1,17 @@
 import type { Db } from "../factory";
 import { DEMO_MODULES, SEED_IDS } from "./ids";
 
-/** Un Espace à deux personnes : les deux en sont propriétaires par défaut (CONTEXT.md). */
+/** Un Espace à deux personnes, créé par Alice : les deux en sont propriétaires par défaut (CONTEXT.md). */
 export async function seedSpaces(db: Db) {
   await db.space.upsert({
     where: { id: SEED_IDS.space },
-    create: { id: SEED_IDS.space, name: "Alice & Bob", modules: DEMO_MODULES },
-    update: { name: "Alice & Bob", modules: DEMO_MODULES },
+    create: {
+      id: SEED_IDS.space,
+      name: "Alice & Bob",
+      modules: DEMO_MODULES,
+      createdById: SEED_IDS.alice,
+    },
+    update: { name: "Alice & Bob", modules: DEMO_MODULES, createdById: SEED_IDS.alice },
   });
 
   // Les deux membres sont OWNER ; `update` ne touche que le rôle pour ne pas déplacer le membre.

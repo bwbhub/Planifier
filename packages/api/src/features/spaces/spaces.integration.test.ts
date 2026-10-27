@@ -124,12 +124,13 @@ describe("spaces.space : lecture et droits (base réelle)", () => {
     const spaceId = await createTrio();
     const detail = await call(space.get, { spaceId }, asUser(users.carol));
     expect(detail.myRole).toBe("MEMBER");
-    expect(detail.members.map(({ name, role }) => ({ name, role }))).toEqual([
-      { name: "alice", role: "OWNER" },
-      { name: "bob", role: "OWNER" },
-      { name: "carol", role: "MEMBER" },
+    expect(detail.members.map(({ name, role, isCreator }) => ({ name, role, isCreator }))).toEqual([
+      { name: "alice", role: "OWNER", isCreator: true },
+      { name: "bob", role: "OWNER", isCreator: false },
+      { name: "carol", role: "MEMBER", isCreator: false },
     ]);
     expect(Object.keys(detail.members[0] ?? {}).sort()).toEqual([
+      "isCreator",
       "joinedAt",
       "name",
       "role",
@@ -217,20 +218,46 @@ describe("départs et rôles (base réelle)", () => {
     });
     await expect(db.space.count()).resolves.toBe(0);
   });
+});
+
+describe("créateur et rôles (base réelle)", () => {
+  it("protège le créateur : ni rétrogradé ni retiré, même par un autre propriétaire", async () => {
+    const spaceId = await createTrio();
+    const target = { spaceId, userId: users.alice.id };
+    await expect(
+      call(members.setRole, { ...target, role: "MEMBER" }, asUser(users.bob)),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "CREATOR" } });
+    await expect(
+      call(members.setRole, { ...target, role: "MEMBER" }, asUser(users.alice)),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "CREATOR" } });
+    await expect(call(members.remove, target, asUser(users.bob))).rejects.toMatchObject({
+      code: "CONFLICT",
+      data: { reason: "CREATOR" },
+    });
+    await expect(roleOf(spaceId, users.alice)).resolves.toEqual({ role: "OWNER" });
+  });
+
+  it("lève la protection quand le créateur part", async () => {
+    const spaceId = await createTrio();
+    await call(space.leave, { spaceId }, asUser(users.alice));
+    await expect(
+      db.space.findUnique({ where: { id: spaceId }, select: { createdById: true } }),
+    ).resolves.toEqual({
+      createdById: null,
+    });
+    // Revenu par un lien, Alice n'est plus protégée : Bob peut la retirer.
+    await join(spaceId, users.bob, users.alice);
+    await expect(
+      call(members.remove, { spaceId, userId: users.alice.id }, asUser(users.bob)),
+    ).resolves.toEqual({});
+  });
 
   it("refuse de rétrograder le dernier propriétaire, même soi-même", async () => {
     const spaceId = await createTrio();
-    await call(
-      members.setRole,
-      { spaceId, userId: users.bob.id, role: "MEMBER" },
-      asUser(users.alice),
-    );
+    // Alice (créatrice) partie, Bob reste seul propriétaire.
+    await call(space.leave, { spaceId }, asUser(users.alice));
     await expect(
-      call(
-        members.setRole,
-        { spaceId, userId: users.alice.id, role: "MEMBER" },
-        asUser(users.alice),
-      ),
+      call(members.setRole, { spaceId, userId: users.bob.id, role: "MEMBER" }, asUser(users.bob)),
     ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "LAST_OWNER" } });
   });
 

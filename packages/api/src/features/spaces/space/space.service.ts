@@ -12,7 +12,7 @@ import type { Db } from "@planifier/db";
 import { departureOutcome, roleOfNewMember } from "@planifier/domain-access/space";
 
 import { spaceConflict } from "../space-errors";
-import { lockSpaceMembers, membershipOf } from "../space-lock";
+import { lockSpace, membershipOf } from "../space-lock";
 import { MEMBER_SELECT, toMemberOutput } from "../space-member";
 
 const SPACE_SELECT = {
@@ -23,7 +23,7 @@ const SPACE_SELECT = {
   version: true,
 } as const;
 
-/** L'appelant est le premier membre : propriétaire (`roleOfNewMember`). */
+/** L'appelant est le créateur et le premier membre : propriétaire (`roleOfNewMember`). */
 export async function createSpace(
   db: Db,
   userId: string,
@@ -31,7 +31,7 @@ export async function createSpace(
 ): Promise<SpaceOutput> {
   const myRole = roleOfNewMember(0);
   const space = await db.space.create({
-    data: { ...input, members: { create: { userId, role: myRole } } },
+    data: { ...input, createdById: userId, members: { create: { userId, role: myRole } } },
     select: SPACE_SELECT,
   });
   return { ...space, myRole };
@@ -74,16 +74,17 @@ export async function getSpace(
     where: { id: spaceId },
     select: {
       ...SPACE_SELECT,
+      createdById: true,
       members: { orderBy: { joinedAt: "asc" }, select: MEMBER_SELECT },
     },
   });
   // Supprimé entre la garde et la lecture.
   if (space === null) throw new ORPCError("NOT_FOUND");
-  const { members, ...settings } = space;
+  const { members, createdById, ...settings } = space;
   return {
     ...settings,
     myRole,
-    members: members.map(toMemberOutput),
+    members: members.map((member) => toMemberOutput(member, createdById)),
   };
 }
 
@@ -113,14 +114,14 @@ export async function deleteSpace(db: Db, spaceId: string): Promise<void> {
   await db.space.deleteMany({ where: { id: spaceId } });
 }
 
-/** Règles de `departureOutcome`, appliquées sous le verrou de l'Espace. */
+/** Règles de `departureOutcome`, appliquées sous le verrou de l'Espace. Le créateur qui part perd sa protection. */
 export async function leaveSpace(
   db: Db,
   spaceId: string,
   userId: string,
 ): Promise<{ spaceDeleted: boolean }> {
   return db.$transaction(async (tx) => {
-    const membership = membershipOf(await lockSpaceMembers(tx, spaceId), userId);
+    const membership = membershipOf(await lockSpace(tx, spaceId), userId);
     // Parti entre la garde et le verrou.
     if (membership === null) throw new ORPCError("NOT_FOUND");
     switch (departureOutcome(membership)) {
@@ -131,6 +132,9 @@ export async function leaveSpace(
         return { spaceDeleted: true };
       case "leave":
         await tx.spaceMember.delete({ where: { spaceId_userId: { spaceId, userId } } });
+        if (membership.isCreator) {
+          await tx.space.update({ where: { id: spaceId }, data: { createdById: null } });
+        }
         return { spaceDeleted: false };
     }
   });

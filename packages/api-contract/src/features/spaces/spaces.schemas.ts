@@ -12,11 +12,13 @@ export const spaceTargetSchema = z.strictObject({ spaceId: spaceIdSchema });
 
 /**
  * Raisons d'un `CONFLICT` sur un Espace, pour que l'interface dise quoi faire :
- * `LAST_OWNER` (nommer un autre propriétaire ou supprimer l'Espace), `SPACE_FULL`, `TOO_MANY_INVITES`,
+ * `LAST_OWNER` (nommer un autre propriétaire ou supprimer l'Espace), `CREATOR` (le créateur ne se rétrograde ni ne
+ * se retire), `SPACE_FULL`, `TOO_MANY_INVITES`,
  * `STALE_VERSION` (l'Espace a changé entre-temps, recharger).
  */
 export const SPACE_CONFLICT_REASONS = [
   "LAST_OWNER",
+  "CREATOR",
   "SPACE_FULL",
   "TOO_MANY_INVITES",
   "STALE_VERSION",

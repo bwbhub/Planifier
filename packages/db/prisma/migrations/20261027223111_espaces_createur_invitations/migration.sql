@@ -1,3 +1,6 @@
+-- AlterTable
+ALTER TABLE "spaces" ADD COLUMN     "created_by_id" TEXT;
+
 -- CreateTable
 CREATE TABLE "space_invites" (
     "id" TEXT NOT NULL,
@@ -18,6 +21,12 @@ CREATE INDEX "space_invites_space_id_idx" ON "space_invites"("space_id");
 
 -- CreateIndex
 CREATE INDEX "space_invites_created_by_id_idx" ON "space_invites"("created_by_id");
+
+-- CreateIndex
+CREATE INDEX "spaces_created_by_id_idx" ON "spaces"("created_by_id");
+
+-- AddForeignKey
+ALTER TABLE "spaces" ADD CONSTRAINT "spaces_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "space_invites" ADD CONSTRAINT "space_invites_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "spaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;

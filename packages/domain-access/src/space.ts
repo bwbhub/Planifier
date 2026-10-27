@@ -34,6 +34,8 @@ export function roleOfNewMember(memberCount: number): SpaceRole {
 export interface SpaceMembership {
   /** Rôle actuel du membre concerné. */
   role: SpaceRole;
+  /** Créateur de l'Espace : propriétaire protégé, personne ne le rétrograde ni ne le retire. */
+  isCreator: boolean;
   ownerCount: number;
   memberCount: number;
 }
@@ -54,15 +56,43 @@ export function departureOutcome(membership: SpaceMembership): DepartureOutcome 
   return "leave";
 }
 
-/** Changement de rôle : refusé s'il laisse l'Espace sans propriétaire. */
-export function canChangeRole(membership: SpaceMembership, nextRole: SpaceRole): boolean {
-  return !(nextRole === "MEMBER" && isLastOwner(membership));
+/** Changement de rôle ou retrait d'un membre par un propriétaire : permis, ou refusé et pourquoi. */
+export type MemberChangeOutcome = "allowed" | "creator" | "last_owner";
+
+/** Rétrograder : jamais le créateur (même lui-même), jamais le dernier propriétaire. Nommer propriétaire : toujours. */
+export function roleChangeOutcome(
+  membership: SpaceMembership,
+  nextRole: SpaceRole,
+): MemberChangeOutcome {
+  if (nextRole === "OWNER") return "allowed";
+  if (membership.isCreator) return "creator";
+  return isLastOwner(membership) ? "last_owner" : "allowed";
 }
 
 /**
- * Retrait d'un autre membre par un propriétaire : refusé s'il laisse l'Espace sans propriétaire (n'arrive que si
- * l'appelant a perdu son rôle entre-temps).
+ * Retirer un autre membre : jamais le créateur (il part seul s'il le veut), jamais le dernier propriétaire (n'arrive
+ * que si l'appelant a perdu son rôle entre-temps).
  */
-export function canRemoveMember(membership: SpaceMembership): boolean {
-  return !isLastOwner(membership);
+export function removalOutcome(membership: SpaceMembership): MemberChangeOutcome {
+  if (membership.isCreator) return "creator";
+  return isLastOwner(membership) ? "last_owner" : "allowed";
+}
+
+/** Ce que l'interface sait de l'Espace pour l'appelant. */
+export interface SpaceOverview {
+  myRole: SpaceRole;
+  ownerCount: number;
+  memberCount: number;
+}
+
+/**
+ * Retombé à deux membres avec un seul propriétaire (après un départ) : l'interface propose à ce propriétaire de
+ * nommer l'autre. Une proposition seulement, rien n'est changé sans son accord (principe produit).
+ */
+export function suggestsOwnerPromotion({
+  myRole,
+  ownerCount,
+  memberCount,
+}: SpaceOverview): boolean {
+  return myRole === "OWNER" && memberCount === 2 && ownerCount === 1;
 }

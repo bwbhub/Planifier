@@ -9,7 +9,7 @@ import type { Db } from "@planifier/db";
 import { roleOfNewMember } from "@planifier/domain-access/space";
 
 import { spaceConflict } from "../space-errors";
-import { lockSpaceMembers, membershipOf } from "../space-lock";
+import { lockSpace, membershipOf } from "../space-lock";
 import { createInviteToken, hashInviteToken } from "./invite-token";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -25,7 +25,7 @@ export async function createInvite(
   now = new Date(),
 ): Promise<CreatedInviteOutput> {
   return db.$transaction(async (tx) => {
-    await lockSpaceMembers(tx, spaceId);
+    await lockSpace(tx, spaceId);
     await tx.spaceInvite.deleteMany({ where: { spaceId, expiresAt: { lte: now } } });
     if ((await tx.spaceInvite.count({ where: { spaceId } })) >= SPACE_MAX_ACTIVE_INVITES) {
       throw spaceConflict("TOO_MANY_INVITES");
@@ -109,14 +109,15 @@ export async function acceptInvite(
     });
     if (invite === null) throw new ORPCError("NOT_FOUND");
     const { spaceId } = invite;
-    const members = await lockSpaceMembers(tx, spaceId);
-    if (membershipOf(members, userId) !== null) return { spaceId };
-    if (members.length >= SPACE_MAX_MEMBERS) throw spaceConflict("SPACE_FULL");
+    const locked = await lockSpace(tx, spaceId);
+    if (membershipOf(locked, userId) !== null) return { spaceId };
+    const memberCount = locked.members.length;
+    if (memberCount >= SPACE_MAX_MEMBERS) throw spaceConflict("SPACE_FULL");
     // Consommé par une acceptation concurrente pendant l'attente du verrou.
     const { count } = await tx.spaceInvite.deleteMany({ where: { id: invite.id } });
     if (count === 0) throw new ORPCError("NOT_FOUND");
     await tx.spaceMember.create({
-      data: { spaceId, userId, role: roleOfNewMember(members.length) },
+      data: { spaceId, userId, role: roleOfNewMember(memberCount) },
     });
     return { spaceId };
   });

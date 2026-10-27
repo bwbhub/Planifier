@@ -3,12 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   canAccessSpace,
-  canChangeRole,
-  canRemoveMember,
   departureOutcome,
+  removalOutcome,
+  roleChangeOutcome,
   roleOfNewMember,
   SPACE_ACTIONS,
   type SpaceAction,
+  type SpaceMembership,
+  suggestsOwnerPromotion,
 } from "./space";
 
 function allowedActions(role: SpaceRole | null): SpaceAction[] {
@@ -42,45 +44,73 @@ describe("roleOfNewMember", () => {
   });
 });
 
+/** Propriétaire non créateur, dans un Espace de 3 avec 2 propriétaires. */
+const owner: SpaceMembership = { role: "OWNER", isCreator: false, ownerCount: 2, memberCount: 3 };
+const creator: SpaceMembership = { ...owner, isCreator: true };
+const member: SpaceMembership = { ...owner, role: "MEMBER" };
+const lastOwner: SpaceMembership = { ...owner, ownerCount: 1 };
+
 describe("departureOutcome", () => {
   it("supprime l'Espace quand le dernier membre part", () => {
-    expect(departureOutcome({ role: "OWNER", ownerCount: 1, memberCount: 1 })).toBe("delete_space");
+    expect(departureOutcome({ ...creator, ownerCount: 1, memberCount: 1 })).toBe("delete_space");
   });
 
   it("refuse le départ du dernier propriétaire tant qu'il reste des membres", () => {
-    expect(departureOutcome({ role: "OWNER", ownerCount: 1, memberCount: 3 })).toBe("last_owner");
+    expect(departureOutcome(lastOwner)).toBe("last_owner");
   });
 
-  it("laisse partir un propriétaire qui n'est pas le dernier", () => {
-    expect(departureOutcome({ role: "OWNER", ownerCount: 2, memberCount: 2 })).toBe("leave");
+  it("laisse partir le créateur s'il reste un autre propriétaire", () => {
+    expect(departureOutcome(creator)).toBe("leave");
   });
 
   it("laisse partir un membre", () => {
-    expect(departureOutcome({ role: "MEMBER", ownerCount: 1, memberCount: 3 })).toBe("leave");
+    expect(departureOutcome(member)).toBe("leave");
   });
 });
 
-describe("canChangeRole", () => {
+describe("roleChangeOutcome", () => {
+  it("refuse de rétrograder le créateur", () => {
+    expect(roleChangeOutcome(creator, "MEMBER")).toBe("creator");
+  });
+
   it("refuse de rétrograder le dernier propriétaire", () => {
-    expect(canChangeRole({ role: "OWNER", ownerCount: 1, memberCount: 3 }, "MEMBER")).toBe(false);
+    expect(roleChangeOutcome(lastOwner, "MEMBER")).toBe("last_owner");
   });
 
-  it("rétrograde un propriétaire s'il en reste un autre", () => {
-    expect(canChangeRole({ role: "OWNER", ownerCount: 2, memberCount: 3 }, "MEMBER")).toBe(true);
+  it("rétrograde un propriétaire non créateur s'il en reste un autre", () => {
+    expect(roleChangeOutcome(owner, "MEMBER")).toBe("allowed");
   });
 
-  it.each(SPACE_ROLES)("accepte toujours de nommer propriétaire (depuis %s)", (role) => {
-    expect(canChangeRole({ role, ownerCount: 1, memberCount: 3 }, "OWNER")).toBe(true);
+  it("accepte toujours de nommer propriétaire", () => {
+    expect(roleChangeOutcome(member, "OWNER")).toBe("allowed");
   });
 });
 
-describe("canRemoveMember", () => {
-  it("refuse de retirer le dernier propriétaire", () => {
-    expect(canRemoveMember({ role: "OWNER", ownerCount: 1, memberCount: 3 })).toBe(false);
+describe("removalOutcome", () => {
+  it("refuse de retirer le créateur", () => {
+    expect(removalOutcome(creator)).toBe("creator");
   });
 
-  it("retire un propriétaire s'il en reste un autre, et tout membre", () => {
-    expect(canRemoveMember({ role: "OWNER", ownerCount: 2, memberCount: 3 })).toBe(true);
-    expect(canRemoveMember({ role: "MEMBER", ownerCount: 1, memberCount: 3 })).toBe(true);
+  it("refuse de retirer le dernier propriétaire", () => {
+    expect(removalOutcome(lastOwner)).toBe("last_owner");
+  });
+
+  it("retire un propriétaire non créateur ou un membre", () => {
+    expect(removalOutcome(owner)).toBe("allowed");
+    expect(removalOutcome(member)).toBe("allowed");
+  });
+});
+
+describe("suggestsOwnerPromotion", () => {
+  it("propose au propriétaire seul d'un Espace à deux de nommer l'autre", () => {
+    expect(suggestsOwnerPromotion({ myRole: "OWNER", ownerCount: 1, memberCount: 2 })).toBe(true);
+  });
+
+  it.each([
+    { myRole: "MEMBER", ownerCount: 1, memberCount: 2 },
+    { myRole: "OWNER", ownerCount: 2, memberCount: 2 },
+    { myRole: "OWNER", ownerCount: 1, memberCount: 3 },
+  ] as const)("ne propose rien sinon (%o)", (overview) => {
+    expect(suggestsOwnerPromotion(overview)).toBe(false);
   });
 });

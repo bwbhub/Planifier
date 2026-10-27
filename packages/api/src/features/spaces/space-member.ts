@@ -16,6 +16,10 @@ interface SelectedMember {
   user: { name: string };
 }
 
-export function toMemberOutput({ user, ...member }: SelectedMember): SpaceMemberOutput {
-  return { ...member, name: user.name };
+/** `createdById` : créateur de l'Espace (null s'il est parti), pour signaler le membre protégé. */
+export function toMemberOutput(
+  { user, ...member }: SelectedMember,
+  createdById: string | null,
+): SpaceMemberOutput {
+  return { ...member, name: user.name, isCreator: member.userId === createdById };
 }

@@ -121,6 +121,7 @@ model User {
   sessions            Session[]
   accounts            Account[]
   spaces              SpaceMember[]
+  createdSpaces       Space[]            @relation("SpaceCreator")
   createdSpaceInvites SpaceInvite[]      @relation("SpaceInviteCreator")
   ownedEvents         Event[]            @relation("EventOwner")
   eventParticipations EventParticipant[]
@@ -211,6 +212,10 @@ model Space {
   /// false : un membre voit tous les éléments de l'Espace (CONTEXT.md). true : il ne voit que ce qui lui est partagé.
   restrictVisibility Boolean     @default(false) @map("restrict_visibility")
   version            Int         @default(1)
+  /// Créateur, protégé tant qu'il est membre : personne ne le rétrograde ni ne le retire. null : parti, ou compte
+  /// supprimé ; la protection s'arrête.
+  createdById        String?     @map("created_by_id")
+  createdBy          User?       @relation("SpaceCreator", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
@@ -219,6 +224,7 @@ model Space {
   /// Espace supprimé : ses événements deviennent personnels (SetNull), les participants gardent leur accès.
   events  Event[]
 
+  @@index([createdById])
   @@map("spaces")
 }
 

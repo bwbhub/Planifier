@@ -24,7 +24,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                            |
 | base + client          | `@planifier/db` (Prisma 7)                                 | posé                                             |
 | contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                     |
-| implémentation API     | `@planifier/api`                                           | plans public, user                               |
+| implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces                     |
 | auth                   | `@planifier/auth`                                          | posé (Better Auth)                               |
 | droits (logique pure)  | `@planifier/domain-access`                                 | posé                                             |
 | e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)    |

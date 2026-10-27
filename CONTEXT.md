@@ -14,6 +14,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Propriétaire d'espace** : dans un espace à 2 personnes, les deux le sont par défaut. À plus de 2, le créateur l'est, et peut en nommer d'autres.
 - **Module** : fonction activable à la carte (Todo, Agenda, Événements, Journal). Personne n'est obligé de tous les utiliser.
 - **Espace personnel** : ce qui n'est rattaché à aucun espace est privé.
+- **Lien d'invitation d'espace** : lien créé par un propriétaire, à usage unique, valable 7 jours. Rien n'est envoyé : le propriétaire le partage lui-même ; la personne connectée qui l'ouvre voit l'espace, puis le rejoint.
+- **Gestion d'un espace** : nom, modules, visibilité, invitations, rôles, retrait de membres et suppression reviennent aux propriétaires ; un membre peut quitter. Le dernier propriétaire ne part pas tant qu'il reste des membres (il nomme un autre propriétaire ou supprime l'espace) ; le dernier membre qui part supprime l'espace.
 - **Visibilité dans un espace** : par défaut, un membre voit tous les éléments de l'espace. Elle se restreint dans les paramètres de l'espace.
 - **Espace supprimé** : ses événements deviennent personnels pour leur propriétaire ; les participants gardent leur accès.
 

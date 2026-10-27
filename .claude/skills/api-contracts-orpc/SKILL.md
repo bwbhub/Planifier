@@ -26,7 +26,9 @@ Chaque procédure appartient à **un** plan. Un test énumère les routeurs et �
 
 ## Chaîne d'accès (ordre obligatoire)
 
-limitation de débit → authentification → droits (Espace, rôle, partage) → validation d'entrée (contrat) → handler → validation de sortie.
+limitation de débit → authentification → validation d'entrée (contrat) → droits (Espace, rôle, partage) → handler →
+validation de sortie. Les droits d'une ressource lisent son identifiant : ils viennent après la validation, en
+middleware de ressource (`spaceGuard`), jamais sur l'entrée brute.
 
 - Toujours `.input()` **et** `.output()`.
 - **Jamais de contrôle d'accès écrit à la main dans un handler** ; restreindre par rôle = ajouter le middleware, pas un `if`.

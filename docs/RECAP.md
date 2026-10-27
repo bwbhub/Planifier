@@ -18,6 +18,35 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-27 — Modèle Espace : droits, procédures, liens d'invitation (branche `feat/espaces`, ticket `869fhwtf9`)
+
+**Fait**
+
+- `domain-access/space` : `canAccessSpace` (membre : voir, quitter ; propriétaire : tout), `roleOfNewMember`,
+  `departureOutcome`, `canChangeRole`, matrice testée.
+- Migration `invitations_espace` : table `space_invites` (empreinte SHA-256 du jeton, `expires_at`, cascade).
+- Contrat `spaces.space` (create, list, get, update, delete, leave), `spaces.members` (setRole, remove),
+  `spaces.invites` (create, list, revoke, preview, accept). `CONFLICT` typé avec raison (`LAST_OWNER`, `SPACE_FULL`,
+  `TOO_MANY_INVITES`, `STALE_VERSION`).
+- `api` : `getDb` dans `ApiContext` (injecté par `apps/api`), garde `spaceGuard(action)` après validation d'entrée,
+  services en transaction sous verrou de la ligne de l'Espace (`SELECT … FOR UPDATE`).
+- Constantes : nom ≤ 60, 50 membres max, 20 liens en cours max, lien valable 7 jours.
+
+**Décisions (utilisateur)** : ajout par lien d'invitation (rien envoyé) ; 2e membre propriétaire, stocké à l'arrivée ;
+gestion aux propriétaires ; dernier propriétaire refusé tant qu'il reste des membres, dernier membre ⇒ Espace
+supprimé. **Décisions (agent, à valider)** : lien à usage unique, non lié à une adresse ; bornes 50 / 20 / 7 j ;
+membres exposés par nom seul (pas d'e-mail) ; skill `api-contracts-orpc` corrigée : validation d'entrée **avant**
+les droits (un droit de ressource lit l'identifiant validé).
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `format:check` OK ; `test:integration`
+36/36 (dont 21 Espaces : droits par rôle, dernier propriétaire, lien consommé, expiré, concurrence sur un même lien,
+Espace plein). **Non vérifié** : CI, E2E (aucun écran), Neon.
+
+**Ouvert** : revue humaine (droits, nouvelle route d'invitation, skill modifiée). Garde puis verrou : un rôle changé
+entre les deux n'est revérifié que pour les règles d'état. Pas d'UI (ticket `869fhwtfk`). Seed sans lien d'invitation.
+
+**Attendu ensuite** : revue, push + PR sur demande ; UI de gestion des Espaces (`869fhwtfk`).
+
 ## 2026-10-26 — Package `mails`, vérification d'adresse, mot de passe oublié (branche `feat/mails`, ticket `869fhwtm6`)
 
 **Fait**
@@ -52,6 +81,18 @@ bac à sable `MAIL_ALLOWED_DOMAINS`. Aussi : `textLinkClassName` (`packages/ui`)
 `constants`, gabarits réduits à leurs données (`actionMail`), journal de Better Auth figé à `warn`.
 
 **Attendu ensuite** : push + PR, vérif Brave (inscription → Mailpit `localhost:8025` → lien), modèle Espace.
+
+**Vérifié le 2026-10-27** (PR #16, CI verte) : portes + `format:check` OK ; `test:integration` 15/15 ; `test:e2e`
+24/24. À la main dans Chrome (dev local + Mailpit) : inscription ⇒ « Vérifie ta boîte mail » ⇒ e-mail reçu (HTML
+Check Mailpit : 87 % supporté) ⇒ lien ⇒ session ouverte ; mot de passe oublié ⇒ e-mail ⇒ nouveau mot de passe ⇒
+connexion OK ; lien rejoué ⇒ « Ce lien n'est plus valable ». Aucune erreur console. **Resend réel** : clé dans
+`apps/api/.env.local`, `MAIL_FROM=onboarding@resend.dev` ⇒ e-mail reçu dans Gmail (seule l'adresse du compte
+Resend est autorisée sans domaine). PR #16 mergée le 2026-10-27, ticket `869fhwtm6` clos ; gabarit d'invitation
+renvoyé au ticket `869fhwtgx`.
+
+**Ouvert (2026-10-27)** : ticket `869fmt5aa` « Domaine d'envoi Resend », bloqué par le nom et le branding ; boucle de rechargement de `/` vue une fois dans Brave en dev (HMR de Next, non reproduite
+dans Chrome) ; un 429 sur `account/me/get` fait planter la page (`getCurrentUser` relance tout sauf
+`UNAUTHORIZED`), à traiter si ça se reproduit.
 
 **Suites (utilisateur)** : domaine Resend à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ;
 changement d'e-mail ⇒ ticket `869fmk5dw` ; écart de durée ⇒ dette long terme (`project-context` §7.6) ; `jsx` dans le

@@ -19,8 +19,9 @@ export const membersContract = {
     .route({
       summary: "Retirer un membre",
       description:
-        "Retire un autre membre de l'Espace. Se viser soi-même : BAD_REQUEST (quitter l'Espace).",
+        "Retire un autre membre de l'Espace. Se viser soi-même : BAD_REQUEST (quitter l'Espace). Laisser l'Espace sans propriétaire : CONFLICT `LAST_OWNER`.",
     })
+    .errors(SPACE_ERRORS)
     .input(removeMemberInputSchema)
     .output(emptyOutputSchema),
 };

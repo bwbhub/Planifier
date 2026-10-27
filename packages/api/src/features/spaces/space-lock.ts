@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import type { SpaceConflictReason } from "@planifier/api-contract";
 import type { DbTransaction } from "@planifier/db";
 import type { SpaceMembership } from "@planifier/domain-access/space";
 
@@ -27,9 +26,4 @@ export function membershipOf(members: LockedMembers, userId: string): SpaceMembe
     ownerCount: members.filter(({ role }) => role === "OWNER").length,
     memberCount: members.length,
   };
-}
-
-/** `CONFLICT` typé du contrat (`SPACE_ERRORS`). */
-export function spaceConflict(reason: SpaceConflictReason) {
-  return new ORPCError("CONFLICT", { data: { reason } });
 }

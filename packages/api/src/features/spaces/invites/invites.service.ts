@@ -8,7 +8,8 @@ import {
 import type { Db } from "@planifier/db";
 import { roleOfNewMember } from "@planifier/domain-access/space";
 
-import { lockSpaceMembers, membershipOf, spaceConflict } from "../space-lock";
+import { spaceConflict } from "../space-errors";
+import { lockSpaceMembers, membershipOf } from "../space-lock";
 import { createInviteToken, hashInviteToken } from "./invite-token";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

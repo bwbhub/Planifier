@@ -2,9 +2,11 @@ import { ORPCError } from "@orpc/server";
 import type { SpaceMemberOutput } from "@planifier/api-contract";
 import type { SpaceRole } from "@planifier/constants/spaces";
 import type { Db } from "@planifier/db";
-import { canChangeRole, departureOutcome } from "@planifier/domain-access/space";
+import { canChangeRole, canRemoveMember } from "@planifier/domain-access/space";
 
-import { lockSpaceMembers, membershipOf, spaceConflict } from "../space-lock";
+import { spaceConflict } from "../space-errors";
+import { lockSpaceMembers, membershipOf } from "../space-lock";
+import { MEMBER_SELECT, toMemberOutput } from "../space-member";
 
 /** Nommer ou rétrograder un propriétaire ; jamais au point de laisser l'Espace sans propriétaire. */
 export async function setMemberRole(
@@ -18,17 +20,13 @@ export async function setMemberRole(
     const member = await tx.spaceMember.update({
       where: { spaceId_userId: { spaceId, userId } },
       data: { role },
-      select: { userId: true, role: true, joinedAt: true, user: { select: { name: true } } },
+      select: MEMBER_SELECT,
     });
-    const { user, ...rest } = member;
-    return { ...rest, name: user.name };
+    return toMemberOutput(member);
   });
 }
 
-/**
- * Retirer un autre membre : mêmes règles qu'un départ. L'appelant, propriétaire et différent de la personne visée,
- * reste dans l'Espace : `last_owner` n'arrive que s'il a été rétrogradé entre la garde et le verrou.
- */
+/** Retirer un autre membre, sans jamais laisser l'Espace sans propriétaire (`canRemoveMember`). */
 export async function removeMember(
   db: Db,
   { spaceId, userId, callerId }: { spaceId: string; userId: string; callerId: string },
@@ -39,7 +37,7 @@ export async function removeMember(
   await db.$transaction(async (tx) => {
     const membership = membershipOf(await lockSpaceMembers(tx, spaceId), userId);
     if (membership === null) throw new ORPCError("NOT_FOUND");
-    if (departureOutcome(membership) === "last_owner") throw spaceConflict("LAST_OWNER");
+    if (!canRemoveMember(membership)) throw spaceConflict("LAST_OWNER");
     await tx.spaceMember.delete({ where: { spaceId_userId: { spaceId, userId } } });
   });
 }

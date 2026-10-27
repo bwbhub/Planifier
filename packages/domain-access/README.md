@@ -7,7 +7,7 @@ Droits : fonctions **pures** `(appelant, ressource, action) → autorisé` (ADR 
 - `@planifier/domain-access/resource` : `canAccessResource`, `resourceLevel` (liste, entrée d'agenda).
 - `@planifier/domain-access/event` : `canAccessEvent` (rôles OWNER, ORGANIZER, GUEST).
 - `@planifier/domain-access/space` : `canAccessSpace` (gestion de l'Espace), `roleOfNewMember`, `departureOutcome`,
-  `canChangeRole` (règles des propriétaires).
+  `canChangeRole`, `canRemoveMember` (règles des propriétaires).
 
 L'appelant fournit des données déjà lues (rôle d'Espace, partage, rôle de participant). Le package ne lit rien.
 `read`/`view` faux ⇒ l'API répond `NOT_FOUND`.

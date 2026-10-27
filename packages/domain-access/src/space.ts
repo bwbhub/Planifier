@@ -38,6 +38,9 @@ export interface SpaceMembership {
   memberCount: number;
 }
 
+/** Vrai si ce membre, en cessant d'être propriétaire, laisserait l'Espace sans propriétaire. */
+const isLastOwner = ({ role, ownerCount }: SpaceMembership) => role === "OWNER" && ownerCount <= 1;
+
 export type DepartureOutcome = "leave" | "delete_space" | "last_owner";
 
 /**
@@ -45,17 +48,21 @@ export type DepartureOutcome = "leave" | "delete_space" | "last_owner";
  * (`last_owner`) tant qu'il reste des membres : rien n'est transmis à son insu, il nomme un autre propriétaire ou
  * supprime l'Espace.
  */
-export function departureOutcome({
-  role,
-  ownerCount,
-  memberCount,
-}: SpaceMembership): DepartureOutcome {
-  if (memberCount <= 1) return "delete_space";
-  if (role === "OWNER" && ownerCount <= 1) return "last_owner";
+export function departureOutcome(membership: SpaceMembership): DepartureOutcome {
+  if (membership.memberCount <= 1) return "delete_space";
+  if (isLastOwner(membership)) return "last_owner";
   return "leave";
 }
 
 /** Changement de rôle : refusé s'il laisse l'Espace sans propriétaire. */
-export function canChangeRole({ role, ownerCount }: SpaceMembership, nextRole: SpaceRole): boolean {
-  return !(role === "OWNER" && nextRole === "MEMBER" && ownerCount <= 1);
+export function canChangeRole(membership: SpaceMembership, nextRole: SpaceRole): boolean {
+  return !(nextRole === "MEMBER" && isLastOwner(membership));
+}
+
+/**
+ * Retrait d'un autre membre par un propriétaire : refusé s'il laisse l'Espace sans propriétaire (n'arrive que si
+ * l'appelant a perdu son rôle entre-temps).
+ */
+export function canRemoveMember(membership: SpaceMembership): boolean {
+  return !isLastOwner(membership);
 }

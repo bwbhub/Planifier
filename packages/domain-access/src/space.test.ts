@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   canAccessSpace,
   canChangeRole,
+  canRemoveMember,
   departureOutcome,
   roleOfNewMember,
   SPACE_ACTIONS,
@@ -70,5 +71,16 @@ describe("canChangeRole", () => {
 
   it.each(SPACE_ROLES)("accepte toujours de nommer propriétaire (depuis %s)", (role) => {
     expect(canChangeRole({ role, ownerCount: 1, memberCount: 3 }, "OWNER")).toBe(true);
+  });
+});
+
+describe("canRemoveMember", () => {
+  it("refuse de retirer le dernier propriétaire", () => {
+    expect(canRemoveMember({ role: "OWNER", ownerCount: 1, memberCount: 3 })).toBe(false);
+  });
+
+  it("retire un propriétaire s'il en reste un autre, et tout membre", () => {
+    expect(canRemoveMember({ role: "OWNER", ownerCount: 2, memberCount: 3 })).toBe(true);
+    expect(canRemoveMember({ role: "MEMBER", ownerCount: 1, memberCount: 3 })).toBe(true);
   });
 });

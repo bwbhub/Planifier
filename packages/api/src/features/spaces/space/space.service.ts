@@ -11,7 +11,9 @@ import type { SpaceRole } from "@planifier/constants/spaces";
 import type { Db } from "@planifier/db";
 import { departureOutcome, roleOfNewMember } from "@planifier/domain-access/space";
 
-import { lockSpaceMembers, membershipOf, spaceConflict } from "../space-lock";
+import { spaceConflict } from "../space-errors";
+import { lockSpaceMembers, membershipOf } from "../space-lock";
+import { MEMBER_SELECT, toMemberOutput } from "../space-member";
 
 const SPACE_SELECT = {
   id: true,
@@ -72,10 +74,7 @@ export async function getSpace(
     where: { id: spaceId },
     select: {
       ...SPACE_SELECT,
-      members: {
-        orderBy: { joinedAt: "asc" },
-        select: { userId: true, role: true, joinedAt: true, user: { select: { name: true } } },
-      },
+      members: { orderBy: { joinedAt: "asc" }, select: MEMBER_SELECT },
     },
   });
   // Supprimé entre la garde et la lecture.
@@ -84,7 +83,7 @@ export async function getSpace(
   return {
     ...settings,
     myRole,
-    members: members.map(({ user, ...member }) => ({ ...member, name: user.name })),
+    members: members.map(toMemberOutput),
   };
 }
 

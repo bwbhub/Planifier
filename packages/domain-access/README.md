@@ -6,6 +6,8 @@ Droits : fonctions **pures** `(appelant, ressource, action) → autorisé` (ADR 
 
 - `@planifier/domain-access/resource` : `canAccessResource`, `resourceLevel` (liste, entrée d'agenda).
 - `@planifier/domain-access/event` : `canAccessEvent` (rôles OWNER, ORGANIZER, GUEST).
+- `@planifier/domain-access/space` : `canAccessSpace` (gestion de l'Espace), `roleOfNewMember`, `departureOutcome`,
+  `canChangeRole` (règles des propriétaires).
 
 L'appelant fournit des données déjà lues (rôle d'Espace, partage, rôle de participant). Le package ne lit rien.
 `read`/`view` faux ⇒ l'API répond `NOT_FOUND`.
@@ -15,6 +17,9 @@ L'appelant fournit des données déjà lues (rôle d'Espace, partage, rôle de p
 - Propriétaire : tous les droits sur sa ressource. Membre d'Espace : niveau `spaceLevel` (READ par défaut, WRITE pour une
   liste partagée, NONE si l'Espace restreint la visibilité). Le plus élevé du partage direct et de l'Espace l'emporte.
 - Suppression : propriétaire, ou propriétaire d'Espace qui voit la ressource. Partage : propriétaire seul.
+- Espace : un membre voit et quitte ; réglages, invitations, membres et suppression aux propriétaires. Les deux
+  premiers membres sont propriétaires (stocké à l'arrivée). Le dernier propriétaire ne part pas ni n'est rétrogradé
+  tant qu'il reste des membres ; le dernier membre qui part supprime l'Espace.
 - Événement : voir `src/event.ts`. Reprise de propriété par un co-organisateur seulement si le propriétaire est parti.
 
 ## Interdits

@@ -17,6 +17,8 @@ export const listTasksInputSchema = listTargetSchema;
 
 export const createTaskInputSchema = z.strictObject({
   listId: listIdSchema,
+  /** Tâche de la même liste dont celle-ci devient une sous-tâche ; absente : tâche de la liste. */
+  parentId: taskIdSchema.optional(),
   title: titleSchema,
   description: descriptionSchema.optional(),
   dueDate: dueDateSchema.optional(),
@@ -45,6 +47,8 @@ export const deleteTaskInputSchema = taskTargetSchema;
 export const taskSchema = z.strictObject({
   id: taskIdSchema,
   listId: listIdSchema,
+  /** null : tâche de la liste ; sinon, sous-tâche de cette tâche (un seul niveau). */
+  parentId: taskIdSchema.nullable(),
   title: z.string(),
   description: z.string().nullable(),
   dueDate: dueDateSchema.nullable(),
@@ -53,7 +57,7 @@ export const taskSchema = z.strictObject({
   version: z.int(),
 });
 
-/** Toutes les tâches de la liste (bornées), par ordre de création. */
+/** Toutes les tâches de la liste (bornées), sous-tâches comprises, par ordre de création. */
 export const listTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });

@@ -21,7 +21,8 @@ export const tasksContract = {
   create: oc
     .route({
       summary: "Créer une tâche",
-      description: "Titre obligatoire. Liste pleine : CONFLICT `LIST_FULL`.",
+      description:
+        "Titre obligatoire. `parentId` : sous-tâche d'une tâche de la même liste (sinon NOT_FOUND), un seul niveau (CONFLICT `NESTED_SUBTASK`). Liste pleine (sous-tâches comprises) : CONFLICT `LIST_FULL`.",
     })
     .errors(TODO_ERRORS)
     .input(createTaskInputSchema)
@@ -43,7 +44,10 @@ export const tasksContract = {
     .input(setTaskDoneInputSchema)
     .output(taskSchema),
   delete: oc
-    .route({ summary: "Supprimer une tâche" })
+    .route({
+      summary: "Supprimer une tâche",
+      description: "Ses sous-tâches sont supprimées avec elle.",
+    })
     .input(deleteTaskInputSchema)
     .output(emptyOutputSchema),
 };

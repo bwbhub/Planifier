@@ -25,6 +25,7 @@ const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
 
 const COPY = {
   create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
+  subtask: { title: "Nouvelle sous-tâche", placeholder: "Ex. : du pain", submit: "Ajouter" },
   edit: { title: "Titre", placeholder: undefined, submit: "Enregistrer" },
 } as const;
 
@@ -82,15 +83,23 @@ interface TaskFormProps {
   listId: string;
   /** Tâche à modifier ; absente : création (le formulaire se vide après chaque ajout). */
   task?: TaskOutput | undefined;
+  /** Création d'une sous-tâche de cette tâche. */
+  parentId?: string | undefined;
+  /** Fin de la modification, ou abandon de l'ajout de sous-tâches ; absent : formulaire toujours ouvert. */
   onDone?: (() => void) | undefined;
 }
 
+function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
+  if (task !== undefined) return COPY.edit;
+  return parentId === undefined ? COPY.create : COPY.subtask;
+}
+
 /** Un seul formulaire pour créer une tâche et la modifier : titre obligatoire, détails facultatifs. */
-export function TaskForm({ listId, task, onDone }: TaskFormProps) {
+export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const mutation = task === undefined ? createTask : updateTask;
-  const copy = task === undefined ? COPY.create : COPY.edit;
+  const copy = copyOf(task, parentId);
   const { invalid, validate } = useFormValidation(FIELDS);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -104,6 +113,7 @@ export function TaskForm({ listId, task, onDone }: TaskFormProps) {
       // Création : un champ vide est absent.
       const input = validate(form, createTaskInputSchema, {
         listId,
+        parentId,
         title,
         description: description ?? undefined,
         dueDate: dueDate ?? undefined,
@@ -136,7 +146,7 @@ export function TaskForm({ listId, task, onDone }: TaskFormProps) {
         defaultValue={task?.title}
         maxLength={TASK_TITLE_MAX_LENGTH}
         required
-        autoFocus={task !== undefined}
+        autoFocus={onDone !== undefined}
         error={invalid.has("title") ? TITLE_ERROR : undefined}
       />
       <TaskDetails task={task} invalid={invalid} />
@@ -145,9 +155,9 @@ export function TaskForm({ listId, task, onDone }: TaskFormProps) {
         <Button type="submit" disabled={mutation.isPending}>
           {copy.submit}
         </Button>
-        {task === undefined ? null : (
+        {onDone === undefined ? null : (
           <Button variant="secondary" onClick={onDone}>
-            Annuler
+            {task === undefined ? "Fermer" : "Annuler"}
           </Button>
         )}
       </div>

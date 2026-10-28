@@ -52,12 +52,15 @@ export function useDeleteTask() {
   return useMutation(orpc.todo.tasks.delete.mutationOptions({ onSettled }));
 }
 
-/** Tâches avec `taskId` cochée ou décochée ; `delta` : variation du nombre de tâches à faire (0 si déjà dans l'état). */
+/**
+ * Tâches avec `taskId` cochée ou décochée ; `delta` : variation du nombre de tâches à faire de la liste (0 si déjà
+ * dans l'état, ou pour une sous-tâche, qui n'y compte pas).
+ */
 function withTaskDone(tasks: ListTasksOutput, taskId: string, done: boolean) {
   let delta = 0;
   const items = tasks.items.map((task) => {
     if (task.id !== taskId || (task.completedAt !== null) === done) return task;
-    delta = done ? -1 : 1;
+    if (task.parentId === null) delta = done ? -1 : 1;
     return { ...task, completedAt: done ? new Date() : null };
   });
   return { tasks: { items }, delta };

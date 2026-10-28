@@ -53,8 +53,17 @@ async function createListAndCheckTask(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
-/** Sur le Todo : modifie puis supprime la tâche, renomme puis supprime la liste. */
+/** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
+  await page.getByRole("button", { name: "+ Sous-tâche à « Acheter du pain »" }).click();
+  await page.getByLabel("Nouvelle sous-tâche").fill("Baguette");
+  await page.getByRole("button", { name: "Ajouter" }).last().click();
+  await page.getByRole("checkbox", { name: "Baguette" }).click();
+  await expect(page.getByText("1 sur 1 sous-tâche cochée")).toBeVisible();
+  // Cocher la sous-tâche ne coche rien d'autre : la tâche reste telle quelle.
+  await expect(page.getByRole("checkbox", { name: "Acheter du pain", exact: true })).toBeChecked();
+  await page.getByRole("button", { name: "Fermer" }).click();
+
   await page.goto("/todo");
   await page.getByRole("button", { name: "Modifier « Acheter du pain »" }).click();
   await page.getByLabel("Titre").fill("Acheter du pain complet");
@@ -62,6 +71,9 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("checkbox", { name: "Acheter du pain complet" })).toBeVisible();
 
   await page.getByRole("button", { name: "Supprimer « Acheter du pain complet »" }).click();
+  await expect(
+    page.getByRole("group", { name: "Supprimer « Acheter du pain complet » et sa sous-tâche ?" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Supprimer définitivement" }).click();
   await expect(page.getByText("Aucune tâche dans cette liste.")).toBeVisible();
 
@@ -117,7 +129,9 @@ test.describe.serial("parcours d'un compte", () => {
     await createListAndCheckTask(page);
   });
 
-  test("modifie puis supprime la tâche et la liste quand on le demande", async ({ page }) => {
+  test("ajoute une sous-tâche, modifie puis supprime la tâche et la liste quand on le demande", async ({
+    page,
+  }) => {
     await page.context().addCookies(session);
     await page.goto("/todo");
     await editThenDeleteTaskAndList(page);

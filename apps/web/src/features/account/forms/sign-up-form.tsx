@@ -13,7 +13,7 @@ import type { SubmitEvent } from "react";
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { MailSentNotice } from "../atoms/mail-sent-notice";
 import { useSignUp } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 const FIELDS = ["name", "email", "password"] as const;
 type Field = (typeof FIELDS)[number];

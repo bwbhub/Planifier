@@ -9,7 +9,7 @@ import type { SubmitEvent } from "react";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useUpdateProfile } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 const FIELDS = ["name", "preferredTheme"] as const;
 

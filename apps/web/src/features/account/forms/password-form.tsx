@@ -9,7 +9,7 @@ import type { SubmitEvent } from "react";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useChangePassword } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 const FIELDS = ["currentPassword", "newPassword"] as const;
 type Field = (typeof FIELDS)[number];

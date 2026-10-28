@@ -11,7 +11,7 @@ description: Organisation feature-first de apps/web (un dossier par module event
 apps/web/src/
   app/                    # routes Next : pages MINCES (composition + chargement), aucune logique
   features/
-    <module>/             # events | todo | agenda
+    <module>/             # account | spaces | events | todo | agenda
       components/         # composition d'écran ou de section (dialogues, vues)
       atoms/              # composants métier réutilisés dans le module, absents de `ui`
       forms/              # formulaires (un seul pour création et modification)

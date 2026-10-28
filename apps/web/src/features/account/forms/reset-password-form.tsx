@@ -34,7 +34,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     return (
       <div role="status" className="flex flex-col gap-4">
         <p>Ton mot de passe est changé. Tes appareils connectés ont été déconnectés.</p>
-        <Link href={ROUTES.signIn} className={buttonClassName("primary")}>
+        <Link href={ROUTES.signIn} className={buttonClassName()}>
           Me connecter
         </Link>
       </div>

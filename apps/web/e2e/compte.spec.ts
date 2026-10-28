@@ -68,6 +68,28 @@ test.describe.serial("parcours d'un compte", () => {
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   });
 
+  test("crée une liste, ajoute une tâche et la coche quand on ouvre le Todo", async ({ page }) => {
+    await openHomeSignedIn(page);
+    await page.getByRole("link", { name: "Ouvrir mes listes" }).click();
+    await page.getByRole("button", { name: "Créer ma première liste" }).click();
+    await page.getByLabel("Nom de la liste").fill("Courses");
+    await page.getByRole("button", { name: "Créer la liste" }).click();
+    await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+
+    await page.getByLabel("Nouvelle tâche").fill("Acheter du pain");
+    await page.getByRole("button", { name: "Ajouter" }).click();
+    const task = page.getByRole("checkbox", { name: "Acheter du pain" });
+    await expect(task).not.toBeChecked();
+    // `click` et non `check` : cochée, la tâche passe dans « Cochées », sa case est un autre élément.
+    await task.click();
+    await expect(page.getByRole("heading", { name: "Cochées (1)" })).toBeVisible();
+    await expect(task).toBeChecked();
+    // Cochée côté serveur : toujours cochée après un rechargement.
+    await page.reload();
+    await expect(page.getByRole("checkbox", { name: "Acheter du pain" })).toBeChecked();
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  });
+
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {
     await openHomeSignedIn(page);
     await page.getByRole("button", { name: "Se déconnecter" }).click();

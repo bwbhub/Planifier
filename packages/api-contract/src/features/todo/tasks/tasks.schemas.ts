@@ -8,12 +8,8 @@ import { z } from "zod";
 import { listIdSchema, listTargetSchema, taskIdSchema, taskTargetSchema } from "../todo.schemas";
 
 const titleSchema = z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH);
-/** Vide une fois nettoyée : pas de description. */
-const descriptionSchema = z
-  .string()
-  .trim()
-  .max(TASK_DESCRIPTION_MAX_LENGTH)
-  .transform((text) => (text === "" ? null : text));
+/** Pas de description : champ absent (création) ou `null` (modification), jamais une chaîne vide. */
+const descriptionSchema = z.string().trim().min(1).max(TASK_DESCRIPTION_MAX_LENGTH);
 /** Jour d'échéance `AAAA-MM-JJ`, sans heure ni fuseau. */
 const dueDateSchema = z.iso.date();
 

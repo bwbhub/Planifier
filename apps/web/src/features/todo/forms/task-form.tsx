@@ -1,0 +1,156 @@
+"use client";
+
+import {
+  createTaskInputSchema,
+  type TaskOutput,
+  updateTaskInputSchema,
+} from "@planifier/api-contract";
+import { TASK_DESCRIPTION_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from "@planifier/constants/todo";
+import { Button } from "@planifier/ui/components/button";
+import { TextAreaField } from "@planifier/ui/components/text-area-field";
+import { TextField } from "@planifier/ui/components/text-field";
+import type { SubmitEvent } from "react";
+
+import { useFormValidation } from "@/features/_shared/utils/use-form-validation";
+
+import { TodoErrorAlert } from "../atoms/todo-error-alert";
+import { useCreateTask, useUpdateTask } from "../queries/todo.queries";
+
+const FIELDS = ["title", "description", "dueDate"] as const;
+type Field = (typeof FIELDS)[number];
+
+const TITLE_ERROR = `Donne un titre à la tâche, ${String(TASK_TITLE_MAX_LENGTH)} caractères au plus.`;
+const DESCRIPTION_ERROR = `${String(TASK_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
+const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
+
+const COPY = {
+  create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
+  edit: { title: "Titre", placeholder: undefined, submit: "Enregistrer" },
+} as const;
+
+/** Champ facultatif laissé vide : `null`. */
+function optionalText(value: FormDataEntryValue | null): string | null {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+}
+
+/** Saisie à la chaîne : le formulaire se vide et le titre reprend le focus. */
+function resetForNext(form: HTMLFormElement) {
+  form.reset();
+  const title = form.elements.namedItem("title");
+  if (title instanceof HTMLInputElement) title.focus();
+}
+
+interface TaskDetailsProps {
+  task: TaskOutput | undefined;
+  invalid: ReadonlySet<Field>;
+}
+
+/** Repliés tant que la description et l'échéance sont vides et sans erreur. */
+function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
+  if (invalid.has("description") || invalid.has("dueDate")) return true;
+  return task !== undefined && (task.description !== null || task.dueDate !== null);
+}
+
+/** Description et échéance, facultatives. */
+function TaskDetails({ task, invalid }: TaskDetailsProps) {
+  return (
+    <details open={detailsOpen({ task, invalid })}>
+      <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-muted">
+        Description et échéance (facultatives)
+      </summary>
+      <div className="flex flex-col gap-3 pt-2">
+        <TextAreaField
+          label="Description"
+          name="description"
+          defaultValue={task?.description ?? undefined}
+          maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+          error={invalid.has("description") ? DESCRIPTION_ERROR : undefined}
+        />
+        <TextField
+          label="Échéance"
+          name="dueDate"
+          type="date"
+          defaultValue={task?.dueDate ?? undefined}
+          error={invalid.has("dueDate") ? DUE_DATE_ERROR : undefined}
+        />
+      </div>
+    </details>
+  );
+}
+
+interface TaskFormProps {
+  listId: string;
+  /** Tâche à modifier ; absente : création (le formulaire se vide après chaque ajout). */
+  task?: TaskOutput | undefined;
+  onDone?: (() => void) | undefined;
+}
+
+/** Un seul formulaire pour créer une tâche et la modifier : titre obligatoire, détails facultatifs. */
+export function TaskForm({ listId, task, onDone }: TaskFormProps) {
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const mutation = task === undefined ? createTask : updateTask;
+  const copy = task === undefined ? COPY.create : COPY.edit;
+  const { invalid, validate } = useFormValidation(FIELDS);
+
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const title = data.get("title");
+    const description = optionalText(data.get("description"));
+    const dueDate = optionalText(data.get("dueDate"));
+    if (task === undefined) {
+      // Création : un champ vide est absent.
+      const input = validate(form, createTaskInputSchema, {
+        listId,
+        title,
+        description: description ?? undefined,
+        dueDate: dueDate ?? undefined,
+      });
+      if (input !== null)
+        createTask.mutate(input, {
+          onSuccess: () => {
+            resetForNext(form);
+          },
+        });
+      return;
+    }
+    // Modification : un champ vidé vaut `null`, il est effacé.
+    const input = validate(form, updateTaskInputSchema, {
+      taskId: task.id,
+      version: task.version,
+      title,
+      description,
+      dueDate,
+    });
+    if (input !== null) updateTask.mutate(input, { onSuccess: () => onDone?.() });
+  }
+
+  return (
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <TextField
+        label={copy.title}
+        name="title"
+        placeholder={copy.placeholder}
+        defaultValue={task?.title}
+        maxLength={TASK_TITLE_MAX_LENGTH}
+        required
+        autoFocus={task !== undefined}
+        error={invalid.has("title") ? TITLE_ERROR : undefined}
+      />
+      <TaskDetails task={task} invalid={invalid} />
+      {mutation.isError ? <TodoErrorAlert error={mutation.error} /> : null}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={mutation.isPending}>
+          {copy.submit}
+        </Button>
+        {task === undefined ? null : (
+          <Button variant="secondary" onClick={onDone}>
+            Annuler
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}

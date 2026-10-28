@@ -11,7 +11,7 @@ import { ROUTES } from "@/lib/routes";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useResetPassword } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/utils/use-form-validation";
 
 const FIELDS = ["newPassword"] as const;
 

@@ -21,5 +21,6 @@ export function focusFirstInvalid<TField extends string>(
   const first = fields.find((field) => invalid.has(field));
   if (first === undefined) return;
   const element = form.elements.namedItem(first);
-  if (element instanceof HTMLInputElement) element.focus();
+  if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)
+    element.focus();
 }

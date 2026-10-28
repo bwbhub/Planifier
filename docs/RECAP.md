@@ -18,6 +18,40 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-28 — Todo minimal : listes perso et tâches (branche `feat/todo-minimal`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
+
+**Fait**
+
+- Demande de l'utilisateur : une app testable au plus vite ⇒ Todo minimal d'abord (choix parmi UI Espaces, déploiement).
+- `db` : modèles `TodoList` (propriétaire, nom, teinte, version) et `Task` (titre, description, échéance `DATE`,
+  `completedAt`, version), migration `todo_listes_taches`, seed (deux listes d'Alice, quatre tâches).
+- `constants/todo` : bornes (nom 60, titre 200, description 2 000, 50 listes, 500 tâches par liste), `isListTint`.
+- Contrat `todo.lists` (list, create, update, delete) et `todo.tasks` (list, create, update, setDone, delete) ;
+  `CONFLICT` typé (`STALE_VERSION`, `TOO_MANY_LISTS`, `LIST_FULL`). `emptyOutputSchema` sorti dans `_shared`.
+- `api` : gardes `listGuard` / `taskGuard` sur `canAccessResource` (déjà dans `domain-access`), bornes sous verrou de
+  ligne (utilisateur, liste), coche rejouable (garde la date de la 1re coche, ne change pas la version).
+- Web : page `/todo` (onglets de listes en `?liste=`, en-tête teinté, ajout de tâche à la chaîne, détails repliés,
+  modification et suppression sur place avec confirmation, coche optimiste restaurée en cas d'erreur, états
+  chargement / vide / erreur) ; lien Todo dans l'en-tête, « Ouvrir mes listes » sur l'accueil (indicateur d'API retiré).
+- `ui` : `TextAreaField`. Validation de formulaire déplacée de `account` vers `_shared` (deux modules l'utilisent).
+- Tests d'intégration de l'API sérialisés par fichier (`fileParallelism: false`) : deux fichiers vident la même base.
+
+**Décisions (agent, à valider)** : périmètre réduit (ni partage, ni sous-tâches, ni récurrence, ni assignation, ni
+« Cochée par ») ; pas de `spaceId` ni de `kind` sur la liste tant qu'aucune procédure ne s'en sert ; listes et
+tâches bornées et rendues d'un bloc (pas de curseur) ; description vide refusée par le contrat (le formulaire
+envoie absent ou `null`) ; Todo ouvert à tous, sans regarder les modules activés.
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `test:integration` OK (api 72 dont
+Todo 14 : droits « autre utilisateur » ⇒ NOT_FOUND sur les 7 procédures gardées, bornes, version périmée, coche
+rejouable) ; `test:e2e` 26/26 (parcours Todo PC et mobile : liste, tâche, coche persistée). Seed lancé deux fois.
+**Non vérifié** : `pnpm dev` à la main, rendu nuit à l'œil, CI, lecteur d'écran réel.
+
+**Ouvert** : revue humaine (droits des listes). Activation du module Todo non prise en compte. Navigation provisoire
+(lien dans l'en-tête, pas la barre de la maquette).
+
+**Attendu ensuite** : vérif à la main par l'utilisateur, push + PR sur demande ; puis déploiement (`869fhwtcc`) pour
+faire tester, ou suite du Todo (partage, sous-tâches, assignation).
+
 ## 2026-10-27 — Modèle Espace : droits, procédures, liens d'invitation (branche `feat/espaces`, ticket `869fhwtf9`)
 
 **Fait**

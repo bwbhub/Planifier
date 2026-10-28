@@ -104,16 +104,16 @@ describe("todo.lists (base réelle)", () => {
 });
 
 describe("todo.tasks (base réelle)", () => {
-  it("crée une tâche avec description et échéance, au jour près", async () => {
+  it("crée une tâche nettoyée, avec description et échéance au jour près", async () => {
     const list = await createAliceList();
     const task = await call(
       tasks.create,
-      { listId: list.id, title: " Facture ", description: "  ", dueDate: "2026-11-05" },
+      { listId: list.id, title: " Facture ", description: " Avant le 5 ", dueDate: "2026-11-05" },
       asUser(alice),
     );
     expect(task).toMatchObject({
       title: "Facture",
-      description: null,
+      description: "Avant le 5",
       dueDate: "2026-11-05",
       completedAt: null,
       version: 1,

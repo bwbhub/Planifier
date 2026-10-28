@@ -14,20 +14,20 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 
 ## 2. Cartographie rôle → package
 
-| Rôle                   | Nom réel                                                   | État                                             |
-| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------ |
-| app web                | `apps/web` (`@planifier/web`)                              | squelette posé                                   |
-| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)                                     |
-| constantes métier      | `@planifier/constants`                                     | posé                                             |
-| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)                                |
-| composants sans métier | `@planifier/ui`                                            | `Button`, `TextField`, `ChoiceGroup`, `Checkbox` |
-| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                            |
-| base + client          | `@planifier/db` (Prisma 7)                                 | posé                                             |
-| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                     |
-| implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces                     |
-| auth                   | `@planifier/auth`                                          | posé (Better Auth)                               |
-| droits (logique pure)  | `@planifier/domain-access`                                 | posé                                             |
-| e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)    |
+| Rôle                   | Nom réel                                                   | État                                                              |
+| ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| app web                | `apps/web` (`@planifier/web`)                              | squelette posé                                                    |
+| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)                                                      |
+| constantes métier      | `@planifier/constants`                                     | posé                                                              |
+| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)                                                 |
+| composants sans métier | `@planifier/ui`                                            | `Button`, `TextField`, `TextAreaField`, `ChoiceGroup`, `Checkbox` |
+| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                                             |
+| base + client          | `@planifier/db` (Prisma 7)                                 | posé                                                              |
+| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                                      |
+| implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces, Todo                                |
+| auth                   | `@planifier/auth`                                          | posé (Better Auth)                                                |
+| droits (logique pure)  | `@planifier/domain-access`                                 | posé                                                              |
+| e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)                     |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)
 
@@ -76,7 +76,7 @@ contourner.
 
 1. Ancien code (`back/`, `front/`) : JS, MUI, Express, JWT en localStorage, secret JWT par défaut codé en dur.
 2. Racine : `package-lock.json` (npm) conservé pour l'ancien code ; à retirer avec lui.
-3. `packages/ui` : `Button`, `TextField`, `ChoiceGroup`, `Checkbox` seulement (le reste avec le ticket design system).
+3. `packages/ui` : `Button`, `TextField`, `TextAreaField`, `ChoiceGroup`, `Checkbox` seulement (le reste avec le ticket design system).
 4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
    partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
 5. Pas de changement d'e-mail (ticket `869fmk5dw`). Domaine à acheter pour Resend : aucun e-mail réel ne part tant

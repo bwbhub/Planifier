@@ -4,15 +4,16 @@
 
 ## 1. À faire par l'utilisateur
 
-- **PR #16** (`feat/mails`) : revue humaine (auth, e-mails, CI), merge une fois la CI verte.
-- **Vérif Brave** : `docker compose up -d` (Mailpit), `pnpm dev`, inscription → e-mail sur `localhost:8025` → lien ⇒
-  accueil ; « Mot de passe oublié ? » → lien → nouveau mot de passe ; profil ; clair et nuit ; mobile et PC.
-- Comptes de démo : `pnpm seed` (adresses vérifiées), puis `alice@example.test` / `planifier-demo`.
+- **Tester le Todo** (branche `feat/todo-minimal`) : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`
+  (nouvelle migration), `pnpm seed`, `pnpm dev`, puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ».
+  Créer, renommer, supprimer une liste ; ajouter, modifier, cocher, supprimer une tâche ; clair et nuit ; mobile et PC.
+- Revue humaine : droits des listes (gardes `listGuard` / `taskGuard`), puis push + PR sur demande.
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
-Modèle Espace (`869fhwtf9`) : vérifier ce que couvre déjà `db`.
+Au choix : déploiement (`869fhwtcc`, pour faire tester par d'autres) ou suite du Todo (partage, sous-tâches,
+assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
 
 ## 3. Ensuite
 

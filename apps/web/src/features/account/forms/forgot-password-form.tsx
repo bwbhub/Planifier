@@ -8,7 +8,7 @@ import type { SubmitEvent } from "react";
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { MailSentNotice } from "../atoms/mail-sent-notice";
 import { useRequestPasswordReset } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/utils/use-form-validation";
 
 const FIELDS = ["email"] as const;
 

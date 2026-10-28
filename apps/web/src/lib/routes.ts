@@ -8,4 +8,5 @@ export const ROUTES = {
   forgotPassword: "/mot-de-passe-oublie",
   resetPassword: AUTH_PAGES.resetPassword,
   profile: "/profil",
+  todo: "/todo",
 } as const;

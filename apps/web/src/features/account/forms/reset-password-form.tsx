@@ -7,6 +7,7 @@ import { TextField } from "@planifier/ui/components/text-field";
 import Link from "next/link";
 import type { SubmitEvent } from "react";
 
+import { COMMON_LABELS } from "@/lib/labels";
 import { ROUTES } from "@/lib/routes";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
@@ -59,7 +60,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       />
       {reset.isError ? <AuthErrorAlert error={reset.error} /> : null}
       <Button type="submit" disabled={reset.isPending}>
-        {reset.isPending ? "Enregistrement…" : "Enregistrer"}
+        {reset.isPending ? COMMON_LABELS.saving : COMMON_LABELS.save}
       </Button>
     </form>
   );

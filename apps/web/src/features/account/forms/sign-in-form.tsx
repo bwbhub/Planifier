@@ -7,7 +7,7 @@ import { textLinkClassName } from "@planifier/ui/lib/text-link";
 import Link from "next/link";
 import type { SubmitEvent } from "react";
 
-import { ROUTES } from "@/lib/routes";
+import { type ReturnPath, ROUTES } from "@/lib/routes";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSignIn } from "../queries/auth.queries";
@@ -22,7 +22,12 @@ const FIELD_ERRORS: Record<Field, string> = {
   password: "Saisis ton mot de passe.",
 };
 
-export function SignInForm() {
+interface SignInFormProps {
+  /** Page où revenir une fois connecté, avec le fragment de l'adresse (jeton d'un lien d'invitation). */
+  returnTo?: ReturnPath | null;
+}
+
+export function SignInForm({ returnTo = null }: SignInFormProps) {
   const redirectTo = useSessionRedirect();
   const signIn = useSignIn();
   const { invalid, validate } = useFormValidation(FIELDS);
@@ -38,7 +43,7 @@ export function SignInForm() {
     if (input === null) return;
     signIn.mutate(input, {
       onSuccess: () => {
-        redirectTo(ROUTES.home);
+        redirectTo(returnTo === null ? ROUTES.home : `${returnTo}${window.location.hash}`);
       },
     });
   }

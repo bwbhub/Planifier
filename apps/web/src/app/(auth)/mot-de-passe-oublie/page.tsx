@@ -4,8 +4,9 @@ import Link from "next/link";
 
 import { AuthShell, ForgotPasswordForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
+import { pageTitle } from "@/lib/labels";
 
-export const metadata: Metadata = { title: "Mot de passe oublié · Planifier" };
+export const metadata: Metadata = { title: pageTitle("Mot de passe oublié") };
 
 export default function ForgotPasswordPage() {
   return (

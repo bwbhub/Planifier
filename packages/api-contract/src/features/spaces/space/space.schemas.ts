@@ -87,6 +87,7 @@ export const leaveSpaceOutputSchema = z.strictObject({ spaceDeleted: z.boolean()
 export type SpaceOutput = z.infer<typeof spaceSchema>;
 export type SpaceDetailOutput = z.infer<typeof spaceDetailSchema>;
 export type SpaceMemberOutput = z.infer<typeof spaceMemberSchema>;
+export type SpaceSummaryOutput = z.infer<typeof spaceSummarySchema>;
 export type ListSpacesOutput = z.infer<typeof listSpacesOutputSchema>;
 export type CreateSpaceInput = z.output<typeof createSpaceInputSchema>;
 export type ListSpacesInput = z.output<typeof listSpacesInputSchema>;

@@ -18,6 +18,74 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-28 — UI des Espaces (branche `feat/espaces-ui`, ticket `869fhwtfk`)
+
+**Fait**
+
+- Maquette `docs/maquettes/espaces.html` (clair/nuit, mobile/PC, fiches d'écran), validée par l'utilisateur.
+- Module web `spaces` : `/espaces` (liste, vide, chargement, erreur, pagination), `/espaces/nouveau` et
+  `/espaces/[id]/reglages` (un seul formulaire : nom, modules, visibilité ; `STALE_VERSION` → recharger),
+  `/espaces/[id]` (membres, « Gérer » : rôle et retrait, proposition de promotion à deux, liens d'invitation,
+  réglages en lecture, quitter, supprimer), `/rejoindre#jeton` (aperçu puis adhésion explicite ; lien mort, déjà
+  membre, complet). Bouton « Espaces » dans l'en-tête.
+- `ui` : `Sheet` (feuille du bas sur `<dialog>` natif), `Button` gagne `outline`, `strong` et `size` ;
+  `buttonClassName` prend un objet. `tokens` : `--overlay` (clair et nuit), `--radius-sheet`.
+- Connexion : paramètre `retour` (liste fermée, seule `/rejoindre` ; pas de redirection ouverte), le fragment suit.
+- `api-contract` : export additif des schémas `createSpaceInputSchema`, `updateSpaceInputSchema`, `inviteTokenSchema`
+  et des types `SpaceSummaryOutput`, `SpaceInviteOutput`.
+- Validation de formulaire déplacée de `account/utils` vers `_shared/forms` (deux modules l'utilisent).
+- Lint : module `spaces` dans l'isolation des features (commit séparé).
+- Après revue (standards + spec) :
+  - droits de l'interface par `@planifier/domain-access`, sans comparaison de rôle réécrite
+    (`utils/space-membership.ts` fait le lien avec l'Espace lu) ; « Rétrograder » masqué quand la règle le refuse ;
+  - catalogues de libellés : `lib/labels.ts` (communs, `pageTitle`) et `spaces/labels.ts` (rôles, modules,
+    visibilité, actions) ; pas encore de traduction, le catalogue est le point que les langues remplaceront ;
+  - doublons retirés : `SpaceGate` (chargement, introuvable, erreur), `ConfirmSheet` (quitter, supprimer, retirer),
+    `MessageCard`, `SpacePage` (cadre des 4 pages) ;
+  - chargement des liens d'invitation affiché, erreur par `LoadError` (déplacé de `_shared` vers `spaces`) ;
+  - `format-date` dans `lib/` ; paramètre `enabled` de `useSpaceInvites` retiré ; encart de retour de la connexion
+    dans `account` (`ReturnNotice`) ;
+  - historique de la branche redécoupé (refactorings, `ui`/`tokens`, e2e, fonctionnalité).
+
+**Décisions**
+
+- Jeton d'invitation dans le **fragment** (`#`) : jamais envoyé au serveur web, absent des journaux et du Referer ;
+  page `rejoindre` en `no-referrer`, non indexée ; `router.replace` après adhésion retire le lien de l'historique.
+- Modules cochés à la création : Todo et Agenda (choix de l'utilisateur), décochables.
+- Teinte d'un Espace et des pastilles tirée de l'identifiant parmi les teintes des tokens : aucune couleur stockée.
+- Réglages modifiés par le formulaire (règle 13), pas par des interrupteurs dans la page de l'Espace (maquette 3).
+- Visibilité absente à la création : le contrat `create` ne la prend pas.
+- « Plus tard » sur la proposition de promotion la masque jusqu'au prochain affichage : maquette alignée sur le code.
+- Quitter, supprimer, rejoindre ne relisent que la liste : relire l'aperçu après adhésion affichait « déjà membre »
+  avant la redirection (défaut trouvé par le test).
+
+**Vérifié** (exécuté le 2026-10-28) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` : OK ;
+`pnpm test:e2e` : 36/36 (PC et mobile, dont le parcours Espace : création, lien, connexion depuis le lien avec
+retour, adhésion, lien usé, suppression) ; `prettier --check` : OK. Captures clair/nuit, mobile/PC relues.
+
+**Ouvert**
+
+- Revue humaine (sécurité) : jeton dans le fragment et page `rejoindre` ; paramètre `retour` de la connexion (liste
+  fermée) ; `compte.spec` rejoue inscription et connexion après la limite de débit (`e2e/rate-limit.ts`).
+- Sans compte : la personne invitée s'inscrit puis doit rouvrir le lien (le retour ne traverse pas l'inscription).
+- Pas de préchargement serveur des données d'Espace (chargement côté client, squelettes).
+
+**Attendu ensuite** : revue, push et PR sur demande ; puis `869fmu1m4` (rattacher un événement à un Espace) une
+fois le module Événements posé.
+
+---
+
+## 2026-10-28 — Clôture Espaces (branche `master`)
+
+**Fait** : PR #17 mergée (`fbe86ca7`) ; ticket `869fhwtf9` fermé ; ticket `869fmu1m4` créé (rattacher un événement
+à un Espace).
+**Vérifié** : `master` local en avance rapide sur le merge. Aucun code modifié.
+**Ouvert** : fetch SSH en échec dans le shell de l'agent (clé à passphrase, pas d'askpass), donc `origin/master`
+local reste périmé.
+**Attendu ensuite** : UI des Espaces (`869fhwtfk`) ou `869fmu1m4`.
+
+---
+
 ## 2026-10-27 — Modèle Espace : droits, procédures, liens d'invitation (branche `feat/espaces`, ticket `869fhwtf9`)
 
 **Fait**

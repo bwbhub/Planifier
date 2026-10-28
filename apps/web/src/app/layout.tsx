@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { getThemePreference, themeAttribute } from "@/features/account";
+import { COMMON_LABELS } from "@/lib/labels";
 import { QueryProvider } from "@/lib/query-provider";
 
 import "./globals.css";
@@ -20,7 +21,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Planifier",
+  title: COMMON_LABELS.appName,
   description: "Todo, agenda et événements, à la carte.",
 };
 

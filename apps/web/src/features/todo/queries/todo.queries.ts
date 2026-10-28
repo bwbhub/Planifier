@@ -47,6 +47,11 @@ export function useUpdateTask() {
   return useMutation(orpc.todo.tasks.update.mutationOptions({ onSettled }));
 }
 
+export function useCompleteOccurrence() {
+  const onSettled = useInvalidateTodo();
+  return useMutation(orpc.todo.tasks.completeOccurrence.mutationOptions({ onSettled }));
+}
+
 export function useDeleteTask() {
   const onSettled = useInvalidateTodo();
   return useMutation(orpc.todo.tasks.delete.mutationOptions({ onSettled }));

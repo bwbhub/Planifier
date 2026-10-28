@@ -18,6 +18,28 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-28 — Todo : récurrence (branche `feat/todo-recurrence`, ticket `869fhwtqr`, en partie)
+
+**Fait** : ADR 0017 (proposé) ; package `@planifier/domain-recurrence` (`nextDueDate` pur, forme stockée versionnée,
+cas d'or et propriétés) ; colonne `tasks.recurrence` JSON (migration `recurrence_taches`), `JSON_DB_NULL` exporté par
+`db` ; contrat : `recurrence` en création, modification (`null` arrête) et sortie, procédure `completeOccurrence`
+(`version` + `today`), `CONFLICT NOT_RECURRING` ; web : « Répéter » et « Intervalle » dans les détails, « Toutes les
+semaines » sur la ligne, coche d'une tâche répétée ⇒ échéance avancée et annonce « Prochaine fois le … ».
+
+**Décisions (agent, à valider, ADR 0017)** : une ligne par tâche répétée, échéance avancée à la coche (première
+occurrence après aujourd'hui), pas de nouvelle tâche ; fin de mois ramenée au dernier jour ; « today » envoyé par
+l'appareil ; rappel proposé reporté aux notifications.
+
+**Vérifié** : portes OK ; `domain-recurrence` 9 tests ; `test:integration` api 85/85 (6 nouveaux + matrice de droits
+étendue) ; `test:e2e` 28/28 (tâche hebdomadaire cochée : reste à faire, annonce la suivante). **Non vérifié** : CI, à
+la main.
+
+**Ouvert** : l'E2E frôle la limitation de débit des plans (120 requêtes/min par IP, tout le run vient de localhost) :
+des 429 sont journalisés sur les derniers tests mobile, sans échec. À traiter à part (limite configurable pour l'E2E
+ou clé par session ; touche la sécurité ⇒ revue humaine).
+
+**Attendu ensuite** : PR empilée sur #19 ; puis UI Espaces.
+
 ## 2026-10-28 — Todo : sous-tâches (branche `feat/todo-sous-taches`, ticket `869fhwtqr`, en partie)
 
 **Fait** : `Task.parentId` (même liste, un seul niveau, supprimées avec leur parent), migration `sous_taches` ;

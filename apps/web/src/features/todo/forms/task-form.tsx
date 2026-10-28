@@ -5,8 +5,13 @@ import {
   type TaskOutput,
   updateTaskInputSchema,
 } from "@planifier/api-contract";
-import { TASK_DESCRIPTION_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from "@planifier/constants/todo";
+import {
+  RECURRENCE_MAX_INTERVAL,
+  TASK_DESCRIPTION_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@planifier/constants/todo";
 import { Button } from "@planifier/ui/components/button";
+import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
 import type { SubmitEvent } from "react";
@@ -15,13 +20,15 @@ import { useFormValidation } from "@/features/_shared/utils/use-form-validation"
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { useCreateTask, useUpdateTask } from "../queries/todo.queries";
+import { recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
 
-const FIELDS = ["title", "description", "dueDate"] as const;
+const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
 type Field = (typeof FIELDS)[number];
 
 const TITLE_ERROR = `Donne un titre à la tâche, ${String(TASK_TITLE_MAX_LENGTH)} caractères au plus.`;
 const DESCRIPTION_ERROR = `${String(TASK_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
 const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
+const INTERVAL_ERROR = `Un nombre entier de 1 à ${String(RECURRENCE_MAX_INTERVAL)}.`;
 
 const COPY = {
   create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
@@ -46,18 +53,44 @@ interface TaskDetailsProps {
   invalid: ReadonlySet<Field>;
 }
 
-/** Repliés tant que la description et l'échéance sont vides et sans erreur. */
+/** Repliés tant que les détails sont vides et sans erreur. */
 function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
-  if (invalid.has("description") || invalid.has("dueDate")) return true;
-  return task !== undefined && (task.description !== null || task.dueDate !== null);
+  if (invalid.size > 0 && !(invalid.size === 1 && invalid.has("title"))) return true;
+  if (task === undefined) return false;
+  return [task.description, task.dueDate, task.recurrence].some((value) => value !== null);
 }
 
-/** Description et échéance, facultatives. */
+/** Répétition (ADR 0017) : rythme, puis intervalle (« 2 » avec « Chaque semaine » : toutes les deux semaines). */
+function RecurrenceFields({ task, invalid }: TaskDetailsProps) {
+  return (
+    <>
+      <ChoiceGroup
+        legend="Répéter"
+        name="repeat"
+        options={REPEAT_OPTIONS}
+        defaultValue={task?.recurrence?.frequency ?? "NONE"}
+      />
+      <TextField
+        label="Intervalle"
+        name="interval"
+        type="number"
+        inputMode="numeric"
+        min={1}
+        max={RECURRENCE_MAX_INTERVAL}
+        defaultValue={task?.recurrence?.interval ?? 1}
+        hint="2 avec « Chaque semaine » : toutes les deux semaines. Sans effet si la tâche ne se répète pas."
+        error={invalid.has("recurrence") ? INTERVAL_ERROR : undefined}
+      />
+    </>
+  );
+}
+
+/** Description, échéance et répétition, facultatives. */
 function TaskDetails({ task, invalid }: TaskDetailsProps) {
   return (
     <details open={detailsOpen({ task, invalid })}>
       <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-muted">
-        Description et échéance (facultatives)
+        Description, échéance, répétition (facultatives)
       </summary>
       <div className="flex flex-col gap-3 pt-2">
         <TextAreaField
@@ -74,6 +107,7 @@ function TaskDetails({ task, invalid }: TaskDetailsProps) {
           defaultValue={task?.dueDate ?? undefined}
           error={invalid.has("dueDate") ? DUE_DATE_ERROR : undefined}
         />
+        <RecurrenceFields task={task} invalid={invalid} />
       </div>
     </details>
   );
@@ -109,6 +143,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
     const title = data.get("title");
     const description = optionalText(data.get("description"));
     const dueDate = optionalText(data.get("dueDate"));
+    const recurrence = recurrenceFromForm(data);
     if (task === undefined) {
       // Création : un champ vide est absent.
       const input = validate(form, createTaskInputSchema, {
@@ -117,6 +152,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
         title,
         description: description ?? undefined,
         dueDate: dueDate ?? undefined,
+        recurrence: recurrence ?? undefined,
       });
       if (input !== null)
         createTask.mutate(input, {
@@ -133,6 +169,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       title,
       description,
       dueDate,
+      recurrence,
     });
     if (input !== null) updateTask.mutate(input, { onSuccess: () => onDone?.() });
   }

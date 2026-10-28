@@ -295,6 +295,9 @@ model Task {
   dueDate     DateTime? @map("due_date") @db.Date
   /// null : à faire.
   completedAt DateTime? @map("completed_at")
+  /// Répétition (ADR 0017) : `{ schemaVersion, frequency, interval }`, validée par `@planifier/domain-recurrence` en
+  /// écriture et en lecture. null : tâche non répétée.
+  recurrence  Json?
   version     Int       @default(1)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")

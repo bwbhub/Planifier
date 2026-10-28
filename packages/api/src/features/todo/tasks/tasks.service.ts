@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import type {
+  CompleteOccurrenceInput,
   CreateTaskInput,
   ListTasksOutput,
   SetTaskDoneInput,
@@ -8,7 +9,9 @@ import type {
 } from "@planifier/api-contract";
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
-import type { Db, DbTransaction, Prisma } from "@planifier/db";
+import { type Db, type DbTransaction, JSON_DB_NULL, type Prisma } from "@planifier/db";
+import { nextDueDate } from "@planifier/domain-recurrence";
+import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recurrence/stored";
 
 import { todoConflict } from "../todo-errors";
 
@@ -20,14 +23,19 @@ const TASK_SELECT = {
   description: true,
   dueDate: true,
   completedAt: true,
+  recurrence: true,
   version: true,
 } as const satisfies Prisma.TaskSelect;
 
 type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 
 /** Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. */
-function toTaskOutput({ dueDate, ...task }: TaskRow): TaskOutput {
-  return { ...task, dueDate: dueDate === null ? null : utcDateToDay(dueDate) };
+function toTaskOutput({ dueDate, recurrence, ...task }: TaskRow): TaskOutput {
+  return {
+    ...task,
+    dueDate: dueDate === null ? null : utcDateToDay(dueDate),
+    recurrence: fromStoredRecurrence(recurrence),
+  };
 }
 
 /** Curseur inutile : les tâches d'une liste sont bornées (`TODO_LIST_MAX_TASKS`). */
@@ -54,7 +62,7 @@ async function assertParent(tx: DbTransaction, listId: string, parentId: string)
 /** Sous le verrou de la ligne de la liste : deux créations simultanées ne dépassent pas la borne. */
 export async function createTask(
   db: Db,
-  { listId, parentId, title, description, dueDate }: CreateTaskInput,
+  { listId, parentId, title, description, dueDate, recurrence }: CreateTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<
@@ -72,6 +80,7 @@ export async function createTask(
         title,
         description: description ?? null,
         dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
+        ...(recurrence === undefined ? {} : { recurrence: toStoredRecurrence(recurrence) }),
       },
       select: TASK_SELECT,
     });
@@ -88,7 +97,7 @@ async function readTask(db: Db, taskId: string): Promise<TaskOutput> {
 
 export async function updateTask(
   db: Db,
-  { taskId, version, title, description, dueDate }: UpdateTaskInput,
+  { taskId, version, title, description, dueDate, recurrence }: UpdateTaskInput,
 ): Promise<TaskOutput> {
   const { count } = await db.task.updateMany({
     where: { id: taskId, version },
@@ -99,6 +108,9 @@ export async function updateTask(
       ...(dueDate === undefined
         ? {}
         : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
+      ...(recurrence === undefined
+        ? {}
+        : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
       version: { increment: 1 },
     },
   });
@@ -122,6 +134,27 @@ export async function setTaskDone(
     data: { completedAt: done ? now : null },
   });
   return readTask(db, taskId);
+}
+
+/**
+ * Tâche répétée cochée (ADR 0017) : échéance avancée à la première occurrence après `today`, tâche toujours à faire.
+ * Écriture conditionnée par la version : rejouer la même coche ne fait pas avancer deux fois.
+ */
+export async function completeOccurrence(
+  db: Db,
+  { taskId, version, today }: CompleteOccurrenceInput,
+): Promise<TaskOutput> {
+  const task = await readTask(db, taskId);
+  if (task.recurrence === null) throw todoConflict("NOT_RECURRING");
+  if (task.version !== version) throw todoConflict("STALE_VERSION");
+  const next = nextDueDate(task.recurrence, task.dueDate, today);
+  const { count } = await db.task.updateMany({
+    where: { id: taskId, version },
+    data: { dueDate: dayToUtcDate(next), completedAt: null, version: { increment: 1 } },
+  });
+  const updated = await readTask(db, taskId);
+  if (count === 0) throw todoConflict("STALE_VERSION");
+  return updated;
 }
 
 /** Ses sous-tâches partent avec elle (`onDelete: Cascade`). */

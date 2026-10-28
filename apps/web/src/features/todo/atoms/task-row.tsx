@@ -8,6 +8,7 @@ import { useState } from "react";
 import { TaskForm } from "../forms/task-form";
 import { useDeleteTask, useUpdateTask } from "../queries/todo.queries";
 import { formatDueDate, isPastDue, today } from "../utils/due-date";
+import { recurrenceLabel } from "../utils/recurrence";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { TodoErrorAlert } from "./todo-error-alert";
 
@@ -109,6 +110,9 @@ function TaskMain({
       </label>
       <div className="flex flex-col gap-0.5 pl-8">
         <DueDate task={task} done={done} />
+        {task.recurrence === null ? null : (
+          <span className="text-sm text-muted">{recurrenceLabel(task.recurrence)}</span>
+        )}
         {task.description === null ? null : (
           <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
         )}

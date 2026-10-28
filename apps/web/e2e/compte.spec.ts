@@ -77,6 +77,18 @@ async function editThenDeleteTaskAndList(page: Page) {
   await page.getByRole("button", { name: "Supprimer définitivement" }).click();
   await expect(page.getByText("Aucune tâche dans cette liste.")).toBeVisible();
 
+  // Tâche répétée : cochée, elle reste à faire et annonce sa prochaine échéance.
+  await page.getByLabel("Nouvelle tâche").fill("Arroser les plantes");
+  await page.getByText("Description, échéance, répétition (facultatives)").click();
+  // Le bouton radio est masqué visuellement : on clique sur sa pastille, comme on le ferait à la main.
+  await page.getByText("Chaque semaine", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Chaque semaine" })).toBeChecked();
+  await page.getByRole("button", { name: "Ajouter" }).click();
+  await expect(page.getByText("Toutes les semaines")).toBeVisible();
+  await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).not.toBeChecked();
+
   await page.getByRole("button", { name: "Modifier la liste" }).click();
   await page.getByLabel("Nom de la liste").fill("Marché");
   await page.getByRole("button", { name: "Enregistrer" }).click();

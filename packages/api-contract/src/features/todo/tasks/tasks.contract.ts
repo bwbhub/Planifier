@@ -3,6 +3,7 @@ import { oc } from "@orpc/contract";
 import { emptyOutputSchema } from "../../_shared/empty.schemas";
 import { TODO_ERRORS } from "../todo.schemas";
 import {
+  completeOccurrenceInputSchema,
   createTaskInputSchema,
   deleteTaskInputSchema,
   listTasksInputSchema,
@@ -42,6 +43,15 @@ export const tasksContract = {
       description: "État demandé explicitement par l'utilisateur ; rejouable.",
     })
     .input(setTaskDoneInputSchema)
+    .output(taskSchema),
+  completeOccurrence: oc
+    .route({
+      summary: "Cocher une tâche répétée",
+      description:
+        "L'occurrence est faite : l'échéance passe à la première occurrence après `today`, la tâche reste à faire. Tâche non répétée : CONFLICT `NOT_RECURRING` ; `version` périmée : CONFLICT `STALE_VERSION`.",
+    })
+    .errors(TODO_ERRORS)
+    .input(completeOccurrenceInputSchema)
     .output(taskSchema),
   delete: oc
     .route({

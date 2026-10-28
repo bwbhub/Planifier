@@ -10,9 +10,10 @@ import { TaskRow, type ToggleTask } from "../atoms/task-row";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { ListForm } from "../forms/list-form";
 import { TaskForm } from "../forms/task-form";
-import { useDeleteList, useSetTaskDone, useTasks } from "../queries/todo.queries";
+import { useDeleteList, useTasks } from "../queries/todo.queries";
 import { TINTS } from "../utils/list-tint";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
+import { useToggleTask } from "../utils/use-toggle-task";
 
 function openCountLabel(count: number): string {
   if (count === 0) return "Rien à faire pour l'instant";
@@ -76,7 +77,7 @@ function TaskSections({ tasks, onToggle }: TaskSectionsProps) {
  */
 function TaskList({ listId }: { listId: string }) {
   const tasks = useTasks(listId);
-  const setDone = useSetTaskDone(listId);
+  const { toggle, notice, error } = useToggleTask(listId);
   if (tasks.isPending) {
     return (
       <p role="status" className="text-muted">
@@ -94,13 +95,11 @@ function TaskList({ listId }: { listId: string }) {
   }
   return (
     <div className="flex flex-col gap-6">
-      {setDone.isError ? <TodoErrorAlert error={setDone.error} /> : null}
-      <TaskSections
-        tasks={tasks.data.items}
-        onToggle={(task, done) => {
-          setDone.mutate({ taskId: task.id, done });
-        }}
-      />
+      {error === null ? null : <TodoErrorAlert error={error} />}
+      <p role="status" className={notice === null ? "sr-only" : "text-sm font-semibold"}>
+        {notice}
+      </p>
+      <TaskSections tasks={tasks.data.items} onToggle={toggle} />
     </div>
   );
 }

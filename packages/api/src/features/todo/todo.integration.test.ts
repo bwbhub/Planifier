@@ -240,6 +240,106 @@ describe("todo.tasks : sous-tâches (base réelle)", () => {
   });
 });
 
+const weekly = { frequency: "WEEKLY", interval: 1 } as const;
+
+async function createWeekly(dueDate?: string) {
+  const list = await createAliceList();
+  return call(
+    tasks.create,
+    {
+      listId: list.id,
+      title: "Sortir les poubelles",
+      recurrence: weekly,
+      ...(dueDate === undefined ? {} : { dueDate }),
+    },
+    asUser(alice),
+  );
+}
+
+describe("todo.tasks : coche d'une tâche répétée (base réelle)", () => {
+  it("cocher une occurrence avance l'échéance, la tâche reste à faire", async () => {
+    const task = await createWeekly("2026-10-28");
+    expect(task.recurrence).toEqual(weekly);
+    const next = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    expect(next).toMatchObject({
+      dueDate: "2026-11-04",
+      completedAt: null,
+      version: task.version + 1,
+    });
+  });
+
+  it("rejouer la même coche n'avance pas deux fois : CONFLICT STALE_VERSION", async () => {
+    const task = await createWeekly("2026-10-28");
+    const input = { taskId: task.id, version: task.version, today: "2026-10-28" };
+    await call(tasks.completeOccurrence, input, asUser(alice));
+    await expect(call(tasks.completeOccurrence, input, asUser(alice))).rejects.toMatchObject({
+      code: "CONFLICT",
+      data: { reason: "STALE_VERSION" },
+    });
+    const { items } = await call(tasks.list, { listId: task.listId }, asUser(alice));
+    expect(items[0]?.dueDate).toBe("2026-11-04");
+  });
+
+  it("sans échéance : la première coche fixe la suivante depuis aujourd'hui", async () => {
+    const task = await createWeekly();
+    const next = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    expect(next.dueDate).toBe("2026-11-04");
+  });
+
+  it("tâche non répétée : CONFLICT NOT_RECURRING", async () => {
+    const { task } = await createAliceTask();
+    await expect(
+      call(
+        tasks.completeOccurrence,
+        { taskId: task.id, version: task.version, today: "2026-10-28" },
+        asUser(alice),
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "NOT_RECURRING" } });
+  });
+});
+
+describe("todo.tasks : réglage de la récurrence (base réelle)", () => {
+  it("modifier la répétition, puis l'arrêter", async () => {
+    const task = await createWeekly("2026-10-28");
+    const monthly = await call(
+      tasks.update,
+      { taskId: task.id, version: task.version, recurrence: { frequency: "MONTHLY", interval: 2 } },
+      asUser(alice),
+    );
+    expect(monthly.recurrence).toEqual({ frequency: "MONTHLY", interval: 2 });
+    const stopped = await call(
+      tasks.update,
+      { taskId: task.id, version: monthly.version, recurrence: null },
+      asUser(alice),
+    );
+    expect(stopped.recurrence).toBeNull();
+    await expect(
+      db.task.findUnique({ where: { id: task.id }, select: { recurrence: true } }),
+    ).resolves.toEqual({
+      recurrence: null,
+    });
+  });
+
+  it("refuse une règle hors bornes à l'écriture", async () => {
+    const list = await createAliceList();
+    await expect(
+      call(
+        tasks.create,
+        { listId: list.id, title: "Trop souvent", recurrence: { frequency: "DAILY", interval: 0 } },
+        asUser(alice),
+      ),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
 describe("todo : supprimée entre la garde et l'écriture (base réelle)", () => {
   // Services appelés directement : la garde est passée, puis la ressource disparaît.
   it("modifier une liste supprimée : NOT_FOUND, pas une version périmée", async () => {
@@ -278,6 +378,11 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, anonymous),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, anonymous),
       call(tasks.setDone, { taskId: task.id, done: true }, anonymous),
+      call(
+        tasks.completeOccurrence,
+        { taskId: task.id, version: 1, today: "2026-10-28" },
+        anonymous,
+      ),
       call(tasks.delete, { taskId: task.id }, anonymous),
     ];
     for (const attempt of attempts) {
@@ -295,6 +400,7 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, asBob),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, asBob),
       call(tasks.setDone, { taskId: task.id, done: true }, asBob),
+      call(tasks.completeOccurrence, { taskId: task.id, version: 1, today: "2026-10-28" }, asBob),
       call(tasks.delete, { taskId: task.id }, asBob),
     ];
     for (const attempt of attempts) {

@@ -36,6 +36,12 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
 - Module Journal (nouveau dans la maquette) : ticket à créer ? Glossaire posé dans `CONTEXT.md`, à valider. Verrou à
   6 chiffres + « Utiliser mon mot de passe » : revue sécurité à prévoir.
 
+- **Sous-tâches (revue de #19), à trancher** :
+  - Compteur : texte « 1 sur 2 sous-tâches cochées » au-dessus de la liste toujours dépliée ; la maquette veut-elle
+    un compteur compact sur la ligne et une liste repliable ?
+  - Sous-tâche ouverte sous une tâche cochée : elle reste dans « Cochées » et n'est comptée nulle part. Voulu ?
+  - Sous-tâches comptées dans la limite de 500 tâches par liste ; pas de changement de parent. D'accord ?
+
 ## 5. Pièges de l'environnement
 
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).

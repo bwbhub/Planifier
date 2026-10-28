@@ -228,6 +228,15 @@ describe("todo.tasks : sous-tâches (base réelle)", () => {
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
+  it("refuse en parent la tâche de quelqu'un d'autre : NOT_FOUND, rien n'est créé", async () => {
+    const { task } = await createAliceTask();
+    const bobList = await call(lists.create, { name: "Bob", tint: "trip" }, asUser(bob));
+    await expect(
+      call(tasks.create, { listId: bobList.id, parentId: task.id, title: "Intrus" }, asUser(bob)),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(db.task.count({ where: { parentId: task.id } })).resolves.toBe(0);
+  });
+
   it("supprime les sous-tâches avec leur parent", async () => {
     const { list, task } = await createAliceTask();
     const subtask = await call(

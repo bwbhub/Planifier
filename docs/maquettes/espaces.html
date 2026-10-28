@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planifier v2 — Espaces (Phase 2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Tokens repris tels quels des maquettes Phase 1 (packages/tokens). */
+:root{--bg:#F8F6F9;--surface:#FFFFFF;--ink:#1C1226;--muted:#645A70;--line:#ECE7EF;--field:#F1EDF4;--accent:#D11F72;--on-accent:#FFFFFF;--accent-text:#B3195F;--accent-tint:#FCDDEB;--scrim:rgba(10,6,14,.55);--t-gen:#DDE6FB;--t-work:#FFE6C2;--t-couple:#F7D9F0;--t-trip:#D3F0E4}
+[data-theme=dark]{--bg:#101216;--surface:#1B1E25;--ink:#F2F3F6;--muted:#A4AAB8;--line:#2A2E38;--field:#252932;--accent:#FF8F5A;--on-accent:#1A1208;--accent-text:#FFA072;--accent-tint:#3A2A24;--scrim:rgba(0,0,0,.6);--t-gen:#1F2D44;--t-work:#3B2E17;--t-couple:#3E2233;--t-trip:#1D3A36}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E5EC;font-family:'DM Sans',sans-serif;color:#1C1226}
+[data-theme=dark] body,body[data-theme=dark]{background:#05060A;color:#F2F3F6}
+button,a,input{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Planche */
+.board{padding:32px;display:flex;flex-direction:column;gap:40px}
+.board-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;max-width:1200px}
+.board-head h1{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-size:32px}
+.board-head p{margin:6px 0 0;max-width:720px;line-height:1.5;opacity:.75}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.cap{font-size:13px;font-weight:600;opacity:.7;margin:0 0 8px 4px}
+.toggle{min-height:44px;padding:0 20px;border-radius:999px;border:0;background:#1C1226;color:#fff;font-weight:600;cursor:pointer}
+
+/* Écran */
+.m{width:390px;min-height:844px;background:var(--bg);color:var(--ink);border-radius:28px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.pc{width:1180px;min-height:760px;background:var(--bg);color:var(--ink);border-radius:20px;padding:20px;display:flex;gap:20px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 16px 0}
+.round{width:44px;height:44px;border:0;border-radius:22px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.body{padding:12px 16px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+h1.t{margin:4px 4px 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:34px;letter-spacing:-.02em}
+.lead{margin:0 4px;color:var(--muted);font-size:15px;line-height:1.5}
+h2.sec{margin:10px 6px 0;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.card{background:var(--surface);border-radius:20px;padding:6px 18px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:8px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .l{min-width:0;flex:1}
+.item .n{font-size:16px;font-weight:500}
+.item .s{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.chev{display:flex;align-items:center;gap:4px;font-size:15px;color:var(--muted);flex:none}
+.btn{min-height:50px;padding:0 24px;border:0;border-radius:999px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn.p{background:var(--accent);color:var(--on-accent)}
+.btn.s{background:var(--field);color:var(--ink)}
+.btn.o{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn.k{background:var(--ink);color:var(--bg)}
+.btn.sm{min-height:44px;padding:0 18px}
+.btn.w{width:100%}
+.lnk{min-height:44px;display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);text-decoration:underline;background:none;border:0}
+.av{width:38px;height:38px;border-radius:19px;color:#1C1226;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.stack{display:flex}.stack .av{margin-left:-10px;border:2px solid var(--hd)}.stack .av:first-child{margin-left:0}
+.pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--field);color:var(--muted);white-space:nowrap}
+.pill.a{background:var(--accent-tint);color:var(--accent-text)}
+.hd{border-radius:20px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--hd)}
+.hd .nm{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em}
+.hd .mt{font-size:14px;color:var(--muted);margin-top:2px}
+.sw{flex:none;width:52px;height:44px;border:0;background:transparent;padding:0;display:flex;align-items:center}
+.sw>span{width:52px;height:32px;border-radius:16px;background:var(--line);position:relative;display:block}
+.sw>span>span{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--surface)}
+.sw[aria-checked=true]>span{background:var(--accent)}
+.sw[aria-checked=true]>span>span{left:auto;right:3px;background:var(--on-accent)}
+.sw[disabled]{opacity:.55}
+.lbl{font-size:14px;font-weight:600;margin:0 0 6px}
+.lbl em{font-style:normal;font-weight:400;color:var(--muted)}
+.field{width:100%;min-height:48px;padding:0 14px;border-radius:12px;border:2px solid transparent;background:var(--field);color:var(--ink);font-size:16px}
+.field.f{border-color:var(--accent);background:var(--surface)}
+.hint{font-size:13.5px;color:var(--muted);margin:6px 2px 0;line-height:1.4}
+.chk{display:flex;align-items:center;gap:14px;min-height:60px;border-bottom:1px solid var(--line)}
+.chk:last-child{border-bottom:0}
+.box{width:24px;height:24px;border-radius:7px;border:2px solid var(--muted);flex:none;display:flex;align-items:center;justify-content:center}
+.box.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.note{padding:12px 14px;border-radius:12px;background:var(--field);font-size:14px;color:var(--muted);line-height:1.45}
+.tip{padding:14px 16px;border-radius:16px;background:var(--accent-tint);font-size:14.5px;line-height:1.45;display:flex;flex-direction:column;gap:10px}
+.copy{display:flex;gap:8px;align-items:center;padding:6px 6px 6px 14px;border-radius:12px;background:var(--field);font-size:14px;color:var(--ink)}
+.copy code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit}
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end;padding:16px 16px 24px}
+.sheet{width:100%;background:var(--surface);border-radius:28px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.01em}
+.sheet p{margin:0;font-size:16px;line-height:1.5}
+.acts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.sk{background:var(--field);border-radius:12px;animation:sk 1.6s ease-in-out infinite}
+@keyframes sk{0%,100%{opacity:1}50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.err{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45}
+.err b{color:var(--accent-text)}
+.mnav{position:absolute;left:16px;right:16px;bottom:16px;height:64px;border-radius:999px;background:#1C1226;display:flex;justify-content:space-around;align-items:center;color:#B9AEC6;font-size:11px}
+[data-theme=dark] .mnav{background:#262A33}
+.side{flex:0 0 232px;background:var(--surface);border-radius:20px;padding:24px 14px;display:flex;flex-direction:column;gap:6px}
+.side .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.02em;padding:0 12px 20px}
+.side a{display:flex;align-items:center;min-height:46px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:15px;font-weight:500;color:var(--muted)}
+.side a[aria-current]{color:var(--ink);font-weight:600;background:var(--accent-tint)}
+.side hr{border:0;border-top:1px solid var(--line);margin:8px 6px}
+.main{flex:1;min-width:0;display:flex;gap:20px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ann{max-width:1200px;background:#fff;color:#1C1226;border-radius:16px;padding:20px 24px;line-height:1.55;font-size:14.5px}
+.ann h2{font-family:'Bricolage Grotesque',sans-serif;margin:0 0 8px;font-size:20px}
+.ann h3{margin:16px 0 4px;font-size:15px}
+.ann ul{margin:4px 0;padding-left:20px}
+.ann code{background:#F1EDF4;padding:1px 5px;border-radius:5px}
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="board-head">
+    <div>
+      <h1>Espaces — maquette Phase 2</h1>
+      <p>Ticket « UI de gestion des Espaces et activation des modules ». Même direction « Doux et vivant » que la Phase 1 :
+        mêmes tokens, contrôles et feuilles du bas. Données fictives. Fiches d'écran en bas de planche.</p>
+    </div>
+    <button class="toggle" type="button" onclick="document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark'">Clair / nuit</button>
+  </div>
+
+  <!-- ========== 1. Liste ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">1 · Mes Espaces — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body">
+          <h1 class="t">Mes Espaces</h1>
+          <p class="lead">Ce que tu partages avec d'autres. Ce qui n'est dans aucun Espace reste privé.</p>
+          <section class="card" aria-label="Mes Espaces">
+            <a class="item" href="#" style="text-decoration:none;color:inherit">
+              <span class="av" style="background:var(--t-couple)">CL</span>
+              <div class="l"><div class="n">Camille et moi</div><div class="s">2 personnes</div></div>
+              <span class="chev"><span class="pill a">Propriétaire</span>›</span>
+            </a>
+            <a class="item" href="#" style="text-decoration:none;color:inherit">
+              <span class="av" style="background:var(--t-gen)">CO</span>
+              <div class="l"><div class="n">Coloc rue Pasteur</div><div class="s">4 personnes</div></div>
+              <span class="chev">›</span>
+            </a>
+            <a class="item" href="#" style="text-decoration:none;color:inherit">
+              <span class="av" style="background:var(--t-trip)">VA</span>
+              <div class="l"><div class="n">Vacances Ardèche</div><div class="s">5 personnes</div></div>
+              <span class="chev"><span class="pill a">Propriétaire</span>›</span>
+            </a>
+          </section>
+          <button class="btn p w" type="button">Créer un Espace</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">1b · Aucun Espace — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body">
+          <h1 class="t">Mes Espaces</h1>
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center">
+            <div style="display:flex;gap:6px"><span class="av" style="background:var(--t-couple)"></span><span class="av" style="background:var(--t-gen)"></span><span class="av" style="background:var(--t-trip)"></span></div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Partager, si tu veux</div>
+            <p class="lead" style="margin:0">Un Espace réunit des personnes : un couple, une colocation, des vacances. Tout ce que tu crées sans Espace reste privé.</p>
+            <button class="btn p w" type="button">Créer un Espace</button>
+          </section>
+          <p class="hint" style="text-align:center">On t'a envoyé un lien ? Ouvre-le simplement pour rejoindre l'Espace.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">1c · Chargement puis erreur — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" aria-busy="true">
+          <h1 class="t">Mes Espaces</h1>
+          <section class="card" style="padding:14px 18px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;gap:12px;align-items:center"><span class="sk" style="width:38px;height:38px;border-radius:19px"></span><span class="sk" style="height:16px;flex:1"></span></div>
+            <div style="display:flex;gap:12px;align-items:center"><span class="sk" style="width:38px;height:38px;border-radius:19px"></span><span class="sk" style="height:16px;width:60%"></span></div>
+          </section>
+          <section class="card" role="alert" style="padding:18px;display:flex;flex-direction:column;gap:12px;margin-top:20px">
+            <div class="err"><b aria-hidden="true">!</b><span>Tes Espaces n'ont pas pu être chargés. Rien n'est perdu.</span></div>
+            <button class="btn s w" type="button">Réessayer maintenant</button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 2. Formulaire ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">2 · Créer un Espace — mobile (même formulaire pour « Réglages de l'Espace »)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Fermer">✕</button></div>
+        <div class="body">
+          <h1 class="t">Nouvel Espace</h1>
+          <div>
+            <p class="lbl">Nom</p>
+            <input class="field f" value="Vacances Ardèche" aria-label="Nom">
+            <p class="hint">Visible par les membres. 60 caractères au plus.</p>
+          </div>
+          <h2 class="sec">Modules de l'Espace</h2>
+          <section class="card" role="group" aria-label="Modules">
+            <div class="chk"><span class="box on">✓</span><div class="l"><div class="n">Todo</div><div class="s">Des listes de tâches à plusieurs.</div></div></div>
+            <div class="chk"><span class="box on">✓</span><div class="l"><div class="n">Agenda</div><div class="s">Voir vos agendas ensemble.</div></div></div>
+            <div class="chk"><span class="box"></span><div class="l"><div class="n">Événements</div><div class="s">Organiser une sortie, un repas, un week-end.</div></div></div>
+          </section>
+          <p class="hint">Tu pourras en ajouter ou en retirer plus tard. Retirer un module ne supprime rien.</p>
+          <h2 class="sec">Visibilité</h2>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Restreindre la visibilité</div><div class="s">Désactivé : chaque membre voit tout ce qui est dans l'Espace. Activé : chacun voit seulement ce qu'on partage avec lui.</div></div><button class="sw" role="switch" aria-checked="false" aria-label="Restreindre la visibilité"><span><span></span></span></button></div>
+          </section>
+          <div style="flex:1"></div>
+          <button class="btn p w" type="button">Créer l'Espace</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">2b · Lien d'invitation créé — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><h1 class="t">Vacances Ardèche</h1></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="inv-t">
+            <h2 id="inv-t">Ton lien est prêt</h2>
+            <p>Envoie-le à <strong>une</strong> personne, par le moyen que tu veux. Il marche une seule fois, pendant 7 jours.</p>
+            <div class="copy"><code>planifier.app/rejoindre#Hq3…x9A</code><button class="btn k sm" type="button">Copier</button></div>
+            <p class="hint" style="margin:0" role="status">Lien copié.</p>
+            <div class="note">Ce lien ne sera plus affiché. Si tu le perds, crée-en un autre et révoque celui-ci.</div>
+            <div class="acts"><button class="btn p w" type="button">Partager…</button><button class="btn s w" type="button">C'est bon</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">2c · Modification refusée (version périmée) — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Fermer">✕</button></div>
+        <div class="body">
+          <h1 class="t">Réglages de l'Espace</h1>
+          <section class="card" role="alert" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div class="err"><b aria-hidden="true">!</b><span>Quelqu'un a modifié l'Espace pendant que tu le faisais. Tes changements n'ont pas été enregistrés : recharge pour partir de la dernière version.</span></div>
+            <button class="btn s w" type="button">Recharger l'Espace</button>
+          </section>
+          <div style="opacity:.5">
+            <p class="lbl">Nom</p><input class="field" value="Vacances Ardèche 2027" aria-label="Nom">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 3. Espace, PC propriétaire ========== -->
+  <div>
+    <p class="cap">3 · Un Espace, vu par une propriétaire — PC</p>
+    <div class="pc">
+      <nav class="side" aria-label="Navigation principale">
+        <div class="brand">Planifier</div>
+        <a href="#">Aujourd'hui</a><a href="#">Todo</a><a href="#">Agenda</a><a href="#">Événements</a><a href="#">Journal</a>
+        <hr><a href="#" aria-current="page">Espaces</a><a href="#">Notifications</a><a href="#">Profil</a>
+      </nav>
+      <div class="main">
+        <div class="col" style="flex:1.2">
+          <div class="hd" style="--hd:var(--t-trip)">
+            <div><div class="nm">Vacances Ardèche</div><div class="mt">5 personnes · Todo, Agenda</div></div>
+            <div class="stack" style="--hd:var(--t-trip)" aria-label="Membres : Camille, Julien, Marie, Léo, Sarah"><span class="av" style="background:#FFD7E5">C</span><span class="av" style="background:#FFE6C2">J</span><span class="av" style="background:#DDE6FB">M</span><span class="av" style="background:#F7D9F0">L</span><span class="av" style="background:#D3F0E4">S</span></div>
+          </div>
+          <h2 class="sec">Membres</h2>
+          <section class="card" aria-label="Membres">
+            <div class="item"><span class="av" style="background:#FFD7E5">C</span><div class="l"><div class="n">Camille (toi)</div><div class="s">A créé l'Espace</div></div><span class="pill a">Propriétaire</span></div>
+            <div class="item"><span class="av" style="background:#FFE6C2">J</span><div class="l"><div class="n">Julien</div><div class="s">Depuis le 2 juillet</div></div><span class="pill a">Propriétaire</span><button class="btn s sm" type="button" aria-label="Gérer Julien">Gérer</button></div>
+            <div class="item"><span class="av" style="background:#DDE6FB">M</span><div class="l"><div class="n">Marie</div><div class="s">Depuis le 3 juillet</div></div><span class="pill">Membre</span><button class="btn s sm" type="button" aria-label="Gérer Marie">Gérer</button></div>
+            <div class="item"><span class="av" style="background:#F7D9F0">L</span><div class="l"><div class="n">Léo</div><div class="s">Depuis le 3 juillet</div></div><span class="pill">Membre</span><button class="btn s sm" type="button" aria-label="Gérer Léo">Gérer</button></div>
+            <div class="item"><span class="av" style="background:#D3F0E4">S</span><div class="l"><div class="n">Sarah</div><div class="s">Depuis hier</div></div><span class="pill">Membre</span><button class="btn s sm" type="button" aria-label="Gérer Sarah">Gérer</button></div>
+          </section>
+          <h2 class="sec">Inviter</h2>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Créer un lien d'invitation</div><div class="s">Pour une personne, valable 7 jours. Rien n'est envoyé : tu le partages toi-même.</div></div><button class="btn p sm" type="button">Créer un lien</button></div>
+            <div class="item"><div class="l"><div class="n">Lien créé aujourd'hui à 14:02</div><div class="s">Expire le 4 novembre</div></div><button class="btn o sm" type="button">Révoquer</button></div>
+            <div class="item"><div class="l"><div class="n">Lien créé le 26 octobre</div><div class="s">Expire le 2 novembre</div></div><button class="btn o sm" type="button">Révoquer</button></div>
+          </section>
+        </div>
+        <div class="col" style="flex:1">
+          <h2 class="sec" style="margin-top:4px">Réglages</h2>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Nom</div></div><span class="chev">Vacances Ardèche ›</span></div>
+            <div class="item"><div class="l"><div class="n">Todo</div><div class="s">Listes de tâches à plusieurs.</div></div><button class="sw" role="switch" aria-checked="true" aria-label="Module Todo"><span><span></span></span></button></div>
+            <div class="item"><div class="l"><div class="n">Agenda</div><div class="s">Voir vos agendas ensemble.</div></div><button class="sw" role="switch" aria-checked="true" aria-label="Module Agenda"><span><span></span></span></button></div>
+            <div class="item"><div class="l"><div class="n">Événements</div><div class="s">Sorties, repas, week-ends.</div></div><button class="sw" role="switch" aria-checked="false" aria-label="Module Événements"><span><span></span></span></button></div>
+            <div class="item"><div class="l"><div class="n">Restreindre la visibilité</div><div class="s">Chacun voit seulement ce qu'on partage avec lui.</div></div><button class="sw" role="switch" aria-checked="false" aria-label="Restreindre la visibilité"><span><span></span></span></button></div>
+          </section>
+          <p class="hint" style="margin:0 6px">Retirer un module ne supprime rien : il disparaît seulement de l'Espace.</p>
+          <h2 class="sec">Quitter ou supprimer</h2>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Quitter l'Espace</div><div class="s">Tu ne verras plus ce qui y est partagé.</div></div><button class="btn o sm" type="button">Quitter</button></div>
+            <div class="item"><div class="l"><div class="n">Supprimer l'Espace</div><div class="s">Pour tout le monde. Une confirmation te sera demandée.</div></div><button class="btn o sm" type="button">Supprimer</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 4. Membre, suggestion, feuilles ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">4 · Un Espace, vu par un membre — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body">
+          <div class="hd" style="--hd:var(--t-gen)">
+            <div><div class="nm">Coloc rue Pasteur</div><div class="mt">4 personnes</div></div>
+          </div>
+          <h2 class="sec">Membres</h2>
+          <section class="card">
+            <div class="item"><span class="av" style="background:#FFE6C2">A</span><div class="l"><div class="n">Alice</div><div class="s">A créé l'Espace</div></div><span class="pill a">Propriétaire</span></div>
+            <div class="item"><span class="av" style="background:#DDE6FB">B</span><div class="l"><div class="n">Bastien (toi)</div><div class="s">Depuis le 12 septembre</div></div><span class="pill">Membre</span></div>
+            <div class="item"><span class="av" style="background:#D3F0E4">N</span><div class="l"><div class="n">Nora</div><div class="s">Depuis le 12 septembre</div></div><span class="pill">Membre</span></div>
+            <div class="item"><span class="av" style="background:#F7D9F0">Y</span><div class="l"><div class="n">Yanis</div><div class="s">Depuis le 1er octobre</div></div><span class="pill">Membre</span></div>
+          </section>
+          <h2 class="sec">Modules</h2>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Todo, Agenda, Événements</div><div class="s">Seuls les propriétaires changent les réglages.</div></div></div>
+          </section>
+          <section class="card">
+            <div class="item"><div class="l"><div class="n">Quitter l'Espace</div></div><button class="btn o sm" type="button">Quitter</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">4b · Espace retombé à deux — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body">
+          <div class="hd" style="--hd:var(--t-couple)">
+            <div><div class="nm">Camille et moi</div><div class="mt">2 personnes · Todo, Agenda</div></div>
+          </div>
+          <div class="tip" role="note">
+            <span>Vous n'êtes plus que deux : tu peux nommer Léo propriétaire, pour que vous gériez l'Espace à égalité. Rien ne change si tu ne fais rien.</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn k sm" type="button">Nommer Léo propriétaire</button><button class="btn s sm" type="button">Plus tard</button></div>
+          </div>
+          <h2 class="sec">Membres</h2>
+          <section class="card">
+            <div class="item"><span class="av" style="background:#FFD7E5">C</span><div class="l"><div class="n">Camille (toi)</div><div class="s">A créé l'Espace</div></div><span class="pill a">Propriétaire</span></div>
+            <div class="item"><span class="av" style="background:#F7D9F0">L</span><div class="l"><div class="n">Léo</div><div class="s">Depuis le 3 juillet</div></div><span class="pill">Membre</span><button class="btn s sm" type="button" aria-label="Gérer Léo">Gérer</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">4c · Gérer un membre — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><h1 class="t">Vacances Ardèche</h1></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="mb-t">
+            <h2 id="mb-t">Marie</h2>
+            <p style="color:var(--muted);font-size:15px">Membre depuis le 3 juillet.</p>
+            <div class="acts">
+              <button class="btn s w" type="button">Nommer propriétaire</button>
+              <button class="btn o w" type="button">Retirer de l'Espace</button>
+              <button class="btn s w" type="button" style="background:transparent">Annuler</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <p class="cap">5 · Supprimer l'Espace — confirmation</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="scrim">
+          <div class="sheet" role="alertdialog" aria-labelledby="del-t" aria-describedby="del-d">
+            <h2 id="del-t">Supprimer « Vacances Ardèche » ?</h2>
+            <p id="del-d">L'Espace sera supprimé <strong>pour ses 5 membres</strong>. Les événements qui y étaient rattachés redeviennent personnels pour leur organisateur, et leurs participants gardent leur accès.</p>
+            <div class="acts"><button class="btn k w" type="button">Supprimer définitivement</button><button class="btn s w" type="button">Garder l'Espace</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">5b · Quitter, dernier propriétaire — refus expliqué</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="scrim">
+          <div class="sheet" role="alertdialog" aria-labelledby="lo-t">
+            <h2 id="lo-t">Avant de partir</h2>
+            <p>Personne d’autre n’est propriétaire de « Vacances Ardèche ». Nomme quelqu'un d'autre propriétaire, ou supprime l'Espace si plus personne n'en a besoin.</p>
+            <div class="acts"><button class="btn k w" type="button">Choisir un propriétaire</button><button class="btn s w" type="button">Rester dans l'Espace</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">5c · Quitter — confirmation (cas général)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="scrim">
+          <div class="sheet" role="alertdialog" aria-labelledby="q-t">
+            <h2 id="q-t">Quitter « Coloc rue Pasteur » ?</h2>
+            <p>Tu ne verras plus ce qui y est partagé. Pour revenir, il te faudra un nouveau lien d'invitation.</p>
+            <div class="acts"><button class="btn k w" type="button">Quitter l'Espace</button><button class="btn s w" type="button">Rester</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 6. Rejoindre ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">6 · Rejoindre par un lien — mobile</p>
+      <div class="m">
+        <div class="body" style="justify-content:center">
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center">
+            <span class="av" style="background:var(--t-trip);width:64px;height:64px;border-radius:32px;font-size:20px">VA</span>
+            <div style="font-size:14px;color:var(--muted)">On t’invite dans un Espace</div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:28px">Vacances Ardèche</div>
+            <div class="lead" style="margin:0">4 personnes en font déjà partie. Tu verras ce qu'elles y partagent, et elles verront ce que tu y mets.</div>
+            <button class="btn p w" type="button">Rejoindre l'Espace</button>
+            <button class="btn s w" type="button">Pas maintenant</button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">6b · Lien expiré ou déjà utilisé</p>
+      <div class="m">
+        <div class="body" style="justify-content:center">
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:14px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px">Ce lien ne marche plus</div>
+            <p class="lead" style="margin:0">Il a peut-être déjà servi, expiré après 7 jours, ou été révoqué. Demande un nouveau lien à la personne qui te l'a envoyé.</p>
+            <button class="btn s w" type="button">Aller à l'accueil</button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">6c · Déjà membre / Espace complet</p>
+      <div class="m">
+        <div class="body" style="justify-content:center;gap:20px">
+          <section class="card" style="padding:24px 22px;display:flex;flex-direction:column;gap:12px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Tu fais déjà partie de « Vacances Ardèche »</div>
+            <p class="lead" style="margin:0">Le lien n'a pas été utilisé : il reste valable pour quelqu'un d'autre.</p>
+            <button class="btn p w" type="button">Ouvrir l'Espace</button>
+          </section>
+          <section class="card" role="alert" style="padding:24px 22px;display:flex;flex-direction:column;gap:12px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Cet Espace est complet</div>
+            <p class="lead" style="margin:0">Il compte déjà 50 personnes, le maximum. Préviens la personne qui t’a envoyé le lien.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Fiches ========== -->
+  <section class="ann">
+    <h2>Fiches d'écran</h2>
+    <h3>Mes Espaces · <code>/espaces</code></h3>
+    <ul>
+      <li>Objectif : retrouver un Espace, en créer un. Données : nom, nombre de personnes, mon rôle (pastille si propriétaire).</li>
+      <li>États : chargement (squelette), vide (explication + création), erreur (« Réessayer maintenant »). Pagination par curseur : « Afficher plus » au-delà de 50.</li>
+    </ul>
+    <h3>Créer / Réglages · <code>/espaces/nouveau</code> et <code>/espaces/[id]/reglages</code></h3>
+    <ul>
+      <li>Un seul formulaire (règle 13) : nom (obligatoire), modules Todo / Agenda / Événements, visibilité. Journal absent : jamais partagé.</li>
+      <li>Modules : rien de pré-coché à l'insu, tout est visible et décochable. Proposition : Todo et Agenda cochés à la création.</li>
+      <li>Réglages : propriétaires seulement. <code>STALE_VERSION</code> → message 2c, rechargement explicite.</li>
+    </ul>
+    <h3>Un Espace · <code>/espaces/[id]</code></h3>
+    <ul>
+      <li>Propriétaire : membres + « Gérer » (nommer / rétrograder propriétaire, retirer ; jamais sur le créateur ni sur soi), invitations (créer, liste, révoquer), réglages, quitter, supprimer.</li>
+      <li>Membre : membres en lecture, modules en lecture, quitter. Non-membre : page « introuvable » (NOT_FOUND).</li>
+      <li>Espace à deux avec un seul propriétaire : proposition 4b, jamais appliquée seule ; « Plus tard » la masque jusqu'au prochain affichage de l'Espace.</li>
+      <li>Refus typés : <code>LAST_OWNER</code> (5b), <code>CREATOR</code>, <code>TOO_MANY_INVITES</code> (« 20 liens en cours : révoque-en un »).</li>
+    </ul>
+    <h3>Rejoindre · <code>/rejoindre#jeton</code></h3>
+    <ul>
+      <li>Jeton dans le fragment : jamais envoyé au serveur web, absent des journaux et du Referer. Sans session : connexion puis retour sur le lien.</li>
+      <li>Aperçu (nom, nombre de membres) puis action explicite « Rejoindre ». États : lien invalide (6b), déjà membre, complet (6c).</li>
+    </ul>
+    <h3>Questions ouvertes</h3>
+    <ul>
+      <li>Accès aux Espaces : entrée « Espaces » dans la navigation (PC, sous un séparateur) et depuis le Profil sur mobile ? En attendant la barre latérale, un lien dans l'en-tête actuel.</li>
+      <li>Teinte d'un Espace : pas de couleur stockée aujourd'hui ; la maquette en dérive une du nom (stable). À stocker plus tard ?</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

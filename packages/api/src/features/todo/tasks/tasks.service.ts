@@ -6,8 +6,9 @@ import type {
   TaskOutput,
   UpdateTaskInput,
 } from "@planifier/api-contract";
+import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
-import type { Db } from "@planifier/db";
+import type { Db, Prisma } from "@planifier/db";
 
 import { todoConflict } from "../todo-errors";
 
@@ -19,16 +20,13 @@ const TASK_SELECT = {
   dueDate: true,
   completedAt: true,
   version: true,
-} as const;
+} as const satisfies Prisma.TaskSelect;
 
-type TaskRow = Omit<TaskOutput, "dueDate"> & { dueDate: Date | null };
+type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 
 /** Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. */
-const toDay = (date: Date) => date.toISOString().slice(0, 10);
-const fromDay = (day: string) => new Date(`${day}T00:00:00Z`);
-
 function toTaskOutput({ dueDate, ...task }: TaskRow): TaskOutput {
-  return { ...task, dueDate: dueDate === null ? null : toDay(dueDate) };
+  return { ...task, dueDate: dueDate === null ? null : utcDateToDay(dueDate) };
 }
 
 /** Curseur inutile : les tâches d'une liste sont bornées (`TODO_LIST_MAX_TASKS`). */
@@ -39,14 +37,7 @@ export async function listTasks(db: Db, listId: string): Promise<ListTasksOutput
     take: TODO_LIST_MAX_TASKS,
     select: TASK_SELECT,
   });
-  // Tri stable : à faire d'abord, puis cochées, chacune dans l'ordre de création.
-  const tasks = rows.map(toTaskOutput);
-  return {
-    items: [
-      ...tasks.filter(({ completedAt }) => completedAt === null),
-      ...tasks.filter(({ completedAt }) => completedAt !== null),
-    ],
-  };
+  return { items: rows.map(toTaskOutput) };
 }
 
 /** Sous le verrou de la ligne de la liste : deux créations simultanées ne dépassent pas la borne. */
@@ -67,7 +58,7 @@ export async function createTask(
         listId,
         title,
         description: description ?? null,
-        dueDate: dueDate === undefined ? null : fromDay(dueDate),
+        dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
       },
       select: TASK_SELECT,
     });
@@ -92,12 +83,16 @@ export async function updateTask(
     data: {
       ...(title === undefined ? {} : { title }),
       ...(description === undefined ? {} : { description }),
-      ...(dueDate === undefined ? {} : { dueDate: dueDate === null ? null : fromDay(dueDate) }),
+      ...(dueDate === undefined
+        ? {}
+        : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
       version: { increment: 1 },
     },
   });
+  // `readTask` : NOT_FOUND si supprimée entre la garde et l'écriture, avant de conclure à une version périmée.
+  const task = await readTask(db, taskId);
   if (count === 0) throw todoConflict("STALE_VERSION");
-  return readTask(db, taskId);
+  return task;
 }
 
 /**

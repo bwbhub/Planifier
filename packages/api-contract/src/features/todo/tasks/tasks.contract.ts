@@ -15,7 +15,7 @@ import {
 // Une tâche se voit et se modifie selon les droits sur sa liste ; sans lecture : NOT_FOUND.
 export const tasksContract = {
   list: oc
-    .route({ summary: "Tâches d'une liste", description: "À faire d'abord, puis cochées." })
+    .route({ summary: "Tâches d'une liste", description: "Par ordre de création." })
     .input(listTasksInputSchema)
     .output(listTasksOutputSchema),
   create: oc
@@ -29,7 +29,8 @@ export const tasksContract = {
   update: oc
     .route({
       summary: "Modifier une tâche",
-      description: "Titre, description, échéance. `version` périmée : CONFLICT `STALE_VERSION`.",
+      description:
+        "Titre, description, échéance (`null` efface). `version` périmée : CONFLICT `STALE_VERSION`.",
     })
     .errors(TODO_ERRORS)
     .input(updateTaskInputSchema)

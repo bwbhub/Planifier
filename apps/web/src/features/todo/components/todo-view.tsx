@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { TodoErrorAlert } from "../atoms/todo-error-alert";
+import { LoadError } from "../atoms/load-error";
 import { ListForm } from "../forms/list-form";
 import { useTodoLists } from "../queries/todo.queries";
 import { listHref } from "../utils/list-href";
@@ -50,13 +50,9 @@ function ListTabs({ lists, selectedId, onCreate }: ListTabsProps) {
           );
         })}
         <li className="shrink-0">
-          <button
-            type="button"
-            onClick={onCreate}
-            className="inline-flex min-h-11 items-center rounded-pill px-4 text-control font-semibold text-accent-text hover:bg-field"
-          >
+          <Button variant="ghost" size="sm" onClick={onCreate}>
             + Nouvelle liste
-          </button>
+          </Button>
         </li>
       </ul>
     </nav>
@@ -82,14 +78,7 @@ export function TodoView({ selectedListId }: TodoViewProps) {
     );
   }
   if (lists.isError) {
-    return (
-      <div className="flex flex-col items-start gap-3">
-        <TodoErrorAlert error={lists.error} />
-        <Button variant="secondary" onClick={() => void lists.refetch()}>
-          Réessayer maintenant
-        </Button>
-      </div>
-    );
+    return <LoadError error={lists.error} onRetry={() => void lists.refetch()} />;
   }
 
   const items = lists.data.items;

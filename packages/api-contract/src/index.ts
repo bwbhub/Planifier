@@ -49,7 +49,11 @@ export type {
   UpdateTaskInput,
 } from "./features/todo/tasks/tasks.schemas";
 export { createTaskInputSchema, updateTaskInputSchema } from "./features/todo/tasks/tasks.schemas";
-export { TODO_CONFLICT_REASONS, type TodoConflictReason } from "./features/todo/todo.schemas";
+export {
+  TODO_CONFLICT_REASONS,
+  type TodoConflictReason,
+  todoConflictDataSchema,
+} from "./features/todo/todo.schemas";
 export { SPACE_CONFLICT_REASONS, type SpaceConflictReason } from "./features/spaces/spaces.schemas";
 export {
   AUTH_ERROR_CODES,

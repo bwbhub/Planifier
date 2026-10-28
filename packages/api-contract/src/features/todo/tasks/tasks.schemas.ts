@@ -53,7 +53,7 @@ export const taskSchema = z.strictObject({
   version: z.int(),
 });
 
-/** Toutes les tâches de la liste (bornées) : à faire d'abord, puis cochées ; chacune par ordre de création. */
+/** Toutes les tâches de la liste (bornées), par ordre de création. */
 export const listTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });

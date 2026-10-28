@@ -15,7 +15,7 @@ export default async function HomePage() {
         <h1 className="font-display text-3xl font-bold tracking-tight">Bonjour {user.name}</h1>
         <p className="mt-2 text-muted">Tes listes de tâches t&apos;attendent.</p>
         <div className="mt-6 flex flex-col items-center gap-3">
-          <Link href={ROUTES.todo} className={buttonClassName("primary")}>
+          <Link href={ROUTES.todo} className={buttonClassName()}>
             Ouvrir mes listes
           </Link>
           <SignOutButton />

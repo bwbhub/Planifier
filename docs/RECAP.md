@@ -49,6 +49,17 @@ rejouable) ; `test:e2e` 26/26 (parcours Todo PC et mobile : liste, tâche, coche
 **Ouvert** : revue humaine (droits des listes). Activation du module Todo non prise en compte. Navigation provisoire
 (lien dans l'en-tête, pas la barre de la maquette).
 
+**Corrections de revue (`/code-review`, 2026-10-28)** : erreur de coche affichée par la liste (la ligne est recréée
+en changeant de section) ; compte de la liste mis à jour avec la coche optimiste ; liste ou tâche supprimée avant
+l'écriture ⇒ `NOT_FOUND` (plus `STALE_VERSION`) ; types de lignes dérivés de Prisma (`Prisma` exporté par `db`) ;
+données de `CONFLICT` lues par `todoConflictDataSchema` ; `ConfirmPanel` et variantes `surface` / `ghost` / taille
+`sm` de `Button` dans `ui` (`buttonClassName` prend un objet) ; une seule table des teintes ; section nommée par la
+liste ; doublons retirés (tri à faire/cochées côté web seulement, conversion des jours dans `constants/days`, reprise
+après erreur, modes sur place) ; `TODO_LIST_KINDS` inutilisé retiré ; tâche en retard : « Prévue le … » sans reproche
+et « Reporter à aujourd'hui », année affichée si différente ; matrice « sans session » sur les 9 procédures. Portes
+OK, `test:integration` api 74/74, `test:e2e` 28/28 (modifier et supprimer tâche et liste). Non fait : identifiants
+typés par marque (jugement, coût sur tout le module), barre de navigation mobile (un seul module).
+
 **Attendu ensuite** : vérif à la main par l'utilisateur, push + PR sur demande ; puis déploiement (`869fhwtcc`) pour
 faire tester, ou suite du Todo (partage, sous-tâches, assignation).
 

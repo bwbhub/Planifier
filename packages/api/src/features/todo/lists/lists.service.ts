@@ -6,7 +6,7 @@ import type {
   UpdateListInput,
 } from "@planifier/api-contract";
 import { isListTint, TODO_MAX_LISTS } from "@planifier/constants/todo";
-import type { Db } from "@planifier/db";
+import type { Db, Prisma } from "@planifier/db";
 
 import { todoConflict } from "../todo-errors";
 
@@ -16,15 +16,9 @@ const LIST_SELECT = {
   tint: true,
   version: true,
   _count: { select: { tasks: { where: { completedAt: null } } } },
-} as const;
+} as const satisfies Prisma.TodoListSelect;
 
-interface ListRow {
-  id: string;
-  name: string;
-  tint: string;
-  version: number;
-  _count: { tasks: number };
-}
+type ListRow = Prisma.TodoListGetPayload<{ select: typeof LIST_SELECT }>;
 
 function toListOutput({ _count, tint, ...list }: ListRow): TodoListOutput {
   // Chaîne libre en base : une valeur inconnue est une donnée corrompue, pas une entrée à deviner.
@@ -74,9 +68,10 @@ export async function updateList(
       version: { increment: 1 },
     },
   });
-  if (count === 0) throw todoConflict("STALE_VERSION");
   const list = await db.todoList.findUnique({ where: { id: listId }, select: LIST_SELECT });
+  // Supprimée entre la garde et l'écriture : elle n'existe plus, ce n'est pas une version périmée.
   if (list === null) throw new ORPCError("NOT_FOUND");
+  if (count === 0) throw todoConflict("STALE_VERSION");
   return toListOutput(list);
 }
 

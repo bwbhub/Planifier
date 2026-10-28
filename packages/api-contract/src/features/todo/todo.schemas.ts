@@ -17,7 +17,8 @@ export const taskTargetSchema = z.strictObject({ taskId: taskIdSchema });
 export const TODO_CONFLICT_REASONS = ["STALE_VERSION", "TOO_MANY_LISTS", "LIST_FULL"] as const;
 export type TodoConflictReason = (typeof TODO_CONFLICT_REASONS)[number];
 
+/** Données d'un `CONFLICT` Todo : lues par le client avec ce schéma. */
+export const todoConflictDataSchema = z.strictObject({ reason: z.enum(TODO_CONFLICT_REASONS) });
+
 /** Erreurs typées des procédures Todo : `CONFLICT` porte toujours sa raison. */
-export const TODO_ERRORS = {
-  CONFLICT: { data: z.strictObject({ reason: z.enum(TODO_CONFLICT_REASONS) }) },
-};
+export const TODO_ERRORS = { CONFLICT: { data: todoConflictDataSchema } };

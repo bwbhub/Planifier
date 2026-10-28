@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/client";
-import { TODO_CONFLICT_REASONS, type TodoConflictReason } from "@planifier/api-contract";
+import { todoConflictDataSchema, type TodoConflictReason } from "@planifier/api-contract";
 import { TODO_LIST_MAX_TASKS, TODO_MAX_LISTS } from "@planifier/constants/todo";
 
 const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
@@ -9,22 +9,18 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   LIST_FULL: `Cette liste compte déjà ${String(TODO_LIST_MAX_TASKS)} tâches. Supprimes-en pour en ajouter.`,
 };
 
-function conflictReason(data: unknown): TodoConflictReason | null {
-  if (typeof data !== "object" || data === null || !("reason" in data)) return null;
-  return TODO_CONFLICT_REASONS.find((reason) => reason === data.reason) ?? null;
-}
+const FALLBACK = "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";
 
 /** Message à montrer après un refus d'une action Todo : rassurant, avec quoi faire ensuite. */
 export function todoErrorMessage(error: unknown): string {
-  if (error instanceof ORPCError) {
-    if (error.code === "CONFLICT") {
-      const reason = conflictReason(error.data);
-      if (reason !== null) return CONFLICT_MESSAGES[reason];
-    }
-    if (error.code === "NOT_FOUND") return "Cet élément n'existe plus. Recharge la page.";
-    if (error.code === "TOO_MANY_REQUESTS") {
-      return "Trop d'actions d'affilée. Patiente quelques secondes, puis réessaie.";
-    }
+  if (!(error instanceof ORPCError)) return FALLBACK;
+  if (error.code === "CONFLICT") {
+    const data = todoConflictDataSchema.safeParse(error.data);
+    return data.success ? CONFLICT_MESSAGES[data.data.reason] : FALLBACK;
   }
-  return "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";
+  if (error.code === "NOT_FOUND") return "Cet élément n'existe plus. Recharge la page.";
+  if (error.code === "TOO_MANY_REQUESTS") {
+    return "Trop d'actions d'affilée. Patiente quelques secondes, puis réessaie.";
+  }
+  return FALLBACK;
 }

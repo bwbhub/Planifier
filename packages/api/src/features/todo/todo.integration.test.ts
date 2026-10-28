@@ -7,6 +7,8 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type { ApiContext } from "../../procedures";
 import { createRateLimiter, PLAN_RATE_LIMIT } from "../../rate-limit";
 import { router } from "../../router";
+import { updateList } from "./lists/lists.service";
+import { updateTask } from "./tasks/tasks.service";
 
 // Base réelle dédiée en `_test` (`createTestDatabase`), vidée avant chaque test. Lancement : `pnpm test:integration`.
 const { db, reset } = createTestDatabase();
@@ -120,12 +122,12 @@ describe("todo.tasks (base réelle)", () => {
     });
   });
 
-  it("liste les tâches à faire d'abord, puis les cochées", async () => {
+  it("liste les tâches par ordre de création, cochées comprises", async () => {
     const { list, task } = await createAliceTask();
     const second = await call(tasks.create, { listId: list.id, title: "Linge" }, asUser(alice));
     await call(tasks.setDone, { taskId: task.id, done: true }, asUser(alice));
     const { items } = await call(tasks.list, { listId: list.id }, asUser(alice));
-    expect(items.map(({ id }) => id)).toEqual([second.id, task.id]);
+    expect(items.map(({ id }) => id)).toEqual([task.id, second.id]);
   });
 
   it("cocher est rejouable et garde la date de la première coche ; décocher l'efface", async () => {
@@ -180,11 +182,49 @@ describe("todo.tasks (base réelle)", () => {
   });
 });
 
-describe("todo : droits (base réelle)", () => {
-  it("sans session : UNAUTHORIZED", async () => {
-    await expect(call(lists.list, {}, asUser(null))).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
+describe("todo : supprimée entre la garde et l'écriture (base réelle)", () => {
+  // Services appelés directement : la garde est passée, puis la ressource disparaît.
+  it("modifier une liste supprimée : NOT_FOUND, pas une version périmée", async () => {
+    const list = await createAliceList();
+    await db.todoList.delete({ where: { id: list.id } });
+    await expect(
+      updateList(db, { listId: list.id, version: 1, name: "Trop tard" }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
     });
+  });
+
+  it("modifier une tâche supprimée : NOT_FOUND, pas une version périmée", async () => {
+    const { task } = await createAliceTask();
+    await db.task.delete({ where: { id: task.id } });
+    await expect(
+      updateTask(db, { taskId: task.id, version: 1, title: "Trop tard" }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+});
+
+// Matrice : sans session, autre utilisateur, propriétaire (les tests ci-dessus). Pas de cas « visible mais action
+// refusée » (FORBIDDEN) : les listes sont perso, seul le propriétaire les voit ; il viendra avec le partage.
+describe("todo : droits (base réelle)", () => {
+  it("sans session : UNAUTHORIZED sur chaque procédure", async () => {
+    const { list, task } = await createAliceTask();
+    const anonymous = asUser(null);
+    const attempts = [
+      call(lists.list, {}, anonymous),
+      call(lists.create, { name: "Intrus", tint: "general" }, anonymous),
+      call(lists.update, { listId: list.id, version: 1, name: "Pris" }, anonymous),
+      call(lists.delete, { listId: list.id }, anonymous),
+      call(tasks.list, { listId: list.id }, anonymous),
+      call(tasks.create, { listId: list.id, title: "Intrus" }, anonymous),
+      call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, anonymous),
+      call(tasks.setDone, { taskId: task.id, done: true }, anonymous),
+      call(tasks.delete, { taskId: task.id }, anonymous),
+    ];
+    for (const attempt of attempts) {
+      await expect(attempt).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    }
   });
 
   it("la liste d'un autre n'existe pas : NOT_FOUND sur chaque procédure gardée", async () => {

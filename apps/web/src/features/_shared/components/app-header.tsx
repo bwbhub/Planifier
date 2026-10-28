@@ -36,7 +36,7 @@ export function AppHeader() {
         <Link
           href={ROUTES.profile}
           aria-current={onProfile ? "page" : undefined}
-          className={buttonClassName("secondary", "px-5")}
+          className={buttonClassName({ variant: "secondary", className: "px-5" })}
         >
           Profil
         </Link>

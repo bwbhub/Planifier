@@ -55,16 +55,24 @@ async function createListAndCheckTask(page: Page) {
 
 /** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
+  // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
+  const parent = page.getByRole("checkbox", { name: "Acheter du pain", exact: true });
+  await parent.click();
+  await expect(parent).not.toBeChecked();
+
   await page.getByRole("button", { name: "+ Sous-tâche à « Acheter du pain »" }).click();
-  await page.getByLabel("Nouvelle sous-tâche").fill("Baguette");
-  await page.getByRole("button", { name: "Ajouter" }).last().click();
+  const subtaskInput = page.getByLabel("Nouvelle sous-tâche");
+  await subtaskInput.fill("Baguette");
+  await page
+    .locator("form", { has: subtaskInput })
+    .getByRole("button", { name: "Ajouter" })
+    .click();
   await page.getByRole("checkbox", { name: "Baguette" }).click();
   await expect(page.getByText("1 sur 1 sous-tâche cochée")).toBeVisible();
-  // Cocher la sous-tâche ne coche rien d'autre : la tâche reste telle quelle.
-  await expect(page.getByRole("checkbox", { name: "Acheter du pain", exact: true })).toBeChecked();
-  await page.getByRole("button", { name: "Fermer" }).click();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
+  await expect(parent).not.toBeChecked();
 
-  await page.goto("/todo");
   await page.getByRole("button", { name: "Modifier « Acheter du pain »" }).click();
   await page.getByLabel("Titre").fill("Acheter du pain complet");
   await page.getByRole("button", { name: "Enregistrer" }).click();

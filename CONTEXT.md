@@ -27,6 +27,7 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Liste partagée** : commune à plusieurs membres, chacun peut cocher.
 - **Liste d'événement** : liste commune unique d'un événement, avec assignation possible.
 - **Tâche** : titre obligatoire ; description, échéance, récurrence, sous-tâches optionnels.
+- **Sous-tâche** : tâche rattachée à une tâche de la même liste, sur un seul niveau. Cochée seule : rien ne se coche en cascade, dans un sens ni dans l'autre. Supprimée avec sa tâche. Compte dans la limite de tâches de la liste, pas dans le nombre de tâches à faire affiché pour la liste.
 - **Récurrence** : indépendante de la date et de l'heure.
 - **Assignation** : désigne qui s'en occupe, jamais imposée.
 - **Clone lié** : copie d'une tâche dans une autre liste. Cocher le clone coche l'original, pas l'inverse.

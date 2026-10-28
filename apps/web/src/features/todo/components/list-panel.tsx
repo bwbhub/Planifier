@@ -12,6 +12,7 @@ import { ListForm } from "../forms/list-form";
 import { TaskForm } from "../forms/task-form";
 import { useDeleteList, useTasks } from "../queries/todo.queries";
 import { TINTS } from "../utils/list-tint";
+import { isSubtask, subtasksByParent } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { useToggleTask } from "../utils/use-toggle-task";
 
@@ -25,20 +26,10 @@ interface TaskSectionsProps {
   onToggle: ToggleTask;
 }
 
-/** Sous-tâches regroupées par parent, dans l'ordre reçu (création). */
-function subtasksByParent(tasks: readonly TaskOutput[]): Map<string, TaskOutput[]> {
-  const byParent = new Map<string, TaskOutput[]>();
-  for (const task of tasks) {
-    if (task.parentId === null) continue;
-    byParent.set(task.parentId, [...(byParent.get(task.parentId) ?? []), task]);
-  }
-  return byParent;
-}
-
 /** À faire, puis cochées : une tâche cochée change de section avec ses sous-tâches. */
 function TaskSections({ tasks, onToggle }: TaskSectionsProps) {
   const byParent = subtasksByParent(tasks);
-  const topLevel = tasks.filter(({ parentId }) => parentId === null);
+  const topLevel = tasks.filter((task) => !isSubtask(task));
   const open = topLevel.filter(({ completedAt }) => completedAt === null);
   const done = topLevel.filter(({ completedAt }) => completedAt !== null);
   const rows = (items: TaskOutput[]) =>

@@ -1,6 +1,7 @@
 import { oc } from "@orpc/contract";
 
-import { emptyOutputSchema, SPACE_ERRORS } from "../spaces.schemas";
+import { emptyOutputSchema } from "../../_shared/empty.schemas";
+import { SPACE_ERRORS } from "../spaces.schemas";
 import {
   acceptInviteOutputSchema,
   createdInviteSchema,

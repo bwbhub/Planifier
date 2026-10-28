@@ -29,5 +29,3 @@ export type SpaceConflictReason = (typeof SPACE_CONFLICT_REASONS)[number];
 export const SPACE_ERRORS = {
   CONFLICT: { data: z.strictObject({ reason: z.enum(SPACE_CONFLICT_REASONS) }) },
 };
-
-export const emptyOutputSchema = z.strictObject({});

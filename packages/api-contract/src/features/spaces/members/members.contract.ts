@@ -1,7 +1,8 @@
 import { oc } from "@orpc/contract";
 
 import { spaceMemberSchema } from "../space/space.schemas";
-import { emptyOutputSchema, SPACE_ERRORS } from "../spaces.schemas";
+import { emptyOutputSchema } from "../../_shared/empty.schemas";
+import { SPACE_ERRORS } from "../spaces.schemas";
 import { removeMemberInputSchema, setMemberRoleInputSchema } from "./members.schemas";
 
 // Propriétaires seulement. Personne visée hors de l'Espace : NOT_FOUND.

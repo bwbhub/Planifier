@@ -10,7 +10,7 @@ import type {
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
 import { type Db, type DbTransaction, JSON_DB_NULL, type Prisma } from "@planifier/db";
-import { nextDueDate } from "@planifier/domain-recurrence";
+import { nextDueDate, seriesAnchor } from "@planifier/domain-recurrence";
 import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recurrence/stored";
 
 import { todoConflict } from "../todo-errors";
@@ -111,6 +111,8 @@ export async function updateTask(
       ...(recurrence === undefined
         ? {}
         : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
+      // Échéance ou règle redéfinies : la série repart de la nouvelle échéance (ADR 0017).
+      ...(dueDate === undefined && recurrence === undefined ? {} : { recurrenceAnchor: null }),
       version: { increment: 1 },
     },
   });
@@ -144,13 +146,29 @@ export async function completeOccurrence(
   db: Db,
   { taskId, version, today }: CompleteOccurrenceInput,
 ): Promise<TaskOutput> {
-  const task = await readTask(db, taskId);
+  const found = await db.task.findUnique({
+    where: { id: taskId },
+    select: { ...TASK_SELECT, recurrenceAnchor: true },
+  });
+  if (found === null) throw new ORPCError("NOT_FOUND");
+  const { recurrenceAnchor, ...row } = found;
+  const task = toTaskOutput(row);
   if (task.recurrence === null) throw todoConflict("NOT_RECURRING");
   if (task.version !== version) throw todoConflict("STALE_VERSION");
-  const next = nextDueDate(task.recurrence, task.dueDate, today);
+  const series = {
+    anchor: recurrenceAnchor === null ? null : utcDateToDay(recurrenceAnchor),
+    due: task.dueDate,
+  };
+  const next = nextDueDate(task.recurrence, series, today);
   const { count } = await db.task.updateMany({
     where: { id: taskId, version },
-    data: { dueDate: dayToUtcDate(next), completedAt: null, version: { increment: 1 } },
+    data: {
+      dueDate: dayToUtcDate(next),
+      // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).
+      recurrenceAnchor: dayToUtcDate(seriesAnchor(series, today)),
+      completedAt: null,
+      version: { increment: 1 },
+    },
   });
   const updated = await readTask(db, taskId);
   if (count === 0) throw todoConflict("STALE_VERSION");

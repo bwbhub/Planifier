@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@planifier/ui",
     "@planifier/constants",
+    "@planifier/domain-recurrence",
     "@planifier/tokens",
     "@planifier/api-contract",
   ],

@@ -5,8 +5,9 @@ toujours fourni par l'appelant.
 
 ## API publique
 
-- `nextDueDate(règle, échéance | null, aujourd'hui)` : prochaine échéance quand on coche une tâche répétée, première
-  occurrence strictement après aujourd'hui, comptée depuis l'échéance (sans glissement des fins de mois).
+- `nextDueDate(règle, { anchor, due }, aujourd'hui)` : prochaine échéance quand on coche une tâche répétée, première
+  occurrence strictement après aujourd'hui et l'échéance, comptée depuis l'ancre de la série (`seriesAnchor` : ancre
+  gardée, sinon échéance, sinon aujourd'hui), sans glissement des fins de mois.
 - Type `Recurrence` (`frequency`, `interval`). Rythmes et bornes : `@planifier/constants/todo`.
 
 - `@planifier/domain-recurrence/stored` : `toStoredRecurrence`, `fromStoredRecurrence` (colonne JSON versionnée,

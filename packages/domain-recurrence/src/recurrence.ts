@@ -1,4 +1,4 @@
-import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
+import { addDays, daysBetween, dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import type { RecurrenceFrequency } from "@planifier/constants/todo";
 
 /** Règle de répétition d'une tâche : tous les `interval` jours, semaines, mois ou ans (ADR 0017). */
@@ -7,11 +7,16 @@ export interface Recurrence {
   interval: number;
 }
 
-const MS_PER_DAY = 86_400_000;
+/** Pas d'un rythme, en jours ou en mois : seule table à compléter pour un nouveau rythme. */
+const STEPS: Record<RecurrenceFrequency, { days: number } | { months: number }> = {
+  DAILY: { days: 1 },
+  WEEKLY: { days: 7 },
+  MONTHLY: { months: 1 },
+  YEARLY: { months: 12 },
+};
 
-function addDays(day: string, days: number): string {
-  return utcDateToDay(new Date(dayToUtcDate(day).getTime() + days * MS_PER_DAY));
-}
+/** Borne haute d'un mois en jours, pour estimer un rang sans le dépasser. */
+const MAX_DAYS_PER_MONTH = 31;
 
 /** `months` mois après `day` ; un jour absent du mois d'arrivée (31, 29 février) devient son dernier jour. */
 function addMonths(day: string, months: number): string {
@@ -26,33 +31,41 @@ function addMonths(day: string, months: number): string {
 
 /** `k`-ième occurrence après `anchor` : calculée depuis l'ancre, jamais de proche en proche (pas de glissement). */
 function occurrence(anchor: string, { frequency, interval }: Recurrence, k: number): string {
-  switch (frequency) {
-    case "DAILY":
-      return addDays(anchor, k * interval);
-    case "WEEKLY":
-      return addDays(anchor, 7 * k * interval);
-    case "MONTHLY":
-      return addMonths(anchor, k * interval);
-    case "YEARLY":
-      return addMonths(anchor, 12 * k * interval);
-  }
+  const step = STEPS[frequency];
+  return "days" in step
+    ? addDays(anchor, step.days * interval * k)
+    : addMonths(anchor, step.months * interval * k);
+}
+
+function maxPeriodDays({ frequency, interval }: Recurrence): number {
+  const step = STEPS[frequency];
+  return ("days" in step ? step.days : step.months * MAX_DAYS_PER_MONTH) * interval;
 }
 
 /**
- * Prochaine échéance quand on coche une tâche répétée : première occurrence **strictement après aujourd'hui**, comptée
- * depuis l'échéance actuelle (ou depuis aujourd'hui si la tâche n'en a pas). Une tâche cochée en retard saute les
- * occurrences passées au lieu de les rattraper une à une.
+ * Série d'une tâche répétée : `anchor`, jour depuis lequel elle compte (garde le 31 ou le 29 février d'origine même
+ * après un mois plus court), `null` tant qu'aucune occurrence n'a été faite ; `due`, échéance actuelle.
  */
-export function nextDueDate(rule: Recurrence, dueDay: string | null, todayDay: string): string {
-  const anchor = dueDay ?? todayDay;
+export interface Series {
+  anchor: string | null;
+  due: string | null;
+}
+
+/** Ancre effective d'une série : celle gardée, sinon l'échéance, sinon aujourd'hui. */
+export function seriesAnchor({ anchor, due }: Series, todayDay: string): string {
+  return anchor ?? due ?? todayDay;
+}
+
+/**
+ * Prochaine échéance quand on coche une tâche répétée : première occurrence de la série **strictement après
+ * aujourd'hui et après l'échéance actuelle**. Une tâche cochée en retard saute les occurrences passées ; cochée en
+ * avance, elle passe à la suivante de son échéance.
+ */
+export function nextDueDate(rule: Recurrence, series: Series, todayDay: string): string {
+  const anchor = seriesAnchor(series, todayDay);
+  const after = series.due !== null && series.due > todayDay ? series.due : todayDay;
   // Estimation basse du rang à atteindre, puis avance : borne le nombre de tours même après un long retard.
-  const lagDays = Math.max(
-    0,
-    (dayToUtcDate(todayDay).getTime() - dayToUtcDate(anchor).getTime()) / MS_PER_DAY,
-  );
-  const periodDays =
-    { DAILY: 1, WEEKLY: 7, MONTHLY: 31, YEARLY: 366 }[rule.frequency] * rule.interval;
-  let k = Math.max(1, Math.floor(lagDays / periodDays));
-  while (occurrence(anchor, rule, k) <= todayDay) k += 1;
+  let k = Math.max(1, Math.floor(daysBetween(anchor, after) / maxPeriodDays(rule)));
+  while (occurrence(anchor, rule, k) <= after) k += 1;
   return occurrence(anchor, rule, k);
 }

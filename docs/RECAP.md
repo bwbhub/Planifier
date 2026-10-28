@@ -18,6 +18,40 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Revue de la récurrence (branche `feat/todo-recurrence`, PR #20)
+
+**Fait** : #19 fusionnée dans la branche ; commit « limite des plans réglable » repris de #21 (l'E2E dépassait la
+limite) ; `/code-review` (standards + spec) puis corrections :
+
+- **Bug** : le jour d'origine glissait (mensuelle au 31 : 28 février puis 28 pour toujours). Ancre de série
+  `tasks.recurrence_anchor` (migration de la PR complétée), posée à la première occurrence, remise à vide quand
+  l'échéance ou la règle change ; `nextDueDate(règle, { anchor, due }, today)` compte toujours depuis l'ancre.
+  ADR 0017 mis à jour.
+- `domain-recurrence` : une table de pas (`STEPS`) au lieu d'un `switch` et d'une table de périodes ; `addDays` et
+  `daysBetween` dans `constants/days` ; tests : séries cochées une à une (31 → 28/02 → 31/03, 29/02), propriété
+  « aucun glissement ».
+- Web : occurrence faite en rendu optimiste (`withOccurrenceDone`, restauré si refus) ; détails du formulaire
+  ouverts selon une liste explicite de champs ; tests `TaskForm` (répétition, intervalle refusé, préremplissage,
+  axe) et `ListPanel` (occurrence faite, annonce, refus, axe) ; aide de test `lib/testing/rpc-fetch.ts` (copie
+  identique de #21).
+- Intégration : série au 31 par l'API, échéance changée à la main, deux coches simultanées, tâche supprimée.
+- `DEPENDANCES.md` : `domain-recurrence` parmi les consommateurs de zod.
+
+**Décisions** : forme de la règle déclarée dans le contrat et dans `domain-recurrence` (un `domain-*` ne dépend pas
+du contrat : workspace-architecture) ; `use-toggle-task` reste dans `utils/` (précédent `use-in-place-mode`).
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 90/90, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28 (avant le
+découpage d'un `describe` d'intégration, sans effet sur l'E2E). Bases locales (dev et test) : colonne ajoutée à la
+main (`ALTER TABLE … ADD COLUMN IF NOT EXISTS recurrence_anchor`), la migration ayant été complétée après application.
+
+**Ouvert** : points à trancher dans `docs/SUITE.md` §4 (ADR 0017 à valider, « terminer pour de bon », sous-tâches
+d'une tâche répétée, borne de `today`, annulation d'une occurrence).
+
+**Attendu ensuite** : partage, liste partagée, assignation (après fusion de #21 pour les composants `ui`).
+
+---
+
 ## 2026-10-29 — Revue des sous-tâches (branche `feat/todo-sous-taches`, PR #19)
 
 **Fait** : `/code-review` (standards + spec), sans violation nette ; corrections :

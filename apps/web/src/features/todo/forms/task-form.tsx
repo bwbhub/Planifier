@@ -53,9 +53,12 @@ interface TaskDetailsProps {
   invalid: ReadonlySet<Field>;
 }
 
+/** Champs rangés dans les détails repliables (le titre reste toujours visible). */
+const DETAIL_FIELDS: readonly Field[] = ["description", "dueDate", "recurrence"];
+
 /** Repliés tant que les détails sont vides et sans erreur. */
 function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
-  if (invalid.size > 0 && !(invalid.size === 1 && invalid.has("title"))) return true;
+  if (DETAIL_FIELDS.some((field) => invalid.has(field))) return true;
   if (task === undefined) return false;
   return [task.description, task.dueDate, task.recurrence].some((value) => value !== null);
 }

@@ -237,6 +237,9 @@ importers:
       '@planifier/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@planifier/domain-recurrence':
+        specifier: workspace:*
+        version: link:../../packages/domain-recurrence
       '@planifier/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

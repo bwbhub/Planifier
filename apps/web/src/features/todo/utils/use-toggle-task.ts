@@ -11,7 +11,7 @@ import { formatDueDate, today } from "./due-date";
  */
 export function useToggleTask(listId: string) {
   const setDone = useSetTaskDone(listId);
-  const completeOccurrence = useCompleteOccurrence();
+  const completeOccurrence = useCompleteOccurrence(listId);
   const [notice, setNotice] = useState<string | null>(null);
 
   function toggle(task: TaskOutput, done: boolean) {

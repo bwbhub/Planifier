@@ -3,7 +3,7 @@ import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { orpc } from "@/lib/orpc";
 
-import { withTaskDone } from "../utils/task-done";
+import { withOccurrenceDone, withTaskDone } from "../utils/task-done";
 
 /** Invalidation centralisée : toute écriture du module relit ses listes et ses tâches (compteurs compris). */
 function invalidateTodo(queryClient: QueryClient) {
@@ -49,9 +49,28 @@ export function useUpdateTask() {
   return useMutation(orpc.todo.tasks.update.mutationOptions({ onSettled }));
 }
 
-export function useCompleteOccurrence() {
+/** Occurrence d'une tâche répétée faite : échéance avancée tout de suite (rendu optimiste), restaurée en cas de refus. */
+export function useCompleteOccurrence(listId: string) {
+  const queryClient = useQueryClient();
   const onSettled = useInvalidateTodo();
-  return useMutation(orpc.todo.tasks.completeOccurrence.mutationOptions({ onSettled }));
+  const tasksKey = orpc.todo.tasks.list.queryKey({ input: { listId } });
+  return useMutation(
+    orpc.todo.tasks.completeOccurrence.mutationOptions({
+      onMutate: async ({ taskId, today }) => {
+        await queryClient.cancelQueries({ queryKey: orpc.todo.key() });
+        const previousTasks = queryClient.getQueryData<ListTasksOutput>(tasksKey);
+        if (previousTasks !== undefined) {
+          queryClient.setQueryData(tasksKey, withOccurrenceDone(previousTasks, taskId, today));
+        }
+        return { previousTasks };
+      },
+      onError: (_error, _input, context) => {
+        if (context?.previousTasks !== undefined)
+          queryClient.setQueryData(tasksKey, context.previousTasks);
+      },
+      onSettled,
+    }),
+  );
 }
 
 export function useDeleteTask() {

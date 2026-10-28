@@ -42,6 +42,17 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
   - Sous-tâche ouverte sous une tâche cochée : elle reste dans « Cochées » et n'est comptée nulle part. Voulu ?
   - Sous-tâches comptées dans la limite de 500 tâches par liste ; pas de changement de parent. D'accord ?
 
+- **Récurrence (revue de #20), à trancher** :
+  - ADR 0017 encore « proposé » : à valider avant la fusion (ancre de série ajoutée après revue).
+  - « Terminer pour de bon » une tâche répétée : aucun geste dans l'interface (seul moyen : retirer la règle).
+    Ajouter une action ?
+  - Sous-tâches d'une tâche répétée : restent cochées à l'occurrence suivante. Les décocher avec l'occurrence
+    (geste de l'utilisateur, donc conforme à la règle 14) ?
+  - `today` envoyé par l'appareil sans borne : un appareil mal réglé peut sauter des occurrences. Borner à ±1 jour
+    de la date UTC du serveur ?
+  - Une occurrence faite par erreur ne s'annule pas (l'échéance a avancé) : proposer « Annuler » dans l'annonce ?
+  - Champ « Intervalle » affiché même avec « Jamais » : le masquer (demande un peu de JS) ?
+
 ## 5. Pièges de l'environnement
 
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).

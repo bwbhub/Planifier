@@ -1,4 +1,5 @@
 import type { ListTasksOutput } from "@planifier/api-contract";
+import { nextDueDate } from "@planifier/domain-recurrence";
 
 import { isSubtask } from "./subtasks";
 
@@ -19,4 +20,21 @@ export function withTaskDone(
     return { ...task, completedAt: done ? now : null };
   });
   return { tasks: { items }, delta };
+}
+
+/**
+ * Tâches avec l'occurrence de `taskId` faite (rendu optimiste) : échéance avancée, tâche toujours à faire. L'ancre de
+ * la série reste côté serveur : l'échéance prévue ici peut différer d'un jour en fin de mois, la réponse la corrige.
+ */
+export function withOccurrenceDone(tasks: ListTasksOutput, taskId: string, todayDay: string) {
+  return {
+    items: tasks.items.map((task) =>
+      task.id !== taskId || task.recurrence === null
+        ? task
+        : {
+            ...task,
+            dueDate: nextDueDate(task.recurrence, { anchor: null, due: task.dueDate }, todayDay),
+          },
+    ),
+  };
 }

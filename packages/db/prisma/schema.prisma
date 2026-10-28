@@ -288,19 +288,22 @@ model TodoList {
 /// Tâche d'une liste : titre obligatoire, le reste facultatif. Cochée seulement par un geste de l'utilisateur ;
 /// cocher une tâche ne coche pas ses sous-tâches, et inversement.
 model Task {
-  id          String    @id @default(uuid(7))
-  title       String
-  description String?
+  id               String    @id @default(uuid(7))
+  title            String
+  description      String?
   /// Jour d'échéance, sans heure.
-  dueDate     DateTime? @map("due_date") @db.Date
+  dueDate          DateTime? @map("due_date") @db.Date
   /// null : à faire.
-  completedAt DateTime? @map("completed_at")
+  completedAt      DateTime? @map("completed_at")
   /// Répétition (ADR 0017) : `{ schemaVersion, frequency, interval }`, validée par `@planifier/domain-recurrence` en
   /// écriture et en lecture. null : tâche non répétée.
-  recurrence  Json?
-  version     Int       @default(1)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  recurrence       Json?
+  /// Jour depuis lequel la série compte (ADR 0017), posé à la première occurrence faite ; garde le 31 ou le 29 février
+  /// d'origine. null : l'échéance sert d'ancre. Remis à null quand l'utilisateur change l'échéance ou la règle.
+  recurrenceAnchor DateTime? @map("recurrence_anchor") @db.Date
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   listId String   @map("list_id")
   list   TodoList @relation(fields: [listId], references: [id], onDelete: Cascade)

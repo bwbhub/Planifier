@@ -8,7 +8,7 @@ import type { ApiContext } from "../../procedures";
 import { createRateLimiter, PLAN_RATE_LIMIT } from "../../rate-limit";
 import { router } from "../../router";
 import { updateList } from "./lists/lists.service";
-import { updateTask } from "./tasks/tasks.service";
+import { completeOccurrence, updateTask } from "./tasks/tasks.service";
 
 // Base réelle dédiée en `_test` (`createTestDatabase`), vidée avant chaque test. Lancement : `pnpm test:integration`.
 const { db, reset } = createTestDatabase();
@@ -315,6 +315,75 @@ describe("todo.tasks : coche d'une tâche répétée (base réelle)", () => {
   });
 });
 
+describe("todo.tasks : série d'une tâche répétée (base réelle)", () => {
+  it("mensuelle au 31 : le 31 revient après un mois plus court, coche après coche", async () => {
+    const list = await createAliceList();
+    let task = await call(
+      tasks.create,
+      {
+        listId: list.id,
+        title: "Payer le loyer",
+        dueDate: "2026-01-31",
+        recurrence: { frequency: "MONTHLY", interval: 1 },
+      },
+      asUser(alice),
+    );
+    const dues = [];
+    for (let i = 0; i < 3; i += 1) {
+      if (task.dueDate === null) throw new Error("échéance attendue");
+      task = await call(
+        tasks.completeOccurrence,
+        { taskId: task.id, version: task.version, today: task.dueDate },
+        asUser(alice),
+      );
+      dues.push(task.dueDate);
+    }
+    expect(dues).toEqual(["2026-02-28", "2026-03-31", "2026-04-30"]);
+  });
+
+  it("une échéance changée à la main fait repartir la série de là", async () => {
+    const list = await createAliceList();
+    const task = await call(
+      tasks.create,
+      {
+        listId: list.id,
+        title: "Payer le loyer",
+        dueDate: "2026-01-31",
+        recurrence: { frequency: "MONTHLY", interval: 1 },
+      },
+      asUser(alice),
+    );
+    const done = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-01-31" },
+      asUser(alice),
+    );
+    const moved = await call(
+      tasks.update,
+      { taskId: task.id, version: done.version, dueDate: "2026-03-05" },
+      asUser(alice),
+    );
+    const next = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: moved.version, today: "2026-03-05" },
+      asUser(alice),
+    );
+    expect(next.dueDate).toBe("2026-04-05");
+  });
+
+  it("deux coches simultanées n'avancent qu'une fois", async () => {
+    const task = await createWeekly("2026-10-28");
+    const input = { taskId: task.id, version: task.version, today: "2026-10-28" };
+    const results = await Promise.allSettled([
+      call(tasks.completeOccurrence, input, asUser(alice)),
+      call(tasks.completeOccurrence, input, asUser(alice)),
+    ]);
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(1);
+    const { items } = await call(tasks.list, { listId: task.listId }, asUser(alice));
+    expect(items[0]).toMatchObject({ dueDate: "2026-11-04", version: task.version + 1 });
+  });
+});
+
 describe("todo.tasks : réglage de la récurrence (base réelle)", () => {
   it("modifier la répétition, puis l'arrêter", async () => {
     const task = await createWeekly("2026-10-28");
@@ -369,6 +438,14 @@ describe("todo : supprimée entre la garde et l'écriture (base réelle)", () =>
     ).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
+  });
+
+  it("cocher l'occurrence d'une tâche supprimée : NOT_FOUND", async () => {
+    const task = await createWeekly("2026-10-28");
+    await db.task.delete({ where: { id: task.id } });
+    await expect(
+      completeOccurrence(db, { taskId: task.id, version: task.version, today: "2026-10-28" }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
 

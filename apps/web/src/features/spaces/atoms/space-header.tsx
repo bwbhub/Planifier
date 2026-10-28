@@ -1,8 +1,8 @@
 import type { SpaceMemberOutput } from "@planifier/api-contract";
 import { cn } from "@planifier/ui/lib/cn";
 
-import { tintOf } from "../utils/tint";
-import { PersonBadge } from "./person-badge";
+import { tintOf } from "@planifier/ui/lib/tint";
+import { Avatar } from "@planifier/ui/components/avatar";
 
 const MAX_BADGES = 5;
 
@@ -39,11 +39,7 @@ export function SpaceHeader({ spaceId, name, meta, members }: SpaceHeaderProps) 
       >
         {shown.map((member, index) => (
           <span key={member.userId} className={index === 0 ? undefined : "-ml-2.5"}>
-            <PersonBadge
-              id={member.userId}
-              name={member.name}
-              ringClassName="border-2 border-surface"
-            />
+            <Avatar id={member.userId} name={member.name} ringClassName="border-2 border-surface" />
           </span>
         ))}
       </div>

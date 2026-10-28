@@ -1,9 +1,8 @@
 import { buttonClassName } from "@planifier/ui/components/button";
 import Link from "next/link";
+import { MessageCard } from "@planifier/ui/components/message-card";
 
 import { ROUTES } from "@/lib/routes";
-
-import { MessageCard } from "./message-card";
 
 /** L'Espace n'existe pas pour l'appelant : jamais existé, supprimé, ou quitté. */
 export function SpaceNotFound() {

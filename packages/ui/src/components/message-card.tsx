@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 
-interface MessageCardProps {
-  /** Absent : le titre fait partie du contenu (aperçu d'invitation). */
+export interface MessageCardProps {
+  /** Absent : le titre fait partie du contenu. */
   title?: string;
   /** `1` quand la carte est tout le contenu de la page. */
   level?: 1 | 2;
   children: ReactNode;
 }
 
-/** Carte centrée qui occupe l'écran : état vide, introuvable, invitation. */
+/** Carte centrée qui occupe l'écran : état vide, introuvable, message d'accueil. */
 export function MessageCard({ title, level = 2, children }: MessageCardProps) {
   const Heading = level === 1 ? "h1" : "h2";
   return (

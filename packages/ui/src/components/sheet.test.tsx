@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { axeViolations } from "../testing/axe";
@@ -30,6 +32,39 @@ function renderSheet(open: boolean, onClose = vi.fn()) {
   );
 }
 
+/** Ouvre une feuille que son bouton « Annuler » retire du document, comme le font les écrans de l'app. */
+function Opener() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button
+        onClick={() => {
+          setOpen(true);
+        }}
+      >
+        Gérer
+      </Button>
+      {open ? (
+        <Sheet
+          open
+          title="Alice"
+          onClose={() => {
+            setOpen(false);
+          }}
+        >
+          <Button
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            Annuler
+          </Button>
+        </Sheet>
+      ) : null}
+    </>
+  );
+}
+
 describe("Sheet", () => {
   it("s'ouvre avec son titre et son explication comme nom et description", () => {
     renderSheet(true);
@@ -55,5 +90,15 @@ describe("Sheet", () => {
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = renderSheet(true);
     await expect(axeViolations(container)).resolves.toEqual([]);
+  });
+
+  it("rend le focus à son déclencheur quand le parent la retire", async () => {
+    render(<Opener />);
+    const opener = screen.getByRole("button", { name: "Gérer" });
+    await userEvent.click(opener);
+    expect(screen.getByRole("dialog", { name: "Alice" })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(opener);
   });
 });

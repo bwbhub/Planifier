@@ -2,14 +2,14 @@
 
 import { Button, buttonClassName } from "@planifier/ui/components/button";
 import Link from "next/link";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
+import { MessageCard } from "@planifier/ui/components/message-card";
+import { Avatar } from "@planifier/ui/components/avatar";
 
 import { COMMON_LABELS } from "@/lib/labels";
 import { ROUTES, spaceRoute } from "@/lib/routes";
 
-import { ListSkeleton } from "../atoms/list-skeleton";
-import { LoadError } from "../atoms/load-error";
-import { MessageCard } from "../atoms/message-card";
-import { PersonBadge } from "../atoms/person-badge";
 import { RolePill } from "../atoms/role-pill";
 import { peopleCount, SPACE_LABELS } from "../labels";
 import { useSpaces } from "../queries/spaces.queries";
@@ -43,7 +43,8 @@ export function SpacesList() {
   if (spaces.isError) {
     return (
       <LoadError
-        message="Tes Espaces n'ont pas pu être chargés. Rien n'est perdu."
+        retryLabel={COMMON_LABELS.retry}
+        message={`Tes Espaces n'ont pas pu être chargés. ${COMMON_LABELS.nothingLost}`}
         onRetry={() => void spaces.refetch()}
       />
     );
@@ -61,7 +62,7 @@ export function SpacesList() {
               href={spaceRoute(space.id)}
               className="flex min-h-15 items-center gap-3 py-2 text-ink"
             >
-              <PersonBadge id={space.id} name={space.name} />
+              <Avatar id={space.id} name={space.name} />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium wrap-break-word">{space.name}</span>
                 <span className="mt-0.5 block text-sm text-muted">

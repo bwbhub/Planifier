@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, useId, useLayoutEffect, useRef } from "react";
 
 import { cn } from "../lib/cn";
 
@@ -20,7 +20,8 @@ export interface SheetProps {
 
 /**
  * Feuille modale sur voile sombre : en bas de l'écran sur mobile, centrée sur grand écran. `<dialog>` natif : le
- * focus reste dans la feuille, Échap la ferme, le reste de la page est inerte.
+ * focus reste dans la feuille, Échap la ferme, le reste de la page est inerte. Fermée ou retirée, elle rend le focus
+ * à l'élément qui l'a ouverte.
  */
 export function Sheet({
   open,
@@ -35,11 +36,17 @@ export function Sheet({
   const titleId = useId();
   const descriptionId = useId();
 
-  useEffect(() => {
+  // Effet de mise en page : son nettoyage passe avant que le parent retire la feuille du document.
+  useLayoutEffect(() => {
     const dialog = ref.current;
-    if (dialog === null) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
+    if (dialog === null || !open) return;
+    const opener = document.activeElement;
+    if (!dialog.open) dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+      // Fermée ou démontée par le parent (« Annuler », succès) : le focus revient à ce qui l'a ouverte.
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
   }, [open]);
 
   return (

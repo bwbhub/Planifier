@@ -10,13 +10,13 @@ import { Button } from "@planifier/ui/components/button";
 import { Checkbox } from "@planifier/ui/components/checkbox";
 import { TextField } from "@planifier/ui/components/text-field";
 import { useRouter } from "next/navigation";
-import type { SubmitEvent } from "react";
+import { type SubmitEvent, useState } from "react";
+import { SectionTitle } from "@planifier/ui/components/setting-list";
 
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 import { COMMON_LABELS } from "@/lib/labels";
 import { spaceRoute } from "@/lib/routes";
 
-import { SectionTitle } from "../atoms/setting-row";
 import { DEFAULT_SPACE_MODULES } from "../constants";
 import { SPACE_LABELS, SPACE_MODULE_LABELS, VISIBILITY_LABELS } from "../labels";
 import { useCreateSpace, useUpdateSpace } from "../queries/spaces.queries";
@@ -29,12 +29,15 @@ const NAME_ERROR = `Indique un nom, ${String(SPACE_NAME_MAX_LENGTH)} caractères
 interface SpaceFormProps {
   /** Espace à modifier ; absent, le formulaire en crée un. */
   space?: SpaceOutput;
-  /** Relire l'Espace après un refus `STALE_VERSION` (modification concurrente). */
+  /** Relire l'Espace après un refus `STALE_VERSION` (modification concurrente) ; le parent remonte alors le formulaire. */
   onReload?: () => void;
 }
 
 /** Création et réglages d'un Espace : nom, modules et, une fois créé, visibilité. */
-export function SpaceForm({ space, onReload }: SpaceFormProps) {
+export function SpaceForm({ space: current, onReload }: SpaceFormProps) {
+  // Figé au montage : un rafraîchissement en arrière-plan ne change ni la saisie ni la version envoyée, qui reste
+  // celle que l'utilisateur a sous les yeux (un changement concurrent est alors refusé, pas écrasé).
+  const [space] = useState(current);
   const router = useRouter();
   const createSpace = useCreateSpace();
   const updateSpace = useUpdateSpace();

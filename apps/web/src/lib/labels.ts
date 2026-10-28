@@ -12,6 +12,8 @@ export const COMMON_LABELS = {
   retry: "Réessayer",
   showMore: "Afficher plus",
   goHome: "Aller à l'accueil",
+  /** Après un échec de lecture ou d'écriture : rassure, rien n'a été modifié. */
+  nothingLost: "Rien n'est perdu.",
 } as const;
 
 /** Titre d'onglet d'une page : « Mes Espaces · Planifier ». */

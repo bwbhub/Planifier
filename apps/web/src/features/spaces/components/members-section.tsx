@@ -5,24 +5,32 @@ import { canAccessSpace, removalOutcome, roleChangeOutcome } from "@planifier/do
 import { Button } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { useState } from "react";
+import { Avatar } from "@planifier/ui/components/avatar";
+import { SectionTitle, SettingCard, SettingRow } from "@planifier/ui/components/setting-list";
 
 import { COMMON_LABELS } from "@/lib/labels";
 import { formatDay } from "@/lib/format-date";
 
 import { ActionError } from "../atoms/action-error";
 import { ConfirmSheet } from "../atoms/confirm-sheet";
-import { PersonBadge } from "../atoms/person-badge";
 import { RolePill } from "../atoms/role-pill";
-import { SectionTitle, SettingCard, SettingRow } from "../atoms/setting-row";
+import { MEMBERS_SECTION_ID } from "../constants";
 import { SPACE_LABELS, SPACE_ROLE_LABELS } from "../labels";
 import { useRemoveMember, useSetMemberRole } from "../queries/spaces.queries";
 import { membershipOf } from "../utils/space-membership";
 
-export const MEMBERS_SECTION_ID = "membres";
-
 interface MembersSectionProps {
   space: SpaceDetailOutput;
   meId: string;
+}
+
+/** Ce qu'un propriétaire peut faire d'un membre : le retirer, et changer son rôle dans un sens ou l'autre. */
+function memberActions(space: SpaceDetailOutput, member: SpaceMemberOutput) {
+  const membership = membershipOf(space, member);
+  const nextRole: SpaceMemberOutput["role"] = member.role === "MEMBER" ? "OWNER" : "MEMBER";
+  const canRemove = removalOutcome(membership) === "allowed";
+  const canChangeRole = roleChangeOutcome(membership, nextRole) === "allowed";
+  return { nextRole, canRemove, canChangeRole, any: canRemove || canChangeRole };
 }
 
 function memberHint(member: SpaceMemberOutput): string {
@@ -41,12 +49,11 @@ export function MembersSection({ space, meId }: MembersSectionProps) {
       <SettingCard label={SPACE_LABELS.members}>
         {space.members.map((member) => {
           const isMe = member.userId === meId;
-          const manageable =
-            canManage && !isMe && removalOutcome(membershipOf(space, member)) === "allowed";
+          const manageable = canManage && !isMe && memberActions(space, member).any;
           return (
             <SettingRow
               key={member.userId}
-              leading={<PersonBadge id={member.userId} name={member.name} />}
+              leading={<Avatar id={member.userId} name={member.name} />}
               title={
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span>{isMe ? `${member.name} (toi)` : member.name}</span>
@@ -117,8 +124,7 @@ function ManageMemberSheet({ space, member, onClose }: ManageMemberSheetProps) {
     );
   }
 
-  const nextRole = member.role === "MEMBER" ? "OWNER" : "MEMBER";
-  const canChangeRole = roleChangeOutcome(membershipOf(space, member), nextRole) === "allowed";
+  const { nextRole, canRemove, canChangeRole } = memberActions(space, member);
   return (
     <Sheet
       open
@@ -142,16 +148,18 @@ function ManageMemberSheet({ space, member, onClose }: ManageMemberSheetProps) {
           {nextRole === "OWNER" ? "Nommer propriétaire" : "Retirer le rôle de propriétaire"}
         </Button>
       ) : null}
-      <Button
-        variant="outline"
-        disabled={pending}
-        onClick={() => {
-          setConfirmRemove(true);
-        }}
-      >
-        {SPACE_LABELS.remove}
-      </Button>
-      <Button variant="secondary" className="bg-transparent" onClick={onClose}>
+      {canRemove ? (
+        <Button
+          variant="outline"
+          disabled={pending}
+          onClick={() => {
+            setConfirmRemove(true);
+          }}
+        >
+          {SPACE_LABELS.remove}
+        </Button>
+      ) : null}
+      <Button variant="ghost" onClick={onClose}>
         {COMMON_LABELS.cancel}
       </Button>
     </Sheet>

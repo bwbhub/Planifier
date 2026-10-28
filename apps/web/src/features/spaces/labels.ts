@@ -1,5 +1,7 @@
 import type { AppModule, SpaceRole } from "@planifier/constants/spaces";
 
+import { COMMON_LABELS } from "@/lib/labels";
+
 /** Libellés du module repris à plusieurs endroits. Catalogue unique : les traductions le remplaceront par langue. */
 export const SPACE_LABELS = {
   myList: "Mes Espaces",
@@ -13,7 +15,7 @@ export const SPACE_LABELS = {
   backToList: "Retour à mes Espaces",
   backToSpace: "Retour à l'Espace",
   loading: "Chargement de l'Espace…",
-  loadFailed: "L'Espace n'a pas pu être chargé. Rien n'est perdu.",
+  loadFailed: `L'Espace n'a pas pu être chargé. ${COMMON_LABELS.nothingLost}`,
   opening: "Ouverture de l'invitation…",
   members: "Membres",
   inviteLink: "Lien d'invitation",

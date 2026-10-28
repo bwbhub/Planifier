@@ -5,16 +5,16 @@ import { SPACE_INVITE_TTL_DAYS, SPACE_MAX_MEMBERS } from "@planifier/constants/s
 import { Button, buttonClassName } from "@planifier/ui/components/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
+import { MessageCard } from "@planifier/ui/components/message-card";
+import { Avatar } from "@planifier/ui/components/avatar";
 
 import { COMMON_LABELS } from "@/lib/labels";
 import { ROUTES, spaceRoute } from "@/lib/routes";
 
 import { ActionError } from "../atoms/action-error";
-import { ListSkeleton } from "../atoms/list-skeleton";
-import { LoadError } from "../atoms/load-error";
-import { MessageCard } from "../atoms/message-card";
-import { PersonBadge } from "../atoms/person-badge";
 import { peopleCount, SPACE_LABELS } from "../labels";
 import { useAcceptInvite, useInvitePreview } from "../queries/spaces.queries";
 import { inviteTokenOf } from "../utils/invite-link";
@@ -34,6 +34,27 @@ function useLocationHash(): string | null {
     () => window.location.hash,
     () => null,
   );
+}
+
+/**
+ * Jeton du lien d'invitation, lu dans le fragment puis retiré de l'adresse : il ne reste ni dans la barre d'adresse
+ * ni dans l'historique, même quand il reste valable (déjà membre, Espace complet). `undefined` avant la lecture.
+ */
+function useInviteToken(): string | null | undefined {
+  const hash = useLocationHash();
+  const read = hash === null ? undefined : inviteTokenOf(hash);
+  const [kept, setKept] = useState<string | null>(null);
+  // Mise à jour pendant le rendu (modèle React) : le jeton survit au fragment vidé ci-dessous.
+  if (read !== undefined && read !== null && read !== kept) setKept(read);
+
+  useEffect(() => {
+    if (kept === null || window.location.hash === "") return;
+    const { pathname, search } = window.location;
+    window.history.replaceState(window.history.state, "", pathname + search);
+  }, [kept]);
+
+  if (read === undefined) return undefined;
+  return kept ?? read;
 }
 
 const homeLink = (
@@ -61,18 +82,18 @@ const opening = <ListSkeleton label={SPACE_LABELS.opening} rows={1} />;
 
 /** Rejoindre un Espace depuis un lien d'invitation : aperçu, puis action explicite. */
 export function JoinSpace() {
-  const hash = useLocationHash();
-  const token = hash === null ? null : inviteTokenOf(hash);
-  const preview = useInvitePreview(token);
+  const token = useInviteToken();
+  const preview = useInvitePreview(token ?? null);
 
-  if (hash === null) return opening;
+  if (token === undefined) return opening;
   if (token === null) return <DeadLink />;
   if (preview.isPending) return opening;
   if (preview.isError) {
     if (isSpaceNotFound(preview.error)) return <DeadLink />;
     return (
       <LoadError
-        message="L'invitation n'a pas pu être ouverte. Rien n'est perdu."
+        retryLabel={COMMON_LABELS.retry}
+        message={`L'invitation n'a pas pu être ouverte. ${COMMON_LABELS.nothingLost}`}
         onRetry={() => void preview.refetch()}
       />
     );
@@ -111,7 +132,7 @@ function InviteCard({ token, invite }: { token: string; invite: InvitePreviewOut
 
   return (
     <MessageCard>
-      <PersonBadge id={invite.spaceId} name={invite.spaceName} size="lg" />
+      <Avatar id={invite.spaceId} name={invite.spaceName} size="lg" />
       <p className="text-sm text-muted">On t&apos;invite dans un Espace</p>
       <h1 className="font-display text-3xl font-bold tracking-tight wrap-break-word">
         {invite.spaceName}

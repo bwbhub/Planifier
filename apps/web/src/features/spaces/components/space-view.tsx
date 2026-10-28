@@ -5,10 +5,11 @@ import { MODULES } from "@planifier/constants/spaces";
 import { canAccessSpace } from "@planifier/domain-access/space";
 import { buttonClassName } from "@planifier/ui/components/button";
 import Link from "next/link";
+import { useId } from "react";
+import { SectionTitle, SettingCard, SettingRow } from "@planifier/ui/components/setting-list";
 
 import { spaceSettingsRoute } from "@/lib/routes";
 
-import { SectionTitle, SettingCard, SettingRow } from "../atoms/setting-row";
 import { SpaceHeader } from "../atoms/space-header";
 import { peopleCount, SPACE_LABELS, SPACE_MODULE_LABELS, VISIBILITY_LABELS } from "../labels";
 import { ExitSection } from "./exit-section";
@@ -61,16 +62,15 @@ function modulesSummary(space: SpaceDetailOutput): string {
     .join(", ");
 }
 
-const SETTINGS_TITLE_ID = "reglages";
-
 /** Réglages en lecture ; seuls les propriétaires les modifient, dans le formulaire de l'Espace. */
 function SettingsSummary({ space }: { space: SpaceDetailOutput }) {
   const visibility = space.restrictVisibility
     ? VISIBILITY_LABELS.restricted
     : VISIBILITY_LABELS.open;
+  const titleId = useId();
   return (
-    <section aria-labelledby={SETTINGS_TITLE_ID} className="flex flex-col gap-3">
-      <SectionTitle id={SETTINGS_TITLE_ID}>Réglages</SectionTitle>
+    <section aria-labelledby={titleId} className="flex flex-col gap-3">
+      <SectionTitle id={titleId}>Réglages</SectionTitle>
       <SettingCard label="Réglages">
         {MODULES.map((module) => (
           <SettingRow

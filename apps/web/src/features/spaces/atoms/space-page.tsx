@@ -1,7 +1,7 @@
 import { cn } from "@planifier/ui/lib/cn";
 import type { ReactNode } from "react";
 
-import { BackLink } from "./back-link";
+import { BackLink } from "@/features/_shared/components/back-link";
 
 interface SpacePageProps {
   back?: { href: string; label: string };

@@ -5,30 +5,31 @@ import { SPACE_INVITE_TTL_DAYS } from "@planifier/constants/spaces";
 import { Button } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { TextField } from "@planifier/ui/components/text-field";
-import { useState } from "react";
+import { useId, useState } from "react";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
+import { SectionTitle, SettingCard, SettingRow } from "@planifier/ui/components/setting-list";
 
+import { COMMON_LABELS } from "@/lib/labels";
 import { formatDay, formatTime } from "@/lib/format-date";
 
 import { ActionError } from "../atoms/action-error";
-import { ListSkeleton } from "../atoms/list-skeleton";
-import { LoadError } from "../atoms/load-error";
-import { SectionTitle, SettingCard, SettingRow } from "../atoms/setting-row";
+import { ConfirmSheet } from "../atoms/confirm-sheet";
 import { SPACE_LABELS } from "../labels";
 import { useCreateInvite, useRevokeInvite, useSpaceInvites } from "../queries/spaces.queries";
 import { inviteLinkOf } from "../utils/invite-link";
-
-const TITLE_ID = "inviter";
 
 /** Liens d'invitation de l'Espace (propriétaires) : rien n'est envoyé, le propriétaire partage le lien lui-même. */
 export function InvitesSection({ spaceId }: { spaceId: string }) {
   const invites = useSpaceInvites(spaceId);
   const createInvite = useCreateInvite();
-  const revokeInvite = useRevokeInvite();
   const [created, setCreated] = useState<CreatedInviteOutput | null>(null);
+  const [revoking, setRevoking] = useState<RevokedInvite | null>(null);
+  const titleId = useId();
 
   return (
-    <section aria-labelledby={TITLE_ID} className="flex flex-col gap-3">
-      <SectionTitle id={TITLE_ID}>Inviter</SectionTitle>
+    <section aria-labelledby={titleId} className="flex flex-col gap-3">
+      <SectionTitle id={titleId}>Inviter</SectionTitle>
       <SettingCard label={SPACE_LABELS.inviteLinks}>
         <SettingRow
           title="Créer un lien d'invitation"
@@ -56,9 +57,8 @@ export function InvitesSection({ spaceId }: { spaceId: string }) {
                 variant="outline"
                 size="sm"
                 aria-label={`Révoquer le ${label.toLowerCase()}`}
-                disabled={revokeInvite.isPending}
                 onClick={() => {
-                  revokeInvite.mutate({ spaceId, inviteId: invite.id });
+                  setRevoking({ id: invite.id, label });
                 }}
               >
                 Révoquer
@@ -70,12 +70,21 @@ export function InvitesSection({ spaceId }: { spaceId: string }) {
       {invites.isPending ? <ListSkeleton label="Chargement des liens en cours…" rows={1} /> : null}
       {invites.isError ? (
         <LoadError
-          message="Les liens en cours n'ont pas pu être chargés. Rien n'est perdu."
+          retryLabel={COMMON_LABELS.retry}
+          message={`Les liens en cours n'ont pas pu être chargés. ${COMMON_LABELS.nothingLost}`}
           onRetry={() => void invites.refetch()}
         />
       ) : null}
       <ActionError error={createInvite.error} />
-      <ActionError error={revokeInvite.error} />
+      {revoking === null ? null : (
+        <RevokeInviteSheet
+          spaceId={spaceId}
+          invite={revoking}
+          onClose={() => {
+            setRevoking(null);
+          }}
+        />
+      )}
       {created === null ? null : (
         <InviteLinkSheet
           token={created.token}
@@ -85,6 +94,39 @@ export function InvitesSection({ spaceId }: { spaceId: string }) {
         />
       )}
     </section>
+  );
+}
+
+interface RevokedInvite {
+  id: string;
+  label: string;
+}
+
+/** Révoquer un lien se confirme : un lien déjà envoyé cesserait de marcher sans que la personne le sache. */
+function RevokeInviteSheet({
+  spaceId,
+  invite,
+  onClose,
+}: {
+  spaceId: string;
+  invite: RevokedInvite;
+  onClose: () => void;
+}) {
+  const revokeInvite = useRevokeInvite();
+  return (
+    <ConfirmSheet
+      title="Révoquer ce lien ?"
+      description={`${invite.label}. Il ne marchera plus ; si quelqu'un l'attend encore, crée-en un autre.`}
+      confirmLabel="Révoquer"
+      pendingLabel="Révocation…"
+      cancelLabel="Garder le lien"
+      pending={revokeInvite.isPending}
+      error={revokeInvite.error}
+      onConfirm={() => {
+        revokeInvite.mutate({ spaceId, inviteId: invite.id }, { onSuccess: onClose });
+      }}
+      onClose={onClose}
+    />
   );
 }
 

@@ -3,6 +3,8 @@ import { SPACE_CONFLICT_REASONS, type SpaceConflictReason } from "@planifier/api
 import { SPACE_MAX_ACTIVE_INVITES, SPACE_MAX_MEMBERS } from "@planifier/constants/spaces";
 import { z } from "zod";
 
+import { COMMON_LABELS } from "@/lib/labels";
+
 const conflictDataSchema = z.object({ reason: z.enum(SPACE_CONFLICT_REASONS) });
 
 const CONFLICT_MESSAGES: Record<SpaceConflictReason, string> = {
@@ -34,7 +36,7 @@ export function spaceErrorMessage(error: unknown): string {
       return "Trop de demandes d'affilée. Patiente quelques secondes, puis réessaie.";
     }
   }
-  return "Quelque chose n'a pas fonctionné. Rien n'est perdu : réessaie dans un instant.";
+  return `Quelque chose n'a pas fonctionné. ${COMMON_LABELS.nothingLost} Réessaie dans un instant.`;
 }
 
 /** L'Espace n'existe pas pour l'appelant (jamais existé, supprimé, ou quitté). */

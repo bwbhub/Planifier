@@ -1,9 +1,9 @@
-import { cn } from "@planifier/ui/lib/cn";
+import { cn } from "../lib/cn";
 
-import { initialOf, tintOf } from "../utils/tint";
+import { initialOf, tintOf } from "../lib/tint";
 
-interface PersonBadgeProps {
-  /** Identifiant stable (personne ou Espace) : il fixe la teinte. */
+export interface AvatarProps {
+  /** Identifiant stable (personne, groupe) : il fixe la teinte. */
   id: string;
   name: string;
   size?: "md" | "lg";
@@ -12,7 +12,7 @@ interface PersonBadgeProps {
 }
 
 /** Pastille ronde à l'initiale, décorative : le nom est toujours écrit à côté ou dans le libellé du groupe. */
-export function PersonBadge({ id, name, size = "md", ringClassName }: PersonBadgeProps) {
+export function Avatar({ id, name, size = "md", ringClassName }: AvatarProps) {
   return (
     <span
       aria-hidden="true"

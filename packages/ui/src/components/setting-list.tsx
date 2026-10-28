@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-interface SettingRowProps {
+export interface SettingRowProps {
   title: ReactNode;
   hint?: ReactNode;
   /** Élément à gauche (pastille). */

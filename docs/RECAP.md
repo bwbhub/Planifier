@@ -18,6 +18,44 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Corrections de revue des Espaces (branche `feat/espaces-ui`)
+
+**Fait**
+
+- `/code-review` (standards + spec) sur la branche, puis corrections :
+  - `ui` reçoit les blocs sans métier : `Avatar` (ex-`PersonBadge`), `ListSkeleton`, `LoadError` (`retryLabel`),
+    `MessageCard`, `SettingRow`/`SettingCard`/`SectionTitle`, `lib/tint` ; `BackLink` dans `_shared` ;
+    `Button` variante `ghost` (remplace `className="bg-transparent"`).
+  - `Sheet` rend le focus à son déclencheur quand elle se ferme ou que le parent la retire.
+  - Réglages : formulaire figé au montage (un rafraîchissement ne perd plus la saisie ni ne change la version
+    envoyée) ; « Recharger » après `STALE_VERSION` le remonte une fois la relecture finie.
+  - Membres : « Gérer » si le retrait **ou** le changement de rôle est permis ; « Retirer » seulement si permis.
+  - « Révoquer » un lien se confirme (`ConfirmSheet`).
+  - `/rejoindre` : jeton retiré de l'adresse (et de l'historique) dès sa lecture.
+  - Ids de titres par `useId` ; ancre `MEMBERS_SECTION_ID` dans `constants.ts` ; « organisateur » → « propriétaire »
+    (vocabulaire de `CONTEXT.md`) ; « Rien n'est perdu. » en libellé commun ; textes de retour de la connexion
+    déclarés avec les routes (`lib/routes.ts`), plus dans `account`.
+  - Lectures (TanStack Query) non réessayées sur un refus 4xx : un membre retiré voyait « Chargement » ~7 s.
+  - API : limite des plans réglable (`RPC_RATE_LIMIT_PER_MINUTE`, défaut 120), relevée à 1000 pour l'E2E seulement.
+- Tests : composants `MembersSection`, `ExitSection`, `InvitesSection`, `PromotionTip`, `SpacesList` (axe compris),
+  `Sheet` (focus), blocs `ui`, `JoinSpace` (jeton retiré) ; serveur (limite configurée appliquée) ; E2E : modules,
+  rôles, dernier propriétaire, révocation, retrait, dernier départ, suppression.
+
+**Décisions**
+
+- `homeLink`/`createLink` : même forme deux fois seulement, laissés (règle de trois).
+- Limite E2E : variable d'environnement explicite plutôt qu'un comportement lié à `NODE_ENV`.
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` : OK ;
+`prettier --check` : OK ; `pnpm test:integration` : api 58/58, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 48/48
+(PC et mobile), aucun 429.
+
+**Ouvert** : points à trancher et revues humaines dans `docs/SUITE.md` §4 (dont `RPC_RATE_LIMIT_PER_MINUTE`).
+
+**Attendu ensuite** : PR sur master ; puis revue et corrections de #19 et #20, et partage/assignation du Todo.
+
+---
+
 ## 2026-10-28 — UI des Espaces (branche `feat/espaces-ui`, ticket `869fhwtfk`)
 
 **Fait**

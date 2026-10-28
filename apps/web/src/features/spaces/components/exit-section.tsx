@@ -5,18 +5,16 @@ import { canAccessSpace, departureOutcome } from "@planifier/domain-access/space
 import { Button, buttonClassName } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
+import { SectionTitle, SettingCard, SettingRow } from "@planifier/ui/components/setting-list";
 
 import { ROUTES } from "@/lib/routes";
 
 import { ConfirmSheet } from "../atoms/confirm-sheet";
-import { SectionTitle, SettingCard, SettingRow } from "../atoms/setting-row";
+import { MEMBERS_SECTION_ID } from "../constants";
 import { peopleCount, SPACE_LABELS } from "../labels";
 import { useDeleteSpace, useLeaveSpace } from "../queries/spaces.queries";
 import { myMembershipOf } from "../utils/space-membership";
-import { MEMBERS_SECTION_ID } from "./members-section";
-
-const TITLE_ID = "quitter";
 
 type OpenSheet = "leave" | "delete" | null;
 
@@ -29,13 +27,14 @@ interface ExitSectionProps {
 export function ExitSection({ space, meId }: ExitSectionProps) {
   const [sheet, setSheet] = useState<OpenSheet>(null);
   const canDelete = canAccessSpace(space.myRole, "delete");
+  const titleId = useId();
   const close = () => {
     setSheet(null);
   };
 
   return (
-    <section aria-labelledby={TITLE_ID} className="flex flex-col gap-3">
-      <SectionTitle id={TITLE_ID}>{canDelete ? "Quitter ou supprimer" : "Quitter"}</SectionTitle>
+    <section aria-labelledby={titleId} className="flex flex-col gap-3">
+      <SectionTitle id={titleId}>{canDelete ? "Quitter ou supprimer" : "Quitter"}</SectionTitle>
       <SettingCard label={SPACE_LABELS.leave}>
         <SettingRow title={SPACE_LABELS.leave} hint="Tu ne verras plus ce qui y est partagé.">
           <Button
@@ -154,7 +153,7 @@ function DeleteSheet({ space, onClose }: { space: SpaceDetailOutput; onClose: ()
           ) : (
             "L'Espace sera supprimé."
           )}{" "}
-          Les événements qui y étaient rattachés redeviennent personnels pour leur organisateur, et
+          Les événements qui y étaient rattachés redeviennent personnels pour leur propriétaire, et
           leurs participants gardent leur accès.
         </p>
       }

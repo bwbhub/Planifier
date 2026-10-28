@@ -9,6 +9,8 @@ const VARIANTS = {
   outline: "bg-transparent text-ink ring-2 ring-line ring-inset hover:bg-field",
   /** Confirmation d'une action définitive, dans une feuille : contraste maximal, sans couleur d'alerte. */
   strong: "bg-ink text-bg hover:opacity-90",
+  /** Sortie discrète d'une feuille (« Annuler ») : texte seul, fond au survol. */
+  ghost: "bg-transparent text-ink hover:bg-field",
 } as const;
 
 const SIZES = {

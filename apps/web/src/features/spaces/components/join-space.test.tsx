@@ -64,6 +64,17 @@ describe("JoinSpace", () => {
     ]);
   });
 
+  it("retire le jeton de l'adresse une fois lu, sans perdre l'invitation", async () => {
+    replyRpc(fetchMock, {
+      "spaces/invites/preview": { data: { ...PREVIEW, alreadyMember: false } },
+    });
+    renderAt(`#${TOKEN}`);
+
+    expect(await screen.findByRole("heading", { name: "Vacances Ardèche" })).toBeTruthy();
+    expect(window.location.hash).toBe("");
+    expect(screen.getByRole("button", { name: "Rejoindre l'Espace" })).toBeTruthy();
+  });
+
   it("dit que le lien ne marche plus quand l'API ne le reconnaît pas", async () => {
     replyRpc(fetchMock, { "spaces/invites/preview": { error: new ORPCError("NOT_FOUND") } });
     renderAt(`#${TOKEN}`);

@@ -58,14 +58,17 @@ function horizontalOverflow(page: Page) {
 
 /**
  * Parcours d'un Espace à deux, dans l'ordre : une personne le crée et partage un lien, l'autre le rejoint en se
- * connectant depuis ce lien (le jeton, dans le fragment, doit survivre à la redirection), puis l'Espace est supprimé.
+ * connectant depuis ce lien (le jeton, dans le fragment, doit survivre à la redirection) ; puis réglages, rôles,
+ * révocation, retrait, et départs jusqu'à la suppression.
  */
-test.describe.serial("parcours d'un Espace", () => {
-  const owner = newAccount("Camille");
-  const guest = newAccount("Léo");
-  let spaceUrl = "";
-  let inviteLink = "";
+test.describe.configure({ mode: "serial" });
 
+const owner = newAccount("Camille");
+const guest = newAccount("Léo");
+let spaceUrl = "";
+let inviteLink = "";
+
+test.describe("rejoindre un Espace", () => {
   test("ouvre un compte pour chaque personne", async ({ browser, request }) => {
     await register(browser, request, owner);
     await register(browser, request, guest);
@@ -126,14 +129,104 @@ test.describe.serial("parcours d'un Espace", () => {
     await page.goto(inviteLink);
     await expect(page.getByRole("heading", { name: "Ce lien ne marche plus" })).toBeVisible();
   });
+});
 
-  test("supprime l'Espace pour tous après confirmation", async ({ page }) => {
+test.describe("gérer un Espace", () => {
+  test("change les modules de l'Espace dans ses réglages", async ({ page }) => {
     await signedIn(page, owner);
     await page.goto(spaceUrl);
-    await expect(page.getByText(guest.name, { exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Modifier les réglages" }).click();
+    await page.getByRole("checkbox", { name: /Événements/ }).check();
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+
+    await expect(page).toHaveURL(spaceUrl);
+    await expect(page.getByText("Todo, Agenda, Événements")).toBeVisible();
+  });
+
+  test("retire puis rend le rôle de propriétaire", async ({ page }) => {
+    await signedIn(page, owner);
+    await page.goto(spaceUrl);
+    const manage = page.getByRole("button", { name: `Gérer ${guest.name}` });
+
+    await manage.click();
+    await page.getByRole("button", { name: "Retirer le rôle de propriétaire" }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(manage).toBeFocused();
+
+    await manage.click();
+    await expect(page.getByRole("button", { name: "Nommer propriétaire" })).toBeVisible();
+    await page.getByRole("button", { name: "Annuler" }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+  });
+
+  test("retient le dernier propriétaire qui voudrait partir", async ({ page }) => {
+    await signedIn(page, owner);
+    await page.goto(spaceUrl);
+    await page.getByRole("button", { name: "Quitter", exact: true }).click();
+
+    const sheet = page.getByRole("alertdialog", { name: "Avant de partir" });
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("button", { name: "Rester dans l'Espace" }).click();
+    await expect(sheet).toBeHidden();
+  });
+
+  test("révoque un lien après confirmation", async ({ page }) => {
+    await signedIn(page, owner);
+    await page.goto(spaceUrl);
+    await page.getByRole("button", { name: "Créer un lien" }).click();
+    await page.getByRole("button", { name: "C'est bon" }).click();
+
+    await page.getByRole("button", { name: /^Révoquer le lien créé/ }).click();
+    const sheet = page.getByRole("alertdialog", { name: "Révoquer ce lien ?" });
+    await sheet.getByRole("button", { name: "Révoquer" }).click();
+    await expect(sheet).toBeHidden();
+    await expect(page.getByText(/^Lien créé le/)).toBeHidden();
+  });
+});
+
+test.describe("sortir d'un Espace", () => {
+  test("retire un membre, qui ne voit plus l'Espace", async ({ page, browser }) => {
+    await signedIn(page, owner);
+    await page.goto(spaceUrl);
+    await page.getByRole("button", { name: `Gérer ${guest.name}` }).click();
+    await page.getByRole("button", { name: "Retirer de l'Espace" }).click();
+    await page
+      .getByRole("alertdialog", { name: `Retirer ${guest.name} ?` })
+      .getByRole("button", { name: "Retirer de l'Espace" })
+      .click();
+    await expect(page.getByText(guest.name, { exact: true })).toBeHidden();
+
+    const context = await browser.newContext();
+    const guestPage = await context.newPage();
+    await signedIn(guestPage, guest);
+    await guestPage.goto(spaceUrl);
+    await expect(
+      guestPage.getByRole("heading", { name: "Cet Espace est introuvable" }),
+    ).toBeVisible();
+    await context.close();
+  });
+
+  test("supprime l'Espace quand la dernière personne le quitte", async ({ page }) => {
+    await signedIn(page, owner);
+    await page.goto(spaceUrl);
+    await page.getByRole("button", { name: "Quitter", exact: true }).click();
+
+    const sheet = page.getByRole("alertdialog", { name: `Quitter « ${SPACE_NAME} » ?` });
+    await expect(sheet).toContainText("il sera supprimé définitivement");
+    await sheet.getByRole("button", { name: "Quitter l'Espace" }).click();
+
+    await expect(page).toHaveURL("/espaces");
+    await expect(page.getByRole("heading", { name: "Partager, si tu veux" })).toBeVisible();
+  });
+
+  test("supprime un Espace après confirmation", async ({ page }) => {
+    await signedIn(page, owner);
+    await page.goto("/espaces/nouveau");
+    await page.getByLabel("Nom", { exact: true }).fill("Brouillon");
+    await page.getByRole("button", { name: "Créer l'Espace" }).click();
     await page.getByRole("button", { name: "Supprimer", exact: true }).click();
 
-    const sheet = page.getByRole("alertdialog", { name: `Supprimer « ${SPACE_NAME} » ?` });
+    const sheet = page.getByRole("alertdialog", { name: "Supprimer « Brouillon » ?" });
     await expect(sheet).toBeVisible();
     await sheet.getByRole("button", { name: "Supprimer définitivement" }).click();
 

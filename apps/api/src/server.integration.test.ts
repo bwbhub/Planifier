@@ -2,6 +2,7 @@ import type { AddressInfo } from "node:net";
 
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
+import { PLAN_RATE_LIMIT } from "@planifier/api";
 import { AUTH_ERROR_CODES, AUTH_ROUTES, type ApiClient } from "@planifier/api-contract";
 import {
   AUTH_COOKIE_PREFIX,
@@ -37,7 +38,7 @@ const auth = createAuth(
   },
 );
 const server = createApiServer({
-  env: { NODE_ENV: "test" },
+  env: { NODE_ENV: "test", RPC_RATE_LIMIT_PER_MINUTE: PLAN_RATE_LIMIT.max },
   authHandler: createAuthNodeHandler(auth),
   getSessionUser: (headers) => getSessionUser(auth, headers),
   getDb: () => db,

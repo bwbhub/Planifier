@@ -49,7 +49,7 @@ function log(entry: Record<string, string | number>) {
 
 /** Dépendances du serveur, injectées pour tester sans base (`main.ts` passe celles de `@planifier/auth`). */
 export interface ApiServerDeps {
-  env: Pick<Env, "NODE_ENV">;
+  env: Pick<Env, "NODE_ENV" | "RPC_RATE_LIMIT_PER_MINUTE">;
   /** Routes de Better Auth, servies sous `AUTH_BASE_PATH`. */
   authHandler: (request: IncomingMessage, response: ServerResponse) => Promise<void>;
   getSessionUser: (headers: IncomingHttpHeaders) => Promise<SessionUser | null>;
@@ -75,7 +75,10 @@ export function createApiServer({
   getDb,
 }: ApiServerDeps): Server {
   // Un limiteur par serveur : aucun état partagé entre deux instances (tests compris).
-  const consumeRateLimit = createRateLimiter(PLAN_RATE_LIMIT);
+  const consumeRateLimit = createRateLimiter({
+    ...PLAN_RATE_LIMIT,
+    max: env.RPC_RATE_LIMIT_PER_MINUTE,
+  });
   const handler = new RPCHandler(router, {
     plugins: [new BodyLimitPlugin({ maxBodySize: MAX_BODY_BYTES })],
     clientInterceptors: [

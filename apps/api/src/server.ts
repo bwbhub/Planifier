@@ -9,6 +9,7 @@ import type { ApiContext } from "@planifier/api";
 import { createRateLimiter, PLAN_RATE_LIMIT, router } from "@planifier/api";
 import type { SessionUser } from "@planifier/auth";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@planifier/constants/http";
+import type { Db } from "@planifier/db";
 
 import type { Env } from "./config/env";
 
@@ -52,6 +53,7 @@ export interface ApiServerDeps {
   /** Routes de Better Auth, servies sous `AUTH_BASE_PATH`. */
   authHandler: (request: IncomingMessage, response: ServerResponse) => Promise<void>;
   getSessionUser: (headers: IncomingHttpHeaders) => Promise<SessionUser | null>;
+  getDb: () => Db;
 }
 
 type Route = "auth" | "rpc" | null;
@@ -66,7 +68,12 @@ function routeOf(path: string): Route {
  * Serveur HTTP de l'API : Better Auth sous /api/auth, oRPC sous /rpc, 404 ailleurs. Toute requête routée doit porter
  * l'IP posée par le proxy du web (400 sinon) : la limitation de débit n'a jamais de compteur commun.
  */
-export function createApiServer({ env, authHandler, getSessionUser }: ApiServerDeps): Server {
+export function createApiServer({
+  env,
+  authHandler,
+  getSessionUser,
+  getDb,
+}: ApiServerDeps): Server {
   // Un limiteur par serveur : aucun état partagé entre deux instances (tests compris).
   const consumeRateLimit = createRateLimiter(PLAN_RATE_LIMIT);
   const handler = new RPCHandler(router, {
@@ -136,6 +143,7 @@ export function createApiServer({ env, authHandler, getSessionUser }: ApiServerD
       clientIp,
       consumeRateLimit,
       getSessionUser: () => getSessionUser(request.headers),
+      getDb,
     };
     handler
       .handle(request, response, { prefix: RPC_PREFIX, context })

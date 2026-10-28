@@ -19,8 +19,8 @@ Avant toute tâche : lire `.claude/skills/project-context/SKILL.md` (cartographi
 6. Toute procédure d'API a un `.input()` et un `.output()`, passe par la chaîne d'accès du projet, et ne contient
    aucun contrôle d'accès écrit à la main. L'utilisateur vient de la session, jamais de l'entrée.
 7. **Droits** : toute lecture ou écriture de ressource est filtrée par les droits de l'appelant (propriétaire,
-   membre d'Espace, rôle d'événement, partage). Sans droit ⇒ `NOT_FOUND`. Les droits sont des fonctions pures
-   testées (ADR 0014).
+   membre d'Espace, rôle d'événement, partage). Sans droit de lecture ⇒ `NOT_FOUND` ; ressource visible mais action
+   refusée ⇒ `FORBIDDEN`. Les droits sont des fonctions pures testées (ADR 0014).
 8. **Build once, run everywhere** : pas de `NEXT_PUBLIC_*`, pas de `process.env` hors `env.ts`, aucune valeur
    d'environnement dans le build. Nouvelle variable ⇒ `.env.example` + schéma Zod dans `env.ts`.
 9. Migrations Prisma : une par PR, relue, compatible ancienne/nouvelle version dès qu'une version tourne sur un

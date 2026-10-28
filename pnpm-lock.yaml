@@ -185,6 +185,9 @@ importers:
       '@planifier/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@planifier/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -198,9 +201,6 @@ importers:
       '@planifier/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
-      '@planifier/db':
-        specifier: workspace:*
-        version: link:../../packages/db
       '@planifier/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -322,6 +322,15 @@ importers:
       '@planifier/auth':
         specifier: workspace:*
         version: link:../auth
+      '@planifier/constants':
+        specifier: workspace:*
+        version: link:../constants
+      '@planifier/db':
+        specifier: workspace:*
+        version: link:../db
+      '@planifier/domain-access':
+        specifier: workspace:*
+        version: link:../domain-access
     devDependencies:
       '@planifier/eslint-config':
         specifier: workspace:*
@@ -329,6 +338,9 @@ importers:
       '@planifier/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       eslint:
         specifier: 'catalog:'
         version: 9.39.5(jiti@2.7.0)

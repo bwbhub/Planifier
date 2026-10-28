@@ -26,7 +26,9 @@ Chaque procédure appartient à **un** plan. Un test énumère les routeurs et �
 
 ## Chaîne d'accès (ordre obligatoire)
 
-limitation de débit → authentification → droits (Espace, rôle, partage) → validation d'entrée (contrat) → handler → validation de sortie.
+limitation de débit → authentification → validation d'entrée (contrat) → droits (Espace, rôle, partage) → handler →
+validation de sortie. Les droits d'une ressource lisent son identifiant : ils viennent après la validation, en
+middleware de ressource (`spaceGuard`), jamais sur l'entrée brute.
 
 - Toujours `.input()` **et** `.output()`.
 - **Jamais de contrôle d'accès écrit à la main dans un handler** ; restreindre par rôle = ajouter le middleware, pas un `if`.
@@ -43,7 +45,7 @@ limitation de débit → authentification → droits (Espace, rôle, partage) �
 ## Erreurs
 
 Codes stables : `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `TOO_MANY_REQUESTS`,
-`INTERNAL_SERVER_ERROR`. Ressource sans droit ⇒ `NOT_FOUND`. Jamais de stack ni de message d'ORM vers le client ; traduire
+`INTERNAL_SERVER_ERROR`. Ressource sans droit de lecture ⇒ `NOT_FOUND` ; visible mais action refusée ⇒ `FORBIDDEN`. Jamais de stack ni de message d'ORM vers le client ; traduire
 `P2002` → `CONFLICT`, `P2025` → `NOT_FOUND`.
 
 ## Compatibilité

@@ -37,6 +37,9 @@ function contextFor(user: SessionUser | null): ApiContext {
     clientIp: "192.0.2.1",
     consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
     getSessionUser: () => Promise.resolve(user),
+    getDb: () => {
+      throw new Error("Pas de base dans les tests unitaires : voir *.integration.test.ts.");
+    },
   };
 }
 
@@ -71,6 +74,13 @@ describe("routeur", () => {
     const sessionUser = { ...ALICE, emailVerified: true };
     const withExtra = contextFor(sessionUser);
     await expect(call(router.account.me.get, {}, { context: withExtra })).resolves.toEqual(ALICE);
+  });
+
+  it("valide l'entrée avant la garde d'Espace (aucune lecture en base sur une entrée invalide)", async () => {
+    // `getDb` échoue dans ce contexte : une garde lancée avant la validation rendrait une autre erreur.
+    await expect(
+      call(router.spaces.space.get, { spaceId: "pas-un-uuid" }, { context: contextFor(ALICE) }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
   it("la garde de plan refuse au-delà de la limite de débit de l'IP", async () => {

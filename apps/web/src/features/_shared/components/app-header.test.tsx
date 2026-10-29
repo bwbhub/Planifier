@@ -22,6 +22,14 @@ describe("AppHeader", () => {
     expect(screen.getByRole("link", { name: "Profil" }).getAttribute("aria-current")).toBe("page");
   });
 
+  it("mène au Todo, marqué comme page courante sur le Todo", () => {
+    pathname.current = "/todo";
+    render(<AppHeader />);
+    const todo = screen.getByRole("link", { name: "Todo" });
+    expect(todo.getAttribute("href")).toBe("/todo");
+    expect(todo.getAttribute("aria-current")).toBe("page");
+  });
+
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = render(<AppHeader />);
     await expect(axeViolations(container)).resolves.toEqual([]);

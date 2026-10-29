@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Fusion de `feat/espaces-ui` dans les branches Todo (branche `feat/todo-minimal`)
+
+**Fait** : merge de `feat/espaces-ui` dans `feat/todo-minimal` (conflits : `Button` variantes et tailles unifiées,
+en-tête avec les deux navs, routes, validation de formulaire dans `_shared/forms`, RECAP, `project-context`).
+**Vérifié** : check-types, lint, test (web 116), build, format, intégration (api 74, api-server 14, auth 1), E2E 52/52.
+**Ouvert** : `Button` sm rapetisse dans les Espaces ; doublon `LoadError` (SUITE §4). Merge des PR à faire par
+l'utilisateur (refusé à l'agent).
+**Attendu ensuite** : propager dans `feat/todo-sous-taches` puis `feat/todo-recurrence`.
+
+---
+
 ## 2026-10-29 — Corrections de revue des Espaces (branche `feat/espaces-ui`)
 
 **Fait**
@@ -123,6 +134,51 @@ local reste périmé.
 **Attendu ensuite** : UI des Espaces (`869fhwtfk`) ou `869fmu1m4`.
 
 ---
+
+## 2026-10-28 — Todo minimal : listes perso et tâches (branche `feat/todo-minimal`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
+
+**Fait**
+
+- Demande de l'utilisateur : une app testable au plus vite ⇒ Todo minimal d'abord (choix parmi UI Espaces, déploiement).
+- `db` : modèles `TodoList` (propriétaire, nom, teinte, version) et `Task` (titre, description, échéance `DATE`,
+  `completedAt`, version), migration `todo_listes_taches`, seed (deux listes d'Alice, quatre tâches).
+- `constants/todo` : bornes (nom 60, titre 200, description 2 000, 50 listes, 500 tâches par liste), `isListTint`.
+- Contrat `todo.lists` (list, create, update, delete) et `todo.tasks` (list, create, update, setDone, delete) ;
+  `CONFLICT` typé (`STALE_VERSION`, `TOO_MANY_LISTS`, `LIST_FULL`). `emptyOutputSchema` sorti dans `_shared`.
+- `api` : gardes `listGuard` / `taskGuard` sur `canAccessResource` (déjà dans `domain-access`), bornes sous verrou de
+  ligne (utilisateur, liste), coche rejouable (garde la date de la 1re coche, ne change pas la version).
+- Web : page `/todo` (onglets de listes en `?liste=`, en-tête teinté, ajout de tâche à la chaîne, détails repliés,
+  modification et suppression sur place avec confirmation, coche optimiste restaurée en cas d'erreur, états
+  chargement / vide / erreur) ; lien Todo dans l'en-tête, « Ouvrir mes listes » sur l'accueil (indicateur d'API retiré).
+- `ui` : `TextAreaField`. Validation de formulaire déplacée de `account` vers `_shared` (deux modules l'utilisent).
+- Tests d'intégration de l'API sérialisés par fichier (`fileParallelism: false`) : deux fichiers vident la même base.
+
+**Décisions (agent, à valider)** : périmètre réduit (ni partage, ni sous-tâches, ni récurrence, ni assignation, ni
+« Cochée par ») ; pas de `spaceId` ni de `kind` sur la liste tant qu'aucune procédure ne s'en sert ; listes et
+tâches bornées et rendues d'un bloc (pas de curseur) ; description vide refusée par le contrat (le formulaire
+envoie absent ou `null`) ; Todo ouvert à tous, sans regarder les modules activés.
+
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK ; `test:integration` OK (api 72 dont
+Todo 14 : droits « autre utilisateur » ⇒ NOT_FOUND sur les 7 procédures gardées, bornes, version périmée, coche
+rejouable) ; `test:e2e` 26/26 (parcours Todo PC et mobile : liste, tâche, coche persistée). Seed lancé deux fois.
+**Non vérifié** : `pnpm dev` à la main, rendu nuit à l'œil, CI, lecteur d'écran réel.
+
+**Ouvert** : revue humaine (droits des listes). Activation du module Todo non prise en compte. Navigation provisoire
+(lien dans l'en-tête, pas la barre de la maquette).
+
+**Corrections de revue (`/code-review`, 2026-10-28)** : erreur de coche affichée par la liste (la ligne est recréée
+en changeant de section) ; compte de la liste mis à jour avec la coche optimiste ; liste ou tâche supprimée avant
+l'écriture ⇒ `NOT_FOUND` (plus `STALE_VERSION`) ; types de lignes dérivés de Prisma (`Prisma` exporté par `db`) ;
+données de `CONFLICT` lues par `todoConflictDataSchema` ; `ConfirmPanel` et variantes `surface` / `ghost` / taille
+`sm` de `Button` dans `ui` (`buttonClassName` prend un objet) ; une seule table des teintes ; section nommée par la
+liste ; doublons retirés (tri à faire/cochées côté web seulement, conversion des jours dans `constants/days`, reprise
+après erreur, modes sur place) ; `TODO_LIST_KINDS` inutilisé retiré ; tâche en retard : « Prévue le … » sans reproche
+et « Reporter à aujourd'hui », année affichée si différente ; matrice « sans session » sur les 9 procédures. Portes
+OK, `test:integration` api 74/74, `test:e2e` 28/28 (modifier et supprimer tâche et liste). Non fait : identifiants
+typés par marque (jugement, coût sur tout le module), barre de navigation mobile (un seul module).
+
+**Attendu ensuite** : vérif à la main par l'utilisateur, push + PR sur demande ; puis déploiement (`869fhwtcc`) pour
+faire tester, ou suite du Todo (partage, sous-tâches, assignation).
 
 ## 2026-10-27 — Modèle Espace : droits, procédures, liens d'invitation (branche `feat/espaces`, ticket `869fhwtf9`)
 

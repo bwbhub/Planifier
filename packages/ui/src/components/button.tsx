@@ -5,24 +5,27 @@ import { cn } from "../lib/cn";
 const VARIANTS = {
   primary: "bg-accent text-on-accent hover:opacity-90",
   secondary: "bg-field text-ink hover:bg-line",
+  /** Sur un fond teinté (en-tête de liste) : la pastille garde le contraste du fond de carte. */
+  surface: "bg-surface text-ink hover:bg-line",
   /** Action d'une ligne de réglage (révoquer, quitter) : contour seul, moins présente qu'une action principale. */
   outline: "bg-transparent text-ink ring-2 ring-line ring-inset hover:bg-field",
   /** Confirmation d'une action définitive, dans une feuille : contraste maximal, sans couleur d'alerte. */
   strong: "bg-ink text-bg hover:opacity-90",
-  /** Sortie discrète d'une feuille (« Annuler ») : texte seul, fond au survol. */
-  ghost: "bg-transparent text-ink hover:bg-field",
+  /** Action discrète (modifier une ligne, « Annuler » d'une feuille) : texte seul, pastille au survol. */
+  ghost: "bg-transparent text-muted hover:bg-field hover:text-ink",
 } as const;
 
 const SIZES = {
-  md: "min-h-12.5 px-6",
-  /** Dans une ligne ou une carte : 44 px, la cible tactile minimale. */
-  sm: "min-h-11 px-4.5",
+  /** Action principale de la maquette : 50 px de haut. */
+  md: "min-h-12.5 px-6 text-control",
+  /** Action secondaire dans une ligne ou un en-tête : 44 px, la cible tactile minimale. */
+  sm: "min-h-11 px-3 text-sm",
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANTS;
 export type ButtonSize = keyof typeof SIZES;
 
-interface ButtonStyle {
+export interface ButtonStyle {
   variant?: ButtonVariant | undefined;
   size?: ButtonSize | undefined;
   className?: string | undefined;
@@ -40,7 +43,7 @@ export function buttonClassName({
   className,
 }: ButtonStyle = {}): string {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-pill text-control font-semibold",
+    "inline-flex items-center justify-center gap-2 rounded-pill font-semibold",
     "transition-opacity motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60",
     SIZES[size],
     VARIANTS[variant],
@@ -49,13 +52,7 @@ export function buttonClassName({
 }
 
 /** Bouton d'action. `type="button"` par défaut : un envoi de formulaire se déclare (`type="submit"`). */
-export function Button({
-  variant = "primary",
-  size = "md",
-  type = "button",
-  className,
-  ...props
-}: ButtonProps) {
+export function Button({ variant, size, type = "button", className, ...props }: ButtonProps) {
   return (
     <button type={type} className={buttonClassName({ variant, size, className })} {...props} />
   );

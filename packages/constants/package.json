@@ -11,6 +11,7 @@
     "./spaces": "./src/spaces.ts",
     "./notifications": "./src/notifications.ts",
     "./todo": "./src/todo.ts",
+    "./days": "./src/days.ts",
     "./http": "./src/http.ts"
   },
   "scripts": {

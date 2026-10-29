@@ -21,7 +21,7 @@ export default defineConfig({
   forbidOnly: CI,
   // Pas de nouvel essai : un test instable se voit, se tracke et se corrige (testing-standards).
   retries: 0,
-  // Un seul navigateur à la fois : la limitation de débit de l'API compte par IP, et tout vient de localhost.
+  // Un seul navigateur à la fois : la limitation de débit de Better Auth compte par IP, et tout vient de localhost.
   workers: 1,
   reporter: CI ? "github" : "list",
   use: { baseURL: WEB_URL, trace: "retain-on-failure" },
@@ -36,6 +36,8 @@ export default defineConfig({
       env: {
         NODE_ENV: "test",
         PORT: String(API_PORT),
+        // Tous les parcours viennent de localhost : la limite par IP compterait la suite entière comme un seul client.
+        RPC_RATE_LIMIT_PER_MINUTE: "1000",
         DATABASE_URL,
         // Secret jetable, tiré à chaque lancement : les sessions ne survivent pas au run.
         BETTER_AUTH_SECRET: randomBytes(32).toString("base64"),

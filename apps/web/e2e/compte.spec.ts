@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { type Cookie, expect, type Page, test } from "@playwright/test";
 
 import { waitForLink } from "./mailpit";
+import { ATTEMPT_TIMEOUT, submitPastRateLimit } from "./rate-limit";
 
 const DISPLAY_NAME = "Eve";
 const GREETING = `Bonjour ${DISPLAY_NAME}`;
@@ -53,8 +54,11 @@ test.describe.serial("parcours d'un compte", () => {
     await page.goto("/inscription");
     await page.getByLabel("Ton nom", { exact: true }).fill(DISPLAY_NAME);
     await fillCredentials(page, email, password);
-    await page.getByRole("button", { name: "Créer mon compte" }).click();
-    await expect(page.getByRole("status")).toContainText(`Un e-mail vient de partir à ${email}`);
+    await submitPastRateLimit(page, "Créer mon compte", async () => {
+      await expect(page.getByRole("status")).toContainText(`Un e-mail vient de partir à ${email}`, {
+        timeout: ATTEMPT_TIMEOUT,
+      });
+    });
   });
 
   test("ouvre l'accueil quand on suit le lien de confirmation", async ({ page, request }) => {
@@ -95,8 +99,9 @@ test.describe.serial("parcours d'un compte", () => {
   }) => {
     await page.goto("/connexion");
     await fillCredentials(page, email, newPassword);
-    await page.getByRole("button", { name: "Se connecter" }).click();
-    await expect(greeting(page)).toBeVisible();
+    await submitPastRateLimit(page, "Se connecter", async () => {
+      await expect(greeting(page)).toBeVisible({ timeout: ATTEMPT_TIMEOUT });
+    });
   });
 });
 

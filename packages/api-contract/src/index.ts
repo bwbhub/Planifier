@@ -18,10 +18,16 @@ export type ApiClient = ContractRouterClient<typeof contract>;
 
 export type { HealthOutput } from "./features/system/health/health.schemas";
 export type { MeOutput } from "./features/account/me/me.schemas";
-export type {
-  CreatedInviteOutput,
-  InvitePreviewOutput,
+export {
+  type CreatedInviteOutput,
+  type InvitePreviewOutput,
+  inviteTokenSchema,
+  type SpaceInviteOutput,
 } from "./features/spaces/invites/invites.schemas";
+export {
+  createSpaceInputSchema,
+  updateSpaceInputSchema,
+} from "./features/spaces/space/space.schemas";
 export type {
   CreateSpaceInput,
   ListSpacesInput,
@@ -29,6 +35,7 @@ export type {
   SpaceDetailOutput,
   SpaceMemberOutput,
   SpaceOutput,
+  SpaceSummaryOutput,
   UpdateSpaceInput,
 } from "./features/spaces/space/space.schemas";
 export { SPACE_CONFLICT_REASONS, type SpaceConflictReason } from "./features/spaces/spaces.schemas";

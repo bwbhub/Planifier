@@ -7,11 +7,12 @@ import { TextField } from "@planifier/ui/components/text-field";
 import Link from "next/link";
 import type { SubmitEvent } from "react";
 
+import { COMMON_LABELS } from "@/lib/labels";
 import { ROUTES } from "@/lib/routes";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useResetPassword } from "../queries/auth.queries";
-import { useFormValidation } from "../utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 const FIELDS = ["newPassword"] as const;
 
@@ -34,7 +35,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     return (
       <div role="status" className="flex flex-col gap-4">
         <p>Ton mot de passe est changé. Tes appareils connectés ont été déconnectés.</p>
-        <Link href={ROUTES.signIn} className={buttonClassName("primary")}>
+        <Link href={ROUTES.signIn} className={buttonClassName()}>
           Me connecter
         </Link>
       </div>
@@ -59,7 +60,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       />
       {reset.isError ? <AuthErrorAlert error={reset.error} /> : null}
       <Button type="submit" disabled={reset.isPending}>
-        {reset.isPending ? "Enregistrement…" : "Enregistrer"}
+        {reset.isPending ? COMMON_LABELS.saving : COMMON_LABELS.save}
       </Button>
     </form>
   );

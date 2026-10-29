@@ -1,5 +1,7 @@
 "use client";
 
+import { COMMON_LABELS } from "@/lib/labels";
+
 import { useApiHealth } from "../queries/health.queries";
 
 function ApiStatusMessage() {
@@ -10,7 +12,7 @@ function ApiStatusMessage() {
       <>
         API injoignable.{" "}
         <button type="button" className="underline" onClick={() => void refetch()}>
-          Réessayer
+          {COMMON_LABELS.retry}
         </button>
       </>
     );

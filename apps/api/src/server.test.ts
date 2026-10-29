@@ -19,8 +19,11 @@ const ALICE: SessionUser = {
 /** Cookie que la session factice reconnaît (la vraie session est testée dans server.integration.test.ts). */
 const SESSION_COOKIE = "session-factice=alice";
 
+/** Limite basse : le test de limitation l'atteint vite, depuis une IP que les autres tests n'utilisent pas. */
+const RPC_LIMIT = 5;
+
 const server = createApiServer({
-  env: { NODE_ENV: "test" },
+  env: { NODE_ENV: "test", RPC_RATE_LIMIT_PER_MINUTE: RPC_LIMIT },
   authHandler: (_request, response) => {
     response.statusCode = 299;
     response.end();
@@ -104,5 +107,19 @@ describe("serveur d'API", () => {
       const invalid = { [CLIENT_IP_HEADER]: "pas-une-ip" };
       expect((await fetch(`${baseUrl}${path}`, { headers: invalid })).status).toBe(400);
     }
+  });
+
+  it("refuse les plans au-delà de la limite configurée, pour cette IP seulement", async () => {
+    const health = (ip: string) =>
+      fetch(`${baseUrl}/rpc/system/health/get`, {
+        method: "POST",
+        headers: { [CLIENT_IP_HEADER]: ip, "content-type": "application/json" },
+        body: JSON.stringify({ json: {} }),
+      }).then((response) => response.status);
+    const statuses = [];
+    for (let i = 0; i <= RPC_LIMIT; i += 1) statuses.push(await health("192.0.2.40"));
+    expect(statuses.slice(0, RPC_LIMIT).every((status) => status === 200)).toBe(true);
+    expect(statuses.at(-1)).toBe(429);
+    expect(await health("192.0.2.41")).toBe(200);
   });
 });

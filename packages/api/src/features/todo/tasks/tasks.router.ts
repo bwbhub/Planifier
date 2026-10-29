@@ -1,6 +1,15 @@
 import { userProcedure } from "../../../procedures";
 import { listGuard, taskGuard } from "../todo-guard";
-import { createTask, deleteTask, listTasks, setTaskDone, updateTask } from "./tasks.service";
+import {
+  completeOccurrence,
+  createTask,
+  deleteTask,
+  finishTask,
+  listTasks,
+  setTaskDone,
+  undoCompletion,
+  updateTask,
+} from "./tasks.service";
 
 // Supprimer une tâche est une écriture dans sa liste : même droit que la modifier.
 export const tasksRouter = {
@@ -16,6 +25,15 @@ export const tasksRouter = {
   setDone: userProcedure.todo.tasks.setDone
     .use(taskGuard("write"))
     .handler(({ context, input }) => setTaskDone(context.getDb(), input, new Date())),
+  completeOccurrence: userProcedure.todo.tasks.completeOccurrence
+    .use(taskGuard("write"))
+    .handler(({ context, input }) => completeOccurrence(context.getDb(), input)),
+  finish: userProcedure.todo.tasks.finish
+    .use(taskGuard("write"))
+    .handler(({ context, input }) => finishTask(context.getDb(), input, new Date())),
+  undoCompletion: userProcedure.todo.tasks.undoCompletion
+    .use(taskGuard("write"))
+    .handler(({ context, input }) => undoCompletion(context.getDb(), input)),
   delete: userProcedure.todo.tasks.delete
     .use(taskGuard("write"))
     .handler(async ({ context, input }) => {

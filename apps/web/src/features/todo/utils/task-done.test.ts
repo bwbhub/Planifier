@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { taskWith } from "../testing/task-fixtures";
-import { withTaskDone } from "./task-done";
+import { withOccurrenceDone, withTaskDone } from "./task-done";
 
 const NOW = new Date("2026-10-28T10:00:00Z");
 const parent = taskWith({ id: "p", title: "Courses" });
@@ -25,5 +25,22 @@ describe("cocher (rendu optimiste)", () => {
     const checked = { items: [{ ...parent, completedAt: NOW }, subtask] };
     expect(withTaskDone(checked, "p", false).delta).toBe(1);
     expect(withTaskDone(checked, "p", true)).toEqual({ tasks: checked, delta: 0 });
+  });
+});
+
+describe("occurrence faite (rendu optimiste)", () => {
+  it("avance l'échéance de la tâche répétée visée, qui reste à faire", () => {
+    const weekly = taskWith({
+      id: "w",
+      title: "Poubelles",
+      dueDate: "2026-10-28",
+      recurrence: { frequency: "WEEKLY", interval: 1 },
+    });
+    const next = withOccurrenceDone({ items: [weekly, parent] }, "w", "2026-10-28");
+    expect(next.items).toEqual([{ ...weekly, dueDate: "2026-11-04" }, parent]);
+  });
+
+  it("ne touche pas une tâche non répétée", () => {
+    expect(withOccurrenceDone(tasks, "p", "2026-10-28")).toEqual(tasks);
   });
 });

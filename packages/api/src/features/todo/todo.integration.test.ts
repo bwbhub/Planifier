@@ -4,11 +4,16 @@ import { TODO_LIST_MAX_TASKS, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import { createTestDatabase } from "@planifier/db/testing";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { ApiContext } from "../../procedures";
-import { createRateLimiter, PLAN_RATE_LIMIT } from "../../rate-limit";
 import { router } from "../../router";
 import { updateList } from "./lists/lists.service";
 import { updateTask } from "./tasks/tasks.service";
+import {
+  createList,
+  createListWithTask,
+  createTestUser,
+  requestAs,
+  WEEKLY as weekly,
+} from "./todo.testing";
 
 // Base réelle dédiée en `_test` (`createTestDatabase`), vidée avant chaque test. Lancement : `pnpm test:integration`.
 const { db, reset } = createTestDatabase();
@@ -17,39 +22,14 @@ const { lists, tasks } = router.todo;
 let alice: SessionUser;
 let bob: SessionUser;
 
-/** Contexte d'une requête de `user` (null : sans session) ; limiteur neuf, aucun état partagé. */
-function asUser(user: SessionUser | null): { context: ApiContext } {
-  return {
-    context: {
-      requestId: "test",
-      clientIp: "192.0.2.1",
-      consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
-      getSessionUser: () => Promise.resolve(user),
-      getDb: () => db,
-    },
-  };
-}
-
-async function createUser(name: string): Promise<SessionUser> {
-  return db.user.create({
-    data: { name, email: `${name}@example.test`, emailVerified: true },
-    select: { id: true, name: true, email: true, preferredTheme: true },
-  });
-}
-
-const createAliceList = () =>
-  call(lists.create, { name: "Maison", tint: "general" }, asUser(alice));
-
-async function createAliceTask() {
-  const list = await createAliceList();
-  const task = await call(tasks.create, { listId: list.id, title: "Courses" }, asUser(alice));
-  return { list, task };
-}
+const asUser = (user: SessionUser | null) => requestAs(db, user);
+const createAliceList = () => createList(db, alice);
+const createAliceTask = () => createListWithTask(db, alice);
 
 beforeEach(async () => {
   await reset();
-  alice = await createUser("alice");
-  bob = await createUser("bob");
+  alice = await createTestUser(db, "alice");
+  bob = await createTestUser(db, "bob");
 });
 
 afterAll(async () => {
@@ -287,6 +267,17 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, anonymous),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, anonymous),
       call(tasks.setDone, { taskId: task.id, done: true }, anonymous),
+      call(
+        tasks.completeOccurrence,
+        { taskId: task.id, version: 1, today: "2026-10-28" },
+        anonymous,
+      ),
+      call(tasks.finish, { taskId: task.id, version: 1 }, anonymous),
+      call(
+        tasks.undoCompletion,
+        { taskId: task.id, version: 1, dueDate: null, recurrence: weekly },
+        anonymous,
+      ),
       call(tasks.delete, { taskId: task.id }, anonymous),
     ];
     for (const attempt of attempts) {
@@ -304,6 +295,13 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, asBob),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, asBob),
       call(tasks.setDone, { taskId: task.id, done: true }, asBob),
+      call(tasks.completeOccurrence, { taskId: task.id, version: 1, today: "2026-10-28" }, asBob),
+      call(tasks.finish, { taskId: task.id, version: 1 }, asBob),
+      call(
+        tasks.undoCompletion,
+        { taskId: task.id, version: 1, dueDate: null, recurrence: weekly },
+        asBob,
+      ),
       call(tasks.delete, { taskId: task.id }, asBob),
     ];
     for (const attempt of attempts) {

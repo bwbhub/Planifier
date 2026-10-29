@@ -5,7 +5,13 @@ import {
 } from "@planifier/constants/todo";
 import { z } from "zod";
 
-import { listIdSchema, listTargetSchema, taskIdSchema, taskTargetSchema } from "../todo.schemas";
+import {
+  listIdSchema,
+  listTargetSchema,
+  recurrenceSchema,
+  taskIdSchema,
+  taskTargetSchema,
+} from "../todo.schemas";
 
 const titleSchema = z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH);
 /** Pas de description : champ absent (création) ou `null` (modification), jamais une chaîne vide. */
@@ -22,6 +28,7 @@ export const createTaskInputSchema = z.strictObject({
   title: titleSchema,
   description: descriptionSchema.optional(),
   dueDate: dueDateSchema.optional(),
+  recurrence: recurrenceSchema.optional(),
 });
 
 /** Champs modifiés : au moins un ; `null` efface. `version` lue avec la tâche (concurrence optimiste). */
@@ -32,15 +39,39 @@ export const updateTaskInputSchema = z
     title: titleSchema.optional(),
     description: descriptionSchema.nullable().optional(),
     dueDate: dueDateSchema.nullable().optional(),
+    recurrence: recurrenceSchema.nullable().optional(),
   })
   .refine(
-    ({ title, description, dueDate }) =>
-      title !== undefined || description !== undefined || dueDate !== undefined,
+    ({ title, description, dueDate, recurrence }) =>
+      [title, description, dueDate, recurrence].some((field) => field !== undefined),
     "Aucun champ à modifier.",
   );
 
 /** Cocher ou décocher : un état demandé, pas une bascule, donc rejouable sans effet de bord. */
 export const setTaskDoneInputSchema = taskTargetSchema.extend({ done: z.boolean() });
+
+/**
+ * Cocher une tâche répétée : l'occurrence est faite, l'échéance passe à la suivante (ADR 0017). `today` : jour de
+ * l'appareil (le serveur ne connaît pas le fuseau de l'utilisateur). `version` : rejouer la même coche ne fait pas
+ * avancer deux fois.
+ */
+export const completeOccurrenceInputSchema = taskTargetSchema.extend({
+  version: z.int().min(1),
+  today: dueDateSchema,
+});
+
+/** Terminer pour de bon une tâche répétée : la répétition s'arrête et la tâche est cochée, en une écriture. */
+export const finishTaskInputSchema = taskTargetSchema.extend({ version: z.int().min(1) });
+
+/**
+ * Annuler une coche de tâche répétée (occurrence faite ou « terminer ») : échéance et règle d'avant, tâche à faire.
+ * `version` : celle rendue par la coche ; modifiée depuis ⇒ STALE_VERSION, rien n'est écrasé.
+ */
+export const undoCompletionInputSchema = taskTargetSchema.extend({
+  version: z.int().min(1),
+  dueDate: dueDateSchema.nullable(),
+  recurrence: recurrenceSchema,
+});
 
 export const deleteTaskInputSchema = taskTargetSchema;
 
@@ -52,8 +83,10 @@ export const taskSchema = z.strictObject({
   title: z.string(),
   description: z.string().nullable(),
   dueDate: dueDateSchema.nullable(),
-  /** null : à faire. */
+  /** null : à faire. Une tâche répétée reste à faire : la cocher avance son échéance. */
   completedAt: z.date().nullable(),
+  /** null : tâche non répétée. */
+  recurrence: recurrenceSchema.nullable(),
   version: z.int(),
 });
 
@@ -67,3 +100,6 @@ export type ListTasksOutput = z.infer<typeof listTasksOutputSchema>;
 export type CreateTaskInput = z.output<typeof createTaskInputSchema>;
 export type UpdateTaskInput = z.output<typeof updateTaskInputSchema>;
 export type SetTaskDoneInput = z.output<typeof setTaskDoneInputSchema>;
+export type CompleteOccurrenceInput = z.output<typeof completeOccurrenceInputSchema>;
+export type FinishTaskInput = z.output<typeof finishTaskInputSchema>;
+export type UndoCompletionInput = z.output<typeof undoCompletionInputSchema>;

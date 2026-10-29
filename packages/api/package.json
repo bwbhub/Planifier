@@ -20,7 +20,8 @@
     "@planifier/auth": "workspace:*",
     "@planifier/constants": "workspace:*",
     "@planifier/db": "workspace:*",
-    "@planifier/domain-access": "workspace:*"
+    "@planifier/domain-access": "workspace:*",
+    "@planifier/domain-recurrence": "workspace:*"
   },
   "devDependencies": {
     "@planifier/eslint-config": "workspace:*",

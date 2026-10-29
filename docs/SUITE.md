@@ -37,10 +37,12 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
   6 chiffres + « Utiliser mon mot de passe » : revue sécurité à prévoir.
 
 - **Sous-tâches (revue de #19), à trancher** :
-  - Compteur : texte « 1 sur 2 sous-tâches cochées » au-dessus de la liste toujours dépliée ; la maquette veut-elle
-    un compteur compact sur la ligne et une liste repliable ?
   - Sous-tâche ouverte sous une tâche cochée : elle reste dans « Cochées » et n'est comptée nulle part. Voulu ?
   - Sous-tâches comptées dans la limite de 500 tâches par liste ; pas de changement de parent. D'accord ?
+
+- **Récurrence** : ADR 0017 laissé « proposé » tant que la mise en place des tâches planifiées (cron) n'est pas
+  décidée (la récurrence elle-même n'en a pas besoin). Reste ouvert : champ « Intervalle » affiché même avec
+  « Jamais » ; forme du compteur de sous-tâches (« on verra la shape »).
 
 - **Espaces (revue de `feat/espaces-ui`), à trancher** :
   - Dialogues des modules : un store par module demanderait une dépendance (Zustand), sinon recalibrer la règle.

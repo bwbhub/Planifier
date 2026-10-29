@@ -14,20 +14,20 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 
 ## 2. Cartographie rôle → package
 
-| Rôle                   | Nom réel                                                   | État                                                      |
-| ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------- |
-| app web                | `apps/web` (`@planifier/web`)                              | squelette posé                                            |
-| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)                                              |
-| constantes métier      | `@planifier/constants`                                     | posé                                                      |
-| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)                                         |
+| Rôle                   | Nom réel                                                   | État                                                                                       |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| app web                | `apps/web` (`@planifier/web`)                              | squelette posé                                                                             |
+| app API                | `apps/api` (`@planifier/api-server`)                       | posé (santé)                                                                               |
+| constantes métier      | `@planifier/constants`                                     | posé                                                                                       |
+| design tokens          | `@planifier/tokens`                                        | posé (clair/nuit)                                                                          |
 | composants sans métier | `@planifier/ui`                                            | `Button`, `TextField`, `TextAreaField`, `ChoiceGroup`, `Checkbox`, `ConfirmPanel`, `Sheet` |
-| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                                     |
-| base + client          | `@planifier/db` (Prisma 7)                                 | posé                                                      |
-| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                              |
-| implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces, Todo                             |
-| auth                   | `@planifier/auth`                                          | posé (Better Auth)                                        |
-| droits (logique pure)  | `@planifier/domain-access`                                 | posé                                                      |
-| e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)             |
+| lint / tsconfig        | `@planifier/eslint-config`, `@planifier/typescript-config` | posés                                                                                      |
+| base + client          | `@planifier/db` (Prisma 7)                                 | posé                                                                                       |
+| contrats d'API         | `@planifier/api-contract`                                  | posé (santé)                                                                               |
+| implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces, Todo                                                         |
+| auth                   | `@planifier/auth`                                          | posé (Better Auth)                                                                         |
+| droits (logique pure)  | `@planifier/domain-access`                                 | posé                                                                                       |
+| e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)                                              |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)
 

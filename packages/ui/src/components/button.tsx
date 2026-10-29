@@ -7,8 +7,12 @@ const VARIANTS = {
   secondary: "bg-field text-ink hover:bg-line",
   /** Sur un fond teinté (en-tête de liste) : la pastille garde le contraste du fond de carte. */
   surface: "bg-surface text-ink hover:bg-line",
-  /** Action discrète d'une ligne (modifier, supprimer) : texte seul, pastille au survol. */
-  ghost: "text-muted hover:bg-field hover:text-ink",
+  /** Action d'une ligne de réglage (révoquer, quitter) : contour seul, moins présente qu'une action principale. */
+  outline: "bg-transparent text-ink ring-2 ring-line ring-inset hover:bg-field",
+  /** Confirmation d'une action définitive, dans une feuille : contraste maximal, sans couleur d'alerte. */
+  strong: "bg-ink text-bg hover:opacity-90",
+  /** Action discrète (modifier une ligne, « Annuler » d'une feuille) : texte seul, pastille au survol. */
+  ghost: "bg-transparent text-muted hover:bg-field hover:text-ink",
 } as const;
 
 const SIZES = {

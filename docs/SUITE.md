@@ -44,6 +44,22 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
   décidée (la récurrence elle-même n'en a pas besoin). Reste ouvert : champ « Intervalle » affiché même avec
   « Jamais » ; forme du compteur de sous-tâches (« on verra la shape »).
 
+- **Espaces (revue de `feat/espaces-ui`), à trancher** :
+  - Dialogues des modules : un store par module demanderait une dépendance (Zustand), sinon recalibrer la règle.
+  - Maquette 3 : les bascules de réglages sont remplacées par le formulaire (règle 13). D'accord ?
+  - Visibilité absente à la création (le contrat `create` ne la prend pas) : l'ajouter ?
+  - Invité sans compte : après inscription, il doit rouvrir le lien (le retour ne traverse pas l'inscription).
+  - « Choisir un propriétaire » (dernier propriétaire qui part) : simple ancre vers les membres ; suffisant ?
+  - Un membre simple voit tous les réglages en lecture : voulu ?
+  - Deux `useSetMemberRole` (proposition à deux, fiche « Gérer ») : laissés séparés, jugé acceptable.
+  - Revue humaine (sécurité) : `RPC_RATE_LIMIT_PER_MINUTE` (limite des plans réglable, relevée à 1000 en E2E
+    seulement) ; réessai E2E après la limite de Better Auth ; paramètre `retour` de la connexion ; jeton
+    d'invitation retiré de l'adresse après lecture.
+
+- **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
+  Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
+  remplacer par celui-ci dans une PR Todo.
+
 ## 5. Pièges de l'environnement
 
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).

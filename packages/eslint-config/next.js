@@ -6,7 +6,7 @@ import globals from "globals";
 import { baseConfig, FORBIDDEN_LIBS, SERVER_PACKAGES } from "./base.js";
 
 /** Les modules (features) de apps/web. Ajouter un module = l'ajouter ici. */
-const FEATURES = ["account", "events", "todo", "agenda"];
+const FEATURES = ["account", "spaces", "events", "todo", "agenda"];
 
 /** Une feature n'importe jamais une autre feature, ni app/ (skill feature-first-structure). */
 function featureIsolation() {

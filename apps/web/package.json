@@ -18,6 +18,7 @@
     "@orpc/tanstack-query": "catalog:",
     "@planifier/api-contract": "workspace:*",
     "@planifier/constants": "workspace:*",
+    "@planifier/domain-access": "workspace:*",
     "@planifier/domain-recurrence": "workspace:*",
     "@planifier/tokens": "workspace:*",
     "@planifier/ui": "workspace:*",

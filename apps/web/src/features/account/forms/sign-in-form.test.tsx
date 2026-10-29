@@ -6,6 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ReturnPath } from "@/lib/routes";
+
 import { SignInForm } from "./sign-in-form";
 
 const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
@@ -21,10 +23,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function renderForm() {
+function renderForm(returnTo: ReturnPath | null = null) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
-      <SignInForm />
+      <SignInForm returnTo={returnTo} />
     </QueryClientProvider>,
   );
 }
@@ -64,6 +66,18 @@ describe("SignInForm", () => {
         callbackURL: "/connexion",
       }),
     );
+  });
+
+  it("ramène au lien d'invitation, fragment compris, quand la connexion vient de là", async () => {
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+    window.location.hash = "#jeton-du-lien";
+    renderForm("/rejoindre");
+    await fill("alice@example.test", "mot-de-passe");
+
+    await waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith("/rejoindre#jeton-du-lien");
+    });
+    window.location.hash = "";
   });
 
   it("annonce un refus sans quitter l'écran", async () => {

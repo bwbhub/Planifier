@@ -22,6 +22,8 @@ journalisés ni renvoyés.
 - **Événement** : rôles `OWNER`, `ORGANIZER`, `GUEST` (toujours présents). Le propriétaire active/désactive les briques ;
   un co-organisateur active des briques, assigne, valide les propositions ; un invité voit et réagit.
 - **Partage par ressource** : `NONE` / `READ` / `WRITE` (liste perso partageable en lecture seule).
+- **Liste partagée** (`domain-access/todo-list`) : rattachée à un Espace, ouverte en écriture à tous ses membres,
+  même dans un Espace restreint (décision du 2026-10-29).
 - **Invité sans compte** : accès par token d'invitation lié à l'adresse e-mail ; ne reçoit **jamais** de notification.
 
 ## Règles

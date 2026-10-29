@@ -50,7 +50,9 @@ export async function listSpaces(
     select: {
       id: true,
       role: true,
-      space: { select: { id: true, name: true, _count: { select: { members: true } } } },
+      space: {
+        select: { id: true, name: true, modules: true, _count: { select: { members: true } } },
+      },
     },
   });
   const page = rows.slice(0, limit);
@@ -58,6 +60,7 @@ export async function listSpaces(
     items: page.map(({ role, space }) => ({
       id: space.id,
       name: space.name,
+      modules: space.modules,
       myRole: role,
       memberCount: space._count.members,
     })),

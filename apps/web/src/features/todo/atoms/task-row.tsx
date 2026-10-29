@@ -27,11 +27,12 @@ interface SubtasksProps {
   subtasks: readonly TaskOutput[];
   adding: boolean;
   completion: TaskCompletion;
+  shared: boolean;
   onStopAdding: () => void;
 }
 
 /** Sous-tâches d'une tâche, cochées une à une (rien ne se coche en cascade), et leur ajout sur place. */
-function Subtasks({ task, subtasks, adding, completion, onStopAdding }: SubtasksProps) {
+function Subtasks({ task, subtasks, adding, completion, shared, onStopAdding }: SubtasksProps) {
   if (subtasks.length === 0 && !adding) return null;
   return (
     <div className="flex flex-col gap-2 pl-8">
@@ -43,7 +44,7 @@ function Subtasks({ task, subtasks, adding, completion, onStopAdding }: Subtasks
             aria-label={`Sous-tâches de « ${task.title} »`}
           >
             {subtasks.map((subtask) => (
-              <TaskRow key={subtask.id} task={subtask} completion={completion} />
+              <TaskRow key={subtask.id} task={subtask} completion={completion} shared={shared} />
             ))}
           </ul>
         </>
@@ -53,14 +54,16 @@ function Subtasks({ task, subtasks, adding, completion, onStopAdding }: Subtasks
   );
 }
 
-/** Case à cocher et titre, puis échéance et description. */
+/** Case à cocher et titre, puis échéance, répétition, description et, liste partagée, qui l'a cochée. */
 function TaskMain({
   task,
   done,
+  shared,
   onToggle,
 }: {
   task: TaskOutput;
   done: boolean;
+  shared: boolean;
   onToggle: TaskCompletion["toggle"];
 }) {
   return (
@@ -84,6 +87,9 @@ function TaskMain({
         {task.description === null ? null : (
           <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
         )}
+        {shared && done && task.completedBy !== null ? (
+          <span className="text-sm text-muted">Cochée par {task.completedBy.name}</span>
+        ) : null}
       </div>
     </div>
   );
@@ -128,10 +134,12 @@ interface TaskRowProps {
   /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
   subtasks?: readonly TaskOutput[];
   completion: TaskCompletion;
+  /** Liste partagée : une tâche cochée dit par qui. */
+  shared: boolean;
 }
 
 /** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
-export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
+export function TaskRow({ task, subtasks = [], completion, shared }: TaskRowProps) {
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
@@ -143,6 +151,7 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
       subtasks={subtasks}
       adding={addingSubtask}
       completion={completion}
+      shared={shared}
       onStopAdding={() => {
         setAddingSubtask(false);
       }}
@@ -166,7 +175,7 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
       }
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3">
-        <TaskMain task={task} done={done} onToggle={completion.toggle} />
+        <TaskMain task={task} done={done} shared={shared} onToggle={completion.toggle} />
         {mode === "view" ? (
           <TaskActions
             task={task}

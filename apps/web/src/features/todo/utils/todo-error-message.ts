@@ -9,6 +9,8 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   LIST_FULL: `Cette liste compte déjà ${String(TODO_LIST_MAX_TASKS)} tâches. Supprimes-en pour en ajouter.`,
   NESTED_SUBTASK: "Une sous-tâche ne peut pas avoir ses propres sous-tâches.",
   NOT_RECURRING: "Cette tâche ne se répète plus. Recharge la page.",
+  TODO_DISABLED:
+    "Todo n'est pas activé dans cet Espace. Un propriétaire peut l'activer dans ses réglages.",
 };
 
 const FALLBACK = "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";

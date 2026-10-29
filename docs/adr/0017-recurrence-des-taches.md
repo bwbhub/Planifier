@@ -1,6 +1,6 @@
 # 0017 — Récurrence des tâches : l'échéance avance à la coche
 
-Statut : proposé (règles posées par l'agent, à valider) · Date : 2026-10-28
+Statut : proposé (en attente : choix des tâches planifiées du projet, cron) · Date : 2026-10-28
 
 Contexte : une tâche peut se répéter (`CONTEXT.md` : « Récurrence : indépendante de la date et de l'heure »). Il faut
 décider ce que fait « cocher » sur une tâche répétée, sans rien cocher ni ajouter à l'insu de l'utilisateur, et sans
@@ -15,8 +15,17 @@ Décision :
   devient le dernier jour du mois, sans glissement pour les suivantes : toutes les occurrences se calculent depuis
   l'ancre, jamais depuis l'échéance précédente (« le 31 » donne 28 février puis 31 mars).
 - Procédure dédiée `todo.tasks.completeOccurrence` (`version` + `today`, jour de l'appareil : le serveur ne connaît pas
-  le fuseau). Rejouer la même coche ⇒ `CONFLICT STALE_VERSION`, jamais deux avances. `setDone` garde son sens :
-  terminer pour de bon. Arrêter la répétition : retirer la règle (`update`, `recurrence: null`).
+  le fuseau). Rejouer la même coche ⇒ `CONFLICT STALE_VERSION`, jamais deux avances. Arrêter la répétition
+  seule : retirer la règle (`update`, `recurrence: null`).
+- Terminer pour de bon (choix de l'utilisateur, 2026-10-29) : `todo.tasks.finish` arrête la répétition et coche la
+  tâche en une écriture ; elle passe, grisée, dans « Cochées ».
+- Garde-fou (choix de l'utilisateur) : une occurrence faite ou un « Terminer » s'annule depuis l'annonce
+  (`todo.tasks.undoCompletion` : échéance et règle d'avant, tâche à faire, ancre gardée, sur la version rendue par la
+  coche).
+- Sous-tâches d'une tâche répétée : elles gardent leur état d'une occurrence à l'autre (choix de l'utilisateur).
+- `today` vient de l'appareil, sans borne côté serveur : un appareil mal réglé est un problème du client (choix de
+  l'utilisateur).
+- Aucune tâche planifiée (cron) : tout se calcule au geste de l'utilisateur.
 - Stockage : colonne `tasks.recurrence` JSON versionnée (`schemaVersion: 1`), validée en écriture et en lecture par
   `@planifier/domain-recurrence/stored` ; calcul pur `nextDueDate` dans `@planifier/domain-recurrence`.
 - Ancre : colonne `tasks.recurrence_anchor` (jour), posée à la première occurrence faite (échéance d'alors, sinon

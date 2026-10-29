@@ -82,6 +82,63 @@ describe("ListPanel, tâche répétée", () => {
       input: { taskId: WEEKLY.id, version: 1, today: "2026-10-28" },
     });
   });
+});
+
+describe("ListPanel, annuler et terminer une tâche répétée", () => {
+  it("« Annuler » rend l'échéance d'avant la coche", async () => {
+    const next = { ...WEEKLY, dueDate: "2026-11-04", version: 2 };
+    const server = {
+      "todo/tasks/list": { data: { items: [WEEKLY] } },
+      "todo/tasks/completeOccurrence": { data: next },
+      "todo/tasks/undoCompletion": { data: { ...WEEKLY, version: 3 } },
+      "todo/lists/list": { data: { items: [LIST] } },
+    };
+    const calls = replyRpc(fetchMock, server);
+    renderPanel();
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Sortir les poubelles" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Annuler" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe(
+        "« Sortir les poubelles » : coche annulée.",
+      );
+    });
+    expect(calls).toContainEqual({
+      path: "todo/tasks/undoCompletion",
+      input: {
+        taskId: WEEKLY.id,
+        version: 2,
+        dueDate: "2026-10-28",
+        recurrence: WEEKLY.recurrence,
+      },
+    });
+  });
+
+  it("« Terminer » arrête la répétition et coche, en l'annonçant", async () => {
+    const finished = { ...WEEKLY, recurrence: null, completedAt: new Date(), version: 2 };
+    const server = {
+      "todo/tasks/list": { data: { items: [WEEKLY] } },
+      "todo/tasks/finish": { data: finished },
+      "todo/lists/list": { data: { items: [LIST] } },
+    };
+    const calls = replyRpc(fetchMock, server);
+    renderPanel();
+    await screen.findByText("Toutes les semaines");
+    server["todo/tasks/list"] = { data: { items: [finished] } };
+    await userEvent.click(screen.getByRole("button", { name: /^Terminer/ }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe(
+        "« Sortir les poubelles » est terminée : elle ne se répète plus.",
+      );
+    });
+    expect(screen.getByRole("button", { name: "Annuler" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Cochées (1)" })).toBeTruthy();
+    expect(calls).toContainEqual({
+      path: "todo/tasks/finish",
+      input: { taskId: WEEKLY.id, version: 1 },
+    });
+  });
 
   it("refusée par le serveur : l'échéance revient et l'erreur s'affiche", async () => {
     replyRpc(fetchMock, {

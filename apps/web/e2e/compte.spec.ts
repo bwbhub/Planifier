@@ -96,6 +96,15 @@ async function editThenDeleteTaskAndList(page: Page) {
   await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).not.toBeChecked();
+  // Garde-fou : l'occurrence faite s'annule.
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "coche annulée" })).toBeVisible();
+
+  // Terminer pour de bon : la répétition s'arrête, la tâche passe dans « Cochées ».
+  await page.getByRole("button", { name: "Terminer « Arroser les plantes » pour de bon" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "ne se répète plus" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).toBeChecked();
+  await expect(page.getByText("Toutes les semaines")).toBeHidden();
 
   await page.getByRole("button", { name: "Modifier la liste" }).click();
   await page.getByLabel("Nom de la liste").fill("Marché");

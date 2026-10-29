@@ -18,6 +18,34 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Récurrence : terminer et annuler (branche `feat/todo-recurrence`, PR #20)
+
+**Fait** (réponses de l'utilisateur aux points ouverts) :
+
+- `todo.tasks.finish` (additif) : arrête la répétition et coche, en une écriture ; action « Terminer » sur une tâche
+  répétée à faire ; la tâche passe, grisée, dans « Cochées ».
+- `todo.tasks.undoCompletion` (additif) : « Annuler » dans l'annonce, après une occurrence faite ou un « Terminer »
+  (échéance et règle d'avant, ancre gardée, `STALE_VERSION` si modifiée entre-temps).
+- Service : écritures versionnées factorisées (`writeVersioned`) ; `useToggleTask` devient `useTaskCompletion`
+  (`toggle`, `finish`, annonce avec annulation) ; `TaskRow` reçoit `completion`.
+- Tests : intégration (terminer, annuler les deux, le 31 gardé après annulation, version périmée, matrice des droits
+  anonyme et autre utilisateur) ; fichier `todo-recurrence.integration.test.ts` séparé (seuil de 500 lignes) avec aide
+  `todo.testing.ts` ; composants (`TaskRow` « Terminer », `ListPanel` annuler et terminer) ; E2E (annuler, terminer).
+- ADR 0017 : décisions ajoutées ; reste « proposé » en attendant le choix des tâches planifiées (cron).
+
+**Décisions de l'utilisateur** : sous-tâches gardées cochées d'une occurrence à l'autre ; `today` non borné (appareil
+mal réglé : problème du client) ; forme du compteur de sous-tâches à revoir plus tard.
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 94/94, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28.
+
+**Ouvert** : ADR 0017 (cron) ; champ « Intervalle » affiché avec « Jamais ».
+
+**Attendu ensuite** : partage, liste partagée, assignation, une fois #21 et la pile Todo fusionnées (ou fusion à la
+main des composants `ui`).
+
+---
+
 ## 2026-10-29 — Revue de la récurrence (branche `feat/todo-recurrence`, PR #20)
 
 **Fait** : #19 fusionnée dans la branche ; commit « limite des plans réglable » repris de #21 (l'E2E dépassait la

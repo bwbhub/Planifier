@@ -6,10 +6,12 @@ import {
   completeOccurrenceInputSchema,
   createTaskInputSchema,
   deleteTaskInputSchema,
+  finishTaskInputSchema,
   listTasksInputSchema,
   listTasksOutputSchema,
   setTaskDoneInputSchema,
   taskSchema,
+  undoCompletionInputSchema,
   updateTaskInputSchema,
 } from "./tasks.schemas";
 
@@ -52,6 +54,24 @@ export const tasksContract = {
     })
     .errors(TODO_ERRORS)
     .input(completeOccurrenceInputSchema)
+    .output(taskSchema),
+  finish: oc
+    .route({
+      summary: "Terminer pour de bon une tâche répétée",
+      description:
+        "La répétition s'arrête et la tâche est cochée, en une écriture. `version` périmée : CONFLICT `STALE_VERSION`.",
+    })
+    .errors(TODO_ERRORS)
+    .input(finishTaskInputSchema)
+    .output(taskSchema),
+  undoCompletion: oc
+    .route({
+      summary: "Annuler la coche d'une tâche répétée",
+      description:
+        "Rend l'échéance et la règle d'avant la coche (occurrence faite ou « terminer »), tâche à faire. `version` : celle rendue par la coche ; modifiée depuis : CONFLICT `STALE_VERSION`.",
+    })
+    .errors(TODO_ERRORS)
+    .input(undoCompletionInputSchema)
     .output(taskSchema),
   delete: oc
     .route({

@@ -73,6 +73,16 @@ export function useCompleteOccurrence(listId: string) {
   );
 }
 
+export function useFinishTask() {
+  const onSettled = useInvalidateTodo();
+  return useMutation(orpc.todo.tasks.finish.mutationOptions({ onSettled }));
+}
+
+export function useUndoCompletion() {
+  const onSettled = useInvalidateTodo();
+  return useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
+}
+
 export function useDeleteTask() {
   const onSettled = useInvalidateTodo();
   return useMutation(orpc.todo.tasks.delete.mutationOptions({ onSettled }));

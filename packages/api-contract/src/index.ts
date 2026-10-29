@@ -44,9 +44,11 @@ export { createListInputSchema, updateListInputSchema } from "./features/todo/li
 export type {
   CompleteOccurrenceInput,
   CreateTaskInput,
+  FinishTaskInput,
   ListTasksOutput,
   SetTaskDoneInput,
   TaskOutput,
+  UndoCompletionInput,
   UpdateTaskInput,
 } from "./features/todo/tasks/tasks.schemas";
 export { createTaskInputSchema, updateTaskInputSchema } from "./features/todo/tasks/tasks.schemas";

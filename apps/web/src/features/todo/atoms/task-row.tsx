@@ -13,19 +13,25 @@ import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { DueDate } from "./due-date";
 import { TodoErrorAlert } from "./todo-error-alert";
 
-/** Coche ou décoche une tâche, au geste de l'utilisateur seulement ; l'erreur s'affiche dans la liste. */
-export type ToggleTask = (task: TaskOutput, done: boolean) => void;
+/**
+ * Gestes de complétion d'une tâche, au geste de l'utilisateur seulement ; erreur et annonce s'affichent dans la liste.
+ * `toggle` : cocher ou décocher (tâche répétée : occurrence faite) ; `finish` : terminer pour de bon une tâche répétée.
+ */
+export interface TaskCompletion {
+  toggle: (task: TaskOutput, done: boolean) => void;
+  finish: (task: TaskOutput) => void;
+}
 
 interface SubtasksProps {
   task: TaskOutput;
   subtasks: readonly TaskOutput[];
   adding: boolean;
-  onToggle: ToggleTask;
+  completion: TaskCompletion;
   onStopAdding: () => void;
 }
 
 /** Sous-tâches d'une tâche, cochées une à une (rien ne se coche en cascade), et leur ajout sur place. */
-function Subtasks({ task, subtasks, adding, onToggle, onStopAdding }: SubtasksProps) {
+function Subtasks({ task, subtasks, adding, completion, onStopAdding }: SubtasksProps) {
   if (subtasks.length === 0 && !adding) return null;
   return (
     <div className="flex flex-col gap-2 pl-8">
@@ -37,7 +43,7 @@ function Subtasks({ task, subtasks, adding, onToggle, onStopAdding }: SubtasksPr
             aria-label={`Sous-tâches de « ${task.title} »`}
           >
             {subtasks.map((subtask) => (
-              <TaskRow key={subtask.id} task={subtask} onToggle={onToggle} />
+              <TaskRow key={subtask.id} task={subtask} completion={completion} />
             ))}
           </ul>
         </>
@@ -55,7 +61,7 @@ function TaskMain({
 }: {
   task: TaskOutput;
   done: boolean;
-  onToggle: ToggleTask;
+  onToggle: TaskCompletion["toggle"];
 }) {
   return (
     <div className="flex flex-1 flex-col gap-0.5">
@@ -87,17 +93,24 @@ interface TaskActionsProps {
   task: TaskOutput;
   /** Absent pour une sous-tâche : un seul niveau. */
   onAddSubtask: (() => void) | undefined;
+  /** Présent pour une tâche répétée à faire : la répétition s'arrête et la tâche est cochée. */
+  onFinish: (() => void) | undefined;
   onEdit: () => void;
   onDelete: () => void;
 }
 
 /** Actions discrètes d'une tâche, nommées avec son titre pour les lecteurs d'écran. */
-function TaskActions({ task, onAddSubtask, onEdit, onDelete }: TaskActionsProps) {
+function TaskActions({ task, onAddSubtask, onFinish, onEdit, onDelete }: TaskActionsProps) {
   return (
     <div className="-ml-3 flex flex-wrap pl-8 sm:ml-0 sm:shrink-0 sm:justify-end sm:pl-0">
       {onAddSubtask === undefined ? null : (
         <Button variant="ghost" size="sm" onClick={onAddSubtask}>
           + Sous-tâche<span className="sr-only"> à « {task.title} »</span>
+        </Button>
+      )}
+      {onFinish === undefined ? null : (
+        <Button variant="ghost" size="sm" onClick={onFinish}>
+          Terminer<span className="sr-only"> « {task.title} » pour de bon</span>
         </Button>
       )}
       <Button variant="ghost" size="sm" onClick={onEdit}>
@@ -114,11 +127,11 @@ interface TaskRowProps {
   task: TaskOutput;
   /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
   subtasks?: readonly TaskOutput[];
-  onToggle: ToggleTask;
+  completion: TaskCompletion;
 }
 
 /** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
-export function TaskRow({ task, subtasks = [], onToggle }: TaskRowProps) {
+export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
@@ -129,7 +142,7 @@ export function TaskRow({ task, subtasks = [], onToggle }: TaskRowProps) {
       task={task}
       subtasks={subtasks}
       adding={addingSubtask}
-      onToggle={onToggle}
+      completion={completion}
       onStopAdding={() => {
         setAddingSubtask(false);
       }}
@@ -153,7 +166,7 @@ export function TaskRow({ task, subtasks = [], onToggle }: TaskRowProps) {
       }
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3">
-        <TaskMain task={task} done={done} onToggle={onToggle} />
+        <TaskMain task={task} done={done} onToggle={completion.toggle} />
         {mode === "view" ? (
           <TaskActions
             task={task}
@@ -162,6 +175,13 @@ export function TaskRow({ task, subtasks = [], onToggle }: TaskRowProps) {
                 ? undefined
                 : () => {
                     setAddingSubtask(true);
+                  }
+            }
+            onFinish={
+              task.recurrence === null || done
+                ? undefined
+                : () => {
+                    completion.finish(task);
                   }
             }
             onEdit={showEdit}

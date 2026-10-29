@@ -2,9 +2,11 @@ import { ORPCError } from "@orpc/server";
 import type {
   CompleteOccurrenceInput,
   CreateTaskInput,
+  FinishTaskInput,
   ListTasksOutput,
   SetTaskDoneInput,
   TaskOutput,
+  UndoCompletionInput,
   UpdateTaskInput,
 } from "@planifier/api-contract";
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
@@ -95,31 +97,37 @@ async function readTask(db: Db, taskId: string): Promise<TaskOutput> {
   return toTaskOutput(task);
 }
 
+/** Écriture conditionnée par la version ; NOT_FOUND si supprimée entre-temps, avant de conclure à une version périmée. */
+async function writeVersioned(
+  db: Db,
+  taskId: string,
+  version: number,
+  data: Prisma.TaskUpdateManyMutationInput,
+): Promise<TaskOutput> {
+  const { count } = await db.task.updateMany({
+    where: { id: taskId, version },
+    data: { ...data, version: { increment: 1 } },
+  });
+  const task = await readTask(db, taskId);
+  if (count === 0) throw todoConflict("STALE_VERSION");
+  return task;
+}
+
 export async function updateTask(
   db: Db,
   { taskId, version, title, description, dueDate, recurrence }: UpdateTaskInput,
 ): Promise<TaskOutput> {
-  const { count } = await db.task.updateMany({
-    where: { id: taskId, version },
-    // Champ absent : inchangé ; `null` efface.
-    data: {
-      ...(title === undefined ? {} : { title }),
-      ...(description === undefined ? {} : { description }),
-      ...(dueDate === undefined
-        ? {}
-        : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
-      ...(recurrence === undefined
-        ? {}
-        : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
-      // Échéance ou règle redéfinies : la série repart de la nouvelle échéance (ADR 0017).
-      ...(dueDate === undefined && recurrence === undefined ? {} : { recurrenceAnchor: null }),
-      version: { increment: 1 },
-    },
+  // Champ absent : inchangé ; `null` efface.
+  return writeVersioned(db, taskId, version, {
+    ...(title === undefined ? {} : { title }),
+    ...(description === undefined ? {} : { description }),
+    ...(dueDate === undefined ? {} : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
+    ...(recurrence === undefined
+      ? {}
+      : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
+    // Échéance ou règle redéfinies : la série repart de la nouvelle échéance (ADR 0017).
+    ...(dueDate === undefined && recurrence === undefined ? {} : { recurrenceAnchor: null }),
   });
-  // `readTask` : NOT_FOUND si supprimée entre la garde et l'écriture, avant de conclure à une version périmée.
-  const task = await readTask(db, taskId);
-  if (count === 0) throw todoConflict("STALE_VERSION");
-  return task;
 }
 
 /**
@@ -160,19 +168,39 @@ export async function completeOccurrence(
     due: task.dueDate,
   };
   const next = nextDueDate(task.recurrence, series, today);
-  const { count } = await db.task.updateMany({
-    where: { id: taskId, version },
-    data: {
-      dueDate: dayToUtcDate(next),
-      // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).
-      recurrenceAnchor: dayToUtcDate(seriesAnchor(series, today)),
-      completedAt: null,
-      version: { increment: 1 },
-    },
+  return writeVersioned(db, taskId, version, {
+    dueDate: dayToUtcDate(next),
+    // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).
+    recurrenceAnchor: dayToUtcDate(seriesAnchor(series, today)),
+    completedAt: null,
   });
-  const updated = await readTask(db, taskId);
-  if (count === 0) throw todoConflict("STALE_VERSION");
-  return updated;
+}
+
+/**
+ * Terminer pour de bon (ADR 0017) : la répétition s'arrête et la tâche est cochée, en une écriture. L'ancre reste :
+ * « Annuler » rend la série telle qu'elle était.
+ */
+export function finishTask(
+  db: Db,
+  { taskId, version }: FinishTaskInput,
+  now: Date,
+): Promise<TaskOutput> {
+  return writeVersioned(db, taskId, version, { recurrence: JSON_DB_NULL, completedAt: now });
+}
+
+/**
+ * Annuler une coche de tâche répétée : échéance et règle d'avant, tâche à faire. L'ancre n'est pas touchée : la série
+ * reprend où elle en était (le 31 reste le 31).
+ */
+export function undoCompletion(
+  db: Db,
+  { taskId, version, dueDate, recurrence }: UndoCompletionInput,
+): Promise<TaskOutput> {
+  return writeVersioned(db, taskId, version, {
+    dueDate: dueDate === null ? null : dayToUtcDate(dueDate),
+    recurrence: toStoredRecurrence(recurrence),
+    completedAt: null,
+  });
 }
 
 /** Ses sous-tâches partent avec elle (`onDelete: Cascade`). */

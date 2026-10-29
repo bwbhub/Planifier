@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { taskWith } from "../testing/task-fixtures";
-import { TaskRow, type ToggleTask } from "./task-row";
+import { type TaskCompletion, TaskRow } from "./task-row";
 
 // jsdom perd l'espace en tête du complément `sr-only` des boutons : noms comparés à `\s*` près.
 // Aucun appel réseau attendu : le client oRPC lit `fetch` à son chargement, on le remplace avant.
@@ -24,11 +24,15 @@ const parent = taskWith({ id: "p", title: "Courses" });
 const bread = taskWith({ id: "a", title: "Pain", parentId: "p" });
 const milk = taskWith({ id: "b", title: "Lait", parentId: "p", completedAt: new Date() });
 
-function renderRow(onToggle: ToggleTask = vi.fn()) {
+function completionWith(fields: Partial<TaskCompletion> = {}): TaskCompletion {
+  return { toggle: vi.fn(), finish: vi.fn(), ...fields };
+}
+
+function renderRow(completion = completionWith(), task = parent) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <ul>
-        <TaskRow task={parent} subtasks={[bread, milk]} onToggle={onToggle} />
+        <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
       </ul>
     </QueryClientProvider>,
   );
@@ -43,8 +47,8 @@ describe("TaskRow avec sous-tâches", () => {
   });
 
   it("coche une sous-tâche seule, sans toucher à sa tâche", async () => {
-    const onToggle = vi.fn<ToggleTask>();
-    renderRow(onToggle);
+    const onToggle = vi.fn<TaskCompletion["toggle"]>();
+    renderRow(completionWith({ toggle: onToggle }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Pain" }));
     expect(onToggle).toHaveBeenCalledExactlyOnceWith(bread, true);
   });
@@ -66,6 +70,17 @@ describe("TaskRow avec sous-tâches", () => {
     renderRow();
     await userEvent.click(screen.getByRole("button", { name: /^Modifier\s*« Courses »$/ }));
     expect(screen.getByRole("list", { name: "Sous-tâches de « Courses »" })).toBeTruthy();
+  });
+
+  it("propose « Terminer » à une tâche répétée seulement", async () => {
+    const finish = vi.fn<TaskCompletion["finish"]>();
+    const weekly = { ...parent, recurrence: { frequency: "WEEKLY", interval: 1 } } as const;
+    renderRow(completionWith({ finish }), weekly);
+    expect(screen.queryByRole("button", { name: /^Terminer\s*« Pain »/ })).toBeNull();
+    await userEvent.click(
+      screen.getByRole("button", { name: /^Terminer\s*« Courses » pour de bon$/ }),
+    );
+    expect(finish).toHaveBeenCalledExactlyOnceWith(weekly);
   });
 
   it("ne présente aucune violation d'accessibilité", async () => {

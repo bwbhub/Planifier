@@ -49,10 +49,13 @@ export type {
 } from "./features/todo/lists/lists.schemas";
 export { createListInputSchema, updateListInputSchema } from "./features/todo/lists/lists.schemas";
 export type {
+  CompleteOccurrenceInput,
   CreateTaskInput,
+  FinishTaskInput,
   ListTasksOutput,
   SetTaskDoneInput,
   TaskOutput,
+  UndoCompletionInput,
   UpdateTaskInput,
 } from "./features/todo/tasks/tasks.schemas";
 export { createTaskInputSchema, updateTaskInputSchema } from "./features/todo/tasks/tasks.schemas";
@@ -60,6 +63,7 @@ export {
   TODO_CONFLICT_REASONS,
   type TodoConflictReason,
   todoConflictDataSchema,
+  recurrenceSchema,
 } from "./features/todo/todo.schemas";
 export { SPACE_CONFLICT_REASONS, type SpaceConflictReason } from "./features/spaces/spaces.schemas";
 export {

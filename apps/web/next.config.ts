@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "@planifier/ui",
     "@planifier/constants",
     "@planifier/domain-access",
+    "@planifier/domain-recurrence",
     "@planifier/tokens",
     "@planifier/api-contract",
   ],

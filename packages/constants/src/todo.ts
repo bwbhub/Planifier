@@ -17,3 +17,10 @@ export const TODO_LIST_MAX_TASKS = 500;
 export function isListTint(value: string): value is ListTint {
   return LIST_TINTS.some((tint) => tint === value);
 }
+
+/** Rythmes de répétition d'une tâche (ADR 0017). */
+export const RECURRENCE_FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
+export type RecurrenceFrequency = (typeof RECURRENCE_FREQUENCIES)[number];
+
+/** Intervalle d'une répétition (« toutes les N semaines ») au plus. */
+export const RECURRENCE_MAX_INTERVAL = 99;

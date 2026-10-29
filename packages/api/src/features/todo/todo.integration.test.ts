@@ -4,11 +4,16 @@ import { TODO_LIST_MAX_TASKS, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import { createTestDatabase } from "@planifier/db/testing";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { ApiContext } from "../../procedures";
-import { createRateLimiter, PLAN_RATE_LIMIT } from "../../rate-limit";
 import { router } from "../../router";
 import { updateList } from "./lists/lists.service";
 import { updateTask } from "./tasks/tasks.service";
+import {
+  createList,
+  createListWithTask,
+  createTestUser,
+  requestAs,
+  WEEKLY as weekly,
+} from "./todo.testing";
 
 // Base réelle dédiée en `_test` (`createTestDatabase`), vidée avant chaque test. Lancement : `pnpm test:integration`.
 const { db, reset } = createTestDatabase();
@@ -17,39 +22,14 @@ const { lists, tasks } = router.todo;
 let alice: SessionUser;
 let bob: SessionUser;
 
-/** Contexte d'une requête de `user` (null : sans session) ; limiteur neuf, aucun état partagé. */
-function asUser(user: SessionUser | null): { context: ApiContext } {
-  return {
-    context: {
-      requestId: "test",
-      clientIp: "192.0.2.1",
-      consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
-      getSessionUser: () => Promise.resolve(user),
-      getDb: () => db,
-    },
-  };
-}
-
-async function createUser(name: string): Promise<SessionUser> {
-  return db.user.create({
-    data: { name, email: `${name}@example.test`, emailVerified: true },
-    select: { id: true, name: true, email: true, preferredTheme: true },
-  });
-}
-
-const createAliceList = () =>
-  call(lists.create, { name: "Maison", tint: "general" }, asUser(alice));
-
-async function createAliceTask() {
-  const list = await createAliceList();
-  const task = await call(tasks.create, { listId: list.id, title: "Courses" }, asUser(alice));
-  return { list, task };
-}
+const asUser = (user: SessionUser | null) => requestAs(db, user);
+const createAliceList = () => createList(db, alice);
+const createAliceTask = () => createListWithTask(db, alice);
 
 beforeEach(async () => {
   await reset();
-  alice = await createUser("alice");
-  bob = await createUser("bob");
+  alice = await createTestUser(db, "alice");
+  bob = await createTestUser(db, "bob");
 });
 
 afterAll(async () => {
@@ -182,6 +162,73 @@ describe("todo.tasks (base réelle)", () => {
   });
 });
 
+describe("todo.tasks : sous-tâches (base réelle)", () => {
+  it("crée une sous-tâche, cochée indépendamment de son parent", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    expect(subtask.parentId).toBe(task.id);
+    await call(tasks.setDone, { taskId: subtask.id, done: true }, asUser(alice));
+    const { items } = await call(tasks.list, { listId: list.id }, asUser(alice));
+    // Rien n'est coché d'office : le parent reste à faire.
+    expect(items.find(({ id }) => id === task.id)?.completedAt).toBeNull();
+  });
+
+  it("ne compte pas les sous-tâches dans les tâches à faire de la liste", async () => {
+    const { list, task } = await createAliceTask();
+    await call(tasks.create, { listId: list.id, parentId: task.id, title: "Pain" }, asUser(alice));
+    const { items } = await call(lists.list, {}, asUser(alice));
+    expect(items[0]?.openTaskCount).toBe(1);
+  });
+
+  it("refuse un deuxième niveau : CONFLICT NESTED_SUBTASK", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    await expect(
+      call(
+        tasks.create,
+        { listId: list.id, parentId: subtask.id, title: "Baguette" },
+        asUser(alice),
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "NESTED_SUBTASK" } });
+  });
+
+  it("refuse un parent d'une autre liste : NOT_FOUND", async () => {
+    const { task } = await createAliceTask();
+    const other = await call(lists.create, { name: "Autre", tint: "trip" }, asUser(alice));
+    await expect(
+      call(tasks.create, { listId: other.id, parentId: task.id, title: "Égarée" }, asUser(alice)),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("refuse en parent la tâche de quelqu'un d'autre : NOT_FOUND, rien n'est créé", async () => {
+    const { task } = await createAliceTask();
+    const bobList = await call(lists.create, { name: "Bob", tint: "trip" }, asUser(bob));
+    await expect(
+      call(tasks.create, { listId: bobList.id, parentId: task.id, title: "Intrus" }, asUser(bob)),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(db.task.count({ where: { parentId: task.id } })).resolves.toBe(0);
+  });
+
+  it("supprime les sous-tâches avec leur parent", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    await call(tasks.delete, { taskId: task.id }, asUser(alice));
+    await expect(db.task.findUnique({ where: { id: subtask.id } })).resolves.toBeNull();
+  });
+});
+
 describe("todo : supprimée entre la garde et l'écriture (base réelle)", () => {
   // Services appelés directement : la garde est passée, puis la ressource disparaît.
   it("modifier une liste supprimée : NOT_FOUND, pas une version périmée", async () => {
@@ -220,6 +267,17 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, anonymous),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, anonymous),
       call(tasks.setDone, { taskId: task.id, done: true }, anonymous),
+      call(
+        tasks.completeOccurrence,
+        { taskId: task.id, version: 1, today: "2026-10-28" },
+        anonymous,
+      ),
+      call(tasks.finish, { taskId: task.id, version: 1 }, anonymous),
+      call(
+        tasks.undoCompletion,
+        { taskId: task.id, version: 1, dueDate: null, recurrence: weekly },
+        anonymous,
+      ),
       call(tasks.delete, { taskId: task.id }, anonymous),
     ];
     for (const attempt of attempts) {
@@ -237,6 +295,13 @@ describe("todo : droits (base réelle)", () => {
       call(tasks.create, { listId: list.id, title: "Intrus" }, asBob),
       call(tasks.update, { taskId: task.id, version: 1, title: "Pris" }, asBob),
       call(tasks.setDone, { taskId: task.id, done: true }, asBob),
+      call(tasks.completeOccurrence, { taskId: task.id, version: 1, today: "2026-10-28" }, asBob),
+      call(tasks.finish, { taskId: task.id, version: 1 }, asBob),
+      call(
+        tasks.undoCompletion,
+        { taskId: task.id, version: 1, dueDate: null, recurrence: weekly },
+        asBob,
+      ),
       call(tasks.delete, { taskId: task.id }, asBob),
     ];
     for (const attempt of attempts) {

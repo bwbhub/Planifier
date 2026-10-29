@@ -7,6 +7,8 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
     "Cet élément a changé entre-temps. Recharge la page pour voir sa dernière version.",
   TOO_MANY_LISTS: `Tu as déjà ${String(TODO_MAX_LISTS)} listes. Supprimes-en une pour en créer une autre.`,
   LIST_FULL: `Cette liste compte déjà ${String(TODO_LIST_MAX_TASKS)} tâches. Supprimes-en pour en ajouter.`,
+  NESTED_SUBTASK: "Une sous-tâche ne peut pas avoir ses propres sous-tâches.",
+  NOT_RECURRING: "Cette tâche ne se répète plus. Recharge la page.",
 };
 
 const FALLBACK = "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";

@@ -54,17 +54,58 @@ async function createListAndCheckTask(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
-/** Sur le Todo : modifie puis supprime la tâche, renomme puis supprime la liste. */
+/** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
-  await page.goto("/todo");
+  // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
+  const parent = page.getByRole("checkbox", { name: "Acheter du pain", exact: true });
+  await parent.click();
+  await expect(parent).not.toBeChecked();
+
+  await page.getByRole("button", { name: "+ Sous-tâche à « Acheter du pain »" }).click();
+  const subtaskInput = page.getByLabel("Nouvelle sous-tâche");
+  await subtaskInput.fill("Baguette");
+  await page
+    .locator("form", { has: subtaskInput })
+    .getByRole("button", { name: "Ajouter" })
+    .click();
+  await page.getByRole("checkbox", { name: "Baguette" }).click();
+  await expect(page.getByText("1 sur 1 sous-tâche cochée")).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
+  await expect(parent).not.toBeChecked();
+
   await page.getByRole("button", { name: "Modifier « Acheter du pain »" }).click();
   await page.getByLabel("Titre").fill("Acheter du pain complet");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("checkbox", { name: "Acheter du pain complet" })).toBeVisible();
 
   await page.getByRole("button", { name: "Supprimer « Acheter du pain complet »" }).click();
+  await expect(
+    page.getByRole("group", { name: "Supprimer « Acheter du pain complet » et sa sous-tâche ?" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Supprimer définitivement" }).click();
   await expect(page.getByText("Aucune tâche dans cette liste.")).toBeVisible();
+
+  // Tâche répétée : cochée, elle reste à faire et annonce sa prochaine échéance.
+  await page.getByLabel("Nouvelle tâche").fill("Arroser les plantes");
+  await page.getByText("Description, échéance, répétition (facultatives)").click();
+  // Le bouton radio est masqué visuellement : on clique sur sa pastille, comme on le ferait à la main.
+  await page.getByText("Chaque semaine", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Chaque semaine" })).toBeChecked();
+  await page.getByRole("button", { name: "Ajouter" }).click();
+  await expect(page.getByText("Toutes les semaines")).toBeVisible();
+  await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).not.toBeChecked();
+  // Garde-fou : l'occurrence faite s'annule.
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "coche annulée" })).toBeVisible();
+
+  // Terminer pour de bon : la répétition s'arrête, la tâche passe dans « Cochées ».
+  await page.getByRole("button", { name: "Terminer « Arroser les plantes » pour de bon" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "ne se répète plus" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).toBeChecked();
+  await expect(page.getByText("Toutes les semaines")).toBeHidden();
 
   await page.getByRole("button", { name: "Modifier la liste" }).click();
   await page.getByLabel("Nom de la liste").fill("Marché");
@@ -121,7 +162,9 @@ test.describe.serial("parcours d'un compte", () => {
     await createListAndCheckTask(page);
   });
 
-  test("modifie puis supprime la tâche et la liste quand on le demande", async ({ page }) => {
+  test("ajoute une sous-tâche, modifie puis supprime la tâche et la liste quand on le demande", async ({
+    page,
+  }) => {
     await page.context().addCookies(session);
     await page.goto("/todo");
     await editThenDeleteTaskAndList(page);

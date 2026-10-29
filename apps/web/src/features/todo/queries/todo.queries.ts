@@ -3,6 +3,8 @@ import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { orpc } from "@/lib/orpc";
 
+import { withOccurrenceDone, withTaskDone } from "../utils/task-done";
+
 /** Invalidation centralisée : toute écriture du module relit ses listes et ses tâches (compteurs compris). */
 function invalidateTodo(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: orpc.todo.key() });
@@ -47,20 +49,43 @@ export function useUpdateTask() {
   return useMutation(orpc.todo.tasks.update.mutationOptions({ onSettled }));
 }
 
+/** Occurrence d'une tâche répétée faite : échéance avancée tout de suite (rendu optimiste), restaurée en cas de refus. */
+export function useCompleteOccurrence(listId: string) {
+  const queryClient = useQueryClient();
+  const onSettled = useInvalidateTodo();
+  const tasksKey = orpc.todo.tasks.list.queryKey({ input: { listId } });
+  return useMutation(
+    orpc.todo.tasks.completeOccurrence.mutationOptions({
+      onMutate: async ({ taskId, today }) => {
+        await queryClient.cancelQueries({ queryKey: orpc.todo.key() });
+        const previousTasks = queryClient.getQueryData<ListTasksOutput>(tasksKey);
+        if (previousTasks !== undefined) {
+          queryClient.setQueryData(tasksKey, withOccurrenceDone(previousTasks, taskId, today));
+        }
+        return { previousTasks };
+      },
+      onError: (_error, _input, context) => {
+        if (context?.previousTasks !== undefined)
+          queryClient.setQueryData(tasksKey, context.previousTasks);
+      },
+      onSettled,
+    }),
+  );
+}
+
+export function useFinishTask() {
+  const onSettled = useInvalidateTodo();
+  return useMutation(orpc.todo.tasks.finish.mutationOptions({ onSettled }));
+}
+
+export function useUndoCompletion() {
+  const onSettled = useInvalidateTodo();
+  return useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
+}
+
 export function useDeleteTask() {
   const onSettled = useInvalidateTodo();
   return useMutation(orpc.todo.tasks.delete.mutationOptions({ onSettled }));
-}
-
-/** Tâches avec `taskId` cochée ou décochée ; `delta` : variation du nombre de tâches à faire (0 si déjà dans l'état). */
-function withTaskDone(tasks: ListTasksOutput, taskId: string, done: boolean) {
-  let delta = 0;
-  const items = tasks.items.map((task) => {
-    if (task.id !== taskId || (task.completedAt !== null) === done) return task;
-    delta = done ? -1 : 1;
-    return { ...task, completedAt: done ? new Date() : null };
-  });
-  return { tasks: { items }, delta };
 }
 
 /**

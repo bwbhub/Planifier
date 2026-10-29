@@ -27,6 +27,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | implémentation API     | `@planifier/api`                                           | plans public, user ; Espaces, Todo                                                         |
 | auth                   | `@planifier/auth`                                          | posé (Better Auth)                                                                         |
 | droits (logique pure)  | `@planifier/domain-access`                                 | posé                                                                                       |
+| récurrence (pure)      | `@planifier/domain-recurrence`                             | posé                                                                                       |
 | e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)                                              |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)

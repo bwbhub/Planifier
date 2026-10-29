@@ -3,96 +3,195 @@
 import type { TaskOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
+import { useState } from "react";
 
 import { TaskForm } from "../forms/task-form";
-import { useDeleteTask, useUpdateTask } from "../queries/todo.queries";
-import { formatDueDate, isPastDue, today } from "../utils/due-date";
+import { useDeleteTask } from "../queries/todo.queries";
+import { recurrenceLabel } from "../utils/recurrence";
+import { deleteQuestion, isSubtask, subtaskCountLabel } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
+import { DueDate } from "./due-date";
 import { TodoErrorAlert } from "./todo-error-alert";
 
-/** Échéance ; passée, elle se dit sans reproche et propose un report (CONTEXT.md, tâche en retard). */
-function DueDate({ task, done }: { task: TaskOutput; done: boolean }) {
-  const updateTask = useUpdateTask();
-  if (task.dueDate === null) return null;
-  const todayDay = today();
-  const label = formatDueDate(task.dueDate, todayDay);
-  if (done || !isPastDue(task.dueDate, todayDay)) {
-    return <span className="text-sm text-muted">Pour le {label}</span>;
-  }
+/**
+ * Gestes de complétion d'une tâche, au geste de l'utilisateur seulement ; erreur et annonce s'affichent dans la liste.
+ * `toggle` : cocher ou décocher (tâche répétée : occurrence faite) ; `finish` : terminer pour de bon une tâche répétée.
+ */
+export interface TaskCompletion {
+  toggle: (task: TaskOutput, done: boolean) => void;
+  finish: (task: TaskOutput) => void;
+}
+
+interface SubtasksProps {
+  task: TaskOutput;
+  subtasks: readonly TaskOutput[];
+  adding: boolean;
+  completion: TaskCompletion;
+  onStopAdding: () => void;
+}
+
+/** Sous-tâches d'une tâche, cochées une à une (rien ne se coche en cascade), et leur ajout sur place. */
+function Subtasks({ task, subtasks, adding, completion, onStopAdding }: SubtasksProps) {
+  if (subtasks.length === 0 && !adding) return null;
   return (
-    <span className="flex flex-wrap items-center gap-x-2 text-sm text-muted">
-      Prévue le {label}
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={updateTask.isPending}
-        onClick={() => {
-          updateTask.mutate({ taskId: task.id, version: task.version, dueDate: todayDay });
-        }}
-      >
-        Reporter à aujourd&apos;hui<span className="sr-only"> « {task.title} »</span>
+    <div className="flex flex-col gap-2 pl-8">
+      {subtasks.length === 0 ? null : (
+        <>
+          <p className="text-sm text-muted">{subtaskCountLabel(subtasks)}</p>
+          <ul
+            className="flex flex-col gap-1 border-l-2 border-line pl-3"
+            aria-label={`Sous-tâches de « ${task.title} »`}
+          >
+            {subtasks.map((subtask) => (
+              <TaskRow key={subtask.id} task={subtask} completion={completion} />
+            ))}
+          </ul>
+        </>
+      )}
+      {adding ? <TaskForm listId={task.listId} parentId={task.id} onDone={onStopAdding} /> : null}
+    </div>
+  );
+}
+
+/** Case à cocher et titre, puis échéance et description. */
+function TaskMain({
+  task,
+  done,
+  onToggle,
+}: {
+  task: TaskOutput;
+  done: boolean;
+  onToggle: TaskCompletion["toggle"];
+}) {
+  return (
+    <div className="flex flex-1 flex-col gap-0.5">
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 pt-2.5">
+        <input
+          type="checkbox"
+          checked={done}
+          onChange={(event) => {
+            onToggle(task, event.target.checked);
+          }}
+          className="mt-0.5 size-5 shrink-0 cursor-pointer accent-accent"
+        />
+        <span className={done ? "text-muted line-through" : "font-semibold"}>{task.title}</span>
+      </label>
+      <div className="flex flex-col gap-0.5 pl-8">
+        <DueDate task={task} done={done} />
+        {task.recurrence === null ? null : (
+          <span className="text-sm text-muted">{recurrenceLabel(task.recurrence)}</span>
+        )}
+        {task.description === null ? null : (
+          <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface TaskActionsProps {
+  task: TaskOutput;
+  /** Absent pour une sous-tâche : un seul niveau. */
+  onAddSubtask: (() => void) | undefined;
+  /** Présent pour une tâche répétée à faire : la répétition s'arrête et la tâche est cochée. */
+  onFinish: (() => void) | undefined;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+/** Actions discrètes d'une tâche, nommées avec son titre pour les lecteurs d'écran. */
+function TaskActions({ task, onAddSubtask, onFinish, onEdit, onDelete }: TaskActionsProps) {
+  return (
+    <div className="-ml-3 flex flex-wrap pl-8 sm:ml-0 sm:shrink-0 sm:justify-end sm:pl-0">
+      {onAddSubtask === undefined ? null : (
+        <Button variant="ghost" size="sm" onClick={onAddSubtask}>
+          + Sous-tâche<span className="sr-only"> à « {task.title} »</span>
+        </Button>
+      )}
+      {onFinish === undefined ? null : (
+        <Button variant="ghost" size="sm" onClick={onFinish}>
+          Terminer<span className="sr-only"> « {task.title} » pour de bon</span>
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" onClick={onEdit}>
+        Modifier<span className="sr-only"> « {task.title} »</span>
       </Button>
-      {updateTask.isError ? <TodoErrorAlert error={updateTask.error} /> : null}
-    </span>
+      <Button variant="ghost" size="sm" onClick={onDelete}>
+        Supprimer<span className="sr-only"> « {task.title} »</span>
+      </Button>
+    </div>
   );
 }
 
 interface TaskRowProps {
   task: TaskOutput;
-  /** Coche ou décoche, au geste de l'utilisateur seulement ; l'erreur s'affiche dans la liste. */
-  onToggle: (done: boolean) => void;
+  /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
+  subtasks?: readonly TaskOutput[];
+  completion: TaskCompletion;
 }
 
-/** Une tâche : case à cocher, échéance et description, modification et suppression sur place. */
-export function TaskRow({ task, onToggle }: TaskRowProps) {
+/** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
+export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
+  const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
   const done = task.completedAt !== null;
+  const subtask = isSubtask(task);
+  const subtaskList = (
+    <Subtasks
+      task={task}
+      subtasks={subtasks}
+      adding={addingSubtask}
+      completion={completion}
+      onStopAdding={() => {
+        setAddingSubtask(false);
+      }}
+    />
+  );
 
+  // En modification, seule la tâche devient un formulaire : ses sous-tâches restent affichées dessous.
   if (mode === "edit") {
     return (
-      <li className="rounded-control bg-surface p-4">
+      <li className="flex flex-col gap-2 rounded-control bg-surface p-4">
         <TaskForm listId={task.listId} task={task} onDone={showView} />
+        {subtaskList}
       </li>
     );
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-control bg-surface px-4 py-3">
-      <div className="flex items-start gap-3">
-        <div className="flex flex-1 flex-col gap-0.5">
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 pt-2.5">
-            <input
-              type="checkbox"
-              checked={done}
-              onChange={(event) => {
-                onToggle(event.target.checked);
-              }}
-              className="mt-0.5 size-5 shrink-0 cursor-pointer accent-accent"
-            />
-            <span className={done ? "text-muted line-through" : "font-semibold"}>{task.title}</span>
-          </label>
-          <div className="flex flex-col gap-0.5 pl-8">
-            <DueDate task={task} done={done} />
-            {task.description === null ? null : (
-              <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
-            )}
-          </div>
-        </div>
+    <li
+      className={
+        subtask ? "flex flex-col gap-1" : "flex flex-col gap-2 rounded-control bg-surface px-4 py-3"
+      }
+    >
+      <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3">
+        <TaskMain task={task} done={done} onToggle={completion.toggle} />
         {mode === "view" ? (
-          <div className="flex shrink-0">
-            <Button variant="ghost" size="sm" onClick={showEdit}>
-              Modifier<span className="sr-only"> « {task.title} »</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={showConfirmDelete}>
-              Supprimer<span className="sr-only"> « {task.title} »</span>
-            </Button>
-          </div>
+          <TaskActions
+            task={task}
+            onAddSubtask={
+              subtask
+                ? undefined
+                : () => {
+                    setAddingSubtask(true);
+                  }
+            }
+            onFinish={
+              task.recurrence === null || done
+                ? undefined
+                : () => {
+                    completion.finish(task);
+                  }
+            }
+            onEdit={showEdit}
+            onDelete={showConfirmDelete}
+          />
         ) : null}
       </div>
       {mode === "confirmDelete" ? (
         <ConfirmPanel
-          question={`Supprimer « ${task.title} » ?`}
+          question={deleteQuestion(task.title, subtasks.length)}
           confirmLabel="Supprimer définitivement"
           keepLabel="Garder la tâche"
           pending={deleteTask.isPending}
@@ -103,6 +202,7 @@ export function TaskRow({ task, onToggle }: TaskRowProps) {
         />
       ) : null}
       {deleteTask.isError ? <TodoErrorAlert error={deleteTask.error} /> : null}
+      {subtaskList}
     </li>
   );
 }

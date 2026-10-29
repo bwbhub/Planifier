@@ -18,6 +18,68 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Récurrence : terminer et annuler (branche `feat/todo-recurrence`, PR #20)
+
+**Fait** (réponses de l'utilisateur aux points ouverts) :
+
+- `todo.tasks.finish` (additif) : arrête la répétition et coche, en une écriture ; action « Terminer » sur une tâche
+  répétée à faire ; la tâche passe, grisée, dans « Cochées ».
+- `todo.tasks.undoCompletion` (additif) : « Annuler » dans l'annonce, après une occurrence faite ou un « Terminer »
+  (échéance et règle d'avant, ancre gardée, `STALE_VERSION` si modifiée entre-temps).
+- Service : écritures versionnées factorisées (`writeVersioned`) ; `useToggleTask` devient `useTaskCompletion`
+  (`toggle`, `finish`, annonce avec annulation) ; `TaskRow` reçoit `completion`.
+- Tests : intégration (terminer, annuler les deux, le 31 gardé après annulation, version périmée, matrice des droits
+  anonyme et autre utilisateur) ; fichier `todo-recurrence.integration.test.ts` séparé (seuil de 500 lignes) avec aide
+  `todo.testing.ts` ; composants (`TaskRow` « Terminer », `ListPanel` annuler et terminer) ; E2E (annuler, terminer).
+- ADR 0017 : décisions ajoutées ; reste « proposé » en attendant le choix des tâches planifiées (cron).
+
+**Décisions de l'utilisateur** : sous-tâches gardées cochées d'une occurrence à l'autre ; `today` non borné (appareil
+mal réglé : problème du client) ; forme du compteur de sous-tâches à revoir plus tard.
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 94/94, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28.
+
+**Ouvert** : ADR 0017 (cron) ; champ « Intervalle » affiché avec « Jamais ».
+
+**Attendu ensuite** : partage, liste partagée, assignation, une fois #21 et la pile Todo fusionnées (ou fusion à la
+main des composants `ui`).
+
+---
+
+## 2026-10-29 — Revue de la récurrence (branche `feat/todo-recurrence`, PR #20)
+
+**Fait** : #19 fusionnée dans la branche ; commit « limite des plans réglable » repris de #21 (l'E2E dépassait la
+limite) ; `/code-review` (standards + spec) puis corrections :
+
+- **Bug** : le jour d'origine glissait (mensuelle au 31 : 28 février puis 28 pour toujours). Ancre de série
+  `tasks.recurrence_anchor` (migration de la PR complétée), posée à la première occurrence, remise à vide quand
+  l'échéance ou la règle change ; `nextDueDate(règle, { anchor, due }, today)` compte toujours depuis l'ancre.
+  ADR 0017 mis à jour.
+- `domain-recurrence` : une table de pas (`STEPS`) au lieu d'un `switch` et d'une table de périodes ; `addDays` et
+  `daysBetween` dans `constants/days` ; tests : séries cochées une à une (31 → 28/02 → 31/03, 29/02), propriété
+  « aucun glissement ».
+- Web : occurrence faite en rendu optimiste (`withOccurrenceDone`, restauré si refus) ; détails du formulaire
+  ouverts selon une liste explicite de champs ; tests `TaskForm` (répétition, intervalle refusé, préremplissage,
+  axe) et `ListPanel` (occurrence faite, annonce, refus, axe) ; aide de test `lib/testing/rpc-fetch.ts` (copie
+  identique de #21).
+- Intégration : série au 31 par l'API, échéance changée à la main, deux coches simultanées, tâche supprimée.
+- `DEPENDANCES.md` : `domain-recurrence` parmi les consommateurs de zod.
+
+**Décisions** : forme de la règle déclarée dans le contrat et dans `domain-recurrence` (un `domain-*` ne dépend pas
+du contrat : workspace-architecture) ; `use-toggle-task` reste dans `utils/` (précédent `use-in-place-mode`).
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 90/90, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28 (avant le
+découpage d'un `describe` d'intégration, sans effet sur l'E2E). Bases locales (dev et test) : colonne ajoutée à la
+main (`ALTER TABLE … ADD COLUMN IF NOT EXISTS recurrence_anchor`), la migration ayant été complétée après application.
+
+**Ouvert** : points à trancher dans `docs/SUITE.md` §4 (ADR 0017 à valider, « terminer pour de bon », sous-tâches
+d'une tâche répétée, borne de `today`, annulation d'une occurrence).
+
+**Attendu ensuite** : partage, liste partagée, assignation (après fusion de #21 pour les composants `ui`).
+
+---
+
 ## 2026-10-29 — Fusion de `feat/espaces-ui` dans les branches Todo (branche `feat/todo-minimal`)
 
 **Fait** : merge de `feat/espaces-ui` dans `feat/todo-minimal` (conflits : `Button` variantes et tailles unifiées,
@@ -26,6 +88,72 @@ en-tête avec les deux navs, routes, validation de formulaire dans `_shared/form
 **Ouvert** : `Button` sm rapetisse dans les Espaces ; doublon `LoadError` (SUITE §4). Merge des PR à faire par
 l'utilisateur (refusé à l'agent).
 **Attendu ensuite** : propager dans `feat/todo-sous-taches` puis `feat/todo-recurrence`.
+
+---
+
+## 2026-10-29 — Revue des sous-tâches (branche `feat/todo-sous-taches`, PR #19)
+
+**Fait** : `/code-review` (standards + spec), sans violation nette ; corrections :
+
+- utilitaires purs testés : `utils/subtasks.ts` (`isSubtask`, `subtasksByParent`, compteur, question de
+  suppression) et `utils/task-done.ts` (`withTaskDone`, sorti des requêtes) ; prédicat « sous-tâche » partagé ;
+- `DueDate` dans son propre atome ; `subtasks` facultatif sur `TaskRow` ; sous-tâches gardées à l'écran pendant
+  la modification de leur tâche ;
+- tests : `TaskRow` (compteur, coche seule, un niveau, suppression, modification, axe) ; intégration : parent
+  appartenant à quelqu'un d'autre ⇒ `NOT_FOUND` ; E2E : la tâche part décochée, cocher la sous-tâche la laisse
+  décochée (avant et après rechargement), bouton « Ajouter » ciblé par son formulaire ;
+- `CONTEXT.md` : définition de « Sous-tâche ».
+
+**Décisions** : `Subtasks` reste dans `task-row.tsx` (le sortir créerait un import circulaire avec `TaskRow`).
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 80/80, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28.
+
+**Ouvert** : points à trancher dans `docs/SUITE.md` §4 (forme du compteur, sous-tâche ouverte sous tâche cochée).
+
+**Attendu ensuite** : report sur `feat/todo-recurrence` (#20), puis sa revue.
+
+---
+
+## 2026-10-28 — Todo : récurrence (branche `feat/todo-recurrence`, ticket `869fhwtqr`, en partie)
+
+**Fait** : ADR 0017 (proposé) ; package `@planifier/domain-recurrence` (`nextDueDate` pur, forme stockée versionnée,
+cas d'or et propriétés) ; colonne `tasks.recurrence` JSON (migration `recurrence_taches`), `JSON_DB_NULL` exporté par
+`db` ; contrat : `recurrence` en création, modification (`null` arrête) et sortie, procédure `completeOccurrence`
+(`version` + `today`), `CONFLICT NOT_RECURRING` ; web : « Répéter » et « Intervalle » dans les détails, « Toutes les
+semaines » sur la ligne, coche d'une tâche répétée ⇒ échéance avancée et annonce « Prochaine fois le … ».
+
+**Décisions (agent, à valider, ADR 0017)** : une ligne par tâche répétée, échéance avancée à la coche (première
+occurrence après aujourd'hui), pas de nouvelle tâche ; fin de mois ramenée au dernier jour ; « today » envoyé par
+l'appareil ; rappel proposé reporté aux notifications.
+
+**Vérifié** : portes OK ; `domain-recurrence` 9 tests ; `test:integration` api 85/85 (6 nouveaux + matrice de droits
+étendue) ; `test:e2e` 28/28 (tâche hebdomadaire cochée : reste à faire, annonce la suivante). **Non vérifié** : CI, à
+la main.
+
+**Ouvert** : l'E2E frôle la limitation de débit des plans (120 requêtes/min par IP, tout le run vient de localhost) :
+des 429 sont journalisés sur les derniers tests mobile, sans échec. À traiter à part (limite configurable pour l'E2E
+ou clé par session ; touche la sécurité ⇒ revue humaine).
+
+**Attendu ensuite** : PR empilée sur #19 ; puis UI Espaces.
+
+---
+
+## 2026-10-28 — Todo : sous-tâches (branche `feat/todo-sous-taches`, ticket `869fhwtqr`, en partie)
+
+**Fait** : `Task.parentId` (même liste, un seul niveau, supprimées avec leur parent), migration `sous_taches` ;
+`tasks.create` accepte `parentId` (parent d'une autre liste ⇒ `NOT_FOUND`, sous-tâche d'une sous-tâche ⇒ `CONFLICT
+NESTED_SUBTASK`) ; `openTaskCount` sans les sous-tâches ; web : sous-tâches sous leur parent, « 1 sur 2 sous-tâches
+cochées », « + Sous-tâche » sur place, question de suppression qui nomme les sous-tâches ; actions d'une tâche sous
+son titre sur mobile (débordement de 23 px vu par l'E2E). Seed : deux sous-tâches.
+
+**Décisions (agent, à valider)** : cocher une tâche ne coche pas ses sous-tâches, et inversement (principe 14) ;
+sous-tâches comptées dans la borne de 500 tâches par liste ; une sous-tâche ne change pas de parent.
+
+**Vérifié** : portes OK ; `test:integration` api 79/79 (5 nouveaux) ; `test:e2e` 28/28 (sous-tâche ajoutée et cochée
+sans cocher le parent). **Non vérifié** : CI, à la main.
+
+**Attendu ensuite** : PR empilée sur #18 ; puis récurrence.
 
 ---
 

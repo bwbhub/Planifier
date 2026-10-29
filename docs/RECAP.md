@@ -29,6 +29,48 @@ l'utilisateur (refusé à l'agent).
 
 ---
 
+## 2026-10-29 — Revue des sous-tâches (branche `feat/todo-sous-taches`, PR #19)
+
+**Fait** : `/code-review` (standards + spec), sans violation nette ; corrections :
+
+- utilitaires purs testés : `utils/subtasks.ts` (`isSubtask`, `subtasksByParent`, compteur, question de
+  suppression) et `utils/task-done.ts` (`withTaskDone`, sorti des requêtes) ; prédicat « sous-tâche » partagé ;
+- `DueDate` dans son propre atome ; `subtasks` facultatif sur `TaskRow` ; sous-tâches gardées à l'écran pendant
+  la modification de leur tâche ;
+- tests : `TaskRow` (compteur, coche seule, un niveau, suppression, modification, axe) ; intégration : parent
+  appartenant à quelqu'un d'autre ⇒ `NOT_FOUND` ; E2E : la tâche part décochée, cocher la sous-tâche la laisse
+  décochée (avant et après rechargement), bouton « Ajouter » ciblé par son formulaire ;
+- `CONTEXT.md` : définition de « Sous-tâche ».
+
+**Décisions** : `Subtasks` reste dans `task-row.tsx` (le sortir créerait un import circulaire avec `TaskRow`).
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier
+--check` : OK ; `pnpm test:integration` : api 80/80, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 28/28.
+
+**Ouvert** : points à trancher dans `docs/SUITE.md` §4 (forme du compteur, sous-tâche ouverte sous tâche cochée).
+
+**Attendu ensuite** : report sur `feat/todo-recurrence` (#20), puis sa revue.
+
+---
+
+## 2026-10-28 — Todo : sous-tâches (branche `feat/todo-sous-taches`, ticket `869fhwtqr`, en partie)
+
+**Fait** : `Task.parentId` (même liste, un seul niveau, supprimées avec leur parent), migration `sous_taches` ;
+`tasks.create` accepte `parentId` (parent d'une autre liste ⇒ `NOT_FOUND`, sous-tâche d'une sous-tâche ⇒ `CONFLICT
+NESTED_SUBTASK`) ; `openTaskCount` sans les sous-tâches ; web : sous-tâches sous leur parent, « 1 sur 2 sous-tâches
+cochées », « + Sous-tâche » sur place, question de suppression qui nomme les sous-tâches ; actions d'une tâche sous
+son titre sur mobile (débordement de 23 px vu par l'E2E). Seed : deux sous-tâches.
+
+**Décisions (agent, à valider)** : cocher une tâche ne coche pas ses sous-tâches, et inversement (principe 14) ;
+sous-tâches comptées dans la borne de 500 tâches par liste ; une sous-tâche ne change pas de parent.
+
+**Vérifié** : portes OK ; `test:integration` api 79/79 (5 nouveaux) ; `test:e2e` 28/28 (sous-tâche ajoutée et cochée
+sans cocher le parent). **Non vérifié** : CI, à la main.
+
+**Attendu ensuite** : PR empilée sur #18 ; puis récurrence.
+
+---
+
 ## 2026-10-29 — Corrections de revue des Espaces (branche `feat/espaces-ui`)
 
 **Fait**

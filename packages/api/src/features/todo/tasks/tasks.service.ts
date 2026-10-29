@@ -8,13 +8,14 @@ import type {
 } from "@planifier/api-contract";
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
-import type { Db, Prisma } from "@planifier/db";
+import type { Db, DbTransaction, Prisma } from "@planifier/db";
 
 import { todoConflict } from "../todo-errors";
 
 const TASK_SELECT = {
   id: true,
   listId: true,
+  parentId: true,
   title: true,
   description: true,
   dueDate: true,
@@ -40,10 +41,20 @@ export async function listTasks(db: Db, listId: string): Promise<ListTasksOutput
   return { items: rows.map(toTaskOutput) };
 }
 
+/** Parent d'une sous-tâche : tâche de la même liste (sinon NOT_FOUND), elle-même pas une sous-tâche. */
+async function assertParent(tx: DbTransaction, listId: string, parentId: string) {
+  const parent = await tx.task.findFirst({
+    where: { id: parentId, listId },
+    select: { parentId: true },
+  });
+  if (parent === null) throw new ORPCError("NOT_FOUND");
+  if (parent.parentId !== null) throw todoConflict("NESTED_SUBTASK");
+}
+
 /** Sous le verrou de la ligne de la liste : deux créations simultanées ne dépassent pas la borne. */
 export async function createTask(
   db: Db,
-  { listId, title, description, dueDate }: CreateTaskInput,
+  { listId, parentId, title, description, dueDate }: CreateTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<
@@ -53,9 +64,11 @@ export async function createTask(
     if (locked.length === 0) throw new ORPCError("NOT_FOUND");
     const count = await tx.task.count({ where: { listId } });
     if (count >= TODO_LIST_MAX_TASKS) throw todoConflict("LIST_FULL");
+    if (parentId !== undefined) await assertParent(tx, listId, parentId);
     const task = await tx.task.create({
       data: {
         listId,
+        parentId: parentId ?? null,
         title,
         description: description ?? null,
         dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
@@ -111,6 +124,7 @@ export async function setTaskDone(
   return readTask(db, taskId);
 }
 
+/** Ses sous-tâches partent avec elle (`onDelete: Cascade`). */
 export async function deleteTask(db: Db, taskId: string): Promise<void> {
   await db.task.deleteMany({ where: { id: taskId } });
 }

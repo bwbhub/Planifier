@@ -24,6 +24,8 @@ export const SEED_IDS = {
   taskPlants: "00000000-0000-7000-8000-000000000081",
   taskBill: "00000000-0000-7000-8000-000000000082",
   taskTickets: "00000000-0000-7000-8000-000000000083",
+  subtaskBread: "00000000-0000-7000-8000-000000000084",
+  subtaskFruit: "00000000-0000-7000-8000-000000000085",
 } as const;
 
 /** Modules activés pour les comptes et l'Espace de démo. */

@@ -182,6 +182,73 @@ describe("todo.tasks (base réelle)", () => {
   });
 });
 
+describe("todo.tasks : sous-tâches (base réelle)", () => {
+  it("crée une sous-tâche, cochée indépendamment de son parent", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    expect(subtask.parentId).toBe(task.id);
+    await call(tasks.setDone, { taskId: subtask.id, done: true }, asUser(alice));
+    const { items } = await call(tasks.list, { listId: list.id }, asUser(alice));
+    // Rien n'est coché d'office : le parent reste à faire.
+    expect(items.find(({ id }) => id === task.id)?.completedAt).toBeNull();
+  });
+
+  it("ne compte pas les sous-tâches dans les tâches à faire de la liste", async () => {
+    const { list, task } = await createAliceTask();
+    await call(tasks.create, { listId: list.id, parentId: task.id, title: "Pain" }, asUser(alice));
+    const { items } = await call(lists.list, {}, asUser(alice));
+    expect(items[0]?.openTaskCount).toBe(1);
+  });
+
+  it("refuse un deuxième niveau : CONFLICT NESTED_SUBTASK", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    await expect(
+      call(
+        tasks.create,
+        { listId: list.id, parentId: subtask.id, title: "Baguette" },
+        asUser(alice),
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "NESTED_SUBTASK" } });
+  });
+
+  it("refuse un parent d'une autre liste : NOT_FOUND", async () => {
+    const { task } = await createAliceTask();
+    const other = await call(lists.create, { name: "Autre", tint: "trip" }, asUser(alice));
+    await expect(
+      call(tasks.create, { listId: other.id, parentId: task.id, title: "Égarée" }, asUser(alice)),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("refuse en parent la tâche de quelqu'un d'autre : NOT_FOUND, rien n'est créé", async () => {
+    const { task } = await createAliceTask();
+    const bobList = await call(lists.create, { name: "Bob", tint: "trip" }, asUser(bob));
+    await expect(
+      call(tasks.create, { listId: bobList.id, parentId: task.id, title: "Intrus" }, asUser(bob)),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(db.task.count({ where: { parentId: task.id } })).resolves.toBe(0);
+  });
+
+  it("supprime les sous-tâches avec leur parent", async () => {
+    const { list, task } = await createAliceTask();
+    const subtask = await call(
+      tasks.create,
+      { listId: list.id, parentId: task.id, title: "Pain" },
+      asUser(alice),
+    );
+    await call(tasks.delete, { taskId: task.id }, asUser(alice));
+    await expect(db.task.findUnique({ where: { id: subtask.id } })).resolves.toBeNull();
+  });
+});
+
 describe("todo : supprimée entre la garde et l'écriture (base réelle)", () => {
   // Services appelés directement : la garde est passée, puis la ressource disparaît.
   it("modifier une liste supprimée : NOT_FOUND, pas une version périmée", async () => {

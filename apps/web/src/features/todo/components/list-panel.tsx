@@ -6,12 +6,13 @@ import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
 import { cn } from "@planifier/ui/lib/cn";
 
 import { LoadError } from "../atoms/load-error";
-import { TaskRow } from "../atoms/task-row";
+import { TaskRow, type ToggleTask } from "../atoms/task-row";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { ListForm } from "../forms/list-form";
 import { TaskForm } from "../forms/task-form";
 import { useDeleteList, useSetTaskDone, useTasks } from "../queries/todo.queries";
 import { TINTS } from "../utils/list-tint";
+import { isSubtask, subtasksByParent } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 
 function openCountLabel(count: number): string {
@@ -21,21 +22,22 @@ function openCountLabel(count: number): string {
 
 interface TaskSectionsProps {
   tasks: readonly TaskOutput[];
-  onToggle: (task: TaskOutput, done: boolean) => void;
+  onToggle: ToggleTask;
 }
 
-/** À faire, puis cochées : une tâche cochée change de section. */
+/** À faire, puis cochées : une tâche cochée change de section avec ses sous-tâches. */
 function TaskSections({ tasks, onToggle }: TaskSectionsProps) {
-  const open = tasks.filter(({ completedAt }) => completedAt === null);
-  const done = tasks.filter(({ completedAt }) => completedAt !== null);
+  const byParent = subtasksByParent(tasks);
+  const topLevel = tasks.filter((task) => !isSubtask(task));
+  const open = topLevel.filter(({ completedAt }) => completedAt === null);
+  const done = topLevel.filter(({ completedAt }) => completedAt !== null);
   const rows = (items: TaskOutput[]) =>
     items.map((task) => (
       <TaskRow
         key={task.id}
         task={task}
-        onToggle={(checked) => {
-          onToggle(task, checked);
-        }}
+        subtasks={byParent.get(task.id) ?? []}
+        onToggle={onToggle}
       />
     ));
   return (

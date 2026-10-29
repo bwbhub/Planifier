@@ -15,7 +15,7 @@ const LIST_SELECT = {
   name: true,
   tint: true,
   version: true,
-  _count: { select: { tasks: { where: { completedAt: null } } } },
+  _count: { select: { tasks: { where: { completedAt: null, parentId: null } } } },
 } as const satisfies Prisma.TodoListSelect;
 
 type ListRow = Prisma.TodoListGetPayload<{ select: typeof LIST_SELECT }>;

@@ -33,7 +33,7 @@ export const todoListSchema = z.strictObject({
   name: z.string(),
   tint: tintSchema,
   version: z.int(),
-  /** Tâches non cochées. */
+  /** Tâches non cochées, sous-tâches non comprises. */
   openTaskCount: z.int(),
 });
 

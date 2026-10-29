@@ -8,7 +8,8 @@
   "exports": {
     "./resource": "./src/resource.ts",
     "./event": "./src/event.ts",
-    "./space": "./src/space.ts"
+    "./space": "./src/space.ts",
+    "./todo-list": "./src/todo-list.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

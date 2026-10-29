@@ -24,7 +24,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 
 - **Liste** : ensemble de tâches. Plusieurs par utilisateur.
 - **Liste perso** : privée. Peut être partagée en lecture seule.
-- **Liste partagée** : commune à plusieurs membres, chacun peut cocher.
+- **Liste partagée** : liste rattachée à un Espace où Todo est activé. Tous ses membres la voient, y ajoutent et cochent des tâches, même si l'Espace restreint sa visibilité. Seul son propriétaire la rattache à un Espace ou la rend perso ; son propriétaire ou un propriétaire de l'Espace la supprime. Espace supprimé : elle redevient perso pour son propriétaire.
+- **Cochée par** : sur une liste partagée, une tâche cochée dit qui l'a cochée.
 - **Liste d'événement** : liste commune unique d'un événement, avec assignation possible.
 - **Tâche** : titre obligatoire ; description, échéance, récurrence, sous-tâches optionnels.
 - **Sous-tâche** : tâche rattachée à une tâche de la même liste, sur un seul niveau. Cochée seule : rien ne se coche en cascade, dans un sens ni dans l'autre. Supprimée avec sa tâche. Compte dans la limite de tâches de la liste, pas dans le nombre de tâches à faire affiché pour la liste.

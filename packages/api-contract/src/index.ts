@@ -43,7 +43,9 @@ export type {
 } from "./features/spaces/space/space.schemas";
 export type {
   CreateListInput,
+  ListListsInput,
   ListListsOutput,
+  ListMembersOutput,
   TodoListOutput,
   UpdateListInput,
 } from "./features/todo/lists/lists.schemas";

@@ -25,6 +25,7 @@ const TASK_SELECT = {
   description: true,
   dueDate: true,
   completedAt: true,
+  completedBy: { select: { id: true, name: true } },
   recurrence: true,
   version: true,
 } as const satisfies Prisma.TaskSelect;
@@ -32,9 +33,10 @@ const TASK_SELECT = {
 type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 
 /** Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. */
-function toTaskOutput({ dueDate, recurrence, ...task }: TaskRow): TaskOutput {
+function toTaskOutput({ dueDate, recurrence, completedBy, ...task }: TaskRow): TaskOutput {
   return {
     ...task,
+    completedBy: completedBy === null ? null : { userId: completedBy.id, name: completedBy.name },
     dueDate: dueDate === null ? null : utcDateToDay(dueDate),
     recurrence: fromStoredRecurrence(recurrence),
   };
@@ -130,18 +132,30 @@ export async function updateTask(
   });
 }
 
+/** Une coche : qui (« Cochée par ») et quand. */
+export interface Completion {
+  userId: string;
+  at: Date;
+}
+
+function done({ userId, at }: Completion) {
+  return { completedAt: at, completedById: userId };
+}
+
+const NOT_DONE = { completedAt: null, completedById: null };
+
 /**
- * État demandé, pas une bascule : rejouer « cocher » garde la date de la première coche. La version ne bouge pas :
- * cocher ne périme pas une modification du titre en cours ailleurs.
+ * État demandé, pas une bascule : rejouer « cocher » garde la première coche (date et personne). La version ne bouge
+ * pas : cocher ne périme pas une modification du titre en cours ailleurs.
  */
 export async function setTaskDone(
   db: Db,
-  { taskId, done }: SetTaskDoneInput,
-  now: Date,
+  { taskId, done: isDone }: SetTaskDoneInput,
+  completion: Completion,
 ): Promise<TaskOutput> {
   await db.task.updateMany({
-    where: done ? { id: taskId, completedAt: null } : { id: taskId },
-    data: { completedAt: done ? now : null },
+    where: isDone ? { id: taskId, completedAt: null } : { id: taskId },
+    data: isDone ? done(completion) : NOT_DONE,
   });
   return readTask(db, taskId);
 }
@@ -172,7 +186,7 @@ export async function completeOccurrence(
     dueDate: dayToUtcDate(next),
     // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).
     recurrenceAnchor: dayToUtcDate(seriesAnchor(series, today)),
-    completedAt: null,
+    ...NOT_DONE,
   });
 }
 
@@ -183,9 +197,9 @@ export async function completeOccurrence(
 export function finishTask(
   db: Db,
   { taskId, version }: FinishTaskInput,
-  now: Date,
+  completion: Completion,
 ): Promise<TaskOutput> {
-  return writeVersioned(db, taskId, version, { recurrence: JSON_DB_NULL, completedAt: now });
+  return writeVersioned(db, taskId, version, { recurrence: JSON_DB_NULL, ...done(completion) });
 }
 
 /**
@@ -199,7 +213,7 @@ export function undoCompletion(
   return writeVersioned(db, taskId, version, {
     dueDate: dueDate === null ? null : dayToUtcDate(dueDate),
     recurrence: toStoredRecurrence(recurrence),
-    completedAt: null,
+    ...NOT_DONE,
   });
 }
 

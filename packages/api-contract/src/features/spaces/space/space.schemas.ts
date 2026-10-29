@@ -71,6 +71,8 @@ export const spaceDetailSchema = spaceSchema.extend({
 export const spaceSummarySchema = z.strictObject({
   id: spaceIdSchema,
   name: z.string(),
+  /** Modules activés : un module propose l'Espace seulement s'il y est actif (une liste partagée, Todo). */
+  modules: z.array(z.enum(MODULES)),
   myRole: spaceRoleSchema,
   memberCount: z.int(),
 });

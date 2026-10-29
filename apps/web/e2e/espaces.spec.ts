@@ -131,6 +131,38 @@ test.describe("rejoindre un Espace", () => {
   });
 });
 
+test.describe("partager une liste avec l'Espace", () => {
+  test("crée une liste partagée que l'autre membre voit et coche", async ({ page, browser }) => {
+    await signedIn(page, owner);
+    await page.goto("/todo");
+    await page.getByRole("button", { name: "Créer ma première liste" }).click();
+    await page.getByLabel("Nom de la liste").fill("Courses communes");
+    // Le bouton radio est masqué visuellement : on clique sur sa pastille, comme on le ferait à la main.
+    await page.getByText(SPACE_NAME, { exact: true }).click();
+    await expect(page.getByRole("radio", { name: SPACE_NAME })).toBeChecked();
+    await page.getByRole("button", { name: "Créer la liste" }).click();
+    await expect(page.getByText(`Liste partagée · ${SPACE_NAME}`)).toBeVisible();
+    await page.getByLabel("Nouvelle tâche").fill("Pain");
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await expect(page.getByRole("checkbox", { name: "Pain" })).toBeVisible();
+
+    const guestPage = await browser.newPage();
+    await signedIn(guestPage, guest);
+    await guestPage.goto("/todo");
+    await expect(guestPage.getByText(`Liste partagée · ${SPACE_NAME}`)).toBeVisible();
+    // `click` et non `check` : cochée, la tâche passe dans « Cochées », sa case est un autre élément.
+    await guestPage.getByRole("checkbox", { name: "Pain" }).click();
+    await expect(guestPage.getByText(`Cochée par ${guest.name}`)).toBeVisible();
+    await guestPage.close();
+
+    await page.reload();
+    await expect(page.getByText(`Cochée par ${guest.name}`)).toBeVisible();
+    await page.getByRole("button", { name: "Supprimer la liste" }).click();
+    await page.getByRole("button", { name: "Supprimer définitivement" }).click();
+    await expect(page.getByRole("button", { name: "Créer ma première liste" })).toBeVisible();
+  });
+});
+
 test.describe("gérer un Espace", () => {
   test("change les modules de l'Espace dans ses réglages", async ({ page }) => {
     await signedIn(page, owner);

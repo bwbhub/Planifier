@@ -56,6 +56,16 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
     seulement) ; réessai E2E après la limite de Better Auth ; paramètre `retour` de la connexion ; jeton
     d'invitation retiré de l'adresse après lecture.
 
+- **Listes partagées (branche `feat/todo-listes-partagees`), à trancher** :
+  - Le propriétaire d'une liste qui quitte l'Espace la garde (et l'Espace aussi) : il y écrit encore. Voulu, ou la
+    liste doit-elle rester à l'Espace sans lui ?
+  - Todo désactivé dans un Espace : ses listes partagées restent visibles et modifiables (rien ne disparaît). Voulu ?
+  - « Cochée par » écrit le nom, même le sien (« Cochée par Camille ») : « toi » demanderait l'utilisateur courant
+    dans le module.
+  - Choix « Partager avec » : parmi les 100 premiers Espaces seulement (borne du contrat `spaces.list`).
+  - Revue humaine (droits) : `domain-access/todo-list`, `todo-guard.ts`, `lists.service.ts` (visibilité, Espace
+    visé, `members`).
+
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
   remplacer par celui-ci dans une PR Todo.

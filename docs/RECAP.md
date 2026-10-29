@@ -80,6 +80,27 @@ d'une tâche répétée, borne de `today`, annulation d'une occurrence).
 
 ---
 
+## 2026-10-29 — Todo : listes partagées et « Cochée par » (branche `feat/todo-listes-partagees`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
+
+**Fait** :
+
+- PR #22 (rattrapage de #19 et #20, fusionnées dans leurs anciennes bases) ouverte vers `master`.
+- Schéma : `todo_lists.space_id` (SetNull), `tasks.completed_by_id` (SetNull) ; migration `20261029220000_listes_partagees`.
+- Droits : `domain-access/todo-list` (liste d'Espace ouverte en écriture à tous les membres, même Espace restreint ;
+  suppression : propriétaire ou propriétaire d'Espace ; changer d'Espace : propriétaire), garde Todo réécrite.
+- Contrat additif : `lists.list` paginé (`limit`, `cursor`, `nextCursor`), `spaceId` à la création et en
+  modification, `space` et `can` en sortie, `lists.members`, `completedBy` des tâches, raison `TODO_DISABLED`,
+  `modules` dans le résumé d'Espace.
+- Web : choix « Partager avec » (propriétaire), en-tête « Liste partagée · Espace » avec pastilles, « Cochée par »,
+  onglets paginés ; `AvatarStack` dans `packages/ui` (repris par l'en-tête d'Espace).
+  **Décisions** (utilisateur) : liste partagée = rattachée à un Espace ; visible même si l'Espace restreint ; lecture
+  seule d'une liste perso plus tard ; assignation à une personne, membre de l'Espace (PR suivante).
+  **Vérifié** : check-types, lint, test, build, format ; intégration (api 105, api-server 14, auth 1) ; E2E 54/54.
+  **Ouvert** : SUITE §4 (listes partagées) ; revue humaine des droits.
+  **Attendu ensuite** : assignation et « Atténuer les tâches qui ne me sont pas assignées ».
+
+---
+
 ## 2026-10-29 — Fusion de `feat/espaces-ui` dans les branches Todo (branche `feat/todo-minimal`)
 
 **Fait** : merge de `feat/espaces-ui` dans `feat/todo-minimal` (conflits : `Button` variantes et tailles unifiées,

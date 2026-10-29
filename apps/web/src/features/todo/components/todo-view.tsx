@@ -11,6 +11,7 @@ import { LoadError } from "../atoms/load-error";
 import { ListForm } from "../forms/list-form";
 import { useTodoLists } from "../queries/todo.queries";
 import { listHref } from "../utils/list-href";
+import { allLists } from "../utils/list-pages";
 import { ListPanel } from "./list-panel";
 
 interface TodoViewProps {
@@ -22,10 +23,12 @@ interface ListTabsProps {
   lists: readonly TodoListOutput[];
   selectedId: string;
   onCreate: () => void;
+  /** Présent s'il reste des listes à lire : elles s'ajoutent aux onglets. */
+  onShowMore: (() => void) | undefined;
 }
 
 /** Onglets des listes (liens `?liste=`, partageables), puis l'entrée de création. */
-function ListTabs({ lists, selectedId, onCreate }: ListTabsProps) {
+function ListTabs({ lists, selectedId, onCreate, onShowMore }: ListTabsProps) {
   return (
     <nav aria-label="Mes listes" className="-mx-4 overflow-x-auto px-4">
       <ul className="flex gap-2">
@@ -49,6 +52,13 @@ function ListTabs({ lists, selectedId, onCreate }: ListTabsProps) {
             </li>
           );
         })}
+        {onShowMore === undefined ? null : (
+          <li className="shrink-0">
+            <Button variant="ghost" size="sm" onClick={onShowMore}>
+              Voir plus de listes
+            </Button>
+          </li>
+        )}
         <li className="shrink-0">
           <Button variant="ghost" size="sm" onClick={onCreate}>
             + Nouvelle liste
@@ -81,7 +91,7 @@ export function TodoView({ selectedListId }: TodoViewProps) {
     return <LoadError error={lists.error} onRetry={() => void lists.refetch()} />;
   }
 
-  const items = lists.data.items;
+  const items = allLists(lists.data);
   const selected = items.find(({ id }) => id === selectedListId) ?? items[0];
   const listForm = (
     <section aria-labelledby="nouvelle-liste" className="rounded-card bg-surface p-5">
@@ -124,6 +134,11 @@ export function TodoView({ selectedListId }: TodoViewProps) {
         onCreate={() => {
           setCreating(true);
         }}
+        onShowMore={
+          lists.hasNextPage && !lists.isFetchingNextPage
+            ? () => void lists.fetchNextPage()
+            : undefined
+        }
       />
       {creating ? listForm : null}
       <ListPanel

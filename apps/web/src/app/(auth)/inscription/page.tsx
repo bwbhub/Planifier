@@ -4,8 +4,9 @@ import Link from "next/link";
 
 import { AuthShell, SignUpForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
+import { pageTitle } from "@/lib/labels";
 
-export const metadata: Metadata = { title: "Inscription · Planifier" };
+export const metadata: Metadata = { title: pageTitle("Inscription") };
 
 export default function SignUpPage() {
   return (

@@ -7,13 +7,14 @@ import { usePathname } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 
 /**
- * Barre du haut des pages connectées : retour à l'accueil, navigation des modules (Todo pour l'instant), et le profil
- * en bouton à part.
+ * Barre du haut des pages connectées : retour à l'accueil, navigation des modules (Todo pour l'instant), Espaces et
+ * profil en boutons à part. Provisoire : la navigation des modules (barre latérale sur PC) les reprendra.
  */
 export function AppHeader() {
   const pathname = usePathname();
   const onProfile = pathname === ROUTES.profile;
   const onTodo = pathname === ROUTES.todo;
+  const inSpaces = pathname === ROUTES.spaces || pathname.startsWith(`${ROUTES.spaces}/`);
 
   return (
     <header className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -32,7 +33,14 @@ export function AppHeader() {
           Todo
         </Link>
       </nav>
-      <nav aria-label="Compte">
+      <nav aria-label="Espaces et profil" className="flex gap-2">
+        <Link
+          href={ROUTES.spaces}
+          aria-current={inSpaces ? "page" : undefined}
+          className={buttonClassName({ variant: "secondary", className: "px-5" })}
+        >
+          Espaces
+        </Link>
         <Link
           href={ROUTES.profile}
           aria-current={onProfile ? "page" : undefined}

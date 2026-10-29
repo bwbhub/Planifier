@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser, PasswordForm, ProfileForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
+import { pageTitle } from "@/lib/labels";
 
-export const metadata: Metadata = { title: "Mon profil · Planifier" };
+export const metadata: Metadata = { title: pageTitle("Mon profil") };
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();

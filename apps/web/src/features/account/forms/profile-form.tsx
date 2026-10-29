@@ -9,7 +9,8 @@ import type { SubmitEvent } from "react";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useUpdateProfile } from "../queries/auth.queries";
-import { useFormValidation } from "@/features/_shared/utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
+import { COMMON_LABELS } from "@/lib/labels";
 
 const FIELDS = ["name", "preferredTheme"] as const;
 
@@ -67,7 +68,7 @@ export function ProfileForm({ name, preferredTheme }: ProfileFormProps) {
         </p>
       ) : null}
       <Button type="submit" disabled={updateProfile.isPending}>
-        {updateProfile.isPending ? "Enregistrement…" : "Enregistrer"}
+        {updateProfile.isPending ? COMMON_LABELS.saving : COMMON_LABELS.save}
       </Button>
     </form>
   );

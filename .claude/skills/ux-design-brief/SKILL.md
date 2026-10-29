@@ -54,10 +54,15 @@ Navigation mobile : barre flottante en bas (fond `nav`), cinq entrées : Aujourd
 Profil et Notifications sur mobile : pas maquettés (l'initiale ronde en haut d'Aujourd'hui en est le candidat).
 Aujourd'hui avec le Journal actif : bouton « Écrire une page ».
 
-## À maquetter (Phase 2)
+## Phase 2
 
-Événements (liste, création, détail), Espaces (création, invitation, modules), Notifications, Profil, connexion et
-inscription, Agenda mois, états vides et d'erreur hors Journal.
+Maquetté : **Espaces** (`docs/maquettes/espaces.html`, 2026-10-28 : liste, création et réglages, Espace vu par un
+propriétaire ou un membre, lien d'invitation, rejoindre, confirmations ; clair et nuit). Entrée provisoire : bouton
+« Espaces » de l'en-tête, en attendant la barre latérale. Teinte d'un Espace tirée de son identifiant parmi les teintes
+des tokens (rien de stocké).
+
+À maquetter : Événements (liste, création, détail), Notifications, Profil, connexion et inscription, Agenda mois,
+états vides et d'erreur hors Journal.
 
 ## Fiche d'écran (avant tout code d'UI)
 

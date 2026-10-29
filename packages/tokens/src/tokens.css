@@ -19,6 +19,8 @@
   --nav-off: #b9aec6;
   --scrim: #d9d3de;
   --today: #fdf1f6;
+  /* Voile sombre sous une feuille du bas (confirmation), dans les deux thèmes. */
+  --overlay: rgb(10 6 14 / 55%);
 
   /* Teintes de liste / d'agenda */
   --t-gen: #dde6fb;
@@ -46,6 +48,7 @@
     --nav-off: #9aa1b0;
     --scrim: #07080a;
     --today: #1f1d22;
+    --overlay: rgb(0 0 0 / 60%);
     --t-gen: #1f2d44;
     --t-work: #3b2e17;
     --t-couple: #3e2233;
@@ -71,6 +74,7 @@
   --nav-off: #9aa1b0;
   --scrim: #07080a;
   --today: #1f1d22;
+  --overlay: rgb(0 0 0 / 60%);
   --t-gen: #1f2d44;
   --t-work: #3b2e17;
   --t-couple: #3e2233;

@@ -283,8 +283,9 @@ model TodoList {
 
   ownerId String  @map("owner_id")
   owner   User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  /// Liste partagée : tous les membres de l'Espace la voient et y écrivent, même si l'Espace restreint sa visibilité.
-  /// null : liste perso, privée. Espace supprimé : la liste redevient perso pour son propriétaire (SetNull).
+  /// Liste partagée : tous les membres de l'Espace la voient et y écrivent, même si l'Espace restreint sa visibilité ;
+  /// elle appartient à l'Espace (son créateur parti, elle y reste). null : liste perso, privée. Espace supprimé : la
+  /// liste redevient perso pour son créateur (SetNull).
   spaceId String? @map("space_id")
   space   Space?  @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   tasks   Task[]

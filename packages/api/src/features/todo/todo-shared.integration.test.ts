@@ -160,12 +160,20 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
     });
   });
 
-  it("ne nomme plus les membres au propriétaire qui a quitté l'Espace", async () => {
+  it("laisse la liste à l'Espace quand son créateur le quitte", async () => {
     const list = await createSharedList(bob);
     await db.spaceMember.deleteMany({ where: { spaceId, userId: bob.id } });
-    await expect(call(lists.members, { listId: list.id }, asUser(bob))).resolves.toEqual({
-      items: [{ userId: bob.id, name: "bob" }],
+    await expect(call(tasks.list, { listId: list.id }, asUser(bob))).rejects.toMatchObject({
+      code: "NOT_FOUND",
     });
+    await expect(call(lists.list, {}, asUser(bob))).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toEqual({
+      items: [{ userId: alice.id, name: "alice" }],
+    });
+    await expect(call(lists.delete, { listId: list.id }, asUser(alice))).resolves.toEqual({});
   });
 
   it("rend la liste perso à son propriétaire quand l'Espace est supprimé", async () => {
@@ -177,7 +185,9 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
       code: "NOT_FOUND",
     });
   });
+});
 
+describe("todo : pages de listes (base réelle)", () => {
   it("pagine les listes visibles", async () => {
     const mine = await createList(db, alice);
     const shared = await createSharedList(bob);

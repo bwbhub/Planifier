@@ -80,6 +80,21 @@ d'une tâche répétée, borne de `today`, annulation d'une occurrence).
 
 ---
 
+## 2026-10-29 — Listes partagées : décisions de l'utilisateur (branche `feat/todo-listes-partagees`, PR #23)
+
+**Fait** : liste partagée rattachée à l'Espace (`canAccessTodoList` réécrite sans `ResourceAccess`) : le créateur
+parti ne la voit plus, elle reste à l'Espace ; `lists.list` et le compte de listes l'ignorent ; `lists.members` =
+membres de l'Espace (créateur d'abord s'il est membre). Création : choisir un Espace propose « Liste <Espace> »
+(`nameAfterSpaceChange`), sans écraser un nom écrit. CONTEXT.md mis à jour.
+**Décisions** (utilisateur, 2026-10-29) : liste à l'Espace sans le créateur parti ; membres renomment et
+propriétaire d'Espace supprime : oui ; Todo désactivé : rien ne disparaît ; nom par défaut « Liste <Espace> ».
+**Vérifié** : check-types, lint, test (domain-access 55, web 158), build, format ; intégration (api 107,
+api-server 14, auth 1) ; E2E 54/54.
+**Ouvert** : compte du créateur supprimé ⇒ ses listes partagées partent (Cascade), SUITE §4.
+**Attendu ensuite** : assignation et « Atténuer ».
+
+---
+
 ## 2026-10-29 — Todo : listes partagées et « Cochée par » (branche `feat/todo-listes-partagees`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
 
 **Fait** :

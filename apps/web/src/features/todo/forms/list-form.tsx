@@ -17,6 +17,7 @@ import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { useCreateList, useSharingSpaces, useUpdateList } from "../queries/todo.queries";
 import { TINT_OPTIONS } from "../utils/list-tint";
 import { sharingChoices } from "../utils/sharing-choices";
+import { useListNameSuggestion } from "../utils/use-list-name-suggestion";
 
 const FIELDS = ["name", "tint"] as const;
 
@@ -105,6 +106,7 @@ export function ListForm({ list, onSaved, onCancel }: ListFormProps) {
   const updateList = useUpdateList();
   const mutation = list === undefined ? createList : updateList;
   const { invalid, validate } = useFormValidation(FIELDS);
+  const suggestName = useListNameSuggestion();
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -125,7 +127,13 @@ export function ListForm({ list, onSaved, onCancel }: ListFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      // Création seulement : un nom déjà choisi ne change pas avec l'Espace.
+      onChange={list === undefined ? suggestName : undefined}
+      className="flex flex-col gap-4"
+    >
       <TextField
         label="Nom de la liste"
         name="name"

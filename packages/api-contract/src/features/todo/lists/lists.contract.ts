@@ -44,7 +44,7 @@ export const listsContract = {
   members: oc
     .route({
       summary: "Personnes d'une liste",
-      description: "Son propriétaire et, liste partagée, les membres de son Espace.",
+      description: "Liste perso : son propriétaire. Liste partagée : les membres de son Espace.",
     })
     .input(listMembersInputSchema)
     .output(listMembersOutputSchema),

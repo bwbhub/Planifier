@@ -46,9 +46,14 @@ function toListOutput(userId: string, row: ListRow): TodoListOutput {
   };
 }
 
-/** Listes visibles : les siennes, et les listes partagées des Espaces dont l'appelant est membre. */
+/**
+ * Listes visibles (`canAccessTodoList`) : ses listes perso, et les listes partagées des Espaces dont l'appelant est
+ * membre. Celles d'un Espace qu'il a quitté restent à l'Espace, même s'il les a créées.
+ */
 function visibleTo(userId: string): Prisma.TodoListWhereInput {
-  return { OR: [{ ownerId: userId }, { space: { members: { some: { userId } } } }] };
+  return {
+    OR: [{ ownerId: userId, spaceId: null }, { space: { members: { some: { userId } } } }],
+  };
 }
 
 /** Curseur : identifiant de liste (`uuid(7)`, croissant), donc ordre de création. */
@@ -91,7 +96,8 @@ export async function createList(
 ): Promise<TodoListOutput> {
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT 1 FROM users WHERE id = ${userId} FOR UPDATE`;
-    const count = await tx.todoList.count({ where: { ownerId: userId } });
+    // Ses listes encore à lui : laissées à un Espace quitté, elles ne comptent plus.
+    const count = await tx.todoList.count({ where: { ownerId: userId, ...visibleTo(userId) } });
     if (count >= TODO_MAX_LISTS) throw todoConflict("TOO_MANY_LISTS");
     if (spaceId !== undefined) await assertSharingSpace(tx, userId, spaceId);
     const list = await tx.todoList.create({
@@ -132,14 +138,10 @@ export async function updateList(
 }
 
 /**
- * Son propriétaire d'abord, puis les membres de son Espace par ordre d'arrivée, sans doublon. Les membres ne sont
- * nommés qu'à un membre de l'Espace : le propriétaire qui l'a quitté ne voit plus qui y est.
+ * Liste perso : son propriétaire. Liste partagée : les membres de son Espace, son créateur d'abord s'il en est
+ * encore membre, puis par ordre d'arrivée.
  */
-export async function listMembers(
-  db: Db,
-  userId: string,
-  listId: string,
-): Promise<ListMembersOutput> {
+export async function listMembers(db: Db, listId: string): Promise<ListMembersOutput> {
   const list = await db.todoList.findUnique({
     where: { id: listId },
     select: {
@@ -156,10 +158,13 @@ export async function listMembers(
   });
   // Supprimée entre la garde et la lecture.
   if (list === null) throw new ORPCError("NOT_FOUND");
-  const members = list.space?.members.map(({ user }) => user) ?? [];
-  const visible = members.some(({ id }) => id === userId) ? members : [];
-  const people = [list.owner, ...visible.filter(({ id }) => id !== list.owner.id)];
-  return { items: people.map(toPerson) };
+  if (list.space === null) return { items: [toPerson(list.owner)] };
+  const members = list.space.members.map(({ user }) => user);
+  const creatorFirst = [
+    ...members.filter(({ id }) => id === list.owner.id),
+    ...members.filter(({ id }) => id !== list.owner.id),
+  ];
+  return { items: creatorFirst.map(toPerson) };
 }
 
 /** Ses tâches partent avec elle (`onDelete: Cascade`). */

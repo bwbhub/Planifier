@@ -88,6 +88,19 @@ describe("ListForm, partage avec un Espace", () => {
     });
   });
 
+  it("propose « Liste <Espace> » comme nom quand on choisit un Espace, sans écraser un nom écrit", async () => {
+    replyRpc(fetchMock, { "spaces/space/list": { data: SPACES } });
+    renderForm();
+    const name = screen.getByRole("textbox", { name: /Nom de la liste/ });
+    await userEvent.click(await screen.findByRole("radio", { name: "Coloc" }));
+    expect(name).toHaveProperty("value", "Liste Coloc");
+    await userEvent.click(screen.getByRole("radio", { name: "Personne" }));
+    expect(name).toHaveProperty("value", "");
+    await userEvent.type(name, "Courses");
+    await userEvent.click(screen.getByRole("radio", { name: "Coloc" }));
+    expect(name).toHaveProperty("value", "Courses");
+  });
+
   it("crée une liste perso sans Espace par défaut", async () => {
     const calls = replyRpc(fetchMock, {
       "spaces/space/list": { data: SPACES },
@@ -104,7 +117,9 @@ describe("ListForm, partage avec un Espace", () => {
       });
     });
   });
+});
 
+describe("ListForm, partage d'une liste existante", () => {
   it("rend la liste perso, et n'envoie pas l'Espace s'il ne change pas", async () => {
     const calls = replyRpc(fetchMock, {
       "spaces/space/list": { data: SPACES },

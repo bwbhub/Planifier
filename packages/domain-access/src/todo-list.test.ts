@@ -14,8 +14,9 @@ const othersSharedList = (callerRole: "MEMBER" | "OWNER" | null): TodoListAccess
 });
 
 describe("canAccessTodoList", () => {
-  it("ouvre tout au propriétaire, liste perso ou partagée", () => {
-    for (const list of [myPersonalList, { ...myPersonalList, space: { callerRole: null } }]) {
+  it("ouvre tout au propriétaire, liste perso ou partagée dont il est membre", () => {
+    const mySharedList: TodoListAccess = { ...myPersonalList, space: { callerRole: "MEMBER" } };
+    for (const list of [myPersonalList, mySharedList]) {
       for (const action of ["read", "write", "delete", "share"] as const) {
         expect(canAccessTodoList(list, action)).toBe(true);
       }
@@ -37,6 +38,13 @@ describe("canAccessTodoList", () => {
 
   it("cache la liste partagée à qui n'est pas membre de l'Espace", () => {
     expect(canAccessTodoList(othersSharedList(null), "read")).toBe(false);
+  });
+
+  it("laisse la liste à l'Espace quand son créateur le quitte", () => {
+    const left: TodoListAccess = { userId: ME, ownerId: ME, space: { callerRole: null } };
+    for (const action of ["read", "write", "delete", "share"] as const) {
+      expect(canAccessTodoList(left, action)).toBe(false);
+    }
   });
 
   it("réserve la suppression au propriétaire de la liste ou de l'Espace", () => {

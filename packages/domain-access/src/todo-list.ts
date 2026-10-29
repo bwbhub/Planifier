@@ -1,6 +1,6 @@
 import type { AppModule, SpaceRole } from "@planifier/constants/spaces";
 
-import { canAccessResource, type ResourceAccess, type ResourceAction } from "./resource";
+import type { ResourceAction } from "./resource";
 
 /** Ce que l'on sait d'une liste Todo et de l'appelant. */
 export interface TodoListAccess {
@@ -13,25 +13,29 @@ export interface TodoListAccess {
 }
 
 /**
- * Une liste partagée s'ouvre en écriture à tous les membres de son Espace, même quand l'Espace restreint sa
- * visibilité : la rattacher à l'Espace, c'est la partager avec lui (décision du 2026-10-29). Liste perso : privée.
+ * Liste perso : privée, tout à son propriétaire. Liste partagée : la rattacher à l'Espace, c'est la partager avec
+ * lui, même quand il restreint sa visibilité ; elle appartient alors à l'Espace (décisions du 2026-10-29) :
+ * - `read`, `write` (nom, teinte, tâches) : tout membre ;
+ * - `delete` : son créateur, ou un propriétaire de l'Espace ;
+ * - `share` (changer d'Espace, la rendre perso) : son créateur.
+ * Seuls les membres comptent : le créateur parti ne la voit plus, elle reste à l'Espace. `read` faux ⇒ NOT_FOUND.
  */
-function asResource({ userId, ownerId, space }: TodoListAccess): ResourceAccess {
-  return {
-    userId,
-    ownerId,
-    spaceRole: space?.callerRole ?? null,
-    spaceLevel: space === null ? "NONE" : "WRITE",
-    shareLevel: "NONE",
-  };
-}
-
-/**
- * `read` faux ⇒ NOT_FOUND. `write` : nom, teinte, tâches. `delete` : propriétaire, ou propriétaire de l'Espace.
- * `share` : rattacher la liste à un Espace ou l'en retirer, propriétaire seulement.
- */
-export function canAccessTodoList(access: TodoListAccess, action: ResourceAction): boolean {
-  return canAccessResource(asResource(access), action);
+export function canAccessTodoList(
+  { userId, ownerId, space }: TodoListAccess,
+  action: ResourceAction,
+): boolean {
+  const isOwner = userId === ownerId;
+  if (space === null) return isOwner;
+  if (space.callerRole === null) return false;
+  switch (action) {
+    case "read":
+    case "write":
+      return true;
+    case "delete":
+      return isOwner || space.callerRole === "OWNER";
+    case "share":
+      return isOwner;
+  }
 }
 
 /** Espace où l'appelant veut partager une liste : son rôle (null s'il n'en est pas membre) et ses modules. */

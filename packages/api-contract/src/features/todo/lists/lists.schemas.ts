@@ -71,7 +71,7 @@ export const listListsOutputSchema = z.strictObject({
 
 export const listMembersInputSchema = listTargetSchema;
 
-/** Personnes qui ont accès à la liste : son propriétaire et, liste partagée, les membres de son Espace. */
+/** Personnes qui ont accès à la liste : liste perso, son propriétaire ; liste partagée, les membres de son Espace. */
 export const listMembersOutputSchema = z.strictObject({
   items: z.array(personSchema).max(SPACE_MAX_MEMBERS + 1),
 });

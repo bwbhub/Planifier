@@ -136,10 +136,11 @@ test.describe("partager une liste avec l'Espace", () => {
     await signedIn(page, owner);
     await page.goto("/todo");
     await page.getByRole("button", { name: "Créer ma première liste" }).click();
-    await page.getByLabel("Nom de la liste").fill("Courses communes");
     // Le bouton radio est masqué visuellement : on clique sur sa pastille, comme on le ferait à la main.
     await page.getByText(SPACE_NAME, { exact: true }).click();
     await expect(page.getByRole("radio", { name: SPACE_NAME })).toBeChecked();
+    // Nom proposé d'après l'Espace, modifiable.
+    await expect(page.getByLabel("Nom de la liste")).toHaveValue(`Liste ${SPACE_NAME}`);
     await page.getByRole("button", { name: "Créer la liste" }).click();
     await expect(page.getByText(`Liste partagée · ${SPACE_NAME}`)).toBeVisible();
     await page.getByLabel("Nouvelle tâche").fill("Pain");

@@ -95,7 +95,12 @@ d'une tâche répétée, borne de `today`, annulation d'une occurrence).
   onglets paginés ; `AvatarStack` dans `packages/ui` (repris par l'en-tête d'Espace).
   **Décisions** (utilisateur) : liste partagée = rattachée à un Espace ; visible même si l'Espace restreint ; lecture
   seule d'une liste perso plus tard ; assignation à une personne, membre de l'Espace (PR suivante).
-  **Vérifié** : check-types, lint, test, build, format ; intégration (api 105, api-server 14, auth 1) ; E2E 54/54.
+  **Revue** (`/code-review`, standards et spec) corrigée : droit « partager avec cet Espace » en fonction pure testée
+  (`sharingSpaceVerdict`), accès à une liste en `{ space: { callerRole } | null }`, lecture des droits dans
+  `list-access.ts`, `PAGE_MAX_LIMIT` partagé, états chargement et erreur du choix d'Espace, lien `?liste=` qui lit les
+  pages suivantes, noms des membres cachés au propriétaire parti, tests de droits (non-membre, ancien membre).
+  **Vérifié** (après la revue) : check-types, lint, test, build, format ; intégration (api 107, api-server 14,
+  auth 1) ; E2E 54/54.
   **Ouvert** : SUITE §4 (listes partagées) ; revue humaine des droits.
   **Attendu ensuite** : assignation et « Atténuer les tâches qui ne me sont pas assignées ».
 

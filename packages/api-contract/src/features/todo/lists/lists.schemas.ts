@@ -2,16 +2,18 @@ import { SPACE_MAX_MEMBERS } from "@planifier/constants/spaces";
 import { LIST_TINTS, TODO_LIST_NAME_MAX_LENGTH, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import { z } from "zod";
 
+import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
 import { listIdSchema, listTargetSchema, personSchema, spaceIdSchema } from "../todo.schemas";
 
 const listNameSchema = z.string().trim().min(1).max(TODO_LIST_NAME_MAX_LENGTH);
 const tintSchema = z.enum(LIST_TINTS);
 
-const LIST_MAX_LIMIT = 100;
-
-/** Mes listes et les listes partagées de mes Espaces : leur nombre n'est borné que par Espace, d'où les pages. */
+/**
+ * Mes listes et les listes partagées de mes Espaces. Chacun a au plus `TODO_MAX_LISTS` listes, mais le nombre
+ * d'Espaces, et donc de listes visibles, n'est pas borné : d'où les pages.
+ */
 export const listListsInputSchema = z.strictObject({
-  limit: z.int().min(1).max(LIST_MAX_LIMIT).default(TODO_MAX_LISTS),
+  limit: z.int().min(1).max(PAGE_MAX_LIMIT).default(TODO_MAX_LISTS),
   /** `nextCursor` de la page précédente. */
   cursor: listIdSchema.optional(),
 });
@@ -62,7 +64,7 @@ export const todoListSchema = z.strictObject({
 
 /** Listes visibles par l'appelant, de la plus ancienne à la plus récente. */
 export const listListsOutputSchema = z.strictObject({
-  items: z.array(todoListSchema).max(LIST_MAX_LIMIT),
+  items: z.array(todoListSchema).max(PAGE_MAX_LIMIT),
   /** null : dernière page. */
   nextCursor: listIdSchema.nullable(),
 });

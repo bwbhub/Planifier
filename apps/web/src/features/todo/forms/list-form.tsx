@@ -26,14 +26,33 @@ const NAME_ERROR = `Donne un nom à la liste, ${String(TODO_LIST_NAME_MAX_LENGTH
 const PERSONAL = "";
 
 /**
- * « Partager avec » : personne (liste perso) ou un Espace (`sharingChoices`). Rien tant que les Espaces chargent, ni
- * pour qui n'est pas propriétaire de la liste.
+ * « Partager avec » : personne (liste perso) ou un Espace (`sharingChoices`) ; rien pour qui n'est pas propriétaire
+ * de la liste. Sans les Espaces (chargement, échec), le champ manque et l'Espace de la liste ne change pas.
  */
 function SharingChoice({ list }: { list: TodoListOutput | undefined }) {
   const spaces = useSharingSpaces();
-  if (!spaces.isSuccess || list?.can.share === false) return null;
+  if (list?.can.share === false) return null;
+  if (spaces.isPending) {
+    return (
+      <p role="status" className="text-sm text-muted">
+        Chargement de tes Espaces…
+      </p>
+    );
+  }
+  if (spaces.isError) {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 text-sm">
+        <p role="alert">
+          Tes Espaces ne se chargent pas : le partage de la liste ne change pas pour l&apos;instant.
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => void spaces.refetch()}>
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
   const current = list?.space ?? null;
-  const choices = sharingChoices(spaces.data, current);
+  const choices = sharingChoices(spaces.data.items, current);
   if (choices.length === 0) {
     return (
       <p className="text-sm text-muted">

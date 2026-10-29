@@ -1,38 +1,37 @@
 import { describe, expect, it } from "vitest";
 
-import { canAccessTodoList, type TodoListAccess } from "./todo-list";
+import { canAccessTodoList, sharingSpaceVerdict, type TodoListAccess } from "./todo-list";
 
 const ME = "user-me";
 const OTHER = "user-other";
 
-const myPersonalList: TodoListAccess = { userId: ME, ownerId: ME, inSpace: false, spaceRole: null };
+const myPersonalList: TodoListAccess = { userId: ME, ownerId: ME, space: null };
 const othersPersonalList: TodoListAccess = { ...myPersonalList, ownerId: OTHER };
-const othersSharedList = (spaceRole: TodoListAccess["spaceRole"]): TodoListAccess => ({
+const othersSharedList = (callerRole: "MEMBER" | "OWNER" | null): TodoListAccess => ({
   userId: ME,
   ownerId: OTHER,
-  inSpace: true,
-  spaceRole,
+  space: { callerRole },
 });
 
 describe("canAccessTodoList", () => {
   it("ouvre tout au propriétaire, liste perso ou partagée", () => {
-    for (const list of [myPersonalList, { ...myPersonalList, inSpace: true }]) {
+    for (const list of [myPersonalList, { ...myPersonalList, space: { callerRole: null } }]) {
       for (const action of ["read", "write", "delete", "share"] as const) {
         expect(canAccessTodoList(list, action)).toBe(true);
       }
     }
   });
 
-  it("garde privée la liste perso d'un autre, même s'il partage un Espace avec l'appelant", () => {
-    for (const spaceRole of [null, "MEMBER", "OWNER"] as const) {
-      expect(canAccessTodoList({ ...othersPersonalList, spaceRole }, "read")).toBe(false);
+  it("garde privée la liste perso d'un autre", () => {
+    for (const action of ["read", "write", "delete", "share"] as const) {
+      expect(canAccessTodoList(othersPersonalList, action)).toBe(false);
     }
   });
 
   it("ouvre la liste partagée en lecture et écriture à tout membre de l'Espace", () => {
-    for (const spaceRole of ["MEMBER", "OWNER"] as const) {
-      expect(canAccessTodoList(othersSharedList(spaceRole), "read")).toBe(true);
-      expect(canAccessTodoList(othersSharedList(spaceRole), "write")).toBe(true);
+    for (const callerRole of ["MEMBER", "OWNER"] as const) {
+      expect(canAccessTodoList(othersSharedList(callerRole), "read")).toBe(true);
+      expect(canAccessTodoList(othersSharedList(callerRole), "write")).toBe(true);
     }
   });
 
@@ -47,5 +46,24 @@ describe("canAccessTodoList", () => {
 
   it("réserve le rattachement à un Espace au propriétaire de la liste", () => {
     expect(canAccessTodoList(othersSharedList("OWNER"), "share")).toBe(false);
+  });
+});
+
+describe("sharingSpaceVerdict", () => {
+  it("accepte un Espace dont l'appelant est membre et où Todo est activé", () => {
+    for (const callerRole of ["MEMBER", "OWNER"] as const) {
+      expect(sharingSpaceVerdict({ callerRole, modules: ["TODO"] })).toBe("OK");
+    }
+  });
+
+  it("ne révèle pas un Espace introuvable ou dont l'appelant n'est pas membre", () => {
+    expect(sharingSpaceVerdict(null)).toBe("NOT_FOUND");
+    expect(sharingSpaceVerdict({ callerRole: null, modules: ["TODO"] })).toBe("NOT_FOUND");
+  });
+
+  it("refuse un Espace sans le module Todo", () => {
+    expect(sharingSpaceVerdict({ callerRole: "MEMBER", modules: ["AGENDA"] })).toBe(
+      "TODO_DISABLED",
+    );
   });
 });

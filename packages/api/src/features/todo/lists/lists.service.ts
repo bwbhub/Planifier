@@ -7,22 +7,20 @@ import type {
   TodoListOutput,
   UpdateListInput,
 } from "@planifier/api-contract";
-import { canAccessTodoList } from "@planifier/domain-access/todo-list";
+import { canAccessTodoList, sharingSpaceVerdict } from "@planifier/domain-access/todo-list";
 import { isListTint, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import type { Db, DbTransaction, Prisma } from "@planifier/db";
 
+import { listAccessSelect, toListAccess, toPerson } from "../list-access";
 import { todoConflict } from "../todo-errors";
-import { listAccessSelect, toListAccess } from "../todo-guard";
 
 function listSelect(userId: string) {
-  const { space, ...access } = listAccessSelect(userId);
   return {
-    ...access,
+    ...listAccessSelect(userId),
     id: true,
     name: true,
     tint: true,
     version: true,
-    space: { select: { ...space.select, id: true, name: true } },
     _count: { select: { tasks: { where: { completedAt: null, parentId: null } } } },
   } as const satisfies Prisma.TodoListSelect;
 }
@@ -72,14 +70,17 @@ export async function listLists(
   };
 }
 
-/** Espace où partager une liste : l'appelant en est membre (sinon NOT_FOUND) et Todo y est activé. */
+/** Espace où partager une liste : droit décidé par `sharingSpaceVerdict` (membre, Todo activé). */
 async function assertSharingSpace(tx: DbTransaction, userId: string, spaceId: string) {
-  const space = await tx.space.findFirst({
-    where: { id: spaceId, members: { some: { userId } } },
-    select: { modules: true },
+  const space = await tx.space.findUnique({
+    where: { id: spaceId },
+    select: { modules: true, members: { where: { userId }, select: { role: true } } },
   });
-  if (space === null) throw new ORPCError("NOT_FOUND");
-  if (!space.modules.includes("TODO")) throw todoConflict("TODO_DISABLED");
+  const verdict = sharingSpaceVerdict(
+    space === null ? null : { callerRole: space.members[0]?.role ?? null, modules: space.modules },
+  );
+  if (verdict === "NOT_FOUND") throw new ORPCError("NOT_FOUND");
+  if (verdict === "TODO_DISABLED") throw todoConflict("TODO_DISABLED");
 }
 
 /** Sous le verrou de la ligne de l'utilisateur : deux créations simultanées ne dépassent pas la borne. */
@@ -130,8 +131,15 @@ export async function updateList(
   });
 }
 
-/** Son propriétaire d'abord, puis les membres de son Espace par ordre d'arrivée, sans doublon. */
-export async function listMembers(db: Db, listId: string): Promise<ListMembersOutput> {
+/**
+ * Son propriétaire d'abord, puis les membres de son Espace par ordre d'arrivée, sans doublon. Les membres ne sont
+ * nommés qu'à un membre de l'Espace : le propriétaire qui l'a quitté ne voit plus qui y est.
+ */
+export async function listMembers(
+  db: Db,
+  userId: string,
+  listId: string,
+): Promise<ListMembersOutput> {
   const list = await db.todoList.findUnique({
     where: { id: listId },
     select: {
@@ -148,11 +156,10 @@ export async function listMembers(db: Db, listId: string): Promise<ListMembersOu
   });
   // Supprimée entre la garde et la lecture.
   if (list === null) throw new ORPCError("NOT_FOUND");
-  const people = [list.owner, ...(list.space?.members.map(({ user }) => user) ?? [])];
-  const unique = people.filter(
-    (person, index) => people.findIndex(({ id }) => id === person.id) === index,
-  );
-  return { items: unique.map(({ id, name }) => ({ userId: id, name })) };
+  const members = list.space?.members.map(({ user }) => user) ?? [];
+  const visible = members.some(({ id }) => id === userId) ? members : [];
+  const people = [list.owner, ...visible.filter(({ id }) => id !== list.owner.id)];
+  return { items: people.map(toPerson) };
 }
 
 /** Ses tâches partent avec elle (`onDelete: Cascade`). */

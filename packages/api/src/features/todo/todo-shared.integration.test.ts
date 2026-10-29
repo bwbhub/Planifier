@@ -52,6 +52,24 @@ describe("todo : droits sur une liste partagée (base réelle)", () => {
     });
   });
 
+  it("ne révèle rien à qui n'est pas membre, ni à un ancien membre", async () => {
+    const list = await createSharedList();
+    const task = await call(tasks.create, { listId: list.id, title: "Pain" }, asUser(alice));
+    await db.spaceMember.deleteMany({ where: { spaceId, userId: bob.id } });
+    for (const user of [carol, bob]) {
+      const notFound = { code: "NOT_FOUND" };
+      await expect(
+        call(lists.update, { listId: list.id, version: 1, name: "Pris" }, asUser(user)),
+      ).rejects.toMatchObject(notFound);
+      await expect(call(lists.delete, { listId: list.id }, asUser(user))).rejects.toMatchObject(
+        notFound,
+      );
+      await expect(
+        call(tasks.setDone, { taskId: task.id, done: true }, asUser(user)),
+      ).rejects.toMatchObject(notFound);
+    }
+  });
+
   it("reste visible par tous les membres quand l'Espace restreint sa visibilité", async () => {
     const list = await createSharedList();
     await db.space.update({ where: { id: spaceId }, data: { restrictVisibility: true } });
@@ -89,7 +107,9 @@ describe("todo : droits sur une liste partagée (base réelle)", () => {
     // Alice est propriétaire de l'Espace : elle supprime la liste de Bob.
     await expect(call(lists.delete, { listId: bobsList.id }, asUser(alice))).resolves.toEqual({});
   });
+});
 
+describe("todo : rattachement à un Espace, personnes et pages (base réelle)", () => {
   it("réserve le changement d'Espace au propriétaire de la liste", async () => {
     const list = await createSharedList();
     await expect(
@@ -107,9 +127,6 @@ describe("todo : droits sur une liste partagée (base réelle)", () => {
       code: "NOT_FOUND",
     });
   });
-});
-
-describe("todo : rattachement à un Espace, personnes et pages (base réelle)", () => {
   it("partage une liste perso avec un Espace", async () => {
     const list = await createList(db, alice);
     await call(lists.update, { listId: list.id, version: 1, spaceId }, asUser(alice));
@@ -140,6 +157,14 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
     });
     await expect(call(lists.members, { listId: list.id }, asUser(carol))).rejects.toMatchObject({
       code: "NOT_FOUND",
+    });
+  });
+
+  it("ne nomme plus les membres au propriétaire qui a quitté l'Espace", async () => {
+    const list = await createSharedList(bob);
+    await db.spaceMember.deleteMany({ where: { spaceId, userId: bob.id } });
+    await expect(call(lists.members, { listId: list.id }, asUser(bob))).resolves.toEqual({
+      items: [{ userId: bob.id, name: "bob" }],
     });
   });
 

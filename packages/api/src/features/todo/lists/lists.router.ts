@@ -15,7 +15,7 @@ export const listsRouter = {
     .handler(({ context, input }) => updateList(context.getDb(), context.user.id, input)),
   members: userProcedure.todo.lists.members
     .use(listGuard("read"))
-    .handler(({ context, input }) => listMembers(context.getDb(), input.listId)),
+    .handler(({ context, input }) => listMembers(context.getDb(), context.user.id, input.listId)),
   delete: userProcedure.todo.lists.delete
     .use(listGuard("delete"))
     .handler(async ({ context, input }) => {

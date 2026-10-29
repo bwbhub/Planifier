@@ -1,6 +1,7 @@
 import { MODULES, SPACE_MAX_MEMBERS, SPACE_NAME_MAX_LENGTH } from "@planifier/constants/spaces";
 import { z } from "zod";
 
+import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
 import { spaceIdSchema, spaceRoleSchema, spaceTargetSchema, userIdSchema } from "../spaces.schemas";
 
 const spaceNameSchema = z.string().trim().min(1).max(SPACE_NAME_MAX_LENGTH);
@@ -12,7 +13,6 @@ const modulesSchema = z
   .refine((modules) => new Set(modules).size === modules.length, "Module en double.");
 
 const LIST_DEFAULT_LIMIT = 50;
-const LIST_MAX_LIMIT = 100;
 
 export const createSpaceInputSchema = z.strictObject({
   name: spaceNameSchema,
@@ -20,7 +20,7 @@ export const createSpaceInputSchema = z.strictObject({
 });
 
 export const listSpacesInputSchema = z.strictObject({
-  limit: z.int().min(1).max(LIST_MAX_LIMIT).default(LIST_DEFAULT_LIMIT),
+  limit: z.int().min(1).max(PAGE_MAX_LIMIT).default(LIST_DEFAULT_LIMIT),
   /** `nextCursor` de la page précédente. */
   cursor: z.uuid().optional(),
 });
@@ -78,7 +78,7 @@ export const spaceSummarySchema = z.strictObject({
 });
 
 export const listSpacesOutputSchema = z.strictObject({
-  items: z.array(spaceSummarySchema).max(LIST_MAX_LIMIT),
+  items: z.array(spaceSummarySchema).max(PAGE_MAX_LIMIT),
   /** null : dernière page. */
   nextCursor: z.uuid().nullable(),
 });

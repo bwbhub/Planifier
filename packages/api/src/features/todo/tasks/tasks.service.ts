@@ -15,6 +15,7 @@ import { type Db, type DbTransaction, JSON_DB_NULL, type Prisma } from "@planifi
 import { nextDueDate, seriesAnchor } from "@planifier/domain-recurrence";
 import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recurrence/stored";
 
+import { toPerson } from "../list-access";
 import { todoConflict } from "../todo-errors";
 
 const TASK_SELECT = {
@@ -36,7 +37,7 @@ type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 function toTaskOutput({ dueDate, recurrence, completedBy, ...task }: TaskRow): TaskOutput {
   return {
     ...task,
-    completedBy: completedBy === null ? null : { userId: completedBy.id, name: completedBy.name },
+    completedBy: completedBy === null ? null : toPerson(completedBy),
     dueDate: dueDate === null ? null : utcDateToDay(dueDate),
     recurrence: fromStoredRecurrence(recurrence),
   };

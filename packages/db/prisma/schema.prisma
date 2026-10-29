@@ -271,7 +271,7 @@ model SpaceInvite {
 // Todo : listes perso et partagées, tâches, sous-tâches, récurrence (assignation à venir)
 // ---------------------------------------------------------------------------
 
-/// Liste de tâches personnelle : seul son propriétaire la voit.
+/// Liste de tâches : perso (seul son propriétaire la voit) ou partagée avec un Espace (`spaceId`).
 model TodoList {
   id        String   @id @default(uuid(7))
   name      String

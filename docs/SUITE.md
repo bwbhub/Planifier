@@ -57,8 +57,14 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
     d'invitation retiré de l'adresse après lecture.
 
 - **Listes partagées (branche `feat/todo-listes-partagees`), à trancher** :
-  - Le propriétaire d'une liste qui quitte l'Espace la garde (et l'Espace aussi) : il y écrit encore. Voulu, ou la
-    liste doit-elle rester à l'Espace sans lui ?
+  - Le propriétaire d'une liste qui quitte l'Espace la garde (et l'Espace aussi) : il y écrit encore, peut la rendre
+    perso (les membres la perdent), mais ne voit plus qui est dans l'Espace. Voulu, ou la liste doit-elle rester à
+    l'Espace sans lui ?
+  - Droits posés en plus de « chacun coche » : tout membre renomme la liste et change sa teinte ; un propriétaire
+    d'Espace supprime la liste d'un autre membre. D'accord ?
+  - En-tête : « Liste partagée · Coloc » + pastilles, et non « Liste partagée avec Julien » (il faudrait savoir qui
+    est l'utilisateur courant dans le module).
+  - « Cochée par » apparaît après la réponse du serveur, pas au moment de la coche (rendu optimiste sans le nom).
   - Todo désactivé dans un Espace : ses listes partagées restent visibles et modifiables (rien ne disparaît). Voulu ?
   - « Cochée par » écrit le nom, même le sien (« Cochée par Camille ») : « toi » demanderait l'utilisateur courant
     dans le module.

@@ -1,4 +1,4 @@
-import type { ListTasksOutput } from "@planifier/api-contract";
+import { type ListTasksOutput, PAGE_MAX_LIMIT } from "@planifier/api-contract";
 import {
   type QueryClient,
   useInfiniteQuery,
@@ -40,15 +40,11 @@ export function useListMembers(listId: string) {
 }
 
 /**
- * Espaces où partager une liste : ceux où Todo est activé, parmi la première page de mes Espaces (100 au plus,
- * borne du contrat). Lu du module Espaces de l'API, sans passer par son code web.
+ * Mes Espaces, candidats au partage d'une liste (`sharingChoices`) : la première page seulement (`PAGE_MAX_LIMIT`).
+ * Lu du module Espaces de l'API, sans passer par son code web.
  */
 export function useSharingSpaces() {
-  return useQuery({
-    ...orpc.spaces.space.list.queryOptions({ input: { limit: 100 } }),
-    select: ({ items }) =>
-      items.filter(({ modules }) => modules.includes("TODO")).map(({ id, name }) => ({ id, name })),
-  });
+  return useQuery(orpc.spaces.space.list.queryOptions({ input: { limit: PAGE_MAX_LIMIT } }));
 }
 
 export function useTasks(listId: string) {

@@ -9,9 +9,8 @@ import { useState } from "react";
 
 import { LoadError } from "../atoms/load-error";
 import { ListForm } from "../forms/list-form";
-import { useTodoLists } from "../queries/todo.queries";
 import { listHref } from "../utils/list-href";
-import { allLists } from "../utils/list-pages";
+import { useSelectedList } from "../utils/use-selected-list";
 import { ListPanel } from "./list-panel";
 
 interface TodoViewProps {
@@ -25,10 +24,11 @@ interface ListTabsProps {
   onCreate: () => void;
   /** Présent s'il reste des listes à lire : elles s'ajoutent aux onglets. */
   onShowMore: (() => void) | undefined;
+  loadingMore: boolean;
 }
 
 /** Onglets des listes (liens `?liste=`, partageables), puis l'entrée de création. */
-function ListTabs({ lists, selectedId, onCreate, onShowMore }: ListTabsProps) {
+function ListTabs({ lists, selectedId, onCreate, onShowMore, loadingMore }: ListTabsProps) {
   return (
     <nav aria-label="Mes listes" className="-mx-4 overflow-x-auto px-4">
       <ul className="flex gap-2">
@@ -54,8 +54,8 @@ function ListTabs({ lists, selectedId, onCreate, onShowMore }: ListTabsProps) {
         })}
         {onShowMore === undefined ? null : (
           <li className="shrink-0">
-            <Button variant="ghost" size="sm" onClick={onShowMore}>
-              Voir plus de listes
+            <Button variant="ghost" size="sm" disabled={loadingMore} onClick={onShowMore}>
+              {loadingMore ? "Chargement des listes…" : "Voir plus de listes"}
             </Button>
           </li>
         )}
@@ -72,7 +72,7 @@ function ListTabs({ lists, selectedId, onCreate, onShowMore }: ListTabsProps) {
 /** Écran Todo : onglets des listes, liste choisie, création d'une liste. */
 export function TodoView({ selectedListId }: TodoViewProps) {
   const router = useRouter();
-  const lists = useTodoLists();
+  const { lists, items, searching } = useSelectedList(selectedListId);
   const [creating, setCreating] = useState(false);
 
   function showList(list: TodoListOutput) {
@@ -80,7 +80,7 @@ export function TodoView({ selectedListId }: TodoViewProps) {
     router.push(listHref(list.id));
   }
 
-  if (lists.isPending) {
+  if (lists.isPending || searching) {
     return (
       <p role="status" className="text-muted">
         Chargement de tes listes…
@@ -91,7 +91,6 @@ export function TodoView({ selectedListId }: TodoViewProps) {
     return <LoadError error={lists.error} onRetry={() => void lists.refetch()} />;
   }
 
-  const items = allLists(lists.data);
   const selected = items.find(({ id }) => id === selectedListId) ?? items[0];
   const listForm = (
     <section aria-labelledby="nouvelle-liste" className="rounded-card bg-surface p-5">
@@ -134,11 +133,8 @@ export function TodoView({ selectedListId }: TodoViewProps) {
         onCreate={() => {
           setCreating(true);
         }}
-        onShowMore={
-          lists.hasNextPage && !lists.isFetchingNextPage
-            ? () => void lists.fetchNextPage()
-            : undefined
-        }
+        onShowMore={lists.hasNextPage ? () => void lists.fetchNextPage() : undefined}
+        loadingMore={lists.isFetchingNextPage}
       />
       {creating ? listForm : null}
       <ListPanel

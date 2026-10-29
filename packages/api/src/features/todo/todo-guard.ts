@@ -1,29 +1,9 @@
 import { ORPCError, os } from "@orpc/server";
 import type { ResourceAction } from "@planifier/domain-access/resource";
 import { canAccessTodoList, type TodoListAccess } from "@planifier/domain-access/todo-list";
-import type { Prisma } from "@planifier/db";
 
 import type { UserContext } from "../../procedures";
-
-/** Ce que la garde lit d'une liste : propriétaire, Espace, et adhésion de l'appelant à cet Espace. */
-export function listAccessSelect(userId: string) {
-  return {
-    ownerId: true,
-    spaceId: true,
-    space: { select: { members: { where: { userId }, select: { role: true } } } },
-  } as const satisfies Prisma.TodoListSelect;
-}
-
-type ListAccessRow = Prisma.TodoListGetPayload<{ select: ReturnType<typeof listAccessSelect> }>;
-
-export function toListAccess(userId: string, list: ListAccessRow): TodoListAccess {
-  return {
-    userId,
-    ownerId: list.ownerId,
-    inSpace: list.spaceId !== null,
-    spaceRole: list.space?.members[0]?.role ?? null,
-  };
-}
+import { listAccessSelect, toListAccess } from "./list-access";
 
 /** Sans lecture ⇒ NOT_FOUND (null : liste introuvable) ; visible mais action refusée ⇒ FORBIDDEN. */
 function assertListAccess(access: TodoListAccess | null, action: ResourceAction) {

@@ -11,16 +11,17 @@ description: Organisation feature-first de apps/web (un dossier par module event
 apps/web/src/
   app/                    # routes Next : pages MINCES (composition + chargement), aucune logique
   features/
-    <module>/             # events | todo | agenda
+    <module>/             # account | spaces | events | todo | agenda
       components/         # composition d'écran ou de section (dialogues, vues)
       atoms/              # composants métier réutilisés dans le module, absents de `ui`
       forms/              # formulaires (un seul pour création et modification)
       stores/             # état d'UI (dialogue ouvert, sélection) — jamais de donnée serveur
       queries/            # SEUL endroit qui appelle l'API (hooks TanStack Query)
+      labels.ts           # libellés du module repris à plusieurs endroits (catalogue, futures traductions)
       types.ts · constants.ts · utils/   # seulement si nécessaire
       index.ts            # exports publics du module
     _shared/              # code utilisé par ≥ 2 modules
-  lib/                    # utilitaires transverses sans métier
+  lib/                    # utilitaires transverses sans métier (`labels.ts` : libellés communs, `format-date.ts`)
   config/                 # env.ts
 packages/ui/              # composants sans connaissance métier, réutilisables partout
 ```
@@ -55,6 +56,10 @@ Un composant promu à 3 usages dans des modules différents, sans connaissance m
   entière sans raison.
 - Une page mince : lit les paramètres, précharge, rend une vue du module.
 - Pas d'export par défaut (hors pages Next) ; pas de barrel géant.
+- Libellés : un texte repris à plusieurs endroits vient d'un catalogue, `lib/labels.ts` (actions et états communs,
+  `pageTitle`) ou `<module>/labels.ts` (rôles, modules, actions du module). Pas encore de traduction : le catalogue est
+  le point unique que les langues remplaceront. Un texte d'un seul usage reste à sa place.
+- Droits dans l'interface : les fonctions de `@planifier/domain-access`, jamais une comparaison de rôle réécrite.
 - Dialogues : un store par module `{ open, entityId | null, openCreate(), openEdit(id), close() }` ; pas de dialogue
   dupliqué création/modification.
 

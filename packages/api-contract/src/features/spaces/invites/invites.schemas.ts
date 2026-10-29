@@ -40,5 +40,6 @@ export const invitePreviewSchema = z.strictObject({
 
 export const acceptInviteOutputSchema = z.strictObject({ spaceId: spaceIdSchema });
 
+export type SpaceInviteOutput = z.infer<typeof spaceInviteSchema>;
 export type CreatedInviteOutput = z.infer<typeof createdInviteSchema>;
 export type InvitePreviewOutput = z.infer<typeof invitePreviewSchema>;

@@ -1,5 +1,6 @@
 // Entrée publique du module `account` (connexion, inscription, session, profil).
 export { LinkErrorNotice } from "./atoms/link-error-notice";
+export { ReturnNotice } from "./atoms/return-notice";
 export { AuthShell } from "./components/auth-shell";
 export { SignOutButton } from "./components/sign-out-button";
 export { ForgotPasswordForm } from "./forms/forgot-password-form";

@@ -18,6 +18,123 @@ Modèle d'entrée :
 
 ---
 
+## 2026-10-29 — Fusion de `feat/espaces-ui` dans les branches Todo (branche `feat/todo-minimal`)
+
+**Fait** : merge de `feat/espaces-ui` dans `feat/todo-minimal` (conflits : `Button` variantes et tailles unifiées,
+en-tête avec les deux navs, routes, validation de formulaire dans `_shared/forms`, RECAP, `project-context`).
+**Vérifié** : check-types, lint, test (web 116), build, format, intégration (api 74, api-server 14, auth 1), E2E 52/52.
+**Ouvert** : `Button` sm rapetisse dans les Espaces ; doublon `LoadError` (SUITE §4). Merge des PR à faire par
+l'utilisateur (refusé à l'agent).
+**Attendu ensuite** : propager dans `feat/todo-sous-taches` puis `feat/todo-recurrence`.
+
+---
+
+## 2026-10-29 — Corrections de revue des Espaces (branche `feat/espaces-ui`)
+
+**Fait**
+
+- `/code-review` (standards + spec) sur la branche, puis corrections :
+  - `ui` reçoit les blocs sans métier : `Avatar` (ex-`PersonBadge`), `ListSkeleton`, `LoadError` (`retryLabel`),
+    `MessageCard`, `SettingRow`/`SettingCard`/`SectionTitle`, `lib/tint` ; `BackLink` dans `_shared` ;
+    `Button` variante `ghost` (remplace `className="bg-transparent"`).
+  - `Sheet` rend le focus à son déclencheur quand elle se ferme ou que le parent la retire.
+  - Réglages : formulaire figé au montage (un rafraîchissement ne perd plus la saisie ni ne change la version
+    envoyée) ; « Recharger » après `STALE_VERSION` le remonte une fois la relecture finie.
+  - Membres : « Gérer » si le retrait **ou** le changement de rôle est permis ; « Retirer » seulement si permis.
+  - « Révoquer » un lien se confirme (`ConfirmSheet`).
+  - `/rejoindre` : jeton retiré de l'adresse (et de l'historique) dès sa lecture.
+  - Ids de titres par `useId` ; ancre `MEMBERS_SECTION_ID` dans `constants.ts` ; « organisateur » → « propriétaire »
+    (vocabulaire de `CONTEXT.md`) ; « Rien n'est perdu. » en libellé commun ; textes de retour de la connexion
+    déclarés avec les routes (`lib/routes.ts`), plus dans `account`.
+  - Lectures (TanStack Query) non réessayées sur un refus 4xx : un membre retiré voyait « Chargement » ~7 s.
+  - API : limite des plans réglable (`RPC_RATE_LIMIT_PER_MINUTE`, défaut 120), relevée à 1000 pour l'E2E seulement.
+- Tests : composants `MembersSection`, `ExitSection`, `InvitesSection`, `PromotionTip`, `SpacesList` (axe compris),
+  `Sheet` (focus), blocs `ui`, `JoinSpace` (jeton retiré) ; serveur (limite configurée appliquée) ; E2E : modules,
+  rôles, dernier propriétaire, révocation, retrait, dernier départ, suppression.
+
+**Décisions**
+
+- `homeLink`/`createLink` : même forme deux fois seulement, laissés (règle de trois).
+- Limite E2E : variable d'environnement explicite plutôt qu'un comportement lié à `NODE_ENV`.
+
+**Vérifié** (exécuté le 2026-10-29) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` : OK ;
+`prettier --check` : OK ; `pnpm test:integration` : api 58/58, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 48/48
+(PC et mobile), aucun 429.
+
+**Ouvert** : points à trancher et revues humaines dans `docs/SUITE.md` §4 (dont `RPC_RATE_LIMIT_PER_MINUTE`).
+
+**Attendu ensuite** : PR sur master ; puis revue et corrections de #19 et #20, et partage/assignation du Todo.
+
+---
+
+## 2026-10-28 — UI des Espaces (branche `feat/espaces-ui`, ticket `869fhwtfk`)
+
+**Fait**
+
+- Maquette `docs/maquettes/espaces.html` (clair/nuit, mobile/PC, fiches d'écran), validée par l'utilisateur.
+- Module web `spaces` : `/espaces` (liste, vide, chargement, erreur, pagination), `/espaces/nouveau` et
+  `/espaces/[id]/reglages` (un seul formulaire : nom, modules, visibilité ; `STALE_VERSION` → recharger),
+  `/espaces/[id]` (membres, « Gérer » : rôle et retrait, proposition de promotion à deux, liens d'invitation,
+  réglages en lecture, quitter, supprimer), `/rejoindre#jeton` (aperçu puis adhésion explicite ; lien mort, déjà
+  membre, complet). Bouton « Espaces » dans l'en-tête.
+- `ui` : `Sheet` (feuille du bas sur `<dialog>` natif), `Button` gagne `outline`, `strong` et `size` ;
+  `buttonClassName` prend un objet. `tokens` : `--overlay` (clair et nuit), `--radius-sheet`.
+- Connexion : paramètre `retour` (liste fermée, seule `/rejoindre` ; pas de redirection ouverte), le fragment suit.
+- `api-contract` : export additif des schémas `createSpaceInputSchema`, `updateSpaceInputSchema`, `inviteTokenSchema`
+  et des types `SpaceSummaryOutput`, `SpaceInviteOutput`.
+- Validation de formulaire déplacée de `account/utils` vers `_shared/forms` (deux modules l'utilisent).
+- Lint : module `spaces` dans l'isolation des features (commit séparé).
+- Après revue (standards + spec) :
+  - droits de l'interface par `@planifier/domain-access`, sans comparaison de rôle réécrite
+    (`utils/space-membership.ts` fait le lien avec l'Espace lu) ; « Rétrograder » masqué quand la règle le refuse ;
+  - catalogues de libellés : `lib/labels.ts` (communs, `pageTitle`) et `spaces/labels.ts` (rôles, modules,
+    visibilité, actions) ; pas encore de traduction, le catalogue est le point que les langues remplaceront ;
+  - doublons retirés : `SpaceGate` (chargement, introuvable, erreur), `ConfirmSheet` (quitter, supprimer, retirer),
+    `MessageCard`, `SpacePage` (cadre des 4 pages) ;
+  - chargement des liens d'invitation affiché, erreur par `LoadError` (déplacé de `_shared` vers `spaces`) ;
+  - `format-date` dans `lib/` ; paramètre `enabled` de `useSpaceInvites` retiré ; encart de retour de la connexion
+    dans `account` (`ReturnNotice`) ;
+  - historique de la branche redécoupé (refactorings, `ui`/`tokens`, e2e, fonctionnalité).
+
+**Décisions**
+
+- Jeton d'invitation dans le **fragment** (`#`) : jamais envoyé au serveur web, absent des journaux et du Referer ;
+  page `rejoindre` en `no-referrer`, non indexée ; `router.replace` après adhésion retire le lien de l'historique.
+- Modules cochés à la création : Todo et Agenda (choix de l'utilisateur), décochables.
+- Teinte d'un Espace et des pastilles tirée de l'identifiant parmi les teintes des tokens : aucune couleur stockée.
+- Réglages modifiés par le formulaire (règle 13), pas par des interrupteurs dans la page de l'Espace (maquette 3).
+- Visibilité absente à la création : le contrat `create` ne la prend pas.
+- « Plus tard » sur la proposition de promotion la masque jusqu'au prochain affichage : maquette alignée sur le code.
+- Quitter, supprimer, rejoindre ne relisent que la liste : relire l'aperçu après adhésion affichait « déjà membre »
+  avant la redirection (défaut trouvé par le test).
+
+**Vérifié** (exécuté le 2026-10-28) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` : OK ;
+`pnpm test:e2e` : 36/36 (PC et mobile, dont le parcours Espace : création, lien, connexion depuis le lien avec
+retour, adhésion, lien usé, suppression) ; `prettier --check` : OK. Captures clair/nuit, mobile/PC relues.
+
+**Ouvert**
+
+- Revue humaine (sécurité) : jeton dans le fragment et page `rejoindre` ; paramètre `retour` de la connexion (liste
+  fermée) ; `compte.spec` rejoue inscription et connexion après la limite de débit (`e2e/rate-limit.ts`).
+- Sans compte : la personne invitée s'inscrit puis doit rouvrir le lien (le retour ne traverse pas l'inscription).
+- Pas de préchargement serveur des données d'Espace (chargement côté client, squelettes).
+
+**Attendu ensuite** : revue, push et PR sur demande ; puis `869fmu1m4` (rattacher un événement à un Espace) une
+fois le module Événements posé.
+
+---
+
+## 2026-10-28 — Clôture Espaces (branche `master`)
+
+**Fait** : PR #17 mergée (`fbe86ca7`) ; ticket `869fhwtf9` fermé ; ticket `869fmu1m4` créé (rattacher un événement
+à un Espace).
+**Vérifié** : `master` local en avance rapide sur le merge. Aucun code modifié.
+**Ouvert** : fetch SSH en échec dans le shell de l'agent (clé à passphrase, pas d'askpass), donc `origin/master`
+local reste périmé.
+**Attendu ensuite** : UI des Espaces (`869fhwtfk`) ou `869fmu1m4`.
+
+---
+
 ## 2026-10-28 — Todo minimal : listes perso et tâches (branche `feat/todo-minimal`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
 
 **Fait**

@@ -11,7 +11,7 @@ import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
 import type { SubmitEvent } from "react";
 
-import { useFormValidation } from "@/features/_shared/utils/use-form-validation";
+import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { useCreateTask, useUpdateTask } from "../queries/todo.queries";

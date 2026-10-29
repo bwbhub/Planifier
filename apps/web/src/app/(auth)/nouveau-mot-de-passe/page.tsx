@@ -4,8 +4,9 @@ import Link from "next/link";
 
 import { AuthShell, LinkErrorNotice, ResetPasswordForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
+import { pageTitle } from "@/lib/labels";
 
-export const metadata: Metadata = { title: "Nouveau mot de passe · Planifier" };
+export const metadata: Metadata = { title: pageTitle("Nouveau mot de passe") };
 
 /** Page où mène le lien de l'e-mail : `?token=…` s'il est valable, `?error=…` sinon (Better Auth). */
 export default async function ResetPasswordPage({

@@ -2,6 +2,8 @@
 
 import { Button } from "@planifier/ui/components/button";
 
+import { COMMON_LABELS } from "@/lib/labels";
+
 /**
  * Erreur inattendue d'un écran (API injoignable pendant le rendu serveur, par exemple) : message sans détail
  * technique et reprise. Le détail reste dans les journaux du serveur.
@@ -25,7 +27,7 @@ export default function ErrorPage({
           Le service ne répond pas pour l'instant. Réessaie dans un instant.
         </p>
         <Button className="mt-6" onClick={retry}>
-          Réessayer
+          {COMMON_LABELS.retry}
         </Button>
       </section>
     </main>

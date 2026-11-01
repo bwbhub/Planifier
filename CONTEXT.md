@@ -30,7 +30,7 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Tâche** : titre obligatoire ; description, échéance, récurrence, sous-tâches optionnels.
 - **Sous-tâche** : tâche rattachée à une tâche de la même liste, sur un seul niveau. Cochée seule : rien ne se coche en cascade, dans un sens ni dans l'autre. Supprimée avec sa tâche. Compte dans la limite de tâches de la liste, pas dans le nombre de tâches à faire affiché pour la liste.
 - **Récurrence** : indépendante de la date et de l'heure.
-- **Assignation** : désigne qui s'en occupe, jamais imposée.
+- **Assignation** : désigne qui s'en occupe, jamais imposée. Une personne au plus, membre de l'Espace de la liste ; une sous-tâche a la sienne. Sur une liste perso, pas d'assignation. La personne quitte l'Espace : la tâche n'est plus assignée. Une tâche répétée garde son assigné d'une occurrence à l'autre.
 - **Clone lié** : copie d'une tâche dans une autre liste. Cocher le clone coche l'original, pas l'inverse.
 - **Tâche orpheline** : clone dont l'original a été supprimé. Signalée jusqu'à décision de l'utilisateur (supprimer ou garder comme indépendante).
 - **Rappel** : option d'une tâche, choisie explicitement.

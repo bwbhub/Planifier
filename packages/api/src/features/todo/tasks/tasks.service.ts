@@ -12,10 +12,11 @@ import type {
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
 import { type Db, type DbTransaction, JSON_DB_NULL, type Prisma } from "@planifier/db";
+import { canBeAssigned } from "@planifier/domain-access/todo-list";
 import { nextDueDate, seriesAnchor } from "@planifier/domain-recurrence";
 import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recurrence/stored";
 
-import { toPerson } from "../list-access";
+import { spaceMemberIds, toPerson } from "../list-access";
 import { todoConflict } from "../todo-errors";
 
 const TASK_SELECT = {
@@ -27,17 +28,26 @@ const TASK_SELECT = {
   dueDate: true,
   completedAt: true,
   completedBy: { select: { id: true, name: true } },
+  assignee: { select: { id: true, name: true } },
   recurrence: true,
   version: true,
 } as const satisfies Prisma.TaskSelect;
 
 type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 
-/** Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. */
-function toTaskOutput({ dueDate, recurrence, completedBy, ...task }: TaskRow): TaskOutput {
+/**
+ * Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. L'assigné n'est
+ * rendu que s'il est encore membre : quitter l'Espace, y être retiré ou le voir supprimé n'a rien à écrire ici.
+ */
+function toTaskOutput(
+  { dueDate, recurrence, completedBy, assignee, ...task }: TaskRow,
+  spaceMembers: ReadonlySet<string>,
+): TaskOutput {
   return {
     ...task,
     completedBy: completedBy === null ? null : toPerson(completedBy),
+    assignee:
+      assignee !== null && canBeAssigned(assignee.id, spaceMembers) ? toPerson(assignee) : null,
     dueDate: dueDate === null ? null : utcDateToDay(dueDate),
     recurrence: fromStoredRecurrence(recurrence),
   };
@@ -51,7 +61,8 @@ export async function listTasks(db: Db, listId: string): Promise<ListTasksOutput
     take: TODO_LIST_MAX_TASKS,
     select: TASK_SELECT,
   });
-  return { items: rows.map(toTaskOutput) };
+  const spaceMembers = await spaceMemberIds(db, listId);
+  return { items: rows.map((row) => toTaskOutput(row, spaceMembers)) };
 }
 
 /** Parent d'une sous-tâche : tâche de la même liste (sinon NOT_FOUND), elle-même pas une sous-tâche. */
@@ -64,10 +75,14 @@ async function assertParent(tx: DbTransaction, listId: string, parentId: string)
   if (parent.parentId !== null) throw todoConflict("NESTED_SUBTASK");
 }
 
+function assertAssignable(assigneeId: string, spaceMembers: ReadonlySet<string>) {
+  if (!canBeAssigned(assigneeId, spaceMembers)) throw todoConflict("ASSIGNEE_NOT_MEMBER");
+}
+
 /** Sous le verrou de la ligne de la liste : deux créations simultanées ne dépassent pas la borne. */
 export async function createTask(
   db: Db,
-  { listId, parentId, title, description, dueDate, recurrence }: CreateTaskInput,
+  { listId, parentId, title, description, dueDate, recurrence, assigneeId }: CreateTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<
@@ -78,6 +93,8 @@ export async function createTask(
     const count = await tx.task.count({ where: { listId } });
     if (count >= TODO_LIST_MAX_TASKS) throw todoConflict("LIST_FULL");
     if (parentId !== undefined) await assertParent(tx, listId, parentId);
+    const spaceMembers = await spaceMemberIds(tx, listId);
+    if (assigneeId !== undefined) assertAssignable(assigneeId, spaceMembers);
     const task = await tx.task.create({
       data: {
         listId,
@@ -85,11 +102,12 @@ export async function createTask(
         title,
         description: description ?? null,
         dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
+        assigneeId: assigneeId ?? null,
         ...(recurrence === undefined ? {} : { recurrence: toStoredRecurrence(recurrence) }),
       },
       select: TASK_SELECT,
     });
-    return toTaskOutput(task);
+    return toTaskOutput(task, spaceMembers);
   });
 }
 
@@ -97,7 +115,7 @@ async function readTask(db: Db, taskId: string): Promise<TaskOutput> {
   const task = await db.task.findUnique({ where: { id: taskId }, select: TASK_SELECT });
   // Supprimée entre-temps.
   if (task === null) throw new ORPCError("NOT_FOUND");
-  return toTaskOutput(task);
+  return toTaskOutput(task, await spaceMemberIds(db, task.listId));
 }
 
 /** Écriture conditionnée par la version ; NOT_FOUND si supprimée entre-temps, avant de conclure à une version périmée. */
@@ -116,15 +134,25 @@ async function writeVersioned(
   return task;
 }
 
+/** Assigné demandé (ni absent ni effacé) : membre de l'Espace de la liste de la tâche. */
+async function assertTaskAssignable(db: Db, taskId: string, assigneeId: string | null | undefined) {
+  if (assigneeId === undefined || assigneeId === null) return;
+  const task = await db.task.findUnique({ where: { id: taskId }, select: { listId: true } });
+  if (task === null) throw new ORPCError("NOT_FOUND");
+  assertAssignable(assigneeId, await spaceMemberIds(db, task.listId));
+}
+
 export async function updateTask(
   db: Db,
-  { taskId, version, title, description, dueDate, recurrence }: UpdateTaskInput,
+  { taskId, version, title, description, dueDate, recurrence, assigneeId }: UpdateTaskInput,
 ): Promise<TaskOutput> {
+  await assertTaskAssignable(db, taskId, assigneeId);
   // Champ absent : inchangé ; `null` efface.
   return writeVersioned(db, taskId, version, {
     ...(title === undefined ? {} : { title }),
     ...(description === undefined ? {} : { description }),
     ...(dueDate === undefined ? {} : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
+    ...(assigneeId === undefined ? {} : { assigneeId }),
     ...(recurrence === undefined
       ? {}
       : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
@@ -169,20 +197,19 @@ export async function completeOccurrence(
   db: Db,
   { taskId, version, today }: CompleteOccurrenceInput,
 ): Promise<TaskOutput> {
-  const found = await db.task.findUnique({
+  const task = await db.task.findUnique({
     where: { id: taskId },
-    select: { ...TASK_SELECT, recurrenceAnchor: true },
+    select: { recurrence: true, version: true, dueDate: true, recurrenceAnchor: true },
   });
-  if (found === null) throw new ORPCError("NOT_FOUND");
-  const { recurrenceAnchor, ...row } = found;
-  const task = toTaskOutput(row);
-  if (task.recurrence === null) throw todoConflict("NOT_RECURRING");
+  if (task === null) throw new ORPCError("NOT_FOUND");
+  const recurrence = fromStoredRecurrence(task.recurrence);
+  if (recurrence === null) throw todoConflict("NOT_RECURRING");
   if (task.version !== version) throw todoConflict("STALE_VERSION");
   const series = {
-    anchor: recurrenceAnchor === null ? null : utcDateToDay(recurrenceAnchor),
-    due: task.dueDate,
+    anchor: task.recurrenceAnchor === null ? null : utcDateToDay(task.recurrenceAnchor),
+    due: task.dueDate === null ? null : utcDateToDay(task.dueDate),
   };
-  const next = nextDueDate(task.recurrence, series, today);
+  const next = nextDueDate(recurrence, series, today);
   return writeVersioned(db, taskId, version, {
     dueDate: dayToUtcDate(next),
     // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).

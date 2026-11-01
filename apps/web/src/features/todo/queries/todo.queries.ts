@@ -35,8 +35,8 @@ export function useTodoLists() {
 }
 
 /** Personnes d'une liste : son propriétaire et les membres de son Espace. */
-export function useListMembers(listId: string) {
-  return useQuery(orpc.todo.lists.members.queryOptions({ input: { listId } }));
+export function useListMembers(listId: string, enabled = true) {
+  return useQuery(orpc.todo.lists.members.queryOptions({ input: { listId }, enabled }));
 }
 
 /**

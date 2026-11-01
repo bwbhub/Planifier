@@ -21,7 +21,8 @@ export const taskTargetSchema = z.strictObject({ taskId: taskIdSchema });
  * Raisons d'un `CONFLICT` du module Todo, pour que l'interface dise quoi faire : `STALE_VERSION` (modifiée
  * entre-temps, recharger), `TOO_MANY_LISTS` (nombre de listes au plus atteint), `LIST_FULL` (tâches au plus atteint),
  * `NESTED_SUBTASK` (une sous-tâche n'a pas de sous-tâches : un seul niveau), `NOT_RECURRING` (la tâche n'est pas
- * répétée : la cocher avec `setDone`), `TODO_DISABLED` (le module Todo n'est pas activé dans l'Espace visé).
+ * répétée : la cocher avec `setDone`), `TODO_DISABLED` (le module Todo n'est pas activé dans l'Espace visé),
+ * `ASSIGNEE_NOT_MEMBER` (la personne n'est pas membre de l'Espace de la liste ; liste perso : personne ne l'est).
  */
 export const TODO_CONFLICT_REASONS = [
   "STALE_VERSION",
@@ -30,6 +31,7 @@ export const TODO_CONFLICT_REASONS = [
   "NESTED_SUBTASK",
   "NOT_RECURRING",
   "TODO_DISABLED",
+  "ASSIGNEE_NOT_MEMBER",
 ] as const;
 export type TodoConflictReason = (typeof TODO_CONFLICT_REASONS)[number];
 

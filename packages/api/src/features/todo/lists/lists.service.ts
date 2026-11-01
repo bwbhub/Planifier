@@ -141,7 +141,11 @@ export async function updateList(
  * Liste perso : son propriétaire. Liste partagée : les membres de son Espace, son créateur d'abord s'il en est
  * encore membre, puis par ordre d'arrivée.
  */
-export async function listMembers(db: Db, listId: string): Promise<ListMembersOutput> {
+export async function listMembers(
+  db: Db,
+  listId: string,
+  callerId: string,
+): Promise<ListMembersOutput> {
   const list = await db.todoList.findUnique({
     where: { id: listId },
     select: {
@@ -158,13 +162,13 @@ export async function listMembers(db: Db, listId: string): Promise<ListMembersOu
   });
   // Supprimée entre la garde et la lecture.
   if (list === null) throw new ORPCError("NOT_FOUND");
-  if (list.space === null) return { items: [toPerson(list.owner)] };
+  if (list.space === null) return { items: [toPerson(list.owner)], callerId };
   const members = list.space.members.map(({ user }) => user);
   const creatorFirst = [
     ...members.filter(({ id }) => id === list.owner.id),
     ...members.filter(({ id }) => id !== list.owner.id),
   ];
-  return { items: creatorFirst.map(toPerson) };
+  return { items: creatorFirst.map(toPerson), callerId };
 }
 
 /** Ses tâches partent avec elle (`onDelete: Cascade`). */

@@ -191,4 +191,38 @@ describe("ListPanel, liste partagée", () => {
     expect(screen.queryByRole("button", { name: /^Supprimer\s*la liste$/ })).toBeNull();
     expect(screen.getByRole("button", { name: /^Modifier\s*la liste$/ })).toBeTruthy();
   });
+
+  it("atténue, sur demande, les tâches qui ne me sont pas assignées, sous-tâche assignée épargnée", async () => {
+    const me = { userId: "0199f3a2-7c4e-7d10-9a51-00000000a11c", name: "Camille" };
+    const other = { userId: "0199f3a2-7c4e-7d10-9a51-00000000b0b0", name: "Julien" };
+    const parentId = "0199f3a2-7c4e-7d10-9a51-00000000d001";
+    replyRpc(fetchMock, {
+      "todo/tasks/list": {
+        data: {
+          items: [
+            taskWith({ id: parentId, title: "Pour Julien", assignee: other }),
+            taskWith({
+              id: "0199f3a2-7c4e-7d10-9a51-00000000d002",
+              title: "Sous-tâche pour moi",
+              parentId,
+              assignee: me,
+            }),
+            taskWith({ id: "0199f3a2-7c4e-7d10-9a51-00000000d003", title: "Sans personne" }),
+          ],
+        },
+      },
+      "todo/lists/members": { data: { items: [me, other], callerId: me.userId } },
+    });
+    renderPanel(shared);
+    const option = await screen.findByRole("checkbox", {
+      name: "Atténuer les tâches qui ne me sont pas assignées",
+    });
+    expect(await screen.findByText("Assignée à Julien")).toBeTruthy();
+    const dimmedTitles = () =>
+      [...document.querySelectorAll(".opacity-45 input + span")].map((title) => title.textContent);
+    expect(dimmedTitles()).toEqual([]);
+
+    await userEvent.click(option);
+    expect(dimmedTitles()).toEqual(["Pour Julien", "Sans personne"]);
+  });
 });

@@ -13,6 +13,7 @@ export function taskWith(
     dueDate: null,
     completedAt: null,
     completedBy: null,
+    assignee: null,
     recurrence: null,
     version: 1,
     ...fields,

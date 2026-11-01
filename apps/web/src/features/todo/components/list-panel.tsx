@@ -2,6 +2,7 @@
 
 import type { TaskOutput, TodoListOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
+import { Checkbox } from "@planifier/ui/components/checkbox";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
 import { cn } from "@planifier/ui/lib/cn";
 
@@ -14,6 +15,7 @@ import { TaskForm } from "../forms/task-form";
 import { useDeleteList, useTasks } from "../queries/todo.queries";
 import { TINTS } from "../utils/list-tint";
 import { isSubtask, subtasksByParent } from "../utils/subtasks";
+import { useDimUnassigned } from "../utils/use-dim-unassigned";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { useTaskCompletion } from "../utils/use-task-completion";
 
@@ -31,10 +33,11 @@ interface TaskSectionsProps {
   completion: TaskCompletion;
   /** Liste partagée : chaque tâche cochée dit par qui. */
   shared: boolean;
+  isDimmed: (task: TaskOutput) => boolean;
 }
 
 /** À faire, puis cochées : une tâche cochée change de section avec ses sous-tâches. */
-function TaskSections({ tasks, completion, shared }: TaskSectionsProps) {
+function TaskSections({ tasks, completion, shared, isDimmed }: TaskSectionsProps) {
   const byParent = subtasksByParent(tasks);
   const topLevel = tasks.filter((task) => !isSubtask(task));
   const open = topLevel.filter(({ completedAt }) => completedAt === null);
@@ -47,6 +50,7 @@ function TaskSections({ tasks, completion, shared }: TaskSectionsProps) {
         subtasks={byParent.get(task.id) ?? []}
         completion={completion}
         shared={shared}
+        isDimmed={isDimmed}
       />
     ));
   return (
@@ -74,7 +78,15 @@ function TaskSections({ tasks, completion, shared }: TaskSectionsProps) {
  * Tâches de la liste. La coche vit ici et non dans la ligne : cochée, une tâche change de section (ligne recréée),
  * et un refus du serveur doit rester visible après ce déplacement.
  */
-function TaskList({ listId, shared }: { listId: string; shared: boolean }) {
+function TaskList({
+  listId,
+  shared,
+  isDimmed,
+}: {
+  listId: string;
+  shared: boolean;
+  isDimmed: (task: TaskOutput) => boolean;
+}) {
   const tasks = useTasks(listId);
   const { completion, notice, error } = useTaskCompletion(listId);
   if (tasks.isPending) {
@@ -105,7 +117,12 @@ function TaskList({ listId, shared }: { listId: string; shared: boolean }) {
           </Button>
         )}
       </div>
-      <TaskSections tasks={tasks.data.items} completion={completion} shared={shared} />
+      <TaskSections
+        tasks={tasks.data.items}
+        completion={completion}
+        shared={shared}
+        isDimmed={isDimmed}
+      />
     </div>
   );
 }
@@ -121,6 +138,8 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const deleteList = useDeleteList();
   const tint = TINTS[list.tint];
+  const shared = list.space !== null;
+  const dim = useDimUnassigned(list.id, shared);
 
   return (
     // Nommée par le nom de la liste, qu'on la lise ou qu'on la modifie (le titre disparaît en modification).
@@ -152,6 +171,15 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
             </div>
           </div>
         )}
+        {dim.available && mode === "view" ? (
+          <Checkbox
+            label="Atténuer les tâches qui ne me sont pas assignées"
+            checked={dim.dimmed}
+            onChange={(event) => {
+              dim.setDimmed(event.target.checked);
+            }}
+          />
+        ) : null}
         {mode === "confirmDelete" ? (
           <ConfirmPanel
             question={`Supprimer la liste « ${list.name} » et toutes ses tâches ?`}
@@ -168,9 +196,9 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
       </header>
       <div className="rounded-card bg-surface p-5">
         {/* Clé : un formulaire neuf par liste (rien de saisi ne passe d'une liste à l'autre). */}
-        <TaskForm key={list.id} listId={list.id} />
+        <TaskForm key={list.id} listId={list.id} shared={shared} />
       </div>
-      <TaskList listId={list.id} shared={list.space !== null} />
+      <TaskList listId={list.id} shared={shared} isDimmed={dim.isDimmed} />
     </section>
   );
 }

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { canAccessTodoList, sharingSpaceVerdict, type TodoListAccess } from "./todo-list";
+import {
+  canAccessTodoList,
+  canBeAssigned,
+  sharingSpaceVerdict,
+  type TodoListAccess,
+} from "./todo-list";
 
 const ME = "user-me";
 const OTHER = "user-other";
@@ -73,5 +78,13 @@ describe("sharingSpaceVerdict", () => {
     expect(sharingSpaceVerdict({ callerRole: "MEMBER", modules: ["AGENDA"] })).toBe(
       "TODO_DISABLED",
     );
+  });
+});
+
+describe("canBeAssigned", () => {
+  it("n'accepte qu'un membre de l'Espace, personne sur une liste perso", () => {
+    expect(canBeAssigned("a", new Set(["a", "b"]))).toBe(true);
+    expect(canBeAssigned("c", new Set(["a", "b"]))).toBe(false);
+    expect(canBeAssigned("a", new Set())).toBe(false);
   });
 });

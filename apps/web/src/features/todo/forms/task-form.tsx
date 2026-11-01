@@ -12,6 +12,7 @@ import {
 } from "@planifier/constants/todo";
 import { Button } from "@planifier/ui/components/button";
 import { ChoiceGroup } from "@planifier/ui/components/choice-group";
+import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
 import type { SubmitEvent } from "react";
@@ -19,7 +20,8 @@ import type { SubmitEvent } from "react";
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
-import { useCreateTask, useUpdateTask } from "../queries/todo.queries";
+import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
+import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
 
 const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
@@ -53,6 +55,11 @@ interface TaskDetailsProps {
   invalid: ReadonlySet<Field>;
 }
 
+interface AssigneeProps {
+  listId: string;
+  task: TaskOutput | undefined;
+}
+
 /** Champs rangés dans les détails repliables (le titre reste toujours visible). */
 const DETAIL_FIELDS: readonly Field[] = ["description", "dueDate", "recurrence"];
 
@@ -60,7 +67,9 @@ const DETAIL_FIELDS: readonly Field[] = ["description", "dueDate", "recurrence"]
 function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
   if (DETAIL_FIELDS.some((field) => invalid.has(field))) return true;
   if (task === undefined) return false;
-  return [task.description, task.dueDate, task.recurrence].some((value) => value !== null);
+  return [task.description, task.dueDate, task.recurrence, task.assignee].some(
+    (value) => value !== null,
+  );
 }
 
 /** Répétition (ADR 0017) : rythme, puis intervalle (« 2 » avec « Chaque semaine » : toutes les deux semaines). */
@@ -88,12 +97,33 @@ function RecurrenceFields({ task, invalid }: TaskDetailsProps) {
   );
 }
 
-/** Description, échéance et répétition, facultatives. */
-function TaskDetails({ task, invalid }: TaskDetailsProps) {
+/** Assigné, liste partagée seulement. Tant que les personnes ne sont pas lues, le champ manque et rien ne change. */
+function AssigneeField({ listId, task }: AssigneeProps) {
+  const members = useListMembers(listId);
+  if (!members.isSuccess) return null;
+  return (
+    <SelectField
+      label="Assignée à"
+      name="assigneeId"
+      options={assigneeOptions(members.data.items, task?.assignee ?? null)}
+      defaultValue={task?.assignee?.userId ?? ""}
+    />
+  );
+}
+
+/** Description, échéance, répétition et, liste partagée, assigné : facultatifs. */
+function TaskDetails({
+  listId,
+  task,
+  invalid,
+  shared,
+}: TaskDetailsProps & AssigneeProps & { shared: boolean }) {
   return (
     <details open={detailsOpen({ task, invalid })}>
       <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-muted">
-        Description, échéance, répétition (facultatives)
+        {shared
+          ? "Description, échéance, répétition, assignation (facultatives)"
+          : "Description, échéance, répétition (facultatives)"}
       </summary>
       <div className="flex flex-col gap-3 pt-2">
         <TextAreaField
@@ -111,6 +141,7 @@ function TaskDetails({ task, invalid }: TaskDetailsProps) {
           error={invalid.has("dueDate") ? DUE_DATE_ERROR : undefined}
         />
         <RecurrenceFields task={task} invalid={invalid} />
+        {shared ? <AssigneeField listId={listId} task={task} /> : null}
       </div>
     </details>
   );
@@ -122,6 +153,8 @@ interface TaskFormProps {
   task?: TaskOutput | undefined;
   /** Création d'une sous-tâche de cette tâche. */
   parentId?: string | undefined;
+  /** Liste partagée : la tâche peut être assignée à un membre. */
+  shared?: boolean | undefined;
   /** Fin de la modification, ou abandon de l'ajout de sous-tâches ; absent : formulaire toujours ouvert. */
   onDone?: (() => void) | undefined;
 }
@@ -132,7 +165,7 @@ function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
 }
 
 /** Un seul formulaire pour créer une tâche et la modifier : titre obligatoire, détails facultatifs. */
-export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
+export function TaskForm({ listId, task, parentId, shared = false, onDone }: TaskFormProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const mutation = task === undefined ? createTask : updateTask;
@@ -147,6 +180,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
     const description = optionalText(data.get("description"));
     const dueDate = optionalText(data.get("dueDate"));
     const recurrence = recurrenceFromForm(data);
+    const assigneeId = assigneeFromForm(data.get("assigneeId"));
     if (task === undefined) {
       // Création : un champ vide est absent.
       const input = validate(form, createTaskInputSchema, {
@@ -156,6 +190,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
         description: description ?? undefined,
         dueDate: dueDate ?? undefined,
         recurrence: recurrence ?? undefined,
+        assigneeId: assigneeId ?? undefined,
       });
       if (input !== null)
         createTask.mutate(input, {
@@ -173,6 +208,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       description,
       dueDate,
       recurrence,
+      assigneeId,
     });
     if (input !== null) updateTask.mutate(input, { onSuccess: () => onDone?.() });
   }
@@ -189,7 +225,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
         autoFocus={onDone !== undefined}
         error={invalid.has("title") ? TITLE_ERROR : undefined}
       />
-      <TaskDetails task={task} invalid={invalid} />
+      <TaskDetails listId={listId} task={task} invalid={invalid} shared={shared} />
       {mutation.isError ? <TodoErrorAlert error={mutation.error} /> : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={mutation.isPending}>

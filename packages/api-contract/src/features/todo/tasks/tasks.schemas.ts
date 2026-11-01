@@ -12,6 +12,7 @@ import {
   recurrenceSchema,
   taskIdSchema,
   taskTargetSchema,
+  userIdSchema,
 } from "../todo.schemas";
 
 const titleSchema = z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH);
@@ -30,6 +31,8 @@ export const createTaskInputSchema = z.strictObject({
   description: descriptionSchema.optional(),
   dueDate: dueDateSchema.optional(),
   recurrence: recurrenceSchema.optional(),
+  /** Membre de l'Espace de la liste ; absent : personne, jamais imposé. */
+  assigneeId: userIdSchema.optional(),
 });
 
 /** Champs modifiés : au moins un ; `null` efface. `version` lue avec la tâche (concurrence optimiste). */
@@ -41,10 +44,11 @@ export const updateTaskInputSchema = z
     description: descriptionSchema.nullable().optional(),
     dueDate: dueDateSchema.nullable().optional(),
     recurrence: recurrenceSchema.nullable().optional(),
+    assigneeId: userIdSchema.nullable().optional(),
   })
   .refine(
-    ({ title, description, dueDate, recurrence }) =>
-      [title, description, dueDate, recurrence].some((field) => field !== undefined),
+    ({ title, description, dueDate, recurrence, assigneeId }) =>
+      [title, description, dueDate, recurrence, assigneeId].some((field) => field !== undefined),
     "Aucun champ à modifier.",
   );
 
@@ -88,6 +92,8 @@ export const taskSchema = z.strictObject({
   completedAt: z.date().nullable(),
   /** Qui l'a cochée (« Cochée par ») ; null : à faire, ou compte supprimé depuis. */
   completedBy: personSchema.nullable(),
+  /** Qui s'en occupe ; null : personne, ou plus membre de l'Espace de la liste. */
+  assignee: personSchema.nullable(),
   /** null : tâche non répétée. */
   recurrence: recurrenceSchema.nullable(),
   version: z.int(),

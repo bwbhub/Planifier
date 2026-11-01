@@ -132,7 +132,10 @@ test.describe("rejoindre un Espace", () => {
 });
 
 test.describe("partager une liste avec l'Espace", () => {
-  test("crée une liste partagée que l'autre membre voit et coche", async ({ page, browser }) => {
+  test("crée une liste partagée où l'on assigne, que l'autre membre voit et coche", async ({
+    page,
+    browser,
+  }) => {
     await signedIn(page, owner);
     await page.goto("/todo");
     await page.getByRole("button", { name: "Créer ma première liste" }).click();
@@ -144,8 +147,14 @@ test.describe("partager une liste avec l'Espace", () => {
     await page.getByRole("button", { name: "Créer la liste" }).click();
     await expect(page.getByText(`Liste partagée · ${SPACE_NAME}`)).toBeVisible();
     await page.getByLabel("Nouvelle tâche").fill("Pain");
+    await page.getByText("Description, échéance, répétition, assignation (facultatives)").click();
+    await page.getByLabel("Assignée à").selectOption({ label: guest.name });
     await page.getByRole("button", { name: "Ajouter", exact: true }).click();
     await expect(page.getByRole("checkbox", { name: "Pain" })).toBeVisible();
+    await expect(page.getByText(`Assignée à ${guest.name}`)).toBeVisible();
+    await expect(page.locator(".opacity-45")).toHaveCount(0);
+    await page.getByLabel("Atténuer les tâches qui ne me sont pas assignées").check();
+    await expect(page.locator(".opacity-45")).toHaveCount(1);
 
     const guestPage = await browser.newPage();
     await signedIn(guestPage, guest);

@@ -87,3 +87,55 @@ describe("TaskForm, répétition", () => {
     await expect(axeViolations(container)).resolves.toEqual([]);
   });
 });
+
+describe("TaskForm, assignation", () => {
+  it("assigne une tâche à un membre sur une liste partagée, personne par défaut", async () => {
+    const julien = { userId: "0199f3a2-7c4e-7d10-9a51-00000000b0b0", name: "Julien" };
+    const calls = replyRpc(fetchMock, {
+      "todo/lists/members": { data: { items: [julien], callerId: julien.userId } },
+      "todo/tasks/create": { data: WEEKLY_TASK },
+    });
+    renderForm({ shared: true });
+    const field = await screen.findByRole("combobox", { name: "Assignée à", hidden: true });
+    expect(field).toHaveProperty("value", "");
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Nouvelle tâche" }), "Billets");
+    await userEvent.selectOptions(field, "Julien");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(calls.find(({ path }) => path === "todo/tasks/create")?.input).toMatchObject({
+        title: "Billets",
+        assigneeId: julien.userId,
+      });
+    });
+  });
+
+  it("retire l'assigné quand on choisit Personne", async () => {
+    const julien = { userId: "0199f3a2-7c4e-7d10-9a51-00000000b0b0", name: "Julien" };
+    const task = { ...WEEKLY_TASK, assignee: julien };
+    const calls = replyRpc(fetchMock, {
+      "todo/lists/members": { data: { items: [julien], callerId: julien.userId } },
+      "todo/tasks/update": { data: task },
+    });
+    renderForm({ shared: true, task, onDone: vi.fn() });
+    await userEvent.selectOptions(await screen.findByRole("combobox", { name: "Assignée à" }), "");
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => {
+      expect(calls.find(({ path }) => path === "todo/tasks/update")?.input).toMatchObject({
+        assigneeId: null,
+      });
+    });
+  });
+
+  it("ne propose pas d'assigner sur une liste perso et ne touche pas à l'assigné", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/update": { data: WEEKLY_TASK } });
+    renderForm({ task: WEEKLY_TASK, onDone: vi.fn() });
+    expect(screen.queryByRole("combobox", { name: "Assignée à", hidden: true })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => {
+      expect(calls).toHaveLength(1);
+    });
+    expect(calls[0]?.input).not.toHaveProperty("assigneeId");
+  });
+});

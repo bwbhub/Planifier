@@ -25,7 +25,7 @@ export const tasksContract = {
     .route({
       summary: "Créer une tâche",
       description:
-        "Titre obligatoire. `parentId` : sous-tâche d'une tâche de la même liste (sinon NOT_FOUND), un seul niveau (CONFLICT `NESTED_SUBTASK`). Liste pleine (sous-tâches comprises) : CONFLICT `LIST_FULL`.",
+        "Titre obligatoire. `parentId` : sous-tâche d'une tâche de la même liste (sinon NOT_FOUND), un seul niveau (CONFLICT `NESTED_SUBTASK`). Liste pleine (sous-tâches comprises) : CONFLICT `LIST_FULL`. `assigneeId` hors de l'Espace de la liste : CONFLICT `ASSIGNEE_NOT_MEMBER`.",
     })
     .errors(TODO_ERRORS)
     .input(createTaskInputSchema)
@@ -34,7 +34,7 @@ export const tasksContract = {
     .route({
       summary: "Modifier une tâche",
       description:
-        "Titre, description, échéance (`null` efface). `version` périmée : CONFLICT `STALE_VERSION`.",
+        "Titre, description, échéance, assigné (`null` efface). `version` périmée : CONFLICT `STALE_VERSION`. `assigneeId` hors de l'Espace de la liste : CONFLICT `ASSIGNEE_NOT_MEMBER`.",
     })
     .errors(TODO_ERRORS)
     .input(updateTaskInputSchema)

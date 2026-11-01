@@ -105,30 +105,63 @@ describe("todo : écriture de l'assigné (base réelle)", () => {
 });
 
 describe("todo : lecture de l'assigné (base réelle)", () => {
-  it("ne montre plus un assigné parti de l'Espace", async () => {
-    const { id: listId } = await createSharedList();
-    await call(tasks.create, { listId, title: "Billets", assigneeId: bob.id }, asUser(alice));
-    await db.spaceMember.deleteMany({ where: { spaceId, userId: bob.id } });
+  async function assignedTask(assigneeId: string) {
+    const list = await createSharedList();
+    await call(tasks.create, { listId: list.id, title: "Billets", assigneeId }, asUser(alice));
+    return list;
+  }
 
+  const assignees = async (listId: string) => {
     const { items } = await call(tasks.list, { listId }, asUser(alice));
-    expect(items.map(({ assignee }) => assignee)).toEqual([null]);
+    return items.map(({ assignee }) => assignee);
+  };
+
+  it("n'assigne plus un membre retiré, même s'il revient", async () => {
+    const { id: listId } = await assignedTask(bob.id);
+    await call(router.spaces.members.remove, { spaceId, userId: bob.id }, asUser(alice));
+    expect(await assignees(listId)).toEqual([null]);
+
+    await db.spaceMember.create({ data: { spaceId, userId: bob.id } });
+    expect(await assignees(listId)).toEqual([null]);
   });
 
-  it("ne montre plus d'assigné sur une liste redevenue perso", async () => {
-    const list = await createSharedList();
-    const task = await call(
-      tasks.create,
-      { listId: list.id, title: "Billets", assigneeId: bob.id },
-      asUser(alice),
-    );
-    await call(
+  it("n'assigne plus un membre parti de lui-même, même s'il revient", async () => {
+    const { id: listId } = await assignedTask(bob.id);
+    await call(router.spaces.space.leave, { spaceId }, asUser(bob));
+    await db.spaceMember.create({ data: { spaceId, userId: bob.id } });
+    expect(await assignees(listId)).toEqual([null]);
+  });
+
+  it("ne rend pas l'assigné d'une liste redevenue perso quand elle est de nouveau partagée", async () => {
+    const list = await assignedTask(bob.id);
+    const personal = await call(
       lists.update,
       { listId: list.id, version: list.version, spaceId: null },
       asUser(alice),
     );
+    await call(
+      lists.update,
+      { listId: list.id, version: personal.version, spaceId },
+      asUser(alice),
+    );
+    expect(await assignees(list.id)).toEqual([null]);
+  });
 
-    const { items } = await call(tasks.list, { listId: list.id }, asUser(alice));
-    expect(items).toMatchObject([{ id: task.id, assignee: null }]);
+  it("garde l'assigné quand la liste change pour un Espace dont il est aussi membre", async () => {
+    const list = await assignedTask(bob.id);
+    const { id: otherSpaceId } = await createSpace(db, alice, [bob]);
+    await call(
+      lists.update,
+      { listId: list.id, version: list.version, spaceId: otherSpaceId },
+      asUser(alice),
+    );
+    expect(await assignees(list.id)).toEqual([{ userId: bob.id, name: bob.name }]);
+  });
+
+  it("ne montre plus d'assigné quand l'Espace est supprimé", async () => {
+    const { id: listId } = await assignedTask(bob.id);
+    await db.space.delete({ where: { id: spaceId } });
+    expect(await assignees(listId)).toEqual([null]);
   });
 
   it("garde l'assigné d'une occurrence à l'autre d'une tâche répétée", async () => {

@@ -34,3 +34,15 @@ export function membershipOf(
     memberCount: members.length,
   };
 }
+
+/**
+ * Retire `userId` de l'Espace. Ses tâches dans les listes de l'Espace ne lui sont plus assignées, pour de bon :
+ * revenir plus tard ne les lui rend pas. La version bouge : un formulaire ouvert ne réécrit pas l'ancien assigné.
+ */
+export async function deleteMembership(tx: DbTransaction, spaceId: string, userId: string) {
+  await tx.spaceMember.delete({ where: { spaceId_userId: { spaceId, userId } } });
+  await tx.task.updateMany({
+    where: { assigneeId: userId, list: { spaceId } },
+    data: { assigneeId: null, version: { increment: 1 } },
+  });
+}

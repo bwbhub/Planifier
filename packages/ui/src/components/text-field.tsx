@@ -1,6 +1,7 @@
 import { type InputHTMLAttributes, useId } from "react";
 
 import { cn } from "../lib/cn";
+import { FIELD_CONTROL_CLASSES } from "../lib/field";
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
   label: string;
@@ -28,11 +29,7 @@ export function TextField({ label, hint, error, className, ...input }: TextField
         id={id}
         aria-invalid={error === undefined ? undefined : true}
         aria-describedby={describedBy === "" ? undefined : describedBy}
-        className={cn(
-          "min-h-12 rounded-control border-2 border-transparent bg-field px-3.5 text-base text-ink",
-          "placeholder:text-muted focus:border-accent focus:bg-surface aria-invalid:border-accent",
-          "disabled:opacity-60",
-        )}
+        className={cn("min-h-12", FIELD_CONTROL_CLASSES)}
         {...input}
       />
       {hint === undefined ? null : (

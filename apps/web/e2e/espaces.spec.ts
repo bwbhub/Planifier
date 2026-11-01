@@ -152,9 +152,9 @@ test.describe("partager une liste avec l'Espace", () => {
     await page.getByRole("button", { name: "Ajouter", exact: true }).click();
     await expect(page.getByRole("checkbox", { name: "Pain" })).toBeVisible();
     await expect(page.getByText(`Assignée à ${guest.name}`)).toBeVisible();
-    await expect(page.locator(".opacity-45")).toHaveCount(0);
+    await expect(page.locator("[data-dimmed]")).toHaveCount(0);
     await page.getByLabel("Atténuer les tâches qui ne me sont pas assignées").check();
-    await expect(page.locator(".opacity-45")).toHaveCount(1);
+    await expect(page.locator("[data-dimmed]")).toHaveCount(1);
 
     const guestPage = await browser.newPage();
     await signedIn(guestPage, guest);

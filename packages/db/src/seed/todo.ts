@@ -1,17 +1,21 @@
 import type { Db } from "../factory";
 import { SEED_IDS } from "./ids";
 
-/** Deux listes perso d'Alice, quelques tâches dont une cochée, une avec échéance et une avec sous-tâches. */
+/**
+ * Deux listes perso d'Alice, quelques tâches dont une cochée, une avec échéance et une avec sous-tâches ; une liste
+ * partagée avec l'Espace d'Alice et Bob, avec une tâche assignée à chacun.
+ */
 export async function seedTodo(db: Db) {
   const lists = [
-    { id: SEED_IDS.listHome, name: "Maison", tint: "general" },
-    { id: SEED_IDS.listTrip, name: "Vacances", tint: "trip" },
+    { id: SEED_IDS.listHome, name: "Maison", tint: "general", spaceId: null },
+    { id: SEED_IDS.listTrip, name: "Vacances", tint: "trip", spaceId: null },
+    { id: SEED_IDS.listShared, name: "Liste Alice & Bob", tint: "couple", spaceId: SEED_IDS.space },
   ];
-  for (const list of lists) {
+  for (const { id, name, tint, spaceId } of lists) {
     await db.todoList.upsert({
-      where: { id: list.id },
-      create: { ...list, ownerId: SEED_IDS.alice },
-      update: { name: list.name, tint: list.tint },
+      where: { id },
+      create: { id, name, tint, spaceId, ownerId: SEED_IDS.alice },
+      update: { name, tint, spaceId },
     });
   }
 
@@ -34,6 +38,18 @@ export async function seedTodo(db: Db) {
       listId: SEED_IDS.listTrip,
       title: "Réserver les billets de train",
       description: "Aller le vendredi soir si possible.",
+    },
+    {
+      id: SEED_IDS.taskRent,
+      listId: SEED_IDS.listShared,
+      title: "Payer le loyer",
+      assigneeId: SEED_IDS.alice,
+    },
+    {
+      id: SEED_IDS.taskDishes,
+      listId: SEED_IDS.listShared,
+      title: "Réparer le lave-vaisselle",
+      assigneeId: SEED_IDS.bob,
     },
     // Sous-tâches des courses, après leur parent.
     {

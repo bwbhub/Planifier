@@ -9,7 +9,7 @@ import {
 } from "@planifier/domain-access/space";
 
 import { spaceConflict } from "../space-errors";
-import { lockSpace, membershipOf } from "../space-lock";
+import { deleteMembership, lockSpace, membershipOf } from "../space-lock";
 import { MEMBER_SELECT, toMemberOutput } from "../space-member";
 
 /** Refus d'un changement de membre, en `CONFLICT` typé. */
@@ -49,6 +49,6 @@ export async function removeMember(
     const membership = membershipOf(await lockSpace(tx, spaceId), userId);
     if (membership === null) throw new ORPCError("NOT_FOUND");
     assertAllowed(removalOutcome(membership));
-    await tx.spaceMember.delete({ where: { spaceId_userId: { spaceId, userId } } });
+    await deleteMembership(tx, spaceId, userId);
   });
 }

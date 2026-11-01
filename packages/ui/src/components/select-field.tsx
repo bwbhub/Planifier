@@ -1,15 +1,19 @@
 import { type SelectHTMLAttributes, useId } from "react";
 
 import { cn } from "../lib/cn";
+import { FIELD_CONTROL_CLASSES } from "../lib/field";
 
 export interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "id"> {
   label: string;
   options: readonly { value: string; label: string }[];
+  /** Erreur : marque le champ invalide et s'annonce avec lui. */
+  error?: string | undefined;
 }
 
-/** Liste de choix native avec libellé relié (WCAG : libellé visible), pour une liste trop longue pour `ChoiceGroup`. */
-export function SelectField({ label, options, className, ...select }: SelectFieldProps) {
+/** Liste de choix native avec libellé et erreur reliés, pour une liste trop longue pour `ChoiceGroup`. */
+export function SelectField({ label, options, error, className, ...select }: SelectFieldProps) {
   const id = useId();
+  const errorId = `${id}-error`;
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
@@ -18,10 +22,9 @@ export function SelectField({ label, options, className, ...select }: SelectFiel
       </label>
       <select
         id={id}
-        className={cn(
-          "min-h-12 rounded-control border-2 border-transparent bg-field px-3.5 text-base text-ink",
-          "focus:border-accent focus:bg-surface disabled:opacity-60",
-        )}
+        aria-invalid={error === undefined ? undefined : true}
+        aria-describedby={error === undefined ? undefined : errorId}
+        className={cn("min-h-12", FIELD_CONTROL_CLASSES)}
         {...select}
       >
         {options.map(({ value, label: optionLabel }) => (
@@ -30,6 +33,11 @@ export function SelectField({ label, options, className, ...select }: SelectFiel
           </option>
         ))}
       </select>
+      {error === undefined ? null : (
+        <p id={errorId} className="text-sm text-accent-text">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

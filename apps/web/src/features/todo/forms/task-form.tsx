@@ -15,13 +15,16 @@ import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
-import type { SubmitEvent } from "react";
+import { type SubmitEvent, useState } from "react";
 
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
+import { LoadError } from "../atoms/load-error";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
+import { ASSIGNEE_LABEL } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
+import { useListView } from "../utils/list-view";
 import { recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
 
 const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
@@ -100,10 +103,18 @@ function RecurrenceFields({ task, invalid }: TaskDetailsProps) {
 /** Assigné, liste partagée seulement. Tant que les personnes ne sont pas lues, le champ manque et rien ne change. */
 function AssigneeField({ listId, task }: AssigneeProps) {
   const members = useListMembers(listId);
-  if (!members.isSuccess) return null;
+  if (members.data === undefined) {
+    return members.isError ? (
+      <LoadError error={members.error} onRetry={() => void members.refetch()} />
+    ) : (
+      <p role="status" className="text-sm text-muted">
+        Chargement des personnes…
+      </p>
+    );
+  }
   return (
     <SelectField
-      label="Assignée à"
+      label={ASSIGNEE_LABEL}
       name="assigneeId"
       options={assigneeOptions(members.data.items, task?.assignee ?? null)}
       defaultValue={task?.assignee?.userId ?? ""}
@@ -112,12 +123,8 @@ function AssigneeField({ listId, task }: AssigneeProps) {
 }
 
 /** Description, échéance, répétition et, liste partagée, assigné : facultatifs. */
-function TaskDetails({
-  listId,
-  task,
-  invalid,
-  shared,
-}: TaskDetailsProps & AssigneeProps & { shared: boolean }) {
+function TaskDetails({ listId, task, invalid }: TaskDetailsProps & AssigneeProps) {
+  const { shared } = useListView();
   return (
     <details open={detailsOpen({ task, invalid })}>
       <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-muted">
@@ -153,8 +160,6 @@ interface TaskFormProps {
   task?: TaskOutput | undefined;
   /** Création d'une sous-tâche de cette tâche. */
   parentId?: string | undefined;
-  /** Liste partagée : la tâche peut être assignée à un membre. */
-  shared?: boolean | undefined;
   /** Fin de la modification, ou abandon de l'ajout de sous-tâches ; absent : formulaire toujours ouvert. */
   onDone?: (() => void) | undefined;
 }
@@ -165,12 +170,15 @@ function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
 }
 
 /** Un seul formulaire pour créer une tâche et la modifier : titre obligatoire, détails facultatifs. */
-export function TaskForm({ listId, task, parentId, shared = false, onDone }: TaskFormProps) {
+export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const mutation = task === undefined ? createTask : updateTask;
   const copy = copyOf(task, parentId);
   const { invalid, validate } = useFormValidation(FIELDS);
+  // Version lue à l'ouverture : les champs ne suivent pas les relectures, enregistrer après un changement venu
+  // d'ailleurs doit le signaler (STALE_VERSION), pas l'écraser sans le dire.
+  const [openedVersion] = useState(task?.version);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -203,7 +211,7 @@ export function TaskForm({ listId, task, parentId, shared = false, onDone }: Tas
     // Modification : un champ vidé vaut `null`, il est effacé.
     const input = validate(form, updateTaskInputSchema, {
       taskId: task.id,
-      version: task.version,
+      version: openedVersion,
       title,
       description,
       dueDate,
@@ -225,7 +233,7 @@ export function TaskForm({ listId, task, parentId, shared = false, onDone }: Tas
         autoFocus={onDone !== undefined}
         error={invalid.has("title") ? TITLE_ERROR : undefined}
       />
-      <TaskDetails listId={listId} task={task} invalid={invalid} shared={shared} />
+      <TaskDetails listId={listId} task={task} invalid={invalid} />
       {mutation.isError ? <TodoErrorAlert error={mutation.error} /> : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={mutation.isPending}>

@@ -35,10 +35,12 @@ const TASK_SELECT = {
 
 type TaskRow = Prisma.TaskGetPayload<{ select: typeof TASK_SELECT }>;
 
-/**
- * Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. L'assigné n'est
- * rendu que s'il est encore membre : quitter l'Espace, y être retiré ou le voir supprimé n'a rien à écrire ici.
- */
+/** Colonne `DATE` : Prisma la rend à minuit UTC ; le jour se relit en UTC, sans décalage de fuseau. */
+function toDay(date: Date | null): string | null {
+  return date === null ? null : utcDateToDay(date);
+}
+
+/** L'assigné n'est rendu que s'il est encore membre : un Espace supprimé laisse des listes perso, qui n'en ont pas. */
 function toTaskOutput(
   { dueDate, recurrence, completedBy, assignee, ...task }: TaskRow,
   spaceMembers: ReadonlySet<string>,
@@ -48,7 +50,7 @@ function toTaskOutput(
     completedBy: completedBy === null ? null : toPerson(completedBy),
     assignee:
       assignee !== null && canBeAssigned(assignee.id, spaceMembers) ? toPerson(assignee) : null,
-    dueDate: dueDate === null ? null : utcDateToDay(dueDate),
+    dueDate: toDay(dueDate),
     recurrence: fromStoredRecurrence(recurrence),
   };
 }
@@ -111,7 +113,7 @@ export async function createTask(
   });
 }
 
-async function readTask(db: Db, taskId: string): Promise<TaskOutput> {
+async function readTask(db: Db | DbTransaction, taskId: string): Promise<TaskOutput> {
   const task = await db.task.findUnique({ where: { id: taskId }, select: TASK_SELECT });
   // Supprimée entre-temps.
   if (task === null) throw new ORPCError("NOT_FOUND");
@@ -120,7 +122,7 @@ async function readTask(db: Db, taskId: string): Promise<TaskOutput> {
 
 /** Écriture conditionnée par la version ; NOT_FOUND si supprimée entre-temps, avant de conclure à une version périmée. */
 async function writeVersioned(
-  db: Db,
+  db: Db | DbTransaction,
   taskId: string,
   version: number,
   data: Prisma.TaskUpdateManyMutationInput,
@@ -135,7 +137,11 @@ async function writeVersioned(
 }
 
 /** Assigné demandé (ni absent ni effacé) : membre de l'Espace de la liste de la tâche. */
-async function assertTaskAssignable(db: Db, taskId: string, assigneeId: string | null | undefined) {
+async function assertAssigneeOfTask(
+  db: DbTransaction,
+  taskId: string,
+  assigneeId: string | null | undefined,
+) {
   if (assigneeId === undefined || assigneeId === null) return;
   const task = await db.task.findUnique({ where: { id: taskId }, select: { listId: true } });
   if (task === null) throw new ORPCError("NOT_FOUND");
@@ -146,18 +152,22 @@ export async function updateTask(
   db: Db,
   { taskId, version, title, description, dueDate, recurrence, assigneeId }: UpdateTaskInput,
 ): Promise<TaskOutput> {
-  await assertTaskAssignable(db, taskId, assigneeId);
-  // Champ absent : inchangé ; `null` efface.
-  return writeVersioned(db, taskId, version, {
-    ...(title === undefined ? {} : { title }),
-    ...(description === undefined ? {} : { description }),
-    ...(dueDate === undefined ? {} : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
-    ...(assigneeId === undefined ? {} : { assigneeId }),
-    ...(recurrence === undefined
-      ? {}
-      : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
-    // Échéance ou règle redéfinies : la série repart de la nouvelle échéance (ADR 0017).
-    ...(dueDate === undefined && recurrence === undefined ? {} : { recurrenceAnchor: null }),
+  return db.$transaction(async (tx) => {
+    await assertAssigneeOfTask(tx, taskId, assigneeId);
+    // Champ absent : inchangé ; `null` efface.
+    return writeVersioned(tx, taskId, version, {
+      ...(title === undefined ? {} : { title }),
+      ...(description === undefined ? {} : { description }),
+      ...(dueDate === undefined
+        ? {}
+        : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
+      ...(assigneeId === undefined ? {} : { assigneeId }),
+      ...(recurrence === undefined
+        ? {}
+        : { recurrence: recurrence === null ? JSON_DB_NULL : toStoredRecurrence(recurrence) }),
+      // Échéance ou règle redéfinies : la série repart de la nouvelle échéance (ADR 0017).
+      ...(dueDate === undefined && recurrence === undefined ? {} : { recurrenceAnchor: null }),
+    });
   });
 }
 
@@ -206,8 +216,8 @@ export async function completeOccurrence(
   if (recurrence === null) throw todoConflict("NOT_RECURRING");
   if (task.version !== version) throw todoConflict("STALE_VERSION");
   const series = {
-    anchor: task.recurrenceAnchor === null ? null : utcDateToDay(task.recurrenceAnchor),
-    due: task.dueDate === null ? null : utcDateToDay(task.dueDate),
+    anchor: toDay(task.recurrenceAnchor),
+    due: toDay(task.dueDate),
   };
   const next = nextDueDate(recurrence, series, today);
   return writeVersioned(db, taskId, version, {

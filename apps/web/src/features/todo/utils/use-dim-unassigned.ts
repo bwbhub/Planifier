@@ -11,7 +11,7 @@ import { useListMembers } from "../queries/todo.queries";
  */
 export function useDimUnassigned(listId: string, shared: boolean) {
   const [dimmed, setDimmed] = useState(false);
-  const members = useListMembers(listId, shared);
+  const members = useListMembers(listId, { enabled: shared });
   const callerId = members.data?.callerId;
   return {
     available: shared && callerId !== undefined,

@@ -149,11 +149,12 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
 
   it("liste les personnes de la liste : propriétaire puis membres, sans doublon", async () => {
     const list = await createSharedList(bob);
-    await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toMatchObject({
+    await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toEqual({
       items: [
         { userId: bob.id, name: "bob" },
         { userId: alice.id, name: "alice" },
       ],
+      callerId: alice.id,
     });
     await expect(call(lists.members, { listId: list.id }, asUser(carol))).rejects.toMatchObject({
       code: "NOT_FOUND",
@@ -170,8 +171,9 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
       items: [],
       nextCursor: null,
     });
-    await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toMatchObject({
+    await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toEqual({
       items: [{ userId: alice.id, name: "alice" }],
+      callerId: alice.id,
     });
     await expect(call(lists.delete, { listId: list.id }, asUser(alice))).resolves.toEqual({});
   });

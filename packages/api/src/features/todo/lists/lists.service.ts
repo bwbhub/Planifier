@@ -108,6 +108,18 @@ export async function createList(
   });
 }
 
+/** Liste qui change d'Espace (`null` : redevient perso) : seuls ses membres gardent leurs tâches, pour de bon. */
+async function unassignOutsideSpace(tx: DbTransaction, listId: string, spaceId: string | null) {
+  await tx.task.updateMany({
+    where: {
+      listId,
+      assigneeId: { not: null },
+      ...(spaceId === null ? {} : { assignee: { spaces: { none: { spaceId } } } }),
+    },
+    data: { assigneeId: null, version: { increment: 1 } },
+  });
+}
+
 /** Changer d'Espace demande le droit `share`, vérifié par la garde ; l'Espace visé l'est ici. */
 export async function updateList(
   db: Db,
@@ -133,6 +145,7 @@ export async function updateList(
     // Supprimée entre la garde et l'écriture : elle n'existe plus, ce n'est pas une version périmée.
     if (list === null) throw new ORPCError("NOT_FOUND");
     if (count === 0) throw todoConflict("STALE_VERSION");
+    if (spaceId !== undefined) await unassignOutsideSpace(tx, listId, spaceId);
     return toListOutput(userId, list);
   });
 }

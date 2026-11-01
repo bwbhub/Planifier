@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { ORPCError } from "@orpc/client";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -8,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { replyRpc } from "@/lib/testing/rpc-fetch";
 
 import { LIST_ID, taskWith } from "../testing/task-fixtures";
+import { ListViewProvider } from "../utils/list-view";
 import { TaskForm } from "./task-form";
 
 const fetchMock = vi.hoisted(() => {
@@ -26,12 +28,24 @@ const WEEKLY_TASK = taskWith({
   recurrence: { frequency: "WEEKLY", interval: 2 },
 });
 
-function renderForm(props: Partial<Parameters<typeof TaskForm>[0]> = {}) {
-  return render(
-    <QueryClientProvider client={new QueryClient()}>
-      <TaskForm listId={LIST_ID} {...props} />
-    </QueryClientProvider>,
+type FormProps = Partial<Parameters<typeof TaskForm>[0]>;
+
+function renderForm(props: FormProps = {}, shared = false) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const ui = (formProps: FormProps) => (
+    <QueryClientProvider client={client}>
+      <ListViewProvider value={{ shared, isDimmed: () => false }}>
+        <TaskForm listId={LIST_ID} {...formProps} />
+      </ListViewProvider>
+    </QueryClientProvider>
   );
+  const view = render(ui(props));
+  return {
+    ...view,
+    rerenderWith: (next: FormProps) => {
+      view.rerender(ui(next));
+    },
+  };
 }
 
 describe("TaskForm, répétition", () => {
@@ -95,7 +109,7 @@ describe("TaskForm, assignation", () => {
       "todo/lists/members": { data: { items: [julien], callerId: julien.userId } },
       "todo/tasks/create": { data: WEEKLY_TASK },
     });
-    renderForm({ shared: true });
+    renderForm({}, true);
     const field = await screen.findByRole("combobox", { name: "Assignée à", hidden: true });
     expect(field).toHaveProperty("value", "");
 
@@ -118,13 +132,36 @@ describe("TaskForm, assignation", () => {
       "todo/lists/members": { data: { items: [julien], callerId: julien.userId } },
       "todo/tasks/update": { data: task },
     });
-    renderForm({ shared: true, task, onDone: vi.fn() });
+    renderForm({ task, onDone: vi.fn() }, true);
     await userEvent.selectOptions(await screen.findByRole("combobox", { name: "Assignée à" }), "");
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     await waitFor(() => {
       expect(calls.find(({ path }) => path === "todo/tasks/update")?.input).toMatchObject({
         assigneeId: null,
       });
+    });
+  });
+
+  it("dit qu'il charge les personnes, puis propose de réessayer si elles sont illisibles", async () => {
+    replyRpc(fetchMock, {
+      "todo/lists/members": { error: new ORPCError("INTERNAL_SERVER_ERROR", { status: 500 }) },
+    });
+    renderForm({}, true);
+    expect(screen.getByRole("status", { hidden: true }).textContent).toBe(
+      "Chargement des personnes…",
+    );
+    expect(
+      await screen.findByRole("button", { name: "Réessayer maintenant", hidden: true }),
+    ).toBeTruthy();
+  });
+
+  it("garde la version d'ouverture : un changement venu d'ailleurs n'est pas écrasé", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/update": { data: WEEKLY_TASK } });
+    const { rerenderWith } = renderForm({ task: WEEKLY_TASK, onDone: vi.fn() });
+    rerenderWith({ task: { ...WEEKLY_TASK, version: 2 }, onDone: vi.fn() });
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({ version: 1 });
     });
   });
 

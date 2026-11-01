@@ -4,11 +4,12 @@ import type { TaskOutput } from "@planifier/api-contract";
 import { Avatar } from "@planifier/ui/components/avatar";
 import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
-import { cn } from "@planifier/ui/lib/cn";
 import { useState } from "react";
 
 import { TaskForm } from "../forms/task-form";
+import { ASSIGNEE_LABEL } from "../labels";
 import { useDeleteTask } from "../queries/todo.queries";
+import { useListView } from "../utils/list-view";
 import { recurrenceLabel } from "../utils/recurrence";
 import { deleteQuestion, isSubtask, subtaskCountLabel } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
@@ -29,21 +30,11 @@ interface SubtasksProps {
   subtasks: readonly TaskOutput[];
   adding: boolean;
   completion: TaskCompletion;
-  shared: boolean;
-  isDimmed: (task: TaskOutput) => boolean;
   onStopAdding: () => void;
 }
 
 /** Sous-tâches d'une tâche, cochées une à une (rien ne se coche en cascade), et leur ajout sur place. */
-function Subtasks({
-  task,
-  subtasks,
-  adding,
-  completion,
-  shared,
-  isDimmed,
-  onStopAdding,
-}: SubtasksProps) {
+function Subtasks({ task, subtasks, adding, completion, onStopAdding }: SubtasksProps) {
   if (subtasks.length === 0 && !adding) return null;
   return (
     <div className="flex flex-col gap-2 pl-8">
@@ -55,20 +46,12 @@ function Subtasks({
             aria-label={`Sous-tâches de « ${task.title} »`}
           >
             {subtasks.map((subtask) => (
-              <TaskRow
-                key={subtask.id}
-                task={subtask}
-                completion={completion}
-                shared={shared}
-                isDimmed={isDimmed}
-              />
+              <TaskRow key={subtask.id} task={subtask} completion={completion} />
             ))}
           </ul>
         </>
       )}
-      {adding ? (
-        <TaskForm listId={task.listId} parentId={task.id} shared={shared} onDone={onStopAdding} />
-      ) : null}
+      {adding ? <TaskForm listId={task.listId} parentId={task.id} onDone={onStopAdding} /> : null}
     </div>
   );
 }
@@ -77,14 +60,13 @@ function Subtasks({
 function TaskMain({
   task,
   done,
-  shared,
   onToggle,
 }: {
   task: TaskOutput;
   done: boolean;
-  shared: boolean;
   onToggle: TaskCompletion["toggle"];
 }) {
+  const { shared } = useListView();
   return (
     <div className="flex flex-1 flex-col gap-0.5">
       <label className="flex min-h-11 cursor-pointer items-start gap-3 pt-2.5">
@@ -109,7 +91,7 @@ function TaskMain({
         {task.assignee === null ? null : (
           <span className="flex items-center gap-1.5 text-sm text-muted">
             <Avatar id={task.assignee.userId} name={task.assignee.name} size="sm" />
-            Assignée à {task.assignee.name}
+            {ASSIGNEE_LABEL} {task.assignee.name}
           </span>
         )}
         {shared && done && task.completedBy !== null ? (
@@ -167,22 +149,11 @@ interface TaskRowProps {
   /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
   subtasks?: readonly TaskOutput[];
   completion: TaskCompletion;
-  /** Liste partagée : une tâche cochée dit par qui. */
-  shared: boolean;
-  /** Tâche atténuée, ligne par ligne : une sous-tâche garde son propre état sous sa tâche. */
-  isDimmed?: ((task: TaskOutput) => boolean) | undefined;
 }
 
-const NEVER_DIMMED = () => false;
-
 /** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
-export function TaskRow({
-  task,
-  subtasks = [],
-  completion,
-  shared,
-  isDimmed = NEVER_DIMMED,
-}: TaskRowProps) {
+export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
+  const { isDimmed } = useListView();
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
@@ -193,8 +164,6 @@ export function TaskRow({
       subtasks={subtasks}
       adding={addingSubtask}
       completion={completion}
-      shared={shared}
-      isDimmed={isDimmed}
       onStopAdding={() => {
         setAddingSubtask(false);
       }}
@@ -205,7 +174,7 @@ export function TaskRow({
   if (mode === "edit") {
     return (
       <li className="flex flex-col gap-2 rounded-control bg-surface p-4">
-        <TaskForm listId={task.listId} task={task} shared={shared} onDone={showView} />
+        <TaskForm listId={task.listId} task={task} onDone={showView} />
         {subtaskList}
       </li>
     );
@@ -220,12 +189,10 @@ export function TaskRow({
       }
     >
       <div
-        className={cn(
-          "flex flex-col sm:flex-row sm:items-start sm:gap-3",
-          isDimmed(task) && "opacity-45",
-        )}
+        data-dimmed={isDimmed(task) ? true : undefined}
+        className="flex flex-col data-dimmed:opacity-45 sm:flex-row sm:items-start sm:gap-3"
       >
-        <TaskMain task={task} done={done} shared={shared} onToggle={completion.toggle} />
+        <TaskMain task={task} done={done} onToggle={completion.toggle} />
         {mode === "view" ? (
           <TaskActions
             task={task}

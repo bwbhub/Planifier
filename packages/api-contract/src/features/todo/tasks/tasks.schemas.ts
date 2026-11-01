@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   listIdSchema,
   listTargetSchema,
+  personSchema,
   recurrenceSchema,
   taskIdSchema,
   taskTargetSchema,
@@ -85,6 +86,8 @@ export const taskSchema = z.strictObject({
   dueDate: dueDateSchema.nullable(),
   /** null : à faire. Une tâche répétée reste à faire : la cocher avance son échéance. */
   completedAt: z.date().nullable(),
+  /** Qui l'a cochée (« Cochée par ») ; null : à faire, ou compte supprimé depuis. */
+  completedBy: personSchema.nullable(),
   /** null : tâche non répétée. */
   recurrence: recurrenceSchema.nullable(),
   version: z.int(),

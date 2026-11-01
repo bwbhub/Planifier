@@ -39,9 +39,22 @@ afterAll(async () => {
 describe("todo.lists (base réelle)", () => {
   it("crée une liste et la rend à son propriétaire seulement", async () => {
     const list = await createAliceList();
-    expect(list).toMatchObject({ name: "Maison", tint: "general", version: 1, openTaskCount: 0 });
-    await expect(call(lists.list, {}, asUser(alice))).resolves.toEqual({ items: [list] });
-    await expect(call(lists.list, {}, asUser(bob))).resolves.toEqual({ items: [] });
+    expect(list).toMatchObject({
+      name: "Maison",
+      tint: "general",
+      version: 1,
+      openTaskCount: 0,
+      space: null,
+      can: { delete: true, share: true },
+    });
+    await expect(call(lists.list, {}, asUser(alice))).resolves.toEqual({
+      items: [list],
+      nextCursor: null,
+    });
+    await expect(call(lists.list, {}, asUser(bob))).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    });
   });
 
   it("compte les tâches non cochées", async () => {
@@ -235,7 +248,7 @@ describe("todo : supprimée entre la garde et l'écriture (base réelle)", () =>
     const list = await createAliceList();
     await db.todoList.delete({ where: { id: list.id } });
     await expect(
-      updateList(db, { listId: list.id, version: 1, name: "Trop tard" }),
+      updateList(db, alice.id, { listId: list.id, version: 1, name: "Trop tard" }),
     ).rejects.toMatchObject({
       code: "NOT_FOUND",
     });

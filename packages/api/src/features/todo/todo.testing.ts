@@ -1,5 +1,6 @@
 import { call } from "@orpc/server";
 import type { SessionUser } from "@planifier/auth";
+import type { AppModule } from "@planifier/constants/spaces";
 import type { Db } from "@planifier/db";
 
 import type { ApiContext } from "../../procedures";
@@ -28,6 +29,29 @@ export function createTestUser(db: Db, name: string): Promise<SessionUser> {
   return db.user.create({
     data: { name, email: `${name}@example.test`, emailVerified: true },
     select: { id: true, name: true, email: true, preferredTheme: true },
+  });
+}
+
+/** Espace de `owner` (propriétaire) et `members`, avec les modules donnés (Todo par défaut). */
+export function createSpace(
+  db: Db,
+  owner: SessionUser,
+  members: SessionUser[],
+  modules: AppModule[] = ["TODO"],
+) {
+  return db.space.create({
+    data: {
+      name: "Coloc",
+      modules,
+      createdById: owner.id,
+      members: {
+        create: [
+          { userId: owner.id, role: "OWNER" },
+          ...members.map(({ id }) => ({ userId: id, role: "MEMBER" as const })),
+        ],
+      },
+    },
+    select: { id: true },
   });
 }
 

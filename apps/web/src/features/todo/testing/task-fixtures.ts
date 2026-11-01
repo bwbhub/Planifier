@@ -12,6 +12,7 @@ export function taskWith(
     description: null,
     dueDate: null,
     completedAt: null,
+    completedBy: null,
     recurrence: null,
     version: 1,
     ...fields,

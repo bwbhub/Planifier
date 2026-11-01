@@ -124,6 +124,8 @@ model User {
   createdSpaces       Space[]            @relation("SpaceCreator")
   createdSpaceInvites SpaceInvite[]      @relation("SpaceInviteCreator")
   todoLists           TodoList[]
+  /// Tâches cochées par l'utilisateur (« Cochée par »).
+  completedTasks      Task[]             @relation("TaskCompleter")
   ownedEvents         Event[]            @relation("EventOwner")
   eventParticipations EventParticipant[]
   sentInvites         Invite[]           @relation("InviteSender")
@@ -220,10 +222,12 @@ model Space {
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
-  members SpaceMember[]
-  invites SpaceInvite[]
+  members   SpaceMember[]
+  invites   SpaceInvite[]
   /// Espace supprimé : ses événements deviennent personnels (SetNull), les participants gardent leur accès.
-  events  Event[]
+  events    Event[]
+  /// Listes partagées de l'Espace ; s'il est supprimé, elles redeviennent perso pour leur propriétaire (SetNull).
+  todoLists TodoList[]
 
   @@index([createdById])
   @@map("spaces")
@@ -264,10 +268,10 @@ model SpaceInvite {
 }
 
 // ---------------------------------------------------------------------------
-// Todo : listes perso et tâches (partage, sous-tâches, récurrence et assignation à venir)
+// Todo : listes perso et partagées, tâches, sous-tâches, récurrence (assignation à venir)
 // ---------------------------------------------------------------------------
 
-/// Liste de tâches personnelle : seul son propriétaire la voit.
+/// Liste de tâches : perso (seul son propriétaire la voit) ou partagée avec un Espace (`spaceId`).
 model TodoList {
   id        String   @id @default(uuid(7))
   name      String
@@ -277,11 +281,17 @@ model TodoList {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  ownerId String @map("owner_id")
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String  @map("owner_id")
+  owner   User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  /// Liste partagée : tous les membres de l'Espace la voient et y écrivent, même si l'Espace restreint sa visibilité ;
+  /// elle appartient à l'Espace (son créateur parti, elle y reste). null : liste perso, privée. Espace supprimé : la
+  /// liste redevient perso pour son créateur (SetNull).
+  spaceId String? @map("space_id")
+  space   Space?  @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   tasks   Task[]
 
   @@index([ownerId])
+  @@index([spaceId])
   @@map("todo_lists")
 }
 
@@ -295,6 +305,9 @@ model Task {
   dueDate          DateTime? @map("due_date") @db.Date
   /// null : à faire.
   completedAt      DateTime? @map("completed_at")
+  /// Qui a coché (« Cochée par »). null : à faire, ou compte supprimé depuis.
+  completedById    String?   @map("completed_by_id")
+  completedBy      User?     @relation("TaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
   /// Répétition (ADR 0017) : `{ schemaVersion, frequency, interval }`, validée par `@planifier/domain-recurrence` en
   /// écriture et en lecture. null : tâche non répétée.
   recurrence       Json?
@@ -316,6 +329,7 @@ model Task {
 
   @@index([listId])
   @@index([parentId])
+  @@index([completedById])
   @@map("tasks")
 }
 

@@ -5,6 +5,7 @@ import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
 import { cn } from "@planifier/ui/lib/cn";
 
+import { ListPeople } from "../atoms/list-people";
 import { LoadError } from "../atoms/load-error";
 import { type TaskCompletion, TaskRow } from "../atoms/task-row";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
@@ -21,13 +22,19 @@ function openCountLabel(count: number): string {
   return count === 1 ? "1 tâche à faire" : `${String(count)} tâches à faire`;
 }
 
+function listKindLabel(list: TodoListOutput, tintLabel: string): string {
+  return list.space === null ? `Liste perso · ${tintLabel}` : `Liste partagée · ${list.space.name}`;
+}
+
 interface TaskSectionsProps {
   tasks: readonly TaskOutput[];
   completion: TaskCompletion;
+  /** Liste partagée : chaque tâche cochée dit par qui. */
+  shared: boolean;
 }
 
 /** À faire, puis cochées : une tâche cochée change de section avec ses sous-tâches. */
-function TaskSections({ tasks, completion }: TaskSectionsProps) {
+function TaskSections({ tasks, completion, shared }: TaskSectionsProps) {
   const byParent = subtasksByParent(tasks);
   const topLevel = tasks.filter((task) => !isSubtask(task));
   const open = topLevel.filter(({ completedAt }) => completedAt === null);
@@ -39,6 +46,7 @@ function TaskSections({ tasks, completion }: TaskSectionsProps) {
         task={task}
         subtasks={byParent.get(task.id) ?? []}
         completion={completion}
+        shared={shared}
       />
     ));
   return (
@@ -66,7 +74,7 @@ function TaskSections({ tasks, completion }: TaskSectionsProps) {
  * Tâches de la liste. La coche vit ici et non dans la ligne : cochée, une tâche change de section (ligne recréée),
  * et un refus du serveur doit rester visible après ce déplacement.
  */
-function TaskList({ listId }: { listId: string }) {
+function TaskList({ listId, shared }: { listId: string; shared: boolean }) {
   const tasks = useTasks(listId);
   const { completion, notice, error } = useTaskCompletion(listId);
   if (tasks.isPending) {
@@ -97,7 +105,7 @@ function TaskList({ listId }: { listId: string }) {
           </Button>
         )}
       </div>
-      <TaskSections tasks={tasks.data.items} completion={completion} />
+      <TaskSections tasks={tasks.data.items} completion={completion} shared={shared} />
     </div>
   );
 }
@@ -108,7 +116,7 @@ interface ListPanelProps {
   onDeleted: () => void;
 }
 
-/** Une liste : en-tête teinté (nom, compte), ajout de tâche, tâches à faire puis cochées. */
+/** Une liste : en-tête teinté (nom, type, personnes, compte), ajout de tâche, tâches à faire puis cochées. */
 export function ListPanel({ list, onDeleted }: ListPanelProps) {
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const deleteList = useDeleteList();
@@ -127,17 +135,20 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
         ) : (
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold">Liste perso · {tint.label}</p>
+              <p className="text-sm font-semibold">{listKindLabel(list, tint.label)}</p>
               <h2 className="font-display text-2xl font-bold tracking-tight">{list.name}</h2>
               <p className="text-sm">{openCountLabel(list.openTaskCount)}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {list.space === null ? null : <ListPeople listId={list.id} />}
               <Button variant="surface" size="sm" onClick={showEdit}>
                 Modifier<span className="sr-only"> la liste</span>
               </Button>
-              <Button variant="surface" size="sm" onClick={showConfirmDelete}>
-                Supprimer<span className="sr-only"> la liste</span>
-              </Button>
+              {list.can.delete ? (
+                <Button variant="surface" size="sm" onClick={showConfirmDelete}>
+                  Supprimer<span className="sr-only"> la liste</span>
+                </Button>
+              ) : null}
             </div>
           </div>
         )}
@@ -159,7 +170,7 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
         {/* Clé : un formulaire neuf par liste (rien de saisi ne passe d'une liste à l'autre). */}
         <TaskForm key={list.id} listId={list.id} />
       </div>
-      <TaskList listId={list.id} />
+      <TaskList listId={list.id} shared={list.space !== null} />
     </section>
   );
 }

@@ -34,6 +34,8 @@ const LIST: TodoListOutput = {
   tint: "general",
   version: 1,
   openTaskCount: 1,
+  space: null,
+  can: { delete: true, share: true },
 };
 const WEEKLY = taskWith({
   id: "0199f3a2-7c4e-7d10-9a51-0000000000aa",
@@ -42,12 +44,12 @@ const WEEKLY = taskWith({
   recurrence: { frequency: "WEEKLY", interval: 1 },
 });
 
-function renderPanel() {
+function renderPanel(list = LIST) {
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <ListPanel list={LIST} onDeleted={vi.fn()} />
+      <ListPanel list={list} onDeleted={vi.fn()} />
     </QueryClientProvider>,
   );
 }
@@ -58,7 +60,7 @@ describe("ListPanel, tâche répétée", () => {
     const server = {
       "todo/tasks/list": { data: { items: [WEEKLY] } },
       "todo/tasks/completeOccurrence": { data: next },
-      "todo/lists/list": { data: { items: [LIST] } },
+      "todo/lists/list": { data: { items: [LIST], nextCursor: null } },
     };
     const calls = replyRpc(fetchMock, server);
     renderPanel();
@@ -91,7 +93,7 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
       "todo/tasks/list": { data: { items: [WEEKLY] } },
       "todo/tasks/completeOccurrence": { data: next },
       "todo/tasks/undoCompletion": { data: { ...WEEKLY, version: 3 } },
-      "todo/lists/list": { data: { items: [LIST] } },
+      "todo/lists/list": { data: { items: [LIST], nextCursor: null } },
     };
     const calls = replyRpc(fetchMock, server);
     renderPanel();
@@ -119,7 +121,7 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
     const server = {
       "todo/tasks/list": { data: { items: [WEEKLY] } },
       "todo/tasks/finish": { data: finished },
-      "todo/lists/list": { data: { items: [LIST] } },
+      "todo/lists/list": { data: { items: [LIST], nextCursor: null } },
     };
     const calls = replyRpc(fetchMock, server);
     renderPanel();
@@ -146,7 +148,7 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
       "todo/tasks/completeOccurrence": {
         error: new ORPCError("CONFLICT", { data: { reason: "STALE_VERSION" } }),
       },
-      "todo/lists/list": { data: { items: [LIST] } },
+      "todo/lists/list": { data: { items: [LIST], nextCursor: null } },
     });
     renderPanel();
     await userEvent.click(await screen.findByRole("checkbox", { name: "Sortir les poubelles" }));
@@ -159,5 +161,34 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
     const { container } = renderPanel();
     await screen.findByText("Toutes les semaines");
     await expect(axeViolations(container)).resolves.toEqual([]);
+  });
+});
+
+describe("ListPanel, liste partagée", () => {
+  const shared: TodoListOutput = {
+    ...LIST,
+    space: { id: "0199f3a2-7c4e-7d10-9a51-00000000c010", name: "Coloc" },
+    can: { delete: false, share: false },
+  };
+
+  it("nomme l'Espace et ses personnes, sans suppression pour un simple membre", async () => {
+    replyRpc(fetchMock, {
+      "todo/tasks/list": { data: { items: [] } },
+      "todo/lists/members": {
+        data: {
+          items: [
+            { userId: "0199f3a2-7c4e-7d10-9a51-00000000a11c", name: "Camille" },
+            { userId: "0199f3a2-7c4e-7d10-9a51-00000000b0b0", name: "Julien" },
+          ],
+        },
+      },
+    });
+    renderPanel(shared);
+    expect(screen.getByText("Liste partagée · Coloc")).toBeTruthy();
+    expect(
+      await screen.findByRole("img", { name: "Personnes de la liste : Camille, Julien" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Supprimer\s*la liste$/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /^Modifier\s*la liste$/ })).toBeTruthy();
   });
 });

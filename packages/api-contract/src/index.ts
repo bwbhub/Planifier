@@ -19,6 +19,7 @@ export const contract = {
 /** Client typé de l'API, dérivé du contrat. */
 export type ApiClient = ContractRouterClient<typeof contract>;
 
+export { PAGE_MAX_LIMIT } from "./features/_shared/page.schemas";
 export type { HealthOutput } from "./features/system/health/health.schemas";
 export type { MeOutput } from "./features/account/me/me.schemas";
 export {
@@ -43,7 +44,9 @@ export type {
 } from "./features/spaces/space/space.schemas";
 export type {
   CreateListInput,
+  ListListsInput,
   ListListsOutput,
+  ListMembersOutput,
   TodoListOutput,
   UpdateListInput,
 } from "./features/todo/lists/lists.schemas";

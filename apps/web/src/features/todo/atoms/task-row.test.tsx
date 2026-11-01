@@ -22,17 +22,23 @@ afterEach(() => {
 
 const parent = taskWith({ id: "p", title: "Courses" });
 const bread = taskWith({ id: "a", title: "Pain", parentId: "p" });
-const milk = taskWith({ id: "b", title: "Lait", parentId: "p", completedAt: new Date() });
+const milk = taskWith({
+  id: "b",
+  title: "Lait",
+  parentId: "p",
+  completedAt: new Date(),
+  completedBy: { userId: "u-julien", name: "Julien" },
+});
 
 function completionWith(fields: Partial<TaskCompletion> = {}): TaskCompletion {
   return { toggle: vi.fn(), finish: vi.fn(), ...fields };
 }
 
-function renderRow(completion = completionWith(), task = parent) {
+function renderRow(completion = completionWith(), task = parent, shared = false) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <ul>
-        <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
+        <TaskRow task={task} subtasks={[bread, milk]} completion={completion} shared={shared} />
       </ul>
     </QueryClientProvider>,
   );
@@ -81,6 +87,14 @@ describe("TaskRow avec sous-tâches", () => {
       screen.getByRole("button", { name: /^Terminer\s*« Courses » pour de bon$/ }),
     );
     expect(finish).toHaveBeenCalledExactlyOnceWith(weekly);
+  });
+
+  it("dit qui a coché, dans une liste partagée seulement", () => {
+    const { unmount } = renderRow();
+    expect(screen.queryByText("Cochée par Julien")).toBeNull();
+    unmount();
+    renderRow(completionWith(), parent, true);
+    expect(screen.getByText("Cochée par Julien")).toBeTruthy();
   });
 
   it("ne présente aucune violation d'accessibilité", async () => {

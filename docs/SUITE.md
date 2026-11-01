@@ -4,16 +4,18 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Tester le Todo** (branche `feat/todo-minimal`) : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`
-  (nouvelle migration), `pnpm seed`, `pnpm dev`, puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ».
-  Créer, renommer, supprimer une liste ; ajouter, modifier, cocher, supprimer une tâche ; clair et nuit ; mobile et PC.
-- Revue humaine : droits des listes (gardes `listGuard` / `taskGuard`), puis push + PR sur demande.
+- **Fusionner le rattrapage** `fix/rattrapage-listes-partagees` (#23 n'était pas dans `master`).
+- **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
+  puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
+  sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
+- Revue humaine : droits des listes (voir §4, listes partagées).
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
-Au choix : déploiement (`869fhwtcc`, pour faire tester par d'autres) ou suite du Todo (partage, sous-tâches,
-assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
+Assignation (`869fhwtqr`, `869fhwtqz`) : avatar d'assigné, « Atténuer les tâches qui ne me sont pas assignées »,
+jamais imposée. Reste ensuite au Todo : partage en lecture seule d'une liste perso. Liste d'événement : avec le
+module Événements.
 
 ## 3. Ensuite
 
@@ -56,6 +58,17 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
     seulement) ; réessai E2E après la limite de Better Auth ; paramètre `retour` de la connexion ; jeton
     d'invitation retiré de l'adresse après lecture.
 
+- **Listes partagées (branche `feat/todo-listes-partagees`)** : tranché le 2026-10-29 (liste à l'Espace, créateur
+  parti sans accès ; membres renomment, propriétaire d'Espace supprime ; rien ne disparaît si Todo est désactivé ;
+  nom proposé « Liste <Espace> »). Reste ouvert :
+  - Compte du créateur supprimé : ses listes partagées partent avec lui (`owner` en `Cascade`), contrairement à
+    « elle reste à l'Espace ». À traiter avec la suppression de compte (propriétaire nullable, ou passage à un membre).
+  - « Cochée par » apparaît après la réponse du serveur, pas au moment de la coche (rendu optimiste sans le nom), et
+    écrit le nom même quand c'est soi (« toi » demanderait l'utilisateur courant dans le module).
+  - Choix « Partager avec » : parmi les 100 premiers Espaces seulement (borne du contrat `spaces.list`).
+  - Revue humaine (droits) : `domain-access/todo-list`, `todo-guard.ts`, `list-access.ts`, `lists.service.ts`
+    (visibilité, Espace visé, `members`).
+
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
   remplacer par celui-ci dans une PR Todo.
@@ -64,6 +77,7 @@ assignation, « Cochée par »), ou UI Espaces (`869fhwtfk`).
 
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).
 - Merge de PR refusé en mode auto : l'utilisateur fusionne.
+- PR empilées : avant de fusionner, vérifier que la base n'est pas déjà fusionnée (#23 a manqué `master` ainsi).
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
 - TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
 - Navigateur : Brave seulement, pas de Chrome ⇒ pas d'extension Claude in Chrome ; vérif visuelle par l'utilisateur.

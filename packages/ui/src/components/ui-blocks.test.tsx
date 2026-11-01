@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { axeViolations } from "../testing/axe";
 import { Avatar } from "./avatar";
+import { AvatarStack } from "./avatar-stack";
 import { ListSkeleton } from "./list-skeleton";
 import { LoadError } from "./load-error";
 import { MessageCard } from "./message-card";
@@ -27,6 +28,13 @@ describe("blocs d'écran", () => {
     const { container } = render(<Avatar id="u-1" name="alice" />);
     expect(container.firstElementChild?.getAttribute("aria-hidden")).toBe("true");
     expect(container.textContent).toBe("A");
+  });
+
+  it("AvatarStack nomme tout le monde d'un libellé et borne les pastilles", () => {
+    const people = ["Ana", "Bo", "Cy"].map((name) => ({ id: name, name }));
+    render(<AvatarStack people={people} label="Membres : Ana, Bo, Cy" max={2} />);
+    const stack = screen.getByRole("img", { name: "Membres : Ana, Bo, Cy" });
+    expect(stack.textContent).toBe("AB");
   });
 
   it("ne présente aucune violation d'accessibilité", async () => {

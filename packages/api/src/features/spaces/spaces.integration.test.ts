@@ -91,7 +91,15 @@ describe("spaces.space : création et liste (base réelle)", () => {
     });
 
     await expect(call(space.list, {}, asUser(users.alice))).resolves.toEqual({
-      items: [{ id: created.id, name: "Coloc", myRole: "OWNER", memberCount: 1 }],
+      items: [
+        {
+          id: created.id,
+          name: "Coloc",
+          modules: ["TODO", "AGENDA"],
+          myRole: "OWNER",
+          memberCount: 1,
+        },
+      ],
       nextCursor: null,
     });
     await expect(call(space.list, {}, asUser(users.bob))).resolves.toEqual({

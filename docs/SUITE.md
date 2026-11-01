@@ -4,7 +4,7 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Fusionner** #24 (rattrapage de #23, absente de `master`), puis l'assignation empilée dessus.
+- #24 fusionnée (2026-11-01) ; #25 (assignation) repassée sur `master`.
 - **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
   puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
   sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
@@ -87,6 +87,8 @@ Partage en lecture seule d'une liste perso : dernier morceau du Todo. Liste d'é
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).
 - Merge de PR refusé en mode auto : l'utilisateur fusionne.
 - PR empilées : avant de fusionner, vérifier que la base n'est pas déjà fusionnée (#23 a manqué `master` ainsi).
+- CI : `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` au build = téléchargement Google Fonts raté,
+  pas le code (vu une fois sur #25, job `e2e` du même commit vert) ; le build dépend de ce réseau.
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
 - TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
 - Navigateur : Brave seulement, pas de Chrome ⇒ pas d'extension Claude in Chrome ; vérif visuelle par l'utilisateur.

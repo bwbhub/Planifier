@@ -43,7 +43,8 @@ dérive ; seed lancé deux fois sur la base locale. **Non vérifié à l'œil** 
 **Ouvert** : `docs/SUITE.md` §4 (assignation) ; revue humaine des droits (`canBeAssigned`, `deleteMembership`,
 `unassignOutsideSpace`).
 
-**Attendu ensuite** : fusion de #24 puis de cette PR ; partage en lecture seule d'une liste perso.
+**Attendu ensuite** : fusion de cette PR (#24 fusionnée, base repassée sur `master`) ; partage en lecture seule d'une
+liste perso.
 
 ---
 

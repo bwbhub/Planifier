@@ -10,12 +10,13 @@ import {
 const ME = "user-me";
 const OTHER = "user-other";
 
-const myPersonalList: TodoListAccess = { userId: ME, ownerId: ME, space: null };
+const myPersonalList: TodoListAccess = { userId: ME, ownerId: ME, space: null, isReader: false };
 const othersPersonalList: TodoListAccess = { ...myPersonalList, ownerId: OTHER };
 const othersSharedList = (callerRole: "MEMBER" | "OWNER" | null): TodoListAccess => ({
   userId: ME,
   ownerId: OTHER,
   space: { callerRole },
+  isReader: false,
 });
 
 describe("canAccessTodoList", () => {
@@ -34,6 +35,21 @@ describe("canAccessTodoList", () => {
     }
   });
 
+  it("n'ouvre que la lecture à qui voit une liste perso par son Espace", () => {
+    const shown: TodoListAccess = { ...othersPersonalList, isReader: true };
+    expect(canAccessTodoList(shown, "read")).toBe(true);
+    for (const action of ["write", "delete", "share"] as const) {
+      expect(canAccessTodoList(shown, action)).toBe(false);
+    }
+  });
+
+  it("laisse tout à son propriétaire quand il montre sa liste à un Espace dont il est membre", () => {
+    const shown: TodoListAccess = { ...myPersonalList, isReader: true };
+    for (const action of ["read", "write", "delete", "share"] as const) {
+      expect(canAccessTodoList(shown, action)).toBe(true);
+    }
+  });
+
   it("ouvre la liste partagée en lecture et écriture à tout membre de l'Espace", () => {
     for (const callerRole of ["MEMBER", "OWNER"] as const) {
       expect(canAccessTodoList(othersSharedList(callerRole), "read")).toBe(true);
@@ -46,7 +62,7 @@ describe("canAccessTodoList", () => {
   });
 
   it("laisse la liste à l'Espace quand son créateur le quitte", () => {
-    const left: TodoListAccess = { userId: ME, ownerId: ME, space: { callerRole: null } };
+    const left: TodoListAccess = { ...myPersonalList, space: { callerRole: null } };
     for (const action of ["read", "write", "delete", "share"] as const) {
       expect(canAccessTodoList(left, action)).toBe(false);
     }

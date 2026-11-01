@@ -11,6 +11,10 @@ describe("todoErrorMessage", () => {
     expect(todoErrorMessage(full)).toContain("500 tâches");
   });
 
+  it("dit qu'un droit manque sur un refus", () => {
+    expect(todoErrorMessage(new ORPCError("FORBIDDEN"))).toContain("pas le droit");
+  });
+
   it("rassure sans détail technique sur une erreur inconnue", () => {
     expect(todoErrorMessage(new Error("boom"))).toBe(
       "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.",

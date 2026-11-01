@@ -7,11 +7,17 @@ import { createContext, useContext } from "react";
 export interface ListView {
   /** Liste partagée : une tâche s'assigne et, cochée, dit par qui. */
   shared: boolean;
+  /** Lecture seule : ni ajout, ni coche, ni modification. */
+  readOnly: boolean;
   /** Ligne par ligne : une sous-tâche garde son propre état sous sa tâche. */
   isDimmed: (task: TaskOutput) => boolean;
 }
 
-const ListViewContext = createContext<ListView>({ shared: false, isDimmed: () => false });
+const ListViewContext = createContext<ListView>({
+  shared: false,
+  readOnly: false,
+  isDimmed: () => false,
+});
 
 export const ListViewProvider = ListViewContext.Provider;
 

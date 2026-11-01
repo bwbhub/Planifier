@@ -9,26 +9,75 @@ import { TODO_LIST_NAME_MAX_LENGTH } from "@planifier/constants/todo";
 import { Button } from "@planifier/ui/components/button";
 import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { TextField } from "@planifier/ui/components/text-field";
-import type { SubmitEvent } from "react";
+import { type SubmitEvent, useState } from "react";
 
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { useCreateList, useSharingSpaces, useUpdateList } from "../queries/todo.queries";
 import { TINT_OPTIONS } from "../utils/list-tint";
-import { sharingChoices } from "../utils/sharing-choices";
+import {
+  PERSONAL,
+  sharedSpace,
+  sharingChoices,
+  sharingFields,
+  type SharingLevel,
+} from "../utils/sharing-choices";
 import { useListNameSuggestion } from "../utils/use-list-name-suggestion";
 
 const FIELDS = ["name", "tint"] as const;
 
 const NAME_ERROR = `Donne un nom à la liste, ${String(TODO_LIST_NAME_MAX_LENGTH)} caractères au plus.`;
 
-/** Valeur du choix « Partager avec » pour une liste perso. */
-const PERSONAL = "";
+const SHARING_LEVEL_OPTIONS: readonly { value: SharingLevel; label: string }[] = [
+  { value: "WRITE", label: "Modifier et cocher" },
+  { value: "READ", label: "Seulement voir" },
+];
+
+interface SharingFieldsProps {
+  choices: readonly { id: string; name: string }[];
+  current: { id: string } | null;
+  level: SharingLevel;
+}
+
+/** « Partager avec » et, un Espace choisi, ce que ses membres peuvent faire. */
+function SharingFields({ choices, current, level }: SharingFieldsProps) {
+  const [spaceChosen, setSpaceChosen] = useState(current !== null);
+  return (
+    <div className="flex flex-col gap-3">
+      <ChoiceGroup
+        legend="Partager avec"
+        name="spaceId"
+        options={[
+          { value: PERSONAL, label: "Personne" },
+          ...choices.map(({ id, name }) => ({ value: id, label: name })),
+        ]}
+        defaultValue={current?.id ?? PERSONAL}
+        onValueChange={(value) => {
+          setSpaceChosen(value !== PERSONAL);
+        }}
+      />
+      {spaceChosen ? (
+        <div className="flex flex-col gap-1.5">
+          <ChoiceGroup
+            legend="Ses membres peuvent"
+            name="sharingLevel"
+            options={SHARING_LEVEL_OPTIONS}
+            defaultValue={level}
+          />
+          <p className="text-sm text-muted">
+            « Modifier et cocher » : la liste appartient à l&apos;Espace, ses membres y font tout. «
+            Seulement voir » : elle reste à toi, personne d&apos;autre n&apos;y écrit.
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /**
- * « Partager avec » : personne (liste perso) ou un Espace (`sharingChoices`) ; rien pour qui n'est pas propriétaire
- * de la liste. Sans les Espaces (chargement, échec), le champ manque et l'Espace de la liste ne change pas.
+ * Partage de la liste : personne (liste perso) ou un Espace (`sharingChoices`) ; rien pour qui n'est pas propriétaire
+ * de la liste. Sans les Espaces (chargement, échec), le champ manque et le partage de la liste ne change pas.
  */
 function SharingChoice({ list }: { list: TodoListOutput | undefined }) {
   const spaces = useSharingSpaces();
@@ -52,45 +101,30 @@ function SharingChoice({ list }: { list: TodoListOutput | undefined }) {
       </div>
     );
   }
-  const current = list?.space ?? null;
+  const current = list === undefined ? null : sharedSpace(list);
   const choices = sharingChoices(spaces.data.items, current);
   if (choices.length === 0) {
     return (
       <p className="text-sm text-muted">
-        Pour partager une liste, active Todo dans un de tes Espaces : tous ses membres pourront y
-        ajouter et cocher des tâches.
+        Pour partager une liste, active Todo dans un de tes Espaces : tous ses membres pourront la
+        voir, et y ajouter et cocher des tâches si tu le choisis.
       </p>
     );
   }
   return (
-    <div className="flex flex-col gap-1.5">
-      <ChoiceGroup
-        legend="Partager avec"
-        name="spaceId"
-        options={[
-          { value: PERSONAL, label: "Personne" },
-          ...choices.map(({ id, name }) => ({ value: id, label: name })),
-        ]}
-        defaultValue={current?.id ?? PERSONAL}
-      />
-      <p className="text-sm text-muted">
-        Partagée avec un Espace, la liste est visible par tous ses membres, qui peuvent y ajouter et
-        cocher des tâches.
-      </p>
-    </div>
+    <SharingFields
+      choices={choices}
+      current={current}
+      level={list?.readOnlySpace ? "READ" : "WRITE"}
+    />
   );
 }
 
-/**
- * Champ `spaceId` à envoyer : rien si le choix n'est pas proposé ou inchangé (changer d'Espace demande d'être
- * propriétaire de la liste) ; à la création, rien pour une liste perso ; en modification, `null` la rend perso.
- */
-function spaceField(data: FormData, list: TodoListOutput | undefined) {
-  const value = data.get("spaceId");
-  if (typeof value !== "string") return {};
-  const spaceId = value === PERSONAL ? null : value;
-  if (list === undefined) return spaceId === null ? {} : { spaceId };
-  return spaceId === (list.space?.id ?? null) ? {} : { spaceId };
+/** Champs de partage du formulaire ; aucun si le choix n'est pas proposé. */
+function sharingFromForm(data: FormData, list: TodoListOutput | undefined) {
+  const chosen = data.get("spaceId");
+  if (typeof chosen !== "string") return {};
+  return sharingFields(chosen, data.get("sharingLevel") === "READ" ? "READ" : "WRITE", list);
 }
 
 interface ListFormProps {
@@ -100,7 +134,7 @@ interface ListFormProps {
   onCancel: () => void;
 }
 
-/** Un seul formulaire pour créer une liste et la modifier (nom, teinte ; Espace, pour son propriétaire). */
+/** Un seul formulaire pour créer une liste et la modifier (nom, teinte ; partage, pour son propriétaire). */
 export function ListForm({ list, onSaved, onCancel }: ListFormProps) {
   const createList = useCreateList();
   const updateList = useUpdateList();
@@ -112,7 +146,11 @@ export function ListForm({ list, onSaved, onCancel }: ListFormProps) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const values = { name: data.get("name"), tint: data.get("tint"), ...spaceField(data, list) };
+    const values = {
+      name: data.get("name"),
+      tint: data.get("tint"),
+      ...sharingFromForm(data, list),
+    };
     if (list === undefined) {
       const input = validate(form, createListInputSchema, values);
       if (input !== null) createList.mutate(input, { onSuccess: onSaved });

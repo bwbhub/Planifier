@@ -34,7 +34,7 @@ function renderForm(props: FormProps = {}, shared = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (formProps: FormProps) => (
     <QueryClientProvider client={client}>
-      <ListViewProvider value={{ shared, isDimmed: () => false }}>
+      <ListViewProvider value={{ shared, readOnly: false, isDimmed: () => false }}>
         <TaskForm listId={LIST_ID} {...formProps} />
       </ListViewProvider>
     </QueryClientProvider>

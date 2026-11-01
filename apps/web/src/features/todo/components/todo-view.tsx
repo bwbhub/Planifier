@@ -138,7 +138,8 @@ export function TodoView({ selectedListId }: TodoViewProps) {
       />
       {creating ? listForm : null}
       <ListPanel
-        key={selected.id}
+        // Droits changés (liste passée en lecture seule) : rien d'ouvert ne survit.
+        key={`${selected.id}:${String(selected.can.write)}`}
         list={selected}
         onDeleted={() => {
           router.push(listHref(null));

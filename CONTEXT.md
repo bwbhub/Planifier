@@ -23,7 +23,7 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 ## Todo
 
 - **Liste** : ensemble de tâches. Plusieurs par utilisateur.
-- **Liste perso** : privée. Peut être partagée en lecture seule.
+- **Liste perso** : privée. Son propriétaire peut la montrer en lecture seule à un Espace dont il est membre et où Todo est activé : tous ses membres la voient, sans y toucher ni la cocher, même si l'Espace restreint sa visibilité. Elle reste à lui, et reste visible si Todo est désactivé ensuite. Le partage s'arrête s'il le retire, s'il quitte l'Espace (pour de bon) ou si l'Espace est supprimé.
 - **Liste partagée** : liste rattachée à un Espace où Todo est activé. Tous ses membres la voient, y ajoutent et cochent des tâches, même si l'Espace restreint sa visibilité. Elle appartient à l'Espace : son créateur la rattache à un Espace ou la rend perso tant qu'il en est membre ; parti, il ne la voit plus et elle reste à l'Espace. Son créateur ou un propriétaire de l'Espace la supprime. Todo désactivé dans l'Espace : rien n'est supprimé. Créée dans un Espace, elle prend par défaut le nom « Liste <Espace> », modifiable. Espace supprimé : elle redevient perso pour son créateur.
 - **Cochée par** : sur une liste partagée, une tâche cochée dit qui l'a cochée.
 - **Liste d'événement** : liste commune unique d'un événement, avec assignation possible.

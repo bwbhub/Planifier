@@ -10,6 +10,8 @@ export interface ChoiceGroupProps<TValue extends string> {
   name: string;
   options: readonly ChoiceOption<TValue>[];
   defaultValue: TValue;
+  /** Quand la suite du formulaire dépend du choix ; la valeur reste lue dans le `FormData`. */
+  onValueChange?: ((value: TValue) => void) | undefined;
   className?: string | undefined;
 }
 
@@ -22,6 +24,7 @@ export function ChoiceGroup<TValue extends string>({
   name,
   options,
   defaultValue,
+  onValueChange,
   className,
 }: ChoiceGroupProps<TValue>) {
   return (
@@ -42,6 +45,7 @@ export function ChoiceGroup<TValue extends string>({
               name={name}
               value={option.value}
               defaultChecked={option.value === defaultValue}
+              onChange={() => onValueChange?.(option.value)}
               className="sr-only"
             />
             {option.label}

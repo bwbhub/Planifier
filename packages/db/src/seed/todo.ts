@@ -1,21 +1,41 @@
 import type { Db } from "../factory";
 import { SEED_IDS } from "./ids";
 
+const LISTS = [
+  {
+    id: SEED_IDS.listHome,
+    name: "Maison",
+    tint: "general",
+    spaceId: null,
+    readOnlySpaceId: null,
+  },
+  {
+    id: SEED_IDS.listTrip,
+    name: "Vacances",
+    tint: "trip",
+    spaceId: null,
+    readOnlySpaceId: SEED_IDS.space,
+  },
+  {
+    id: SEED_IDS.listShared,
+    name: "Liste Alice & Bob",
+    tint: "couple",
+    spaceId: SEED_IDS.space,
+    readOnlySpaceId: null,
+  },
+];
+
 /**
  * Deux listes perso d'Alice, quelques tâches dont une cochée, une avec échéance et une avec sous-tâches ; une liste
- * partagée avec l'Espace d'Alice et Bob, avec une tâche assignée à chacun.
+ * partagée avec l'Espace d'Alice et Bob, avec une tâche assignée à chacun ; « Vacances » est montrée à cet Espace en
+ * lecture seule.
  */
 export async function seedTodo(db: Db) {
-  const lists = [
-    { id: SEED_IDS.listHome, name: "Maison", tint: "general", spaceId: null },
-    { id: SEED_IDS.listTrip, name: "Vacances", tint: "trip", spaceId: null },
-    { id: SEED_IDS.listShared, name: "Liste Alice & Bob", tint: "couple", spaceId: SEED_IDS.space },
-  ];
-  for (const { id, name, tint, spaceId } of lists) {
+  for (const { id, ...list } of LISTS) {
     await db.todoList.upsert({
       where: { id },
-      create: { id, name, tint, spaceId, ownerId: SEED_IDS.alice },
-      update: { name, tint, spaceId },
+      create: { id, ...list, ownerId: SEED_IDS.alice },
+      update: list,
     });
   }
 

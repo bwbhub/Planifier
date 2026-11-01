@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { axeViolations } from "../testing/axe";
 import { ChoiceGroup } from "./choice-group";
@@ -23,6 +23,21 @@ function renderInForm() {
 }
 
 describe("ChoiceGroup", () => {
+  it("annonce le choix fait", async () => {
+    const onValueChange = vi.fn();
+    render(
+      <ChoiceGroup
+        legend="Thème"
+        name="theme"
+        options={OPTIONS}
+        defaultValue="LIGHT"
+        onValueChange={onValueChange}
+      />,
+    );
+    await userEvent.click(screen.getByRole("radio", { name: "Nuit" }));
+    expect(onValueChange).toHaveBeenCalledWith("DARK");
+  });
+
   it("coche la valeur par défaut et donne au groupe son nom", () => {
     renderInForm();
     expect(screen.getByRole("group", { name: "Thème" })).toBeDefined();

@@ -21,7 +21,9 @@ journalisés ni renvoyés.
 - **Hors Espace** : liste, agenda, événement = personnel et privé.
 - **Événement** : rôles `OWNER`, `ORGANIZER`, `GUEST` (toujours présents). Le propriétaire active/désactive les briques ;
   un co-organisateur active des briques, assigne, valide les propositions ; un invité voit et réagit.
-- **Partage par ressource** : `NONE` / `READ` / `WRITE` (liste perso partageable en lecture seule).
+- **Partage par ressource** : `NONE` / `READ` / `WRITE`.
+- **Liste perso montrée à un Espace** (`domain-access/todo-list`, `readOnlySpaceId`) : lecture seule pour ses membres ;
+  écriture, suppression et partage restent au propriétaire, propriétaire d'Espace compris (décision du 2026-11-01).
 - **Liste partagée** (`domain-access/todo-list`) : rattachée à un Espace, ouverte en écriture à tous ses membres,
   même dans un Espace restreint (décision du 2026-10-29).
 - **Invité sans compte** : accès par token d'invitation lié à l'adresse e-mail ; ne reçoit **jamais** de notification.

@@ -1,6 +1,7 @@
 import { type TextareaHTMLAttributes, useId } from "react";
 
 import { cn } from "../lib/cn";
+import { FIELD_CONTROL_CLASSES } from "../lib/field";
 
 export interface TextAreaFieldProps extends Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
@@ -32,11 +33,7 @@ export function TextAreaField({ label, hint, error, className, ...textarea }: Te
         rows={3}
         aria-invalid={error === undefined ? undefined : true}
         aria-describedby={describedBy === "" ? undefined : describedBy}
-        className={cn(
-          "min-h-24 rounded-control border-2 border-transparent bg-field px-3.5 py-3 text-base text-ink",
-          "placeholder:text-muted focus:border-accent focus:bg-surface aria-invalid:border-accent",
-          "disabled:opacity-60",
-        )}
+        className={cn("min-h-24 py-3", FIELD_CONTROL_CLASSES)}
         {...textarea}
       />
       {hint === undefined ? null : (

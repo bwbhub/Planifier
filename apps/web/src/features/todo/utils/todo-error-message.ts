@@ -11,6 +11,8 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   NOT_RECURRING: "Cette tâche ne se répète plus. Recharge la page.",
   TODO_DISABLED:
     "Todo n'est pas activé dans cet Espace. Un propriétaire peut l'activer dans ses réglages.",
+  ASSIGNEE_NOT_MEMBER:
+    "Cette personne n'est plus dans l'Espace. Recharge la page et choisis quelqu'un d'autre.",
 };
 
 const FALLBACK = "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";

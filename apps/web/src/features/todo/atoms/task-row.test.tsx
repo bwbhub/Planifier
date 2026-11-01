@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { taskWith } from "../testing/task-fixtures";
+import { ListViewProvider } from "../utils/list-view";
 import { type TaskCompletion, TaskRow } from "./task-row";
 
 // jsdom perd l'espace en tête du complément `sr-only` des boutons : noms comparés à `\s*` près.
@@ -38,7 +39,9 @@ function renderRow(completion = completionWith(), task = parent, shared = false)
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <ul>
-        <TaskRow task={task} subtasks={[bread, milk]} completion={completion} shared={shared} />
+        <ListViewProvider value={{ shared, isDimmed: () => false }}>
+          <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
+        </ListViewProvider>
       </ul>
     </QueryClientProvider>,
   );

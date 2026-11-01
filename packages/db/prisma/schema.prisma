@@ -126,6 +126,7 @@ model User {
   todoLists           TodoList[]
   /// Tâches cochées par l'utilisateur (« Cochée par »).
   completedTasks      Task[]             @relation("TaskCompleter")
+  assignedTasks       Task[]             @relation("TaskAssignee")
   ownedEvents         Event[]            @relation("EventOwner")
   eventParticipations EventParticipant[]
   sentInvites         Invite[]           @relation("InviteSender")
@@ -308,6 +309,10 @@ model Task {
   /// Qui a coché (« Cochée par »). null : à faire, ou compte supprimé depuis.
   completedById    String?   @map("completed_by_id")
   completedBy      User?     @relation("TaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  /// Qui s'en occupe, jamais imposé. Compte seulement tant que cette personne est membre de l'Espace de la liste :
+  /// sinon la tâche se lit sans assigné (`canBeAssigned`).
+  assigneeId       String?   @map("assignee_id")
+  assignee         User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   /// Répétition (ADR 0017) : `{ schemaVersion, frequency, interval }`, validée par `@planifier/domain-recurrence` en
   /// écriture et en lecture. null : tâche non répétée.
   recurrence       Json?
@@ -330,6 +335,7 @@ model Task {
   @@index([listId])
   @@index([parentId])
   @@index([completedById])
+  @@index([assigneeId])
   @@map("tasks")
 }
 

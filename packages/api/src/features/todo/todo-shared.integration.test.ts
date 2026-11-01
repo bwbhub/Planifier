@@ -154,6 +154,7 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
         { userId: bob.id, name: "bob" },
         { userId: alice.id, name: "alice" },
       ],
+      callerId: alice.id,
     });
     await expect(call(lists.members, { listId: list.id }, asUser(carol))).rejects.toMatchObject({
       code: "NOT_FOUND",
@@ -172,6 +173,7 @@ describe("todo : rattachement à un Espace, personnes et pages (base réelle)", 
     });
     await expect(call(lists.members, { listId: list.id }, asUser(alice))).resolves.toEqual({
       items: [{ userId: alice.id, name: "alice" }],
+      callerId: alice.id,
     });
     await expect(call(lists.delete, { listId: list.id }, asUser(alice))).resolves.toEqual({});
   });

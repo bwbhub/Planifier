@@ -38,6 +38,14 @@ export function canAccessTodoList(
   }
 }
 
+/**
+ * Une tâche s'assigne à un membre de l'Espace de sa liste ; une liste perso n'en a aucun. Vrai à l'écriture comme à
+ * la lecture : parti de l'Espace, ou liste rendue perso, l'ancien assigné ne se montre plus.
+ */
+export function canBeAssigned(userId: string, spaceMemberIds: ReadonlySet<string>): boolean {
+  return spaceMemberIds.has(userId);
+}
+
 /** Espace où l'appelant veut partager une liste : son rôle (null s'il n'en est pas membre) et ses modules. */
 export interface SharingSpace {
   callerRole: SpaceRole | null;

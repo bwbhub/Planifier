@@ -12,7 +12,7 @@ import type { Db } from "@planifier/db";
 import { departureOutcome, roleOfNewMember } from "@planifier/domain-access/space";
 
 import { spaceConflict } from "../space-errors";
-import { lockSpace, membershipOf } from "../space-lock";
+import { deleteMembership, lockSpace, membershipOf } from "../space-lock";
 import { MEMBER_SELECT, toMemberOutput } from "../space-member";
 
 const SPACE_SELECT = {
@@ -134,7 +134,7 @@ export async function leaveSpace(
         await tx.space.delete({ where: { id: spaceId } });
         return { spaceDeleted: true };
       case "leave":
-        await tx.spaceMember.delete({ where: { spaceId_userId: { spaceId, userId } } });
+        await deleteMembership(tx, spaceId, userId);
         if (membership.isCreator) {
           await tx.space.update({ where: { id: spaceId }, data: { createdById: null } });
         }

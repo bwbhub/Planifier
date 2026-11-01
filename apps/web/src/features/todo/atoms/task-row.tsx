@@ -1,12 +1,15 @@
 "use client";
 
 import type { TaskOutput } from "@planifier/api-contract";
+import { Avatar } from "@planifier/ui/components/avatar";
 import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
 import { useState } from "react";
 
 import { TaskForm } from "../forms/task-form";
+import { ASSIGNEE_LABEL } from "../labels";
 import { useDeleteTask } from "../queries/todo.queries";
+import { useListView } from "../utils/list-view";
 import { recurrenceLabel } from "../utils/recurrence";
 import { deleteQuestion, isSubtask, subtaskCountLabel } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
@@ -27,12 +30,11 @@ interface SubtasksProps {
   subtasks: readonly TaskOutput[];
   adding: boolean;
   completion: TaskCompletion;
-  shared: boolean;
   onStopAdding: () => void;
 }
 
 /** Sous-tâches d'une tâche, cochées une à une (rien ne se coche en cascade), et leur ajout sur place. */
-function Subtasks({ task, subtasks, adding, completion, shared, onStopAdding }: SubtasksProps) {
+function Subtasks({ task, subtasks, adding, completion, onStopAdding }: SubtasksProps) {
   if (subtasks.length === 0 && !adding) return null;
   return (
     <div className="flex flex-col gap-2 pl-8">
@@ -44,7 +46,7 @@ function Subtasks({ task, subtasks, adding, completion, shared, onStopAdding }: 
             aria-label={`Sous-tâches de « ${task.title} »`}
           >
             {subtasks.map((subtask) => (
-              <TaskRow key={subtask.id} task={subtask} completion={completion} shared={shared} />
+              <TaskRow key={subtask.id} task={subtask} completion={completion} />
             ))}
           </ul>
         </>
@@ -54,18 +56,17 @@ function Subtasks({ task, subtasks, adding, completion, shared, onStopAdding }: 
   );
 }
 
-/** Case à cocher et titre, puis échéance, répétition, description et, liste partagée, qui l'a cochée. */
+/** Case à cocher et titre, puis échéance, répétition, description et, liste partagée, assigné et qui l'a cochée. */
 function TaskMain({
   task,
   done,
-  shared,
   onToggle,
 }: {
   task: TaskOutput;
   done: boolean;
-  shared: boolean;
   onToggle: TaskCompletion["toggle"];
 }) {
+  const { shared } = useListView();
   return (
     <div className="flex flex-1 flex-col gap-0.5">
       <label className="flex min-h-11 cursor-pointer items-start gap-3 pt-2.5">
@@ -87,6 +88,12 @@ function TaskMain({
         {task.description === null ? null : (
           <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
         )}
+        {task.assignee === null ? null : (
+          <span className="flex items-center gap-1.5 text-sm text-muted">
+            <Avatar id={task.assignee.userId} name={task.assignee.name} size="sm" />
+            {ASSIGNEE_LABEL} {task.assignee.name}
+          </span>
+        )}
         {shared && done && task.completedBy !== null ? (
           <span className="text-sm text-muted">Cochée par {task.completedBy.name}</span>
         ) : null}
@@ -97,25 +104,33 @@ function TaskMain({
 
 interface TaskActionsProps {
   task: TaskOutput;
-  /** Absent pour une sous-tâche : un seul niveau. */
-  onAddSubtask: (() => void) | undefined;
-  /** Présent pour une tâche répétée à faire : la répétition s'arrête et la tâche est cochée. */
-  onFinish: (() => void) | undefined;
+  done: boolean;
+  onAddSubtask: () => void;
+  onFinish: TaskCompletion["finish"];
   onEdit: () => void;
   onDelete: () => void;
 }
 
-/** Actions discrètes d'une tâche, nommées avec son titre pour les lecteurs d'écran. */
-function TaskActions({ task, onAddSubtask, onFinish, onEdit, onDelete }: TaskActionsProps) {
+/**
+ * Actions discrètes d'une tâche, nommées avec son titre pour les lecteurs d'écran. Sous-tâche : pas d'ajout, un seul
+ * niveau. « Terminer » : tâche répétée à faire seulement.
+ */
+function TaskActions({ task, done, onAddSubtask, onFinish, onEdit, onDelete }: TaskActionsProps) {
   return (
     <div className="-ml-3 flex flex-wrap pl-8 sm:ml-0 sm:shrink-0 sm:justify-end sm:pl-0">
-      {onAddSubtask === undefined ? null : (
+      {isSubtask(task) ? null : (
         <Button variant="ghost" size="sm" onClick={onAddSubtask}>
           + Sous-tâche<span className="sr-only"> à « {task.title} »</span>
         </Button>
       )}
-      {onFinish === undefined ? null : (
-        <Button variant="ghost" size="sm" onClick={onFinish}>
+      {task.recurrence === null || done ? null : (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            onFinish(task);
+          }}
+        >
           Terminer<span className="sr-only"> « {task.title} » pour de bon</span>
         </Button>
       )}
@@ -134,24 +149,21 @@ interface TaskRowProps {
   /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
   subtasks?: readonly TaskOutput[];
   completion: TaskCompletion;
-  /** Liste partagée : une tâche cochée dit par qui. */
-  shared: boolean;
 }
 
 /** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
-export function TaskRow({ task, subtasks = [], completion, shared }: TaskRowProps) {
+export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
+  const { isDimmed } = useListView();
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
   const done = task.completedAt !== null;
-  const subtask = isSubtask(task);
   const subtaskList = (
     <Subtasks
       task={task}
       subtasks={subtasks}
       adding={addingSubtask}
       completion={completion}
-      shared={shared}
       onStopAdding={() => {
         setAddingSubtask(false);
       }}
@@ -171,28 +183,24 @@ export function TaskRow({ task, subtasks = [], completion, shared }: TaskRowProp
   return (
     <li
       className={
-        subtask ? "flex flex-col gap-1" : "flex flex-col gap-2 rounded-control bg-surface px-4 py-3"
+        isSubtask(task)
+          ? "flex flex-col gap-1"
+          : "flex flex-col gap-2 rounded-control bg-surface px-4 py-3"
       }
     >
-      <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3">
-        <TaskMain task={task} done={done} shared={shared} onToggle={completion.toggle} />
+      <div
+        data-dimmed={isDimmed(task) ? true : undefined}
+        className="flex flex-col data-dimmed:opacity-45 sm:flex-row sm:items-start sm:gap-3"
+      >
+        <TaskMain task={task} done={done} onToggle={completion.toggle} />
         {mode === "view" ? (
           <TaskActions
             task={task}
-            onAddSubtask={
-              subtask
-                ? undefined
-                : () => {
-                    setAddingSubtask(true);
-                  }
-            }
-            onFinish={
-              task.recurrence === null || done
-                ? undefined
-                : () => {
-                    completion.finish(task);
-                  }
-            }
+            done={done}
+            onAddSubtask={() => {
+              setAddingSubtask(true);
+            }}
+            onFinish={completion.finish}
             onEdit={showEdit}
             onDelete={showConfirmDelete}
           />

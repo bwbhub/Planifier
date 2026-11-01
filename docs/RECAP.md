@@ -18,6 +18,36 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-01 — Todo : assignation (branche `feat/todo-assignation`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
+
+**Fait**
+
+- `tasks.assignee_id` (migration `20261101200000_assignation_taches`), `assigneeId` en création et modification,
+  `assignee` en sortie, conflit `ASSIGNEE_NOT_MEMBER`, `callerId` dans `lists.members`, droit pur `canBeAssigned`.
+- Web : champ « Assignée à » (liste partagée), pastille et nom sur la ligne, sous-tâches comprises ; option
+  « Atténuer les tâches qui ne me sont pas assignées » ; `SelectField` et `Avatar` `sm` dans `ui` ; contexte
+  `ListView` au lieu de `shared` passé de composant en composant ; seed : une liste partagée, une tâche par personne.
+- `/code-review` (standards + spec) puis corrections : assigné effacé pour de bon au départ d'un membre
+  (`deleteMembership`) et quand une liste change d'Espace (il ne revient pas tout seul) ; version figée à l'ouverture
+  du formulaire (une modification n'écrase plus un changement venu d'ailleurs, sur tous les champs) ; `updateTask` en
+  transaction ; états chargement et erreur du champ ; classes de champ communes (`lib/field`).
+
+**Décisions** : une personne au plus (maquette) ; pas d'assignation sur une liste perso ; tout membre assigne tout
+membre ; tâche répétée : assigné gardé ; masquage à la lecture gardé pour l'Espace supprimé (ses listes redeviennent
+perso) ; une liste qui change d'Espace garde l'assigné s'il est aussi membre du nouveau.
+
+**Vérifié** (exécuté le 2026-11-01) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` :
+OK ; `pnpm test:integration` : api 118/118, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 54/54 ; migration sans
+dérive ; seed lancé deux fois sur la base locale. **Non vérifié à l'œil** : rendu clair/nuit, mobile.
+
+**Ouvert** : `docs/SUITE.md` §4 (assignation) ; revue humaine des droits (`canBeAssigned`, `deleteMembership`,
+`unassignOutsideSpace`).
+
+**Attendu ensuite** : fusion de cette PR (#24 fusionnée, base repassée sur `master`) ; partage en lecture seule d'une
+liste perso.
+
+---
+
 ## 2026-11-01 — Rattrapage des listes partagées vers `master` (branche `fix/rattrapage-listes-partagees`)
 
 **Fait** : #23 était fusionnée dans `feat/todo-sous-taches` après la fusion de cette base par #22 : ses 4 commits

@@ -2,11 +2,13 @@ import { cn } from "../lib/cn";
 
 import { initialOf, tintOf } from "../lib/tint";
 
+const SIZES = { sm: "size-6 text-xs", md: "size-10 text-sm", lg: "size-16 text-xl" } as const;
+
 export interface AvatarProps {
   /** Identifiant stable (personne, groupe) : il fixe la teinte. */
   id: string;
   name: string;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   /** Contour de la couleur du fond, quand les pastilles se chevauchent. */
   ringClassName?: string;
 }
@@ -18,7 +20,7 @@ export function Avatar({ id, name, size = "md", ringClassName }: AvatarProps) {
       aria-hidden="true"
       className={cn(
         "flex shrink-0 items-center justify-center rounded-pill font-semibold text-ink",
-        size === "md" ? "size-10 text-sm" : "size-16 text-xl",
+        SIZES[size],
         tintOf(id).background,
         ringClassName,
       )}

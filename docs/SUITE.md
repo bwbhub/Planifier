@@ -4,7 +4,7 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Fusionner le rattrapage** `fix/rattrapage-listes-partagees` (#23 n'était pas dans `master`).
+- #24 fusionnée (2026-11-01) ; #25 (assignation) repassée sur `master`.
 - **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
   puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
   sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
@@ -13,9 +13,7 @@
 
 ## 2. Prochain ticket
 
-Assignation (`869fhwtqr`, `869fhwtqz`) : avatar d'assigné, « Atténuer les tâches qui ne me sont pas assignées »,
-jamais imposée. Reste ensuite au Todo : partage en lecture seule d'une liste perso. Liste d'événement : avec le
-module Événements.
+Partage en lecture seule d'une liste perso : dernier morceau du Todo. Liste d'événement : avec le module Événements.
 
 ## 3. Ensuite
 
@@ -69,6 +67,17 @@ module Événements.
   - Revue humaine (droits) : `domain-access/todo-list`, `todo-guard.ts`, `list-access.ts`, `lists.service.ts`
     (visibilité, Espace visé, `members`).
 
+- **Assignation (revue de `feat/todo-assignation`), à trancher** :
+  - « Atténuer » : opacité 45 % de la maquette sur du texte `muted`, contraste sous 4,5:1 probable (non mesuré). Option
+    choisie par l'utilisateur : garder, ou remonter l'opacité ?
+  - « Atténuer » touche aussi les tâches sans assigné (lecture littérale du libellé) et n'est pas retenue au
+    rechargement. D'accord ?
+  - Option en case à cocher dans l'en-tête de liste (maquette : interrupteur).
+  - `lists.members` rend `callerId` : le web n'a pas l'utilisateur courant dans le module. Mieux à terme : un accès
+    commun à l'utilisateur courant (servirait aussi à « toi » dans « Cochée par »).
+  - Brief « Nouvelle tâche » : champ « liste » absent ; en-tête « dates » absent (listes d'événement).
+  - Revue humaine (droits) : `canBeAssigned`, `deleteMembership`, `unassignOutsideSpace`.
+
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
   remplacer par celui-ci dans une PR Todo.
@@ -78,6 +87,8 @@ module Événements.
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).
 - Merge de PR refusé en mode auto : l'utilisateur fusionne.
 - PR empilées : avant de fusionner, vérifier que la base n'est pas déjà fusionnée (#23 a manqué `master` ainsi).
+- CI : `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` au build = téléchargement Google Fonts raté,
+  pas le code (vu une fois sur #25, job `e2e` du même commit vert) ; le build dépend de ce réseau.
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
 - TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
 - Navigateur : Brave seulement, pas de Chrome ⇒ pas d'extension Claude in Chrome ; vérif visuelle par l'utilisateur.

@@ -108,6 +108,18 @@ export async function createList(
   });
 }
 
+/** Liste qui change d'Espace (`null` : redevient perso) : seuls ses membres gardent leurs tâches, pour de bon. */
+async function unassignOutsideSpace(tx: DbTransaction, listId: string, spaceId: string | null) {
+  await tx.task.updateMany({
+    where: {
+      listId,
+      assigneeId: { not: null },
+      ...(spaceId === null ? {} : { assignee: { spaces: { none: { spaceId } } } }),
+    },
+    data: { assigneeId: null, version: { increment: 1 } },
+  });
+}
+
 /** Changer d'Espace demande le droit `share`, vérifié par la garde ; l'Espace visé l'est ici. */
 export async function updateList(
   db: Db,
@@ -133,6 +145,7 @@ export async function updateList(
     // Supprimée entre la garde et l'écriture : elle n'existe plus, ce n'est pas une version périmée.
     if (list === null) throw new ORPCError("NOT_FOUND");
     if (count === 0) throw todoConflict("STALE_VERSION");
+    if (spaceId !== undefined) await unassignOutsideSpace(tx, listId, spaceId);
     return toListOutput(userId, list);
   });
 }
@@ -141,7 +154,11 @@ export async function updateList(
  * Liste perso : son propriétaire. Liste partagée : les membres de son Espace, son créateur d'abord s'il en est
  * encore membre, puis par ordre d'arrivée.
  */
-export async function listMembers(db: Db, listId: string): Promise<ListMembersOutput> {
+export async function listMembers(
+  db: Db,
+  listId: string,
+  callerId: string,
+): Promise<ListMembersOutput> {
   const list = await db.todoList.findUnique({
     where: { id: listId },
     select: {
@@ -158,13 +175,13 @@ export async function listMembers(db: Db, listId: string): Promise<ListMembersOu
   });
   // Supprimée entre la garde et la lecture.
   if (list === null) throw new ORPCError("NOT_FOUND");
-  if (list.space === null) return { items: [toPerson(list.owner)] };
+  if (list.space === null) return { items: [toPerson(list.owner)], callerId };
   const members = list.space.members.map(({ user }) => user);
   const creatorFirst = [
     ...members.filter(({ id }) => id === list.owner.id),
     ...members.filter(({ id }) => id !== list.owner.id),
   ];
-  return { items: creatorFirst.map(toPerson) };
+  return { items: creatorFirst.map(toPerson), callerId };
 }
 
 /** Ses tâches partent avec elle (`onDelete: Cascade`). */

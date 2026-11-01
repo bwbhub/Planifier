@@ -3,7 +3,13 @@ import { LIST_TINTS, TODO_LIST_NAME_MAX_LENGTH, TODO_MAX_LISTS } from "@planifie
 import { z } from "zod";
 
 import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
-import { listIdSchema, listTargetSchema, personSchema, spaceIdSchema } from "../todo.schemas";
+import {
+  listIdSchema,
+  listTargetSchema,
+  personSchema,
+  spaceIdSchema,
+  userIdSchema,
+} from "../todo.schemas";
 
 const listNameSchema = z.string().trim().min(1).max(TODO_LIST_NAME_MAX_LENGTH);
 const tintSchema = z.enum(LIST_TINTS);
@@ -74,6 +80,8 @@ export const listMembersInputSchema = listTargetSchema;
 /** Personnes qui ont accès à la liste : liste perso, son propriétaire ; liste partagée, les membres de son Espace. */
 export const listMembersOutputSchema = z.strictObject({
   items: z.array(personSchema).max(SPACE_MAX_MEMBERS + 1),
+  /** L'appelant, pour distinguer ce qui lui est assigné. */
+  callerId: userIdSchema,
 });
 
 export type TodoListOutput = z.infer<typeof todoListSchema>;

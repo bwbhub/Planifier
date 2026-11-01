@@ -18,6 +18,22 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-01 — Rattrapage des listes partagées vers `master` (branche `fix/rattrapage-listes-partagees`)
+
+**Fait** : #23 était fusionnée dans `feat/todo-sous-taches` après la fusion de cette base par #22 : ses 4 commits
+n'étaient pas dans `master`. Fusion de `a2554190` sur `master`, sans conflit. `docs/SUITE.md` remis à jour. Détail
+du travail : entrées « listes partagées » du 2026-10-29, plus bas.
+
+**Vérifié** (exécuté le 2026-11-01 sur la branche) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` : OK ;
+`pnpm test:integration` : api 107/107, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 54/54. Code identique à #23,
+déjà relue : `/code-review` non relancé.
+
+**Ouvert** : revue humaine des droits des listes (`docs/SUITE.md` §4).
+
+**Attendu ensuite** : fusion par l'utilisateur, puis assignation (tickets `869fhwtqr`, `869fhwtqz`).
+
+---
+
 ## 2026-10-29 — Récurrence : terminer et annuler (branche `feat/todo-recurrence`, PR #20)
 
 **Fait** (réponses de l'utilisateur aux points ouverts) :

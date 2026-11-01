@@ -317,9 +317,10 @@ describe("todo : droits (base réelle)", () => {
       ),
       call(tasks.delete, { taskId: task.id }, asBob),
     ];
-    for (const attempt of attempts) {
-      await expect(attempt).rejects.toMatchObject({ code: "NOT_FOUND" });
-    }
+    // Tous observés d'emblée : une promesse refusée avant son tour serait une rejection non gérée.
+    await Promise.all(
+      attempts.map((attempt) => expect(attempt).rejects.toMatchObject({ code: "NOT_FOUND" })),
+    );
     // Rien n'a changé.
     await expect(call(tasks.list, { listId: list.id }, asUser(alice))).resolves.toEqual({
       items: [task],

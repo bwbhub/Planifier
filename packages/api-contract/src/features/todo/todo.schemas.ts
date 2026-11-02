@@ -8,9 +8,6 @@ export const taskIdSchema = z.uuid();
 export const spaceIdSchema = z.uuid();
 export const userIdSchema = z.uuid();
 
-/** Personne telle que les autres la voient : nom affiché seul, jamais l'e-mail (données minimales). */
-export const personSchema = z.strictObject({ userId: userIdSchema, name: z.string() });
-
 /** Entrée de toute procédure qui vise une liste : la garde de liste lit `listId` (droits de l'appelant). */
 export const listTargetSchema = z.strictObject({ listId: listIdSchema });
 

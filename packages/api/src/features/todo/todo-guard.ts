@@ -3,7 +3,7 @@ import type { ResourceAction } from "@planifier/domain-access/resource";
 import { canAccessTodoList, type TodoListAccess } from "@planifier/domain-access/todo-list";
 
 import type { UserContext } from "../../procedures";
-import { listAccessSelect, toListAccess } from "./list-access";
+import { listAccessSelect, toListAccess } from "../_shared/list-access";
 
 /** Sans lecture ⇒ NOT_FOUND (null : liste introuvable) ; visible mais action refusée ⇒ FORBIDDEN. */
 function assertListAccess(access: TodoListAccess | null, action: ResourceAction) {

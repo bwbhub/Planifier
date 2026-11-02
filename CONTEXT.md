@@ -40,9 +40,9 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 ## Agenda
 
 - **Agenda** : agenda d'un utilisateur, destiné à remplacer son agenda existant.
-- **Entrée** (ou créneau) : élément de l'agenda.
+- **Entrée** (ou créneau) : élément de l'agenda, à son propriétaire seul. Horaire, ou à la journée (sans fuseau).
 - **Entrée masquée** : cachée entièrement de la vue fusionnée (ni titre, ni « occupé »).
-- **Vue fusionnée** : agendas de plusieurs membres d'un espace, tout visible par défaut.
+- **Vue fusionnée** : agendas des membres d'un espace où Agenda est activé, tout visible par défaut, en lecture seule : titre, horaire et lieu, jamais la description. Si l'espace restreint sa visibilité, chacun n'y voit que ses entrées.
 - **Vue Aujourd'hui** : timeline du jour et tâches du jour, selon les modules actifs.
 - **Créneau lié à une tâche** : lien à sens unique. Aucune coche automatique de la tâche.
 - **Flux iCal d'import** : lien privé d'un agenda externe lu par l'app.

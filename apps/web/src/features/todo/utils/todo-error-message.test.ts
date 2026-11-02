@@ -17,10 +17,10 @@ describe("todoErrorMessage", () => {
 
   it("rassure sans détail technique sur une erreur inconnue", () => {
     expect(todoErrorMessage(new Error("boom"))).toBe(
-      "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.",
+      "Quelque chose n'a pas fonctionné. Rien n'est perdu. Réessaie dans un instant.",
     );
     expect(todoErrorMessage(new ORPCError("CONFLICT", { data: { reason: "AUTRE" } }))).toBe(
-      "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.",
+      "Quelque chose n'a pas fonctionné. Rien n'est perdu. Réessaie dans un instant.",
     );
   });
 });

@@ -1,6 +1,8 @@
 import type { TaskOutput } from "@planifier/api-contract";
 import { useState } from "react";
 
+import { today } from "@/lib/format-date";
+
 import type { TaskCompletion } from "../atoms/task-row";
 import {
   useCompleteOccurrence,
@@ -8,7 +10,7 @@ import {
   useSetTaskDone,
   useUndoCompletion,
 } from "../queries/todo.queries";
-import { formatDueDate, today } from "./due-date";
+import { formatDueDate } from "./due-date";
 
 /** Ce qui vient d'être fait, annoncé dans la liste ; `undo` : le défaire (tâche répétée seulement). */
 export interface CompletionNotice {

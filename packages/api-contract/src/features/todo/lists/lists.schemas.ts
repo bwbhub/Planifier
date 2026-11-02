@@ -3,13 +3,8 @@ import { LIST_TINTS, TODO_LIST_NAME_MAX_LENGTH, TODO_MAX_LISTS } from "@planifie
 import { z } from "zod";
 
 import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
-import {
-  listIdSchema,
-  listTargetSchema,
-  personSchema,
-  spaceIdSchema,
-  userIdSchema,
-} from "../todo.schemas";
+import { personSchema } from "../../_shared/person.schemas";
+import { listIdSchema, listTargetSchema, spaceIdSchema, userIdSchema } from "../todo.schemas";
 
 const listNameSchema = z.string().trim().min(1).max(TODO_LIST_NAME_MAX_LENGTH);
 const tintSchema = z.enum(LIST_TINTS);

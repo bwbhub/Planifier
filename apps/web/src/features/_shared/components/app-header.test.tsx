@@ -30,6 +30,14 @@ describe("AppHeader", () => {
     expect(todo.getAttribute("aria-current")).toBe("page");
   });
 
+  it("mène à l'Agenda, marqué comme page courante sur l'Agenda", () => {
+    pathname.current = "/agenda";
+    render(<AppHeader />);
+    const agenda = screen.getByRole("link", { name: "Agenda" });
+    expect(agenda.getAttribute("href")).toBe("/agenda");
+    expect(agenda.getAttribute("aria-current")).toBe("page");
+  });
+
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = render(<AppHeader />);
     await expect(axeViolations(container)).resolves.toEqual([]);

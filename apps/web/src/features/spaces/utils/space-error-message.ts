@@ -3,7 +3,7 @@ import { SPACE_CONFLICT_REASONS, type SpaceConflictReason } from "@planifier/api
 import { SPACE_MAX_ACTIVE_INVITES, SPACE_MAX_MEMBERS } from "@planifier/constants/spaces";
 import { z } from "zod";
 
-import { COMMON_LABELS } from "@/lib/labels";
+import { actionErrorMessage, conflictReason } from "@/features/_shared/utils/action-error-message";
 
 const conflictDataSchema = z.object({ reason: z.enum(SPACE_CONFLICT_REASONS) });
 
@@ -20,23 +20,17 @@ const CONFLICT_MESSAGES: Record<SpaceConflictReason, string> = {
 
 /** Raison d'un `CONFLICT` d'Espace, ou `null` pour toute autre erreur. */
 export function spaceConflictReason(error: unknown): SpaceConflictReason | null {
-  if (!(error instanceof ORPCError) || error.code !== "CONFLICT") return null;
-  const parsed = conflictDataSchema.safeParse(error.data);
-  return parsed.success ? parsed.data.reason : null;
+  return conflictReason(error, conflictDataSchema);
 }
 
-/** Message à montrer après un refus d'une action sur un Espace : il dit quoi faire, sans accuser. */
+/** Message à montrer après un refus d'une action sur un Espace. */
 export function spaceErrorMessage(error: unknown): string {
-  const reason = spaceConflictReason(error);
-  if (reason !== null) return CONFLICT_MESSAGES[reason];
-  if (error instanceof ORPCError) {
-    if (error.code === "FORBIDDEN") return "Seuls les propriétaires de l'Espace peuvent faire ça.";
-    if (error.code === "NOT_FOUND") return "Cet Espace n'existe plus, ou tu n'en fais plus partie.";
-    if (error.code === "TOO_MANY_REQUESTS") {
-      return "Trop de demandes d'affilée. Patiente quelques secondes, puis réessaie.";
-    }
-  }
-  return `Quelque chose n'a pas fonctionné. ${COMMON_LABELS.nothingLost} Réessaie dans un instant.`;
+  return actionErrorMessage(error, {
+    conflictData: conflictDataSchema,
+    conflicts: CONFLICT_MESSAGES,
+    notFound: "Cet Espace n'existe plus, ou tu n'en fais plus partie.",
+    forbidden: "Seuls les propriétaires de l'Espace peuvent faire ça.",
+  });
 }
 
 /** L'Espace n'existe pas pour l'appelant (jamais existé, supprimé, ou quitté). */

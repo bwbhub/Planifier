@@ -4,7 +4,9 @@ import type { TaskOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 
 import { useUpdateTask } from "../queries/todo.queries";
-import { formatDueDate, isPastDue, today } from "../utils/due-date";
+import { today } from "@/lib/format-date";
+
+import { formatDueDate, isPastDue } from "../utils/due-date";
 import { TodoErrorAlert } from "./todo-error-alert";
 
 /** Échéance ; passée, elle se dit sans reproche et propose un report (CONTEXT.md, tâche en retard). */

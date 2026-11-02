@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDay, formatTime } from "./format-date";
+import { formatDay, formatTime, today } from "./format-date";
 
 const NOW = new Date(2026, 9, 28);
+
+describe("today", () => {
+  it("donne le jour de l'appareil", () => {
+    expect(today(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
+  });
+});
 
 describe("formatDay", () => {
   it("omet l'année courante", () => {

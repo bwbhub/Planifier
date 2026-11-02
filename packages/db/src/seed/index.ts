@@ -1,4 +1,5 @@
 import { openLocalSeedDatabase } from "../seeding";
+import { seedAgenda } from "./agenda";
 import { seedEvents } from "./events";
 import { seedSpaces } from "./spaces";
 import { seedTodo } from "./todo";
@@ -11,6 +12,7 @@ try {
   await seedSpaces(db);
   await seedEvents(db);
   await seedTodo(db);
+  await seedAgenda(db);
   console.log("Seed terminé.");
 } finally {
   await db.$disconnect();

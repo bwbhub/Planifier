@@ -173,6 +173,46 @@ test.describe("partager une liste avec l'Espace", () => {
   });
 });
 
+test.describe("montrer une liste à l'Espace", () => {
+  test("montre une liste perso que l'autre membre voit sans y toucher, puis la retire", async ({
+    page,
+    browser,
+  }) => {
+    await signedIn(page, owner);
+    await page.goto("/todo");
+    await page.getByRole("button", { name: "Créer ma première liste" }).click();
+    await page.getByLabel("Nom de la liste").fill("Idées cadeaux");
+    await page.getByText(SPACE_NAME, { exact: true }).click();
+    await page.getByText("Seulement voir", { exact: true }).click();
+    await page.getByRole("button", { name: "Créer la liste" }).click();
+    await expect(page.getByText(`Liste perso · Visible par ${SPACE_NAME}`)).toBeVisible();
+    await page.getByLabel("Nouvelle tâche").fill("Un livre");
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await expect(page.getByRole("checkbox", { name: "Un livre" })).toBeVisible();
+
+    const guestPage = await browser.newPage();
+    await signedIn(guestPage, guest);
+    await guestPage.goto("/todo");
+    await expect(guestPage.getByText(`Lecture seule · ${SPACE_NAME}`)).toBeVisible();
+    await expect(guestPage.getByRole("checkbox", { name: "Un livre" })).toBeDisabled();
+    await expect(guestPage.getByLabel("Nouvelle tâche")).toBeHidden();
+    await expect(guestPage.getByRole("button", { name: "Modifier la liste" })).toBeHidden();
+
+    await page.getByRole("button", { name: "Modifier la liste" }).click();
+    await page.getByText("Personne", { exact: true }).click();
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.getByText(`Liste perso · Visible par ${SPACE_NAME}`)).toBeHidden();
+
+    await guestPage.reload();
+    await expect(guestPage.getByRole("button", { name: "Créer ma première liste" })).toBeVisible();
+    await guestPage.close();
+
+    await page.getByRole("button", { name: "Supprimer la liste" }).click();
+    await page.getByRole("button", { name: "Supprimer définitivement" }).click();
+    await expect(page.getByRole("button", { name: "Créer ma première liste" })).toBeVisible();
+  });
+});
+
 test.describe("gérer un Espace", () => {
   test("change les modules de l'Espace dans ses réglages", async ({ page }) => {
     await signedIn(page, owner);

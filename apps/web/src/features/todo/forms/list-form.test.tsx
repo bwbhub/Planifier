@@ -53,7 +53,8 @@ const LIST: TodoListOutput = {
   version: 1,
   openTaskCount: 0,
   space: { id: COLOC_ID, name: "Coloc" },
-  can: { delete: true, share: true },
+  readOnlySpace: null,
+  can: { write: true, delete: true, share: true },
 };
 
 function renderForm(list?: TodoListOutput) {
@@ -119,6 +120,53 @@ describe("ListForm, partage avec un Espace", () => {
   });
 });
 
+describe("ListForm, niveau de partage", () => {
+  it("ne demande le niveau qu'une fois un Espace choisi", async () => {
+    replyRpc(fetchMock, { "spaces/space/list": { data: SPACES } });
+    renderForm();
+    await userEvent.click(await screen.findByRole("radio", { name: "Personne" }));
+    expect(screen.queryByRole("radio", { name: "Seulement voir" })).toBeNull();
+    await userEvent.click(screen.getByRole("radio", { name: "Coloc" }));
+    expect(screen.getByRole("radio", { name: "Modifier et cocher" })).toHaveProperty(
+      "checked",
+      true,
+    );
+  });
+
+  it("passe la liste en lecture seule pour l'Espace", async () => {
+    const calls = replyRpc(fetchMock, {
+      "spaces/space/list": { data: SPACES },
+      "todo/lists/update": { data: { ...LIST, version: 2 } },
+    });
+    const { onSaved } = renderForm(LIST);
+    await userEvent.click(await screen.findByRole("radio", { name: "Seulement voir" }));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => {
+      expect(onSaved).toHaveBeenCalled();
+    });
+    expect(calls).toContainEqual({
+      path: "todo/lists/update",
+      input: {
+        name: "Courses",
+        tint: "general",
+        spaceId: null,
+        readOnlySpaceId: COLOC_ID,
+        listId: LIST_ID,
+        version: 1,
+      },
+    });
+  });
+
+  it("garde le niveau lecture seule d'une liste déjà montrée", async () => {
+    replyRpc(fetchMock, { "spaces/space/list": { data: SPACES } });
+    renderForm({ ...LIST, space: null, readOnlySpace: { id: COLOC_ID, name: "Coloc" } });
+    expect(await screen.findByRole("radio", { name: "Seulement voir" })).toHaveProperty(
+      "checked",
+      true,
+    );
+  });
+});
+
 describe("ListForm, partage d'une liste existante", () => {
   it("rend la liste perso, et n'envoie pas l'Espace s'il ne change pas", async () => {
     const calls = replyRpc(fetchMock, {
@@ -133,7 +181,14 @@ describe("ListForm, partage d'une liste existante", () => {
     });
     expect(calls).toContainEqual({
       path: "todo/lists/update",
-      input: { name: "Courses", tint: "general", spaceId: null, listId: LIST_ID, version: 1 },
+      input: {
+        name: "Courses",
+        tint: "general",
+        spaceId: null,
+        readOnlySpaceId: null,
+        listId: LIST_ID,
+        version: 1,
+      },
     });
   });
 
@@ -142,7 +197,7 @@ describe("ListForm, partage d'une liste existante", () => {
       "spaces/space/list": { data: SPACES },
       "todo/lists/update": { data: { ...LIST, version: 2 } },
     });
-    renderForm({ ...LIST, can: { delete: false, share: false } });
+    renderForm({ ...LIST, can: { write: true, delete: false, share: false } });
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     await waitFor(() => {
       expect(calls).toContainEqual({

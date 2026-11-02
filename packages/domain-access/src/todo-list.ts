@@ -10,10 +10,12 @@ export interface TodoListAccess {
    * Liste partagée : rôle de l'appelant dans son Espace (null s'il n'en est pas membre). Liste perso : null.
    */
   space: { callerRole: SpaceRole | null } | null;
+  /** Liste perso montrée en lecture seule à un Espace dont l'appelant est membre. */
+  isReader: boolean;
 }
 
 /**
- * Liste perso : privée, tout à son propriétaire. Liste partagée : la rattacher à l'Espace, c'est la partager avec
+ * Liste perso : privée, tout à son propriétaire ; montrée à un Espace, ses membres la lisent, sans plus. Liste partagée : la rattacher à l'Espace, c'est la partager avec
  * lui, même quand il restreint sa visibilité ; elle appartient alors à l'Espace (décisions du 2026-10-29) :
  * - `read`, `write` (nom, teinte, tâches) : tout membre ;
  * - `delete` : son créateur, ou un propriétaire de l'Espace ;
@@ -21,11 +23,11 @@ export interface TodoListAccess {
  * Seuls les membres comptent : le créateur parti ne la voit plus, elle reste à l'Espace. `read` faux ⇒ NOT_FOUND.
  */
 export function canAccessTodoList(
-  { userId, ownerId, space }: TodoListAccess,
+  { userId, ownerId, space, isReader }: TodoListAccess,
   action: ResourceAction,
 ): boolean {
   const isOwner = userId === ownerId;
-  if (space === null) return isOwner;
+  if (space === null) return isOwner || (isReader && action === "read");
   if (space.callerRole === null) return false;
   switch (action) {
     case "read":

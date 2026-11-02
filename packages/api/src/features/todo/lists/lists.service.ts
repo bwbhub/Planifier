@@ -11,6 +11,7 @@ import { canAccessTodoList, sharingSpaceVerdict } from "@planifier/domain-access
 import { isListTint, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import type { Db, DbTransaction, Prisma } from "@planifier/db";
 
+import { lockSpace } from "../../spaces/space-lock";
 import { listAccessSelect, toListAccess, toPerson } from "../list-access";
 import { todoConflict } from "../todo-errors";
 
@@ -28,7 +29,7 @@ function listSelect(userId: string) {
 type ListRow = Prisma.TodoListGetPayload<{ select: ReturnType<typeof listSelect> }>;
 
 function toListOutput(userId: string, row: ListRow): TodoListOutput {
-  const { id, name, tint, version, space, _count } = row;
+  const { id, name, tint, version, space, readOnlySpace, _count } = row;
   // Chaîne libre en base : une valeur inconnue est une donnée corrompue, pas une entrée à deviner.
   if (!isListTint(tint)) throw new Error(`Teinte de liste inconnue en base (liste ${id}).`);
   const access = toListAccess(userId, row);
@@ -39,7 +40,10 @@ function toListOutput(userId: string, row: ListRow): TodoListOutput {
     version,
     openTaskCount: _count.tasks,
     space: space === null ? null : { id: space.id, name: space.name },
+    readOnlySpace:
+      readOnlySpace === null ? null : { id: readOnlySpace.id, name: readOnlySpace.name },
     can: {
+      write: canAccessTodoList(access, "write"),
       delete: canAccessTodoList(access, "delete"),
       share: canAccessTodoList(access, "share"),
     },
@@ -47,12 +51,16 @@ function toListOutput(userId: string, row: ListRow): TodoListOutput {
 }
 
 /**
- * Listes visibles (`canAccessTodoList`) : ses listes perso, et les listes partagées des Espaces dont l'appelant est
- * membre. Celles d'un Espace qu'il a quitté restent à l'Espace, même s'il les a créées.
+ * Listes visibles (`canAccessTodoList`) : ses listes perso, et celles que les Espaces dont l'appelant est membre
+ * partagent ou voient en lecture seule. Celles d'un Espace qu'il a quitté restent à l'Espace, même s'il les a créées.
  */
 function visibleTo(userId: string): Prisma.TodoListWhereInput {
   return {
-    OR: [{ ownerId: userId, spaceId: null }, { space: { members: { some: { userId } } } }],
+    OR: [
+      { ownerId: userId, spaceId: null },
+      { space: { members: { some: { userId } } } },
+      { readOnlySpace: { members: { some: { userId } } } },
+    ],
   };
 }
 
@@ -75,8 +83,12 @@ export async function listLists(
   };
 }
 
-/** Espace où partager une liste : droit décidé par `sharingSpaceVerdict` (membre, Todo activé). */
+/**
+ * Espace où partager une liste : droit décidé par `sharingSpaceVerdict` (membre, Todo activé). Sous le verrou de
+ * l'Espace : une sortie simultanée voit le partage et le retire, il ne survit pas à un départ.
+ */
 async function assertSharingSpace(tx: DbTransaction, userId: string, spaceId: string) {
+  await lockSpace(tx, spaceId);
   const space = await tx.space.findUnique({
     where: { id: spaceId },
     select: { modules: true, members: { where: { userId }, select: { role: true } } },
@@ -92,16 +104,22 @@ async function assertSharingSpace(tx: DbTransaction, userId: string, spaceId: st
 export async function createList(
   db: Db,
   userId: string,
-  { spaceId, ...input }: CreateListInput,
+  { spaceId, readOnlySpaceId, ...input }: CreateListInput,
 ): Promise<TodoListOutput> {
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT 1 FROM users WHERE id = ${userId} FOR UPDATE`;
     // Ses listes encore à lui : laissées à un Espace quitté, elles ne comptent plus.
     const count = await tx.todoList.count({ where: { ownerId: userId, ...visibleTo(userId) } });
     if (count >= TODO_MAX_LISTS) throw todoConflict("TOO_MANY_LISTS");
-    if (spaceId !== undefined) await assertSharingSpace(tx, userId, spaceId);
+    const sharedWith = spaceId ?? readOnlySpaceId;
+    if (sharedWith !== undefined) await assertSharingSpace(tx, userId, sharedWith);
     const list = await tx.todoList.create({
-      data: { ...input, ownerId: userId, spaceId: spaceId ?? null },
+      data: {
+        ...input,
+        ownerId: userId,
+        spaceId: spaceId ?? null,
+        readOnlySpaceId: readOnlySpaceId ?? null,
+      },
       select: listSelect(userId),
     });
     return toListOutput(userId, list);
@@ -120,21 +138,49 @@ async function unassignOutsideSpace(tx: DbTransaction, listId: string, spaceId: 
   });
 }
 
-/** Changer d'Espace demande le droit `share`, vérifié par la garde ; l'Espace visé l'est ici. */
+/**
+ * Liste montrée à un Espace : « Cochée par » ne vaut que sur une liste partagée, et ses lecteurs ne sont pas forcément
+ * ceux qui ont coché. Seul `ownerId`, seul à écrire désormais, reste nommé.
+ */
+async function forgetOtherCompleters(tx: DbTransaction, listId: string, ownerId: string) {
+  await tx.task.updateMany({
+    where: { listId, completedById: { not: ownerId } },
+    data: { completedById: null },
+  });
+}
+
+type SharingInput = Pick<UpdateListInput, "spaceId" | "readOnlySpaceId">;
+
+/** Champ absent : inchangé. */
+type SharingChange = { [Field in keyof SharingInput]?: Exclude<SharingInput[Field], undefined> };
+
+/** Une liste n'a qu'un partage à la fois : en choisir un retire l'autre. */
+function nextSharing({ spaceId, readOnlySpaceId }: SharingInput): SharingChange {
+  if (typeof spaceId === "string") return { spaceId, readOnlySpaceId: null };
+  if (typeof readOnlySpaceId === "string") return { spaceId: null, readOnlySpaceId };
+  return {
+    ...(spaceId === undefined ? {} : { spaceId }),
+    ...(readOnlySpaceId === undefined ? {} : { readOnlySpaceId }),
+  };
+}
+
+/** Changer de partage demande le droit `share`, vérifié par la garde ; l'Espace visé l'est ici. */
 export async function updateList(
   db: Db,
   userId: string,
-  { listId, version, name, tint, spaceId }: UpdateListInput,
+  { listId, version, name, tint, spaceId, readOnlySpaceId }: UpdateListInput,
 ): Promise<TodoListOutput> {
+  const sharing = nextSharing({ spaceId, readOnlySpaceId });
+  const sharedWith = sharing.spaceId ?? sharing.readOnlySpaceId;
   return db.$transaction(async (tx) => {
-    if (spaceId !== undefined && spaceId !== null) await assertSharingSpace(tx, userId, spaceId);
+    if (typeof sharedWith === "string") await assertSharingSpace(tx, userId, sharedWith);
     const { count } = await tx.todoList.updateMany({
       where: { id: listId, version },
       // Champ absent : inchangé (Prisma refuse `undefined` explicite avec `exactOptionalPropertyTypes`).
       data: {
         ...(name === undefined ? {} : { name }),
         ...(tint === undefined ? {} : { tint }),
-        ...(spaceId === undefined ? {} : { spaceId }),
+        ...sharing,
         version: { increment: 1 },
       },
     });
@@ -145,13 +191,16 @@ export async function updateList(
     // Supprimée entre la garde et l'écriture : elle n'existe plus, ce n'est pas une version périmée.
     if (list === null) throw new ORPCError("NOT_FOUND");
     if (count === 0) throw todoConflict("STALE_VERSION");
-    if (spaceId !== undefined) await unassignOutsideSpace(tx, listId, spaceId);
+    if (sharing.spaceId !== undefined) await unassignOutsideSpace(tx, listId, sharing.spaceId);
+    if (typeof sharing.readOnlySpaceId === "string") {
+      await forgetOtherCompleters(tx, listId, userId);
+    }
     return toListOutput(userId, list);
   });
 }
 
 /**
- * Liste perso : son propriétaire. Liste partagée : les membres de son Espace, son créateur d'abord s'il en est
+ * Liste perso, même montrée à un Espace : son propriétaire. Liste partagée : les membres de son Espace, son créateur d'abord s'il en est
  * encore membre, puis par ordre d'arrivée.
  */
 export async function listMembers(

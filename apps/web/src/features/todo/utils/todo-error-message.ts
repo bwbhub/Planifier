@@ -25,6 +25,9 @@ export function todoErrorMessage(error: unknown): string {
     return data.success ? CONFLICT_MESSAGES[data.data.reason] : FALLBACK;
   }
   if (error.code === "NOT_FOUND") return "Cet élément n'existe plus. Recharge la page.";
+  if (error.code === "FORBIDDEN") {
+    return "Tu n'as pas le droit de faire ça sur cette liste. Recharge la page pour voir ce qui a changé.";
+  }
   if (error.code === "TOO_MANY_REQUESTS") {
     return "Trop d'actions d'affilée. Patiente quelques secondes, puis réessaie.";
   }

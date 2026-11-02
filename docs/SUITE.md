@@ -4,16 +4,16 @@
 
 ## 1. À faire par l'utilisateur
 
-- #24 fusionnée (2026-11-01) ; #25 (assignation) repassée sur `master`.
+- **Fusionner** la PR du partage en lecture seule (`feat/todo-partage-lecture`).
 - **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
   puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
   sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
-- Revue humaine : droits des listes (voir §4, listes partagées).
+- Revue humaine : droits des listes (voir §4 : listes partagées, assignation, lecture seule).
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
-Partage en lecture seule d'une liste perso : dernier morceau du Todo. Liste d'événement : avec le module Événements.
+Todo terminé hors liste d'événement (avec le module Événements). Suite : §3.
 
 ## 3. Ensuite
 
@@ -78,6 +78,16 @@ Partage en lecture seule d'une liste perso : dernier morceau du Todo. Liste d'é
   - Brief « Nouvelle tâche » : champ « liste » absent ; en-tête « dates » absent (listes d'événement).
   - Revue humaine (droits) : `canBeAssigned`, `deleteMembership`, `unassignOutsideSpace`.
 
+- **Lecture seule (branche `feat/todo-partage-lecture`), à trancher** : partage avec un Espace choisi le 2026-11-01.
+  - Reste visible quand Todo est désactivé dans l'Espace (comme une liste partagée) et même si l'Espace restreint sa
+    visibilité : d'accord ?
+  - Liste retirée sous les yeux d'un membre : il bascule sur sa première liste, sans message (comme une liste supprimée
+    par un autre).
+  - Espace où Todo a été désactivé : changer de niveau répond `TODO_DISABLED` ; retirer le partage marche.
+  - Passer en lecture seule efface « Cochée par » des autres sur la liste (les lecteurs ne sont pas forcément ceux qui
+    ont coché) ; revenir en partagée ne le rend pas.
+  - Revue humaine (droits) : `canAccessTodoList` (`isReader`), `visibleTo`, `nextSharing`, `deleteMembership`.
+
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
   remplacer par celui-ci dans une PR Todo.
@@ -95,6 +105,7 @@ Partage en lecture seule d'une liste perso : dernier morceau du Todo. Liste d'é
 - Base locale : `docker compose up -d`, port 5433. Dépendance nouvelle : fiche validée avant `pnpm add`.
 - `pnpm --filter X add` peut délier les `node_modules` d'autres packages : relancer `pnpm install` ensuite.
 - Better Auth coupe son contrôle d'origine en environnement de test : `disableOriginCheck: false` le garde actif.
+- Migrer la base de test : `DATABASE_URL_UNPOOLED` (la CLI Prisma ignore `DATABASE_URL`, qui laisse la base locale).
 - Tests sur base : `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm test:integration`
   (suites sérialisées : `auth` puis `api-server`, même base).
 - Node local 24.11 : jsdom 30 refusé (D4). Tests de composants web : `// @vitest-environment jsdom` en tête de fichier.

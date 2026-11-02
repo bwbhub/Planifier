@@ -35,7 +35,8 @@ const LIST: TodoListOutput = {
   version: 1,
   openTaskCount: 1,
   space: null,
-  can: { delete: true, share: true },
+  readOnlySpace: null,
+  can: { write: true, delete: true, share: true },
 };
 const WEEKLY = taskWith({
   id: "0199f3a2-7c4e-7d10-9a51-0000000000aa",
@@ -164,11 +165,60 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
   });
 });
 
+describe("ListPanel, liste montrée à un Espace", () => {
+  const coloc = { id: "0199f3a2-7c4e-7d10-9a51-00000000c010", name: "Coloc" };
+  const owner = { userId: "0199f3a2-7c4e-7d10-9a51-00000000a11c", name: "Camille" };
+
+  function replyWith(task = WEEKLY) {
+    replyRpc(fetchMock, {
+      "todo/tasks/list": { data: { items: [task] } },
+      "todo/lists/members": { data: { items: [owner], callerId: owner.userId } },
+    });
+  }
+
+  it("ne laisse que la lecture à qui la voit par son Espace", async () => {
+    replyWith();
+    renderPanel({
+      ...LIST,
+      readOnlySpace: coloc,
+      can: { write: false, delete: false, share: false },
+    });
+    await screen.findByText("Sortir les poubelles");
+    expect(screen.getByText("Lecture seule · Coloc")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Sortir les poubelles" })).toHaveProperty(
+      "disabled",
+      true,
+    );
+    expect(screen.queryByRole("button", { name: /Modifier/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Supprimer/ })).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("garde tout à son propriétaire et dit à qui elle est montrée", async () => {
+    replyWith();
+    renderPanel({ ...LIST, readOnlySpace: coloc });
+    await screen.findByText("Sortir les poubelles");
+    expect(screen.getByText("Liste perso · Visible par Coloc")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Modifier.*la liste$/ })).toBeTruthy();
+  });
+
+  it("ne présente aucune violation d'accessibilité en lecture seule", async () => {
+    replyWith();
+    const { container } = renderPanel({
+      ...LIST,
+      readOnlySpace: coloc,
+      can: { write: false, delete: false, share: false },
+    });
+    await screen.findByText("Sortir les poubelles");
+    await expect(axeViolations(container)).resolves.toEqual([]);
+  });
+});
+
 describe("ListPanel, liste partagée", () => {
   const shared: TodoListOutput = {
     ...LIST,
     space: { id: "0199f3a2-7c4e-7d10-9a51-00000000c010", name: "Coloc" },
-    can: { delete: false, share: false },
+    can: { write: true, delete: false, share: false },
   };
 
   it("nomme l'Espace et ses personnes, sans suppression pour un simple membre", async () => {

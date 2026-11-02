@@ -66,17 +66,18 @@ function TaskMain({
   done: boolean;
   onToggle: TaskCompletion["toggle"];
 }) {
-  const { shared } = useListView();
+  const { shared, readOnly } = useListView();
   return (
     <div className="flex flex-1 flex-col gap-0.5">
-      <label className="flex min-h-11 cursor-pointer items-start gap-3 pt-2.5">
+      <label className="flex min-h-11 items-start gap-3 pt-2.5 has-enabled:cursor-pointer">
         <input
           type="checkbox"
           checked={done}
+          disabled={readOnly}
           onChange={(event) => {
             onToggle(task, event.target.checked);
           }}
-          className="mt-0.5 size-5 shrink-0 cursor-pointer accent-accent"
+          className="mt-0.5 size-5 shrink-0 accent-accent enabled:cursor-pointer"
         />
         <span className={done ? "text-muted line-through" : "font-semibold"}>{task.title}</span>
       </label>
@@ -151,9 +152,12 @@ interface TaskRowProps {
   completion: TaskCompletion;
 }
 
-/** Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. */
+/**
+ * Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. Lecture
+ * seule : la coche montre l'état, sans geste possible.
+ */
 export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
-  const { isDimmed } = useListView();
+  const { isDimmed, readOnly } = useListView();
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
@@ -193,7 +197,7 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
         className="flex flex-col data-dimmed:opacity-45 sm:flex-row sm:items-start sm:gap-3"
       >
         <TaskMain task={task} done={done} onToggle={completion.toggle} />
-        {mode === "view" ? (
+        {mode === "view" && !readOnly ? (
           <TaskActions
             task={task}
             done={done}

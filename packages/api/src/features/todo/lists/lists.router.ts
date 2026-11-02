@@ -3,7 +3,7 @@ import { listGuard } from "../todo-guard";
 import { createList, deleteList, listLists, listMembers, updateList } from "./lists.service";
 
 export const listsRouter = {
-  // Filtré par l'appelant : ses listes et celles des Espaces dont il est membre.
+  // Filtré par l'appelant : ses listes et celles que lui ouvrent ses Espaces.
   list: userProcedure.todo.lists.list.handler(({ context, input }) =>
     listLists(context.getDb(), context.user.id, input),
   ),
@@ -11,7 +11,11 @@ export const listsRouter = {
     createList(context.getDb(), context.user.id, input),
   ),
   update: userProcedure.todo.lists.update
-    .use(listGuard(({ spaceId }) => (spaceId === undefined ? "write" : "share")))
+    .use(
+      listGuard(({ spaceId, readOnlySpaceId }) =>
+        spaceId === undefined && readOnlySpaceId === undefined ? "write" : "share",
+      ),
+    )
     .handler(({ context, input }) => updateList(context.getDb(), context.user.id, input)),
   members: userProcedure.todo.lists.members
     .use(listGuard("read"))

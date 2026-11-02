@@ -28,7 +28,8 @@ function listWith(id: string, name: string): TodoListOutput {
     version: 1,
     openTaskCount: 0,
     space: null,
-    can: { delete: true, share: true },
+    readOnlySpace: null,
+    can: { write: true, delete: true, share: true },
   };
 }
 

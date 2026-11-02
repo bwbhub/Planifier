@@ -35,11 +35,11 @@ function completionWith(fields: Partial<TaskCompletion> = {}): TaskCompletion {
   return { toggle: vi.fn(), finish: vi.fn(), ...fields };
 }
 
-function renderRow(completion = completionWith(), task = parent, shared = false) {
+function renderRow(completion = completionWith(), task = parent, shared = false, readOnly = false) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <ul>
-        <ListViewProvider value={{ shared, isDimmed: () => false }}>
+        <ListViewProvider value={{ shared, readOnly, isDimmed: () => false }}>
           <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
         </ListViewProvider>
       </ul>
@@ -103,5 +103,14 @@ describe("TaskRow avec sous-tâches", () => {
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = renderRow();
     await expect(axeViolations(container)).resolves.toEqual([]);
+  });
+});
+
+describe("TaskRow, lecture seule", () => {
+  it("montre la coche sans geste possible ni action", () => {
+    const completion = completionWith();
+    renderRow(completion, parent, false, true);
+    expect(screen.getAllByRole("checkbox").every((box) => box.hasAttribute("disabled"))).toBe(true);
+    expect(screen.queryByRole("button")).toBeNull();
   });
 });

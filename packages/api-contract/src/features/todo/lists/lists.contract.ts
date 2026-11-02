@@ -19,7 +19,7 @@ export const listsContract = {
     .route({
       summary: "Mes listes",
       description:
-        "Listes de l'appelant et listes partagées de ses Espaces, de la plus ancienne à la plus récente.",
+        "Listes de l'appelant, listes partagées de ses Espaces et listes perso qu'ils voient en lecture seule, de la plus ancienne à la plus récente.",
     })
     .input(listListsInputSchema)
     .output(listListsOutputSchema),
@@ -27,7 +27,7 @@ export const listsContract = {
     .route({
       summary: "Créer une liste",
       description:
-        "Liste perso, ou partagée avec un Espace (`spaceId`). Nombre de listes au plus atteint : CONFLICT `TOO_MANY_LISTS` ; Todo non activé dans l'Espace : CONFLICT `TODO_DISABLED`.",
+        "Liste perso, partagée avec un Espace (`spaceId`) ou montrée à un Espace en lecture seule (`readOnlySpaceId`). Nombre de listes au plus atteint : CONFLICT `TOO_MANY_LISTS` ; Todo non activé dans l'Espace : CONFLICT `TODO_DISABLED`.",
     })
     .errors(TODO_ERRORS)
     .input(createListInputSchema)
@@ -36,7 +36,7 @@ export const listsContract = {
     .route({
       summary: "Modifier une liste",
       description:
-        "Nom, teinte ; Espace (propriétaire seulement, sinon FORBIDDEN). `version` périmée : CONFLICT `STALE_VERSION` ; Todo non activé dans l'Espace : CONFLICT `TODO_DISABLED`.",
+        "Nom, teinte ; partage (propriétaire seulement, sinon FORBIDDEN). `version` périmée : CONFLICT `STALE_VERSION` ; Todo non activé dans l'Espace : CONFLICT `TODO_DISABLED`.",
     })
     .errors(TODO_ERRORS)
     .input(updateListInputSchema)
@@ -44,7 +44,8 @@ export const listsContract = {
   members: oc
     .route({
       summary: "Personnes d'une liste",
-      description: "Liste perso : son propriétaire. Liste partagée : les membres de son Espace.",
+      description:
+        "Liste perso, même montrée à un Espace : son propriétaire. Liste partagée : les membres de son Espace.",
     })
     .input(listMembersInputSchema)
     .output(listMembersOutputSchema),

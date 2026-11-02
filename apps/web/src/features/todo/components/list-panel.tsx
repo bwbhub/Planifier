@@ -15,7 +15,7 @@ import { TaskForm } from "../forms/task-form";
 import { useDeleteList, useTasks } from "../queries/todo.queries";
 import { TINTS } from "../utils/list-tint";
 import { isSubtask, subtasksByParent } from "../utils/subtasks";
-import { ListViewProvider } from "../utils/list-view";
+import { ListViewProvider, useListView } from "../utils/list-view";
 import { useDimUnassigned } from "../utils/use-dim-unassigned";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { useTaskCompletion } from "../utils/use-task-completion";
@@ -26,7 +26,11 @@ function openCountLabel(count: number): string {
 }
 
 function listKindLabel(list: TodoListOutput, tintLabel: string): string {
-  return list.space === null ? `Liste perso · ${tintLabel}` : `Liste partagée · ${list.space.name}`;
+  if (list.space !== null) return `Liste partagée · ${list.space.name}`;
+  if (list.readOnlySpace === null) return `Liste perso · ${tintLabel}`;
+  return list.can.write
+    ? `Liste perso · Visible par ${list.readOnlySpace.name}`
+    : `Lecture seule · ${list.readOnlySpace.name}`;
 }
 
 interface TaskSectionsProps {
@@ -76,6 +80,7 @@ function TaskSections({ tasks, completion }: TaskSectionsProps) {
  */
 function TaskList({ listId }: { listId: string }) {
   const tasks = useTasks(listId);
+  const { readOnly } = useListView();
   const { completion, notice, error } = useTaskCompletion(listId);
   if (tasks.isPending) {
     return (
@@ -89,7 +94,11 @@ function TaskList({ listId }: { listId: string }) {
   }
   if (tasks.data.items.length === 0) {
     return (
-      <p className="text-muted">Aucune tâche dans cette liste. Ajoute la première ci-dessus.</p>
+      <p className="text-muted">
+        {readOnly
+          ? "Aucune tâche dans cette liste."
+          : "Aucune tâche dans cette liste. Ajoute la première ci-dessus."}
+      </p>
     );
   }
   return (
@@ -110,6 +119,31 @@ function TaskList({ listId }: { listId: string }) {
   );
 }
 
+interface ListActionsProps {
+  list: TodoListOutput;
+  onEdit: () => void;
+  onConfirmDelete: () => void;
+}
+
+/** Personnes de la liste, si elle ne reste pas privée, et gestes permis à l'appelant. */
+function ListActions({ list, onEdit, onConfirmDelete }: ListActionsProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {list.space === null && list.readOnlySpace === null ? null : <ListPeople listId={list.id} />}
+      {list.can.write ? (
+        <Button variant="surface" size="sm" onClick={onEdit}>
+          Modifier<span className="sr-only"> la liste</span>
+        </Button>
+      ) : null}
+      {list.can.delete ? (
+        <Button variant="surface" size="sm" onClick={onConfirmDelete}>
+          Supprimer<span className="sr-only"> la liste</span>
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 interface ListPanelProps {
   list: TodoListOutput;
   /** Après la suppression de la liste. */
@@ -123,7 +157,8 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
   const tint = TINTS[list.tint];
   const shared = list.space !== null;
   const dimming = useDimUnassigned(list.id, shared);
-  const view = { shared, isDimmed: dimming.isDimmed };
+  const readOnly = !list.can.write;
+  const view = { shared, readOnly, isDimmed: dimming.isDimmed };
 
   return (
     // Nommée par le nom de la liste, qu'on la lise ou qu'on la modifie (le titre disparaît en modification).
@@ -142,17 +177,7 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
               <h2 className="font-display text-2xl font-bold tracking-tight">{list.name}</h2>
               <p className="text-sm">{openCountLabel(list.openTaskCount)}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {list.space === null ? null : <ListPeople listId={list.id} />}
-              <Button variant="surface" size="sm" onClick={showEdit}>
-                Modifier<span className="sr-only"> la liste</span>
-              </Button>
-              {list.can.delete ? (
-                <Button variant="surface" size="sm" onClick={showConfirmDelete}>
-                  Supprimer<span className="sr-only"> la liste</span>
-                </Button>
-              ) : null}
-            </div>
+            <ListActions list={list} onEdit={showEdit} onConfirmDelete={showConfirmDelete} />
           </div>
         )}
         {dimming.available && mode === "view" ? (
@@ -178,12 +203,14 @@ export function ListPanel({ list, onDeleted }: ListPanelProps) {
         ) : null}
         {deleteList.isError ? <TodoErrorAlert error={deleteList.error} /> : null}
       </header>
-      <div className="rounded-card bg-surface p-5">
-        {/* Clé : un formulaire neuf par liste (rien de saisi ne passe d'une liste à l'autre). */}
-        <ListViewProvider value={view}>
-          <TaskForm key={list.id} listId={list.id} />
-        </ListViewProvider>
-      </div>
+      {readOnly ? null : (
+        <div className="rounded-card bg-surface p-5">
+          {/* Clé : un formulaire neuf par liste (rien de saisi ne passe d'une liste à l'autre). */}
+          <ListViewProvider value={view}>
+            <TaskForm key={list.id} listId={list.id} />
+          </ListViewProvider>
+        </div>
+      )}
       <ListViewProvider value={view}>
         <TaskList listId={list.id} />
       </ListViewProvider>

@@ -11,13 +11,15 @@ import { orpc } from "@/lib/orpc";
 /**
  * Invalidation centralisée du module : toute écriture sur un Espace relit les Espaces (liste, détail, liens). Quitter,
  * supprimer ou rejoindre ne relit que la liste : la page encore affichée le temps de partir (détail, aperçu
- * d'invitation) ne vaut plus pour l'appelant et ne doit pas se relire.
+ * d'invitation) ne vaut plus pour l'appelant et ne doit pas se relire. Un départ change aussi les listes visibles :
+ * `refreshTodo`.
  */
 function useSpacesCache() {
   const queryClient = useQueryClient();
   return {
     refresh: () => queryClient.invalidateQueries({ queryKey: orpc.spaces.key() }),
     refreshList: () => queryClient.invalidateQueries({ queryKey: orpc.spaces.space.list.key() }),
+    refreshTodo: () => queryClient.invalidateQueries({ queryKey: orpc.todo.key() }),
   };
 }
 
@@ -55,7 +57,7 @@ export function useDeleteSpace() {
   const cache = useSpacesCache();
   return useMutation(
     orpc.spaces.space.delete.mutationOptions({
-      onSuccess: () => cache.refreshList(),
+      onSuccess: () => Promise.all([cache.refreshList(), cache.refreshTodo()]),
     }),
   );
 }
@@ -64,7 +66,7 @@ export function useLeaveSpace() {
   const cache = useSpacesCache();
   return useMutation(
     orpc.spaces.space.leave.mutationOptions({
-      onSuccess: () => cache.refreshList(),
+      onSuccess: () => Promise.all([cache.refreshList(), cache.refreshTodo()]),
     }),
   );
 }
@@ -79,7 +81,9 @@ export function useSetMemberRole() {
 export function useRemoveMember() {
   const cache = useSpacesCache();
   return useMutation(
-    orpc.spaces.members.remove.mutationOptions({ onSuccess: () => cache.refresh() }),
+    orpc.spaces.members.remove.mutationOptions({
+      onSuccess: () => Promise.all([cache.refresh(), cache.refreshTodo()]),
+    }),
   );
 }
 

@@ -39,10 +39,10 @@ describe("todo : droits sur une liste partagée (base réelle)", () => {
     const list = await createSharedList();
     expect(list).toMatchObject({
       space: { id: spaceId, name: "Coloc" },
-      can: { delete: true, share: true },
+      can: { write: true, delete: true, share: true },
     });
     const { items } = await call(lists.list, {}, asUser(bob));
-    expect(items).toEqual([{ ...list, can: { delete: false, share: false } }]);
+    expect(items).toEqual([{ ...list, can: { write: true, delete: false, share: false } }]);
     await expect(call(lists.list, {}, asUser(carol))).resolves.toEqual({
       items: [],
       nextCursor: null,

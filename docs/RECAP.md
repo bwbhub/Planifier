@@ -18,6 +18,37 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-01 — Todo : liste perso en lecture seule (branche `feat/todo-partage-lecture`, tickets `869fhwtqr` / `869fhwtqz`)
+
+**Fait**
+
+- `todo_lists.read_only_space_id` (migration `20261101220000_listes_lecture_seule`, contrainte : un seul partage à la
+  fois) ; `readOnlySpaceId` en création et modification, `readOnlySpace` et `can.write` en sortie ; droit pur
+  `isReader` dans `canAccessTodoList`.
+- Quitter l'Espace (`deleteMembership`) rend privées pour de bon les listes que le partant y montrait ; choisir un
+  partage prend le verrou de l'Espace (`lockSpace`) : une sortie simultanée ne laisse pas de partage derrière.
+- `/code-review` (standards + spec) puis corrections : formulaires ouverts fermés quand les droits changent (clé de
+  `ListPanel`), message `FORBIDDEN`, `spaces` invalide `todo` au départ, « Cochée par » des autres effacé au passage en
+  lecture seule, `onValueChange` sur `ChoiceGroup`, types dérivés, ADR 0009 amendé.
+- Web : niveau « Ajouter et cocher » / « Seulement voir » sous « Partager avec » ; en lecture seule, coche désactivée,
+  ni ajout ni action ; seed : « Vacances » montrée à l'Espace d'Alice et Bob.
+- Tests : boucle `await` sur des promesses déjà lancées remplacée par `Promise.all` (rejections non gérées, y compris
+  dans `todo.integration.test.ts`).
+
+**Décisions** : avec qui ? Un Espace (choix de l'utilisateur, 2026-11-01) ; la liste reste perso (colonne à part de
+`spaceId`) : assignation, « Cochée par » et suppression par le propriétaire d'Espace ne la concernent pas.
+
+**Vérifié** (exécuté le 2026-11-01) : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `prettier --check` :
+OK ; `pnpm test:integration` : api 134/134, api-server 14/14, auth 1/1 ; `pnpm test:e2e` : 56/56 ; migration sans
+dérive ; seed lancé deux fois. Captures Playwright : lecteur en mobile clair et nuit, formulaire en mobile clair : OK.
+**Non vérifié** : formulaire de nuit, PC.
+
+**Ouvert** : `docs/SUITE.md` §4 (lecture seule) ; revue humaine des droits.
+
+**Attendu ensuite** : fusion de cette PR ; fermeture des tickets Todo (reste : liste d'événement) ; `docs/SUITE.md` §3.
+
+---
+
 ## 2026-11-01 — Todo : assignation (branche `feat/todo-assignation`, tickets `869fhwtqr` / `869fhwtqz`, en partie)
 
 **Fait**

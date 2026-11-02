@@ -15,7 +15,7 @@ const listNameSchema = z.string().trim().min(1).max(TODO_LIST_NAME_MAX_LENGTH);
 const tintSchema = z.enum(LIST_TINTS);
 
 /**
- * Mes listes et les listes partagées de mes Espaces. Chacun a au plus `TODO_MAX_LISTS` listes, mais le nombre
+ * Mes listes et celles que mes Espaces partagent ou voient en lecture seule. Chacun a au plus `TODO_MAX_LISTS` listes, mais le nombre
  * d'Espaces, et donc de listes visibles, n'est pas borné : d'où les pages.
  */
 export const listListsInputSchema = z.strictObject({
@@ -24,16 +24,34 @@ export const listListsInputSchema = z.strictObject({
   cursor: listIdSchema.optional(),
 });
 
-export const createListInputSchema = z.strictObject({
-  name: listNameSchema,
-  tint: tintSchema,
-  /** Liste partagée avec cet Espace (l'appelant en est membre, Todo y est activé). Absent : liste perso. */
-  spaceId: spaceIdSchema.optional(),
-});
+const ONE_SHARING_ERROR = "Une liste n'a qu'un partage à la fois.";
+
+/** Partage d'une liste : ses deux formes s'excluent. */
+function hasOneSharing({
+  spaceId,
+  readOnlySpaceId,
+}: {
+  spaceId?: string | null | undefined;
+  readOnlySpaceId?: string | null | undefined;
+}) {
+  return (spaceId ?? null) === null || (readOnlySpaceId ?? null) === null;
+}
+
+export const createListInputSchema = z
+  .strictObject({
+    name: listNameSchema,
+    tint: tintSchema,
+    /** Liste partagée avec cet Espace (l'appelant en est membre, Todo y est activé). Absent : liste perso. */
+    spaceId: spaceIdSchema.optional(),
+    /** Liste perso montrée à cet Espace, en lecture seule (mêmes conditions). */
+    readOnlySpaceId: spaceIdSchema.optional(),
+  })
+  .refine(hasOneSharing, ONE_SHARING_ERROR);
 
 /**
- * Réglages modifiés : au moins un ; `version` lue avec la liste (concurrence optimiste). `spaceId` (propriétaire
- * seulement) : rattacher la liste à un Espace ; `null` la rend perso.
+ * Réglages modifiés : au moins un ; `version` lue avec la liste (concurrence optimiste). Propriétaire seulement :
+ * `spaceId` rattache la liste à un Espace, `null` la rend perso ; `readOnlySpaceId` la rend perso et la montre à un
+ * Espace, `null` cesse de la montrer. Choisir un partage retire l'autre.
  */
 export const updateListInputSchema = z
   .strictObject({
@@ -42,13 +60,21 @@ export const updateListInputSchema = z
     name: listNameSchema.optional(),
     tint: tintSchema.optional(),
     spaceId: spaceIdSchema.nullable().optional(),
+    readOnlySpaceId: spaceIdSchema.nullable().optional(),
   })
   .refine(
-    ({ name, tint, spaceId }) => name !== undefined || tint !== undefined || spaceId !== undefined,
+    ({ name, tint, spaceId, readOnlySpaceId }) =>
+      name !== undefined ||
+      tint !== undefined ||
+      spaceId !== undefined ||
+      readOnlySpaceId !== undefined,
     "Aucun réglage à modifier.",
-  );
+  )
+  .refine(hasOneSharing, ONE_SHARING_ERROR);
 
 export const deleteListInputSchema = listTargetSchema;
+
+const listSpaceSchema = z.strictObject({ id: spaceIdSchema, name: z.string() });
 
 export const todoListSchema = z.strictObject({
   id: listIdSchema,
@@ -58,9 +84,13 @@ export const todoListSchema = z.strictObject({
   /** Tâches non cochées, sous-tâches non comprises. */
   openTaskCount: z.int(),
   /** Espace avec lequel la liste est partagée ; null : liste perso. */
-  space: z.strictObject({ id: spaceIdSchema, name: z.string() }).nullable(),
-  /** Droits de l'appelant au-delà de l'écriture, ouverte à quiconque voit la liste. */
+  space: listSpaceSchema.nullable(),
+  /** Espace qui voit la liste perso en lecture seule ; null : privée, ou liste partagée. */
+  readOnlySpace: listSpaceSchema.nullable(),
+  /** Droits de l'appelant, au-delà de la lecture. */
   can: z.strictObject({
+    /** Modifier la liste et ses tâches : tout membre d'une liste partagée ; liste perso, son propriétaire seul. */
+    write: z.boolean(),
     /** Supprimer la liste : son propriétaire, ou un propriétaire de son Espace. */
     delete: z.boolean(),
     /** Changer d'Espace ou la rendre perso : son propriétaire seulement. */
@@ -77,7 +107,7 @@ export const listListsOutputSchema = z.strictObject({
 
 export const listMembersInputSchema = listTargetSchema;
 
-/** Personnes qui ont accès à la liste : liste perso, son propriétaire ; liste partagée, les membres de son Espace. */
+/** Personnes de la liste : liste perso, même montrée à un Espace, son propriétaire ; liste partagée, les membres. */
 export const listMembersOutputSchema = z.strictObject({
   items: z.array(personSchema).max(SPACE_MAX_MEMBERS + 1),
   /** L'appelant, pour distinguer ce qui lui est assigné. */

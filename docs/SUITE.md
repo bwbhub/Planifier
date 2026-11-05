@@ -8,24 +8,26 @@
 - **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
   puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
   sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
-- Revue humaine : droits des listes (voir §4 : listes partagées, assignation, lecture seule).
+- Revue humaine : droits des listes et de l'agenda (voir §4).
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 
 ## 2. Prochain ticket
 
-Todo terminé hors liste d'événement (avec le module Événements). Suite : §3.
+Agenda (`feat/agenda-modele`, empilée sur `feat/todo-partage-lecture`) : modèle, droits, API, écran Jour, Semaine, Mois
+et vue fusionnée faits ; ni commit ni PR. Ensuite : Aujourd'hui (`869fhwtu9`), iCal (`869fjgrcc`, `869fhwtup`).
+Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
 
 ## 3. Ensuite
 
-1. Changement d'e-mail (`869fmk5dw`). Gabarit d'invitation (ancien
-   `emailService`) : avec le module Événements.
-2. Jobs planifiés (`869fjgrcd`) : plan « jobs » dans `api` (secret partagé).
-3. Docker (`869fhwtcc`) : image `apps/api` (`node --import tsx`), image web (serveur autonome, statiques copiés ; E2E à rejouer dessus). Vérifier si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit contournable).
-4. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
+1. Module Événements, avec la liste d'événement (fin du Todo). Gabarit d'invitation (ancien `emailService`) : avec lui.
+2. Hors PR : hash des jetons d'invitation, service de suppression de compte (`owner_left_at`).
+3. Pas prévu à court terme (décision du 2026-11-02) : jobs planifiés (`869fjgrcd`), Docker (`869fhwtcc`). Sans cron,
+   rappels, relances, notification de présence et rafraîchissement iCal n'ont rien pour se déclencher. Docker : vérifier
+   si Next garde un `x-forwarded-for` envoyé par le navigateur (IP choisie par le client ⇒ limitation de débit
+   contournable).
 
 ## 4. Questions ouvertes pour l'utilisateur
 
-- Ticket `869fhwtbz` : texte de mise à jour dans `newContext/tickets-a-creer/03-maj-ticket-organisation-apps-web.md`.
 - `newContext/Decisions techniques.md` : supprimer ?
 - Granularité de la visibilité d'Espace ; suppression par le propriétaire d'Espace limitée à ce qu'il voit : à confirmer.
 - Hébergeur : son relais ajoute-t-il `x-forwarded-for` (fiabilité de l'IP, ADR 0016) ?
@@ -87,6 +89,31 @@ Todo terminé hors liste d'événement (avec le module Événements). Suite : §
   - Passer en lecture seule efface « Cochée par » des autres sur la liste (les lecteurs ne sont pas forcément ceux qui
     ont coché) ; revenir en partagée ne le rend pas.
   - Revue humaine (droits) : `canAccessTodoList` (`isReader`), `visibleTo`, `nextSharing`, `deleteMembership`.
+
+- **Agenda (branche `feat/agenda-modele`), à trancher** : choix pris d'après la maquette nuit, à confirmer.
+  - **Glisser-déposer** (bouger une entrée sur PC) : demandé le 2026-11-02 « comme prévu », aucune trace dans les
+    tickets, `CONTEXT`, ADR, maquette ni code. À décider : si oui, `update` existant (`when` + `version`), PC seulement,
+    bouton ou formulaire gardé pour le clavier et le mobile ; dépendance éventuelle avec fiche.
+  - **Vie privée** (accepté par l'utilisateur le 2026-11-02) : un Espace avec Agenda voit titre, horaire et lieu de toutes
+    tes entrées non masquées, passées comprises ; jamais la description.
+  - Couleur : teinte de l'entrée dans mon agenda, teinte de la personne dans la vue fusionnée (maquette). La maquette
+    a aussi une teinte pour les entrées communes (`t-couple`) et les événements (`t-trip`) : à venir avec eux.
+  - **Écarts à la maquette** :
+    - pas de participants sur une entrée (Marie, Léo n'y sont pas membres) : texte libre retenu si « 2. oui » du
+      2026-11-02 valait aussi pour ça, à confirmer ; pas construit ;
+    - filtres par personne : pastilles pleine taille sur mobile, pas les pastilles compactes de la ligne de bascule ;
+    - ajout non demandé : entrée masquée en pointillés dans mon agenda, gardé pour que ça se voie ;
+    - pas de « Peut-être », ni d'événements dans les filtres (« Anniversaire de Léo ») : module Événements ;
+    - pas de vignette ; barre latérale et barre mobile absentes (`869fhwtg4`), en-tête provisoire sur deux lignes ;
+    - choix de l'Espace ajouté (« Mon agenda », « Alice & Bob ») : la maquette ne montre qu'un groupe de personnes.
+  - **Sans maquette, faits au plus simple** : vue Mois, formulaire d'entrée, entrées à la journée, version claire.
+  - Sur mobile, la vue Semaine est très serrée (7 colonnes) ; la vue par défaut y est Jour.
+  - Une entrée masquée disparaît aussi de la vue fusionnée pour son propriétaire (elle reste dans son agenda) ; masquer
+    vaut pour tous les Espaces. Espace qui restreint sa visibilité : la vue fusionnée ne montre que ses propres entrées.
+  - Quatre teintes pour toutes les personnes (`tintOf`) : deux membres peuvent se confondre, le nom et l'avatar tranchent.
+  - Lier un créneau à une tâche : API faite, pas de champ à l'écran. Pas de récurrence sur les entrées.
+  - Limites : 5 000 entrées par personne, 366 jours par entrée, 62 jours lus à la fois.
+  - Revue humaine (droits) : `domain-access/agenda.ts`, `agenda-guard.ts`, `listSpaceEntries`, `assertReadableTask`.
 
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à

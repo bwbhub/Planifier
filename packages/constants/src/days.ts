@@ -10,7 +10,7 @@ export function utcDateToDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-const MS_PER_DAY = 86_400_000;
+export const MS_PER_DAY = 86_400_000;
 
 /** `days` jours après `day` (négatif : avant). */
 export function addDays(day: string, days: number): string {

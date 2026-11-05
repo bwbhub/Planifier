@@ -15,7 +15,7 @@ import { useFormValidation } from "@/features/_shared/forms/use-form-validation"
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { useCreateList, useSharingSpaces, useUpdateList } from "../queries/todo.queries";
-import { TINT_OPTIONS } from "../utils/list-tint";
+import { TINT_OPTIONS } from "@/features/_shared/utils/tints";
 import {
   PERSONAL,
   sharedSpace,

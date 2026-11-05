@@ -13,7 +13,7 @@ import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { ListForm } from "../forms/list-form";
 import { TaskForm } from "../forms/task-form";
 import { useDeleteList, useTasks } from "../queries/todo.queries";
-import { TINTS } from "../utils/list-tint";
+import { TINTS } from "@/features/_shared/utils/tints";
 import { isSubtask, subtasksByParent } from "../utils/subtasks";
 import { ListViewProvider, useListView } from "../utils/list-view";
 import { useDimUnassigned } from "../utils/use-dim-unassigned";

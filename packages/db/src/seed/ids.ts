@@ -29,6 +29,10 @@ export const SEED_IDS = {
   subtaskFruit: "00000000-0000-7000-8000-000000000085",
   taskRent: "00000000-0000-7000-8000-000000000086",
   taskDishes: "00000000-0000-7000-8000-000000000087",
+  entryDentist: "00000000-0000-7000-8000-000000000090",
+  entrySurprise: "00000000-0000-7000-8000-000000000091",
+  entryWeekend: "00000000-0000-7000-8000-000000000092",
+  entryMeeting: "00000000-0000-7000-8000-000000000093",
 } as const;
 
 /** Modules activés pour les comptes et l'Espace de démo. */

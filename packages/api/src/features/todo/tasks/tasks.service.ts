@@ -16,7 +16,7 @@ import { canBeAssigned } from "@planifier/domain-access/todo-list";
 import { nextDueDate, seriesAnchor } from "@planifier/domain-recurrence";
 import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recurrence/stored";
 
-import { spaceMemberIds, toPerson } from "../list-access";
+import { spaceMemberIds, toPerson } from "../../_shared/list-access";
 import { todoConflict } from "../todo-errors";
 
 const TASK_SELECT = {

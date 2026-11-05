@@ -1,6 +1,7 @@
 import type { ContractRouterClient } from "@orpc/contract";
 
 import { meContract } from "./features/account/me/me.contract";
+import { entriesContract } from "./features/agenda/entries/entries.contract";
 import { invitesContract } from "./features/spaces/invites/invites.contract";
 import { membersContract } from "./features/spaces/members/members.contract";
 import { spaceContract } from "./features/spaces/space/space.contract";
@@ -14,6 +15,7 @@ export const contract = {
   account: { me: meContract },
   spaces: { space: spaceContract, members: membersContract, invites: invitesContract },
   todo: { lists: listsContract, tasks: tasksContract },
+  agenda: { entries: entriesContract },
 };
 
 /** Client typé de l'API, dérivé du contrat. */
@@ -22,6 +24,27 @@ export type ApiClient = ContractRouterClient<typeof contract>;
 export { PAGE_MAX_LIMIT } from "./features/_shared/page.schemas";
 export type { HealthOutput } from "./features/system/health/health.schemas";
 export type { MeOutput } from "./features/account/me/me.schemas";
+export {
+  AGENDA_CONFLICT_REASONS,
+  type AgendaConflictReason,
+  agendaConflictDataSchema,
+} from "./features/agenda/agenda.schemas";
+export {
+  createEntryInputSchema,
+  updateEntryInputSchema,
+} from "./features/agenda/entries/entries.schemas";
+export type {
+  AgendaEntryOutput,
+  AgendaWhen,
+  CreateEntryInput,
+  EntriesWindow,
+  ListEntriesInput,
+  ListEntriesOutput,
+  ListSpaceEntriesInput,
+  ListSpaceEntriesOutput,
+  SpaceEntryOutput,
+  UpdateEntryInput,
+} from "./features/agenda/entries/entries.schemas";
 export {
   type CreatedInviteOutput,
   type InvitePreviewOutput,

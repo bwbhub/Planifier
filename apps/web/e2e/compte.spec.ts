@@ -54,6 +54,27 @@ async function createListAndCheckTask(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
+/** Sur l'Agenda : ajoute une entrée, la retrouve après rechargement, la modifie, puis la supprime. */
+async function addEditThenDeleteEntry(page: Page) {
+  await page.getByRole("button", { name: "+ Nouvelle entrée" }).click();
+  await page.getByLabel("Titre").fill("Dentiste");
+  await page.getByLabel("Lieu").fill("Cabinet");
+  await page.getByRole("button", { name: "Ajouter" }).click();
+  const entry = page.getByRole("button", { name: /^Dentiste, 09:00 – 10:00/ });
+  await expect(entry).toBeVisible();
+  await page.reload();
+  await entry.click();
+  await page.getByLabel("Titre").fill("Dentiste Martin");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  const renamed = page.getByRole("button", { name: /^Dentiste Martin/ });
+  await expect(renamed).toBeVisible();
+  await renamed.click();
+  await page.getByRole("button", { name: "Supprimer" }).click();
+  await page.getByRole("button", { name: "Supprimer l'entrée" }).click();
+  await expect(renamed).toHaveCount(0);
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+}
+
 /** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
   // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
@@ -168,6 +189,12 @@ test.describe.serial("parcours d'un compte", () => {
     await page.context().addCookies(session);
     await page.goto("/todo");
     await editThenDeleteTaskAndList(page);
+  });
+
+  test("ajoute, modifie puis supprime une entrée quand on ouvre l'Agenda", async ({ page }) => {
+    await page.context().addCookies(session);
+    await page.goto("/agenda?vue=jour&jour=2030-06-12");
+    await addEditThenDeleteEntry(page);
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {

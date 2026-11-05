@@ -12,13 +12,6 @@ const DAY_MONTH_YEAR = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "UTC",
 });
 
-/** Aujourd'hui, jour `AAAA-MM-JJ` de l'appareil (le jour que l'utilisateur vit, pas celui d'UTC). */
-export function today(now: Date = new Date()): string {
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${String(now.getFullYear())}-${month}-${day}`;
-}
-
 /** Jour en toutes lettres (« 5 novembre ») ; l'année n'apparaît que si ce n'est pas celle de `todayDay`. */
 export function formatDueDate(day: string, todayDay: string): string {
   const sameYear = day.slice(0, 4) === todayDay.slice(0, 4);

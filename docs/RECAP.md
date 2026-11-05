@@ -18,6 +18,44 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-02 — Agenda : modèle, droits, API, logique pure (branche `feat/agenda-modele`, ticket `869fhwtrn`)
+
+**Fait**
+
+- ClickUp recalé sur le code : 5 tickets fermés, 11 passés « in progress ».
+- `agenda_entries` (migration `20261102120000_agenda_entrees`, contraintes : horaire ou à la journée, source + UID) ;
+  procédures `agenda.entries` : `list`, `listInSpace`, `create`, `update`, `delete`.
+- Droits purs `domain-access/agenda.ts` (`canAccessAgendaEntry`, `spaceAgendaScope`), garde `entryGuard`.
+- Nouveau package pur `@planifier/domain-agenda` : jours affichés, pas de navigation, colonnes de chevauchement.
+- `list-access.ts` déplacé dans `api/features/_shared` : l'agenda s'en sert pour lier une tâche sans importer `todo`.
+- Seed : entrées d'Alice et Bob. Glossaire, `project-context`, `SUITE`.
+
+**Décisions** : un agenda par personne, sans rattachement à un Espace : la vue fusionnée se calcule, rien à nettoyer au
+départ d'un membre. Horaire et à la journée séparés : un jour entier ne doit pas glisser avec le fuseau. Liste des
+choix à confirmer : `SUITE` §4. Empilée sur `feat/todo-partage-lecture`, non fusionnée.
+
+- Écran `/agenda` d'après la maquette nuit (Jour mobile, Semaine PC) : vues Jour, Semaine, Mois, filtres par personne,
+  choix de l'Espace, formulaire d'entrée. La vue fusionnée ne rend plus ni description ni teinte (données minimales).
+
+- `/code-review` (Standards, Spec) corrigée : position à l'heure d'horloge le jour du changement d'heure, filtre remis
+  à zéro entre Espaces, case du Mois en lien unique vers le jour, Espace restreint sans pastilles, dates des entrées sur
+  plusieurs jours, créneau de fin de soirée, erreurs de lecture montrées, état vide, « N créneaux ». Bornes d'écriture
+  retirées des sorties. Mis en commun avec Todo et Espaces : teintes, `today`, message d'erreur, `toPage`, `personSchema`.
+  Message « trop de demandes » des Espaces aligné sur « trop d'actions ».
+
+**Laissé volontairement** : un `uuid` par module de contrat (isolation) ; `sharesAgendaSpace` réécrit la règle de
+`spaceAgendaScope` en Prisma ; `hiddenPeople` hors adresse ; `opacity-60/75` non mesuré ; `source`/`sourceUid` sans
+usage (exigés par le ticket).
+
+**Vérifié** : `check-types`, `lint`, `test`, `build`, `format --check` OK ; web 224/224 ; `test:integration` api 157/157,
+api-server 14/14, auth 1/1 ; `test:e2e` 58/58 ; migration sans dérive (base test) ; seed lancé deux fois. Captures
+Playwright relues : Semaine PC clair et nuit, Jour mobile nuit, Semaine mobile clair, Mois PC nuit, sans débordement ;
+après revue : Mois PC et Jour mobile nuit. Formulaire et survol vus seulement par les tests, pas à l'œil.
+
+**Ouvert** : commit local, ni push ni PR. Revue humaine droits. Glisser-déposer et écarts : `SUITE` §4.
+
+**Attendu ensuite** : fusion de #26, relecture à l'œil et des droits, décision sur le glisser-déposer, push sur demande.
+
 ## 2026-11-01 — Todo : liste perso en lecture seule (branche `feat/todo-partage-lecture`, tickets `869fhwtqr` / `869fhwtqz`)
 
 **Fait**

@@ -11,6 +11,7 @@ import type { SpaceRole } from "@planifier/constants/spaces";
 import type { Db } from "@planifier/db";
 import { departureOutcome, roleOfNewMember } from "@planifier/domain-access/space";
 
+import { toPage } from "../../_shared/page";
 import { spaceConflict } from "../space-errors";
 import { deleteMembership, lockSpace, membershipOf } from "../space-lock";
 import { MEMBER_SELECT, toMemberOutput } from "../space-member";
@@ -55,17 +56,13 @@ export async function listSpaces(
       },
     },
   });
-  const page = rows.slice(0, limit);
-  return {
-    items: page.map(({ role, space }) => ({
-      id: space.id,
-      name: space.name,
-      modules: space.modules,
-      myRole: role,
-      memberCount: space._count.members,
-    })),
-    nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
-  };
+  return toPage(rows, limit, ({ role, space }) => ({
+    id: space.id,
+    name: space.name,
+    modules: space.modules,
+    myRole: role,
+    memberCount: space._count.members,
+  }));
 }
 
 export async function getSpace(

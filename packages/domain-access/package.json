@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "sideEffects": false,
   "exports": {
+    "./agenda": "./src/agenda.ts",
     "./resource": "./src/resource.ts",
     "./event": "./src/event.ts",
     "./space": "./src/space.ts",

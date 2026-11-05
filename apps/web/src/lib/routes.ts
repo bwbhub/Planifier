@@ -9,6 +9,7 @@ export const ROUTES = {
   resetPassword: AUTH_PAGES.resetPassword,
   profile: "/profil",
   todo: "/todo",
+  agenda: "/agenda",
   spaces: "/espaces",
   newSpace: "/espaces/nouveau",
   /** Lien d'invitation à un Espace : le jeton suit dans le fragment (`#…`), jamais envoyé au serveur. */

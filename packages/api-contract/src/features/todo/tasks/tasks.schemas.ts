@@ -5,10 +5,10 @@ import {
 } from "@planifier/constants/todo";
 import { z } from "zod";
 
+import { personSchema } from "../../_shared/person.schemas";
 import {
   listIdSchema,
   listTargetSchema,
-  personSchema,
   recurrenceSchema,
   taskIdSchema,
   taskTargetSchema,

@@ -1,6 +1,7 @@
-import { ORPCError } from "@orpc/client";
 import { todoConflictDataSchema, type TodoConflictReason } from "@planifier/api-contract";
 import { TODO_LIST_MAX_TASKS, TODO_MAX_LISTS } from "@planifier/constants/todo";
+
+import { actionErrorMessage } from "@/features/_shared/utils/action-error-message";
 
 const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   STALE_VERSION:
@@ -15,21 +16,13 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
     "Cette personne n'est plus dans l'Espace. Recharge la page et choisis quelqu'un d'autre.",
 };
 
-const FALLBACK = "Quelque chose n'a pas fonctionné, rien n'est perdu. Réessaie dans un instant.";
-
-/** Message à montrer après un refus d'une action Todo : rassurant, avec quoi faire ensuite. */
+/** Message à montrer après un refus d'une action Todo. */
 export function todoErrorMessage(error: unknown): string {
-  if (!(error instanceof ORPCError)) return FALLBACK;
-  if (error.code === "CONFLICT") {
-    const data = todoConflictDataSchema.safeParse(error.data);
-    return data.success ? CONFLICT_MESSAGES[data.data.reason] : FALLBACK;
-  }
-  if (error.code === "NOT_FOUND") return "Cet élément n'existe plus. Recharge la page.";
-  if (error.code === "FORBIDDEN") {
-    return "Tu n'as pas le droit de faire ça sur cette liste. Recharge la page pour voir ce qui a changé.";
-  }
-  if (error.code === "TOO_MANY_REQUESTS") {
-    return "Trop d'actions d'affilée. Patiente quelques secondes, puis réessaie.";
-  }
-  return FALLBACK;
+  return actionErrorMessage(error, {
+    conflictData: todoConflictDataSchema,
+    conflicts: CONFLICT_MESSAGES,
+    notFound: "Cet élément n'existe plus. Recharge la page.",
+    forbidden:
+      "Tu n'as pas le droit de faire ça sur cette liste. Recharge la page pour voir ce qui a changé.",
+  });
 }

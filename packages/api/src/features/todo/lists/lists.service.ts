@@ -12,7 +12,8 @@ import { isListTint, TODO_MAX_LISTS } from "@planifier/constants/todo";
 import type { Db, DbTransaction, Prisma } from "@planifier/db";
 
 import { lockSpace } from "../../spaces/space-lock";
-import { listAccessSelect, toListAccess, toPerson } from "../list-access";
+import { listAccessSelect, toListAccess, toPerson } from "../../_shared/list-access";
+import { toPage } from "../../_shared/page";
 import { todoConflict } from "../todo-errors";
 
 function listSelect(userId: string) {
@@ -76,11 +77,7 @@ export async function listLists(
     take: limit + 1,
     select: listSelect(userId),
   });
-  const page = rows.slice(0, limit);
-  return {
-    items: page.map((row) => toListOutput(userId, row)),
-    nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
-  };
+  return toPage(rows, limit, (row) => toListOutput(userId, row));
 }
 
 /**

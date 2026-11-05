@@ -21,7 +21,7 @@ function ControlledSegments() {
   return (
     <SegmentedControl
       label="Vue"
-      name="view"
+
       options={VIEWS}
       value={value}
       onValueChange={setValue}

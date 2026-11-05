@@ -96,7 +96,7 @@ export function UiShowcase() {
       <Section title="Contrôle segmenté">
         <SegmentedControl
           label="Vue"
-          name="demo-view"
+
           options={VIEWS}
           value={view}
           onValueChange={setView}

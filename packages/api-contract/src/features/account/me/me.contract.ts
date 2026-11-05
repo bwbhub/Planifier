@@ -1,6 +1,11 @@
 import { oc } from "@orpc/contract";
 
-import { meInputSchema, meOutputSchema } from "./me.schemas";
+import {
+  meInputSchema,
+  meOutputSchema,
+  setModulesInputSchema,
+  setModulesOutputSchema,
+} from "./me.schemas";
 
 export const meContract = {
   get: oc
@@ -10,4 +15,12 @@ export const meContract = {
     })
     .input(meInputSchema)
     .output(meOutputSchema),
+  setModules: oc
+    .route({
+      summary: "Modules activés",
+      description:
+        "Remplace les modules de l'espace personnel de l'utilisateur de la session. Sans session : UNAUTHORIZED.",
+    })
+    .input(setModulesInputSchema)
+    .output(setModulesOutputSchema),
 };

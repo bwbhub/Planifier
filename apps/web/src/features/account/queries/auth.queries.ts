@@ -15,6 +15,8 @@ import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+import { orpc } from "@/lib/orpc";
+
 import { AuthRequestError } from "../utils/auth-request-error";
 
 /**
@@ -106,4 +108,16 @@ export function useChangePassword() {
   return useMutation({
     mutationFn: (input: ChangePasswordInput) => postAuth(AUTH_ROUTES.changePassword, input),
   });
+}
+
+/** Modules de l'espace personnel : la navigation est rendue par le serveur, il la relit. */
+export function useSetModules() {
+  const router = useRouter();
+  return useMutation(
+    orpc.account.me.setModules.mutationOptions({
+      onSuccess: () => {
+        router.refresh();
+      },
+    }),
+  );
 }

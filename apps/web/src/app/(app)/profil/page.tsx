@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { getCurrentUser, PasswordForm, ProfileForm } from "@/features/account";
+import { getCurrentUser, ModulesForm, PasswordForm, ProfileForm } from "@/features/account";
 import { ROUTES } from "@/lib/routes";
 import { pageTitle } from "@/lib/labels";
 
@@ -22,6 +22,15 @@ export default async function ProfilePage() {
           Nom et thème
         </h2>
         <ProfileForm name={user.name} preferredTheme={user.preferredTheme} />
+      </section>
+      <section
+        aria-labelledby="profil-modules"
+        className="rounded-card bg-surface px-6 py-8 sm:px-8"
+      >
+        <h2 id="profil-modules" className="mb-4 font-display text-xl font-bold">
+          Modules
+        </h2>
+        <ModulesForm modules={user.modules} />
       </section>
       <section aria-labelledby="profil-mdp" className="rounded-card bg-surface px-6 py-8 sm:px-8">
         <h2 id="profil-mdp" className="mb-4 font-display text-xl font-bold">

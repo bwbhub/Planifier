@@ -1,16 +1,11 @@
 import { MODULES, SPACE_MAX_MEMBERS, SPACE_NAME_MAX_LENGTH } from "@planifier/constants/spaces";
 import { z } from "zod";
 
+import { modulesSchema } from "../../_shared/modules.schemas";
 import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
 import { spaceIdSchema, spaceRoleSchema, spaceTargetSchema, userIdSchema } from "../spaces.schemas";
 
 const spaceNameSchema = z.string().trim().min(1).max(SPACE_NAME_MAX_LENGTH);
-
-/** Modules activés pour l'Espace : liste fermée, sans doublon. */
-const modulesSchema = z
-  .array(z.enum(MODULES))
-  .max(MODULES.length)
-  .refine((modules) => new Set(modules).size === modules.length, "Module en double.");
 
 const LIST_DEFAULT_LIMIT = 50;
 

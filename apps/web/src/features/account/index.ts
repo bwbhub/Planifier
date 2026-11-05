@@ -4,6 +4,7 @@ export { ReturnNotice } from "./atoms/return-notice";
 export { AuthShell } from "./components/auth-shell";
 export { SignOutButton } from "./components/sign-out-button";
 export { ForgotPasswordForm } from "./forms/forgot-password-form";
+export { ModulesForm } from "./forms/modules-form";
 export { PasswordForm } from "./forms/password-form";
 export { ProfileForm } from "./forms/profile-form";
 export { ResetPasswordForm } from "./forms/reset-password-form";

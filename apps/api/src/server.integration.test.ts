@@ -279,11 +279,23 @@ describe("profil (base réelle)", () => {
   const email = PROFILE_EMAIL;
   const signedUp = signedUpProfile;
 
+  it("garde les modules choisis et refuse un doublon", async () => {
+    const session = await signedUp("192.0.2.67");
+    const client = clientWith(session);
+    await expect(client.account.me.setModules({ modules: ["AGENDA"] })).resolves.toEqual({
+      modules: ["AGENDA"],
+    });
+    await expect(client.account.me.get({})).resolves.toMatchObject({ modules: ["AGENDA"] });
+    await expect(client.account.me.setModules({ modules: [] })).resolves.toEqual({ modules: [] });
+    await expect(client.account.me.setModules({ modules: ["AGENDA", "AGENDA"] })).rejects.toThrow();
+  });
+
   it("suit le thème de l'appareil par défaut, puis enregistre le nom et le thème choisis", async () => {
     const session = await signedUp("192.0.2.60");
-    await expect(clientWith(session).account.me.get({})).resolves.toMatchObject({
-      preferredTheme: "SYSTEM",
-    });
+    // Liste blanche : exactement les champs du contrat, jamais le modèle complet.
+    const me = await clientWith(session).account.me.get({});
+    expect(Object.keys(me).sort()).toEqual(["email", "id", "modules", "name", "preferredTheme"]);
+    expect(me).toMatchObject({ preferredTheme: "SYSTEM", modules: ["TODO", "AGENDA", "EVENTS"] });
 
     const update = await authPost(
       AUTH_ROUTES.updateUser,

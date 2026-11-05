@@ -1,10 +1,11 @@
+import { useId } from "react";
+
 import { cn } from "../lib/cn";
 import type { ChoiceOption } from "./choice-group";
 
 export interface SegmentedControlProps<TValue extends string> {
   /** Nom du groupe pour les lecteurs d'écran (ex. « Vue »). */
   label: string;
-  name: string;
   options: readonly ChoiceOption<TValue>[];
   value: TValue;
   onValueChange: (value: TValue) => void;
@@ -17,12 +18,12 @@ export interface SegmentedControlProps<TValue extends string> {
  */
 export function SegmentedControl<TValue extends string>({
   label,
-  name,
   options,
   value,
   onValueChange,
   className,
 }: SegmentedControlProps<TValue>) {
+  const name = useId();
   return (
     <div
       role="radiogroup"

@@ -113,8 +113,8 @@ model User {
   /// @pii identité durée-du-compte
   avatarUrl      String?         @map("avatar_url")
   preferredTheme ThemePreference @default(SYSTEM) @map("preferred_theme")
-  /// Modules activés par cet utilisateur pour son espace personnel.
-  modules        AppModule[]     @default([])
+  /// Modules activés par cet utilisateur pour son espace personnel (tous, à l'inscription ; il en retire).
+  modules        AppModule[]     @default([TODO, AGENDA, EVENTS])
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 

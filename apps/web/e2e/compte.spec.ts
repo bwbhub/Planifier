@@ -170,6 +170,25 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("button", { name: "Créer ma première liste" })).toBeVisible();
 }
 
+/** Éteint puis rallume le module Agenda dans le profil : la navigation le retire, puis le rend. */
+async function toggleAgendaModule(page: Page, session: Cookie[]) {
+  await page.context().addCookies(session);
+  await page.goto("/profil");
+  const modules = page.getByRole("navigation", { name: "Modules" });
+  await expect(modules.getByRole("link", { name: "Agenda" })).toBeVisible();
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+
+  const agenda = page.getByRole("switch", { name: "Agenda" });
+  await agenda.uncheck();
+  await page.getByRole("button", { name: "Enregistrer" }).last().click();
+  await expect(modules.getByRole("link", { name: "Agenda" })).toBeHidden();
+  await expect(modules.getByRole("link", { name: "Todo" })).toBeVisible();
+
+  await agenda.check();
+  await page.getByRole("button", { name: "Enregistrer" }).last().click();
+  await expect(modules.getByRole("link", { name: "Agenda" })).toBeVisible();
+}
+
 /**
  * Parcours d'un même compte, dans l'ordre, la session et les e-mails passant d'un test à l'autre. La limitation de
  * débit de Better Auth (par IP et par route : 3 connexions sur 10 s, 3 demandes de lien sur 60 s) refuserait un
@@ -229,6 +248,10 @@ test.describe.serial("parcours d'un compte", () => {
     await page.context().addCookies(session);
     await page.goto("/agenda?vue=jour&jour=2030-06-12");
     await addMoveEditThenDeleteEntry(page, "2030-06-12");
+  });
+
+  test("retire un module de la navigation quand on l'éteint", async ({ page }) => {
+    await toggleAgendaModule(page, session);
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {

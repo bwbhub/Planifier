@@ -22,6 +22,22 @@ export interface TabsProps<TValue extends string> {
   className?: string | undefined;
 }
 
+/** Onglet visé par une touche (flèches en bouclant, Début, Fin), ou `null` pour toute autre touche. */
+function targetIndex(key: string, index: number, last: number): number | null {
+  switch (key) {
+    case "ArrowRight":
+      return index === last ? 0 : index + 1;
+    case "ArrowLeft":
+      return index === 0 ? last : index - 1;
+    case "Home":
+      return 0;
+    case "End":
+      return last;
+    default:
+      return null;
+  }
+}
+
 /**
  * Onglets qui changent le contenu d'un même écran (modèle ARIA « tabs ») : une seule tabulation sur la liste,
  * flèches, Début et Fin pour passer d'un onglet à l'autre, l'onglet s'ouvre au focus. Pour des pages distinctes
@@ -45,15 +61,8 @@ export function Tabs<TValue extends string>({
   }
 
   function onKeyDown(event: KeyboardEvent, index: number) {
-    const last = tabs.length - 1;
-    const target: Record<string, number> = {
-      ArrowRight: index === last ? 0 : index + 1,
-      ArrowLeft: index === 0 ? last : index - 1,
-      Home: 0,
-      End: last,
-    };
-    const to = target[event.key];
-    if (to === undefined) return;
+    const to = targetIndex(event.key, index, tabs.length - 1);
+    if (to === null) return;
     event.preventDefault();
     select(tabs[to]);
   }
@@ -89,9 +98,11 @@ export function Tabs<TValue extends string>({
               )}
             >
               {tab.label}
-              {/* Espace lu par les lecteurs d'écran (« Courses 3 »), sans effet à l'écran (flex + gap). */}{" "}
               {tab.count === undefined || tab.count === 0 ? null : (
-                <span className="text-sm opacity-80">{tab.count}</span>
+                <>
+                  {/* Espace lu par les lecteurs d'écran (« Courses 3 »), sans effet à l'écran (flex + gap). */}{" "}
+                  <span className="text-sm opacity-80">{tab.count}</span>
+                </>
               )}
             </button>
           );

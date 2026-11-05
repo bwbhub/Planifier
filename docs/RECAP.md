@@ -18,6 +18,37 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-05 — Composants de base et navigation par modules (branches `feat/ui-composants-base` puis `feat/navigation-modules`, empilées)
+
+**Fait**
+
+- `packages/ui` : `Switch` (case native `role="switch"`), `Tabs` (ARIA, flèches, Début/Fin), `SegmentedControl`, `Badge`, état `loading` du `Button`. `RolePill` s'appuie sur `Badge`. Page `/composants` (derrière la connexion) : chaque composant dans ses états.
+- Modules de l'utilisateur : `User.modules` exposé (`account.me.get` rend `modules`, nouvelle procédure `account.me.setModules`), défaut = tous les modules (migration `20261105230000_modules_utilisateur`, comptes existants à liste vide remplis). Réglage « Modules » dans le profil.
+- Navigation : `AppShell` remplace `AppHeader`. PC : panneau latéral (logo, modules, Espaces, Profil). Mobile : en-tête (logo, Espaces, Profil) et barre basse des modules. Filtrée par les modules activés ; seulement les pages qui existent (Todo, Agenda).
+
+**Décisions**
+
+- Défaut « tous les modules » plutôt que `[]` : l'onboarding (`869fp54d7`) pourra proposer le choix. Tranché avec l'utilisateur le 2026-11-05.
+- Pas d'entrée Aujourd'hui, Événements, Notifications tant que leur écran n'existe pas (pas de lien vers un 404).
+- `me.get` lit `modules` en base (la session Better Auth ne les porte pas) ; le test unitaire de liste blanche est passé dans le test d'intégration.
+
+**Vérifié** : `check-types`, `lint`, `test`, `build`, `prettier --check` ; `test:integration` (api 159, api-server 15) ; `test:e2e` 60/60 (dont retrait/retour du module Agenda dans la navigation, sans débordement horizontal). Migration appliquée sur `planifier_test`.
+
+**Ouvert**
+
+- **Non fait du ticket `869fhwtg4`** : bouton « + » (tâche / entrée / événement), pastille de non-lus (attend l'API de notifications `869fhwtka`), carte (`Card`) en composant `ui`, entrées Aujourd'hui / Événements / Notifications.
+- Pas vu à l'œil : thèmes clair et nuit, barre basse sur un vrai téléphone, panneau latéral PC.
+- Revue humaine : migration (mise à jour de comptes existants), nouvelle procédure `setModules`.
+- Onglets du Todo et sélecteur de vue de l'agenda restent des liens (navigation par URL), pas migrés vers `Tabs` / `SegmentedControl`.
+- Base locale : `pnpm --filter @planifier/db migrate:deploy` pour appliquer la migration.
+
+**Attendu ensuite**
+
+- Ticket `869fhwtce` (db) : clore avec commentaire (Zod non généré, décision d'octobre).
+- Écran Aujourd'hui, composants de retour (dialogue, toast, menu), écran Nouvelle tâche (« + »).
+
+---
+
 ## 2026-11-05 — Agenda : déplacer une entrée (branche `feat/agenda-deplacer`, empilée sur #28)
 
 **Fait** : glisser-déposer à la souris (aperçu en pointillés à l'endroit visé), appui long au doigt qui décolle l'entrée

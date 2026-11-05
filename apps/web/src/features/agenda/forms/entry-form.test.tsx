@@ -24,6 +24,7 @@ const ENTRY: AgendaEntryOutput = {
   id: "0199f3a2-7c4e-7d10-9a51-00000000e001",
   title: "Dentiste",
   location: "Cabinet",
+  participants: ["Marie"],
   description: null,
   when: {
     allDay: false,
@@ -96,6 +97,16 @@ describe("EntryForm", () => {
       expect(onDone).toHaveBeenCalledOnce();
     });
     expect(calls[0]?.input).toMatchObject({ entryId: ENTRY.id, version: 3, location: null });
+  });
+
+  it("lit les participants séparés par des virgules", async () => {
+    const calls = replyRpc(fetchMock, { "agenda/entries/update": { data: ENTRY } });
+    renderForm(ENTRY);
+    await userEvent.type(screen.getByLabelText("Participants"), ", Léo ,, Marie");
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({ participants: ["Marie", "Léo"] });
+    });
   });
 
   it("demande confirmation avant de supprimer", async () => {

@@ -10,6 +10,7 @@ const TEAM_LUNCH: AgendaItem = {
   id: "1",
   title: "Déjeuner",
   location: "Cantine",
+  participants: [],
   when: {
     allDay: false,
     startsAt: new Date("2026-11-05T12:00"),

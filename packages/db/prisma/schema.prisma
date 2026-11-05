@@ -358,30 +358,32 @@ model Task {
 /// (`startDay`, `endDay` inclus, sans fuseau) : contrainte `agenda_entries_when_check`. Pas de `spaceId` : l'agenda est
 /// personnel, ses membres d'Espace le voient par la vue fusionnée, sauf entrée masquée (`canAccessAgendaEntry`).
 model AgendaEntry {
-  id          String    @id @default(uuid(7))
-  title       String
-  description String?   @db.Text
-  location    String?
-  startsAt    DateTime? @map("starts_at")
-  endsAt      DateTime? @map("ends_at")
-  startDay    DateTime? @map("start_day") @db.Date
-  endDay      DateTime? @map("end_day") @db.Date
+  id           String    @id @default(uuid(7))
+  title        String
+  description  String?   @db.Text
+  location     String?
+  /// Noms en texte libre, sans compte : personne n'est prévenu ni lié.
+  participants String[]  @default([])
+  startsAt     DateTime? @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  startDay     DateTime? @map("start_day") @db.Date
+  endDay       DateTime? @map("end_day") @db.Date
   /// Teinte (`LIST_TINTS`, constants) : validée par Zod en écriture et en lecture.
-  tint        String    @default("general")
+  tint         String    @default("general")
   /// Cachée entièrement de la vue fusionnée : ni titre, ni « occupé ».
-  hidden      Boolean   @default(false)
+  hidden       Boolean   @default(false)
   /// Origine d'une entrée importée et son identifiant d'origine (ADR 0011) ; les deux, ou aucun.
-  source      String?
-  sourceUid   String?   @map("source_uid")
-  version     Int       @default(1)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  source       String?
+  sourceUid    String?   @map("source_uid")
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  ownerId String      @map("owner_id")
-  owner   User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String  @map("owner_id")
+  owner   User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   /// Tâche liée, à sens unique : l'entrée ne coche rien. Tâche supprimée : l'entrée reste, sans lien.
-  taskId  String?     @map("task_id")
-  task    Task?       @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  taskId  String? @map("task_id")
+  task    Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   @@unique([ownerId, source, sourceUid])
   @@index([ownerId, startsAt])

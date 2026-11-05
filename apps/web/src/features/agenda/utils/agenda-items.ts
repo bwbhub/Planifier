@@ -22,6 +22,7 @@ export interface AgendaItem {
   id: string;
   title: string;
   location: string | null;
+  participants: readonly string[];
   when: AgendaWhen;
   /** Fond (token). Mon agenda : la teinte de l'entrée ; vue fusionnée : celle de la personne, comme son filtre. */
   background: string;
@@ -32,13 +33,15 @@ export interface AgendaItem {
 }
 
 export function fromMyEntry(entry: AgendaEntryOutput): AgendaItem {
-  const { id, title, location, when, tint } = entry;
-  return { id, title, location, when, background: TINTS[tint].background, owner: null, entry };
+  const { id, title, location, participants, when, tint } = entry;
+  const background = TINTS[tint].background;
+  return { id, title, location, participants, when, background, owner: null, entry };
 }
 
-export function fromSpaceEntry({ id, title, location, when, owner }: SpaceEntryOutput): AgendaItem {
+export function fromSpaceEntry(entry: SpaceEntryOutput): AgendaItem {
+  const { id, title, location, participants, when, owner } = entry;
   const background = tintOf(owner.userId).background;
-  return { id, title, location, when, background, owner, entry: null };
+  return { id, title, location, participants, when, background, owner, entry: null };
 }
 
 /** Minuit, heure de l'appareil, du jour `AAAA-MM-JJ`. */
@@ -113,9 +116,15 @@ export function whenLabel(when: AgendaWhen): string {
   return `${formatDay(startsAt)} ${formatTime(startsAt)} – ${formatDay(endsAt)} ${formatTime(endsAt)}`;
 }
 
+/** « avec Marie, Léo », ou `null` sans participant. */
+export function participantsLabel(participants: readonly string[]): string | null {
+  return participants.length === 0 ? null : `avec ${participants.join(", ")}`;
+}
+
 /** Ce qu'on sait d'une entrée, en une phrase : lecteur d'écran et infobulle. */
-export function itemLabel({ title, when, location, owner, entry }: AgendaItem): string {
-  const parts = [title, whenLabel(when), location, owner?.name];
+export function itemLabel(item: AgendaItem): string {
+  const { title, when, location, participants, owner, entry } = item;
+  const parts = [title, whenLabel(when), location, participantsLabel(participants), owner?.name];
   if (entry?.hidden === true) parts.push("masquée dans les Espaces");
   return parts.filter((part) => part !== null && part !== undefined).join(", ");
 }

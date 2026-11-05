@@ -2,6 +2,8 @@ import {
   AGENDA_DESCRIPTION_MAX_LENGTH,
   AGENDA_LOCATION_MAX_LENGTH,
   AGENDA_MAX_ENTRY_DAYS,
+  AGENDA_MAX_PARTICIPANTS,
+  AGENDA_PARTICIPANT_MAX_LENGTH,
   AGENDA_MAX_WINDOW_DAYS,
   AGENDA_TITLE_MAX_LENGTH,
 } from "@planifier/constants/agenda";
@@ -17,6 +19,11 @@ const titleSchema = z.string().trim().min(1).max(AGENDA_TITLE_MAX_LENGTH);
 /** Pas de description ni de lieu : champ absent (création) ou `null` (modification), jamais une chaîne vide. */
 const descriptionSchema = z.string().trim().min(1).max(AGENDA_DESCRIPTION_MAX_LENGTH);
 const locationSchema = z.string().trim().min(1).max(AGENDA_LOCATION_MAX_LENGTH);
+/** Noms en texte libre, sans compte : rien n'est envoyé à personne. Chaque nom une fois ; `[]` : personne. */
+const participantsSchema = z
+  .array(z.string().trim().min(1).max(AGENDA_PARTICIPANT_MAX_LENGTH))
+  .max(AGENDA_MAX_PARTICIPANTS)
+  .refine((names) => new Set(names).size === names.length, "Chaque participant une seule fois.");
 const tintSchema = z.enum(LIST_TINTS);
 /** Jour `AAAA-MM-JJ`, sans heure ni fuseau. */
 const daySchema = z.iso.date();
@@ -91,6 +98,7 @@ export const createEntryInputSchema = z.strictObject({
   title: titleSchema,
   description: descriptionSchema.optional(),
   location: locationSchema.optional(),
+  participants: participantsSchema.optional(),
   when: whenInputSchema,
   tint: tintSchema,
   /** Cachée de la vue fusionnée ; absent : visible, le choix par défaut d'un Espace. */
@@ -107,14 +115,15 @@ export const updateEntryInputSchema = z
     title: titleSchema.optional(),
     description: descriptionSchema.nullable().optional(),
     location: locationSchema.nullable().optional(),
+    participants: participantsSchema.optional(),
     when: whenInputSchema.optional(),
     tint: tintSchema.optional(),
     hidden: z.boolean().optional(),
     taskId: taskIdSchema.nullable().optional(),
   })
   .refine(
-    ({ title, description, location, when, tint, hidden, taskId }) =>
-      [title, description, location, when, tint, hidden, taskId].some(
+    ({ title, description, location, participants, when, tint, hidden, taskId }) =>
+      [title, description, location, participants, when, tint, hidden, taskId].some(
         (field) => field !== undefined,
       ),
     "Aucun champ à modifier.",
@@ -126,6 +135,7 @@ const sharedEntryFields = {
   id: entryIdSchema,
   title: z.string(),
   location: z.string().nullable(),
+  participants: z.array(z.string()),
   when: agendaWhenSchema,
 };
 
@@ -139,7 +149,7 @@ export const agendaEntrySchema = z.strictObject({
   version: z.int(),
 });
 
-/** Entrée vue dans un Espace : titre, horaire et lieu ; le reste ne regarde que son propriétaire (données minimales). */
+/** Entrée vue dans un Espace : titre, horaire, lieu et participants (maquette) ; le reste ne regarde que son propriétaire (données minimales). */
 export const spaceEntrySchema = z.strictObject({
   ...sharedEntryFields,
   owner: personSchema,

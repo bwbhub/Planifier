@@ -26,6 +26,7 @@ const sharedSelect = {
   id: true,
   title: true,
   location: true,
+  participants: true,
   startsAt: true,
   endsAt: true,
   startDay: true,
@@ -60,8 +61,8 @@ function toWhen({ id, startsAt, endsAt, startDay, endDay }: SharedRow): AgendaWh
 }
 
 function toSharedOutput(row: SharedRow) {
-  const { id, title, location } = row;
-  return { id, title, location, when: toWhen(row) };
+  const { id, title, location, participants } = row;
+  return { id, title, location, participants, when: toWhen(row) };
 }
 
 function toEntryOutput(row: EntryRow): AgendaEntryOutput {
@@ -156,7 +157,7 @@ async function assertReadableTask(tx: DbTransaction, userId: string, taskId: str
 export async function createEntry(
   db: Db,
   userId: string,
-  { title, description, location, when, tint, hidden, taskId }: CreateEntryInput,
+  { title, description, location, participants, when, tint, hidden, taskId }: CreateEntryInput,
 ): Promise<AgendaEntryOutput> {
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT 1 FROM users WHERE id = ${userId} FOR UPDATE`;
@@ -169,6 +170,7 @@ export async function createEntry(
         tint,
         description: description ?? null,
         location: location ?? null,
+        participants: participants ?? [],
         hidden: hidden ?? false,
         ...whenColumns(when),
         ownerId: userId,
@@ -185,6 +187,7 @@ function entryChanges({
   title,
   description,
   location,
+  participants,
   when,
   tint,
   hidden,
@@ -194,6 +197,7 @@ function entryChanges({
     ...(title === undefined ? {} : { title }),
     ...(description === undefined ? {} : { description }),
     ...(location === undefined ? {} : { location }),
+    ...(participants === undefined ? {} : { participants }),
     ...(tint === undefined ? {} : { tint }),
     ...(hidden === undefined ? {} : { hidden }),
     ...(when === undefined ? {} : whenColumns(when)),

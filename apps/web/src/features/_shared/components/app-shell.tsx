@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { COMMON_LABELS, MODULE_LABELS } from "@/lib/labels";
+import { COMMON_LABELS, MODULE_LABELS, NAV_LABELS } from "@/lib/labels";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -29,6 +29,22 @@ const MODULE_LINK = cn(
 
 function isOn(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function AccountLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
+  return (
+    <Link
+      href={href}
+      aria-current={isOn(pathname, href) ? "page" : undefined}
+      className={buttonClassName({
+        variant: "secondary",
+        className:
+          "px-5 sm:justify-start aria-[current=page]:bg-ink aria-[current=page]:text-surface",
+      })}
+    >
+      {label}
+    </Link>
+  );
 }
 
 interface AppShellProps {
@@ -62,7 +78,7 @@ export function AppShell({ modules, children }: AppShellProps) {
         </Link>
         {shown.length === 0 ? null : (
           <nav
-            aria-label="Modules"
+            aria-label={NAV_LABELS.modules}
             className={cn(
               "fixed inset-x-0 bottom-0 z-30 flex bg-nav",
               "sm:static sm:z-auto sm:flex-col sm:gap-1 sm:bg-transparent",
@@ -80,29 +96,9 @@ export function AppShell({ modules, children }: AppShellProps) {
             ))}
           </nav>
         )}
-        <nav aria-label="Espaces et profil" className="flex gap-2 sm:mt-auto sm:flex-col">
-          <Link
-            href={ROUTES.spaces}
-            aria-current={isOn(pathname, ROUTES.spaces) ? "page" : undefined}
-            className={buttonClassName({
-              variant: "secondary",
-              className:
-                "px-5 sm:justify-start aria-[current=page]:bg-ink aria-[current=page]:text-surface",
-            })}
-          >
-            Espaces
-          </Link>
-          <Link
-            href={ROUTES.profile}
-            aria-current={isOn(pathname, ROUTES.profile) ? "page" : undefined}
-            className={buttonClassName({
-              variant: "secondary",
-              className:
-                "px-5 sm:justify-start aria-[current=page]:bg-ink aria-[current=page]:text-surface",
-            })}
-          >
-            Profil
-          </Link>
+        <nav aria-label={NAV_LABELS.account} className="flex gap-2 sm:mt-auto sm:flex-col">
+          <AccountLink href={ROUTES.spaces} label={NAV_LABELS.spaces} pathname={pathname} />
+          <AccountLink href={ROUTES.profile} label={NAV_LABELS.profile} pathname={pathname} />
         </nav>
       </header>
       <div className={cn("flex min-w-0 flex-1 flex-col", shown.length > 0 && "pb-14 sm:pb-0")}>

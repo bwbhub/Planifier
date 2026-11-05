@@ -19,6 +19,21 @@ export const COMMON_LABELS = {
 /** Noms des modules, tels que la navigation et le profil les écrivent. */
 export const MODULE_LABELS = { TODO: "Todo", AGENDA: "Agenda", EVENTS: "Événements" } as const;
 
+/** Aide sous chaque module, dans le réglage du profil. */
+export const MODULE_HINTS = {
+  TODO: "Tes listes de tâches.",
+  AGENDA: "Ton agenda, jour par jour.",
+  EVENTS: "Les sorties et rendez-vous à plusieurs.",
+} as const;
+
+/** Libellés de la navigation des pages connectées. */
+export const NAV_LABELS = {
+  modules: "Modules",
+  account: "Espaces et profil",
+  spaces: "Espaces",
+  profile: "Profil",
+} as const;
+
 /** Titre d'onglet d'une page : « Mes Espaces · Planifier ». */
 export function pageTitle(page: string): string {
   return `${page} · ${COMMON_LABELS.appName}`;

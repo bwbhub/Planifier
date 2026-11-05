@@ -12,7 +12,7 @@ export interface SwitchProps extends Omit<
 }
 
 /**
- * Interrupteur pour un réglage qui s'applique tout de suite (sinon : case à cocher). Case native `role="switch"` :
+ * Interrupteur pour un réglage allumé ou éteint (s'applique tout de suite, ou à l'enregistrement du formulaire qui le porte) ; une réponse dans une liste de choix reste une case à cocher. Case native `role="switch"` :
  * clavier (Espace), formulaire et lecteurs d'écran sans code en plus. Éteint sauf `defaultChecked` explicite.
  */
 export function Switch({ label, hint, className, ...input }: SwitchProps) {

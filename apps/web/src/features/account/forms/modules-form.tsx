@@ -7,13 +7,7 @@ import type { SubmitEvent } from "react";
 
 import { AuthErrorAlert } from "../atoms/auth-error-alert";
 import { useSetModules } from "../queries/auth.queries";
-import { COMMON_LABELS, MODULE_LABELS } from "@/lib/labels";
-
-const HINTS: Record<AppModule, string> = {
-  TODO: "Tes listes de tâches.",
-  AGENDA: "Ton agenda, jour par jour.",
-  EVENTS: "Les sorties et rendez-vous à plusieurs.",
-};
+import { COMMON_LABELS, MODULE_HINTS, MODULE_LABELS } from "@/lib/labels";
 
 interface ModulesFormProps {
   modules: readonly AppModule[];
@@ -36,7 +30,7 @@ export function ModulesForm({ modules }: ModulesFormProps) {
           key={module}
           name={module}
           label={MODULE_LABELS[module]}
-          hint={HINTS[module]}
+          hint={MODULE_HINTS[module]}
           defaultChecked={modules.includes(module)}
         />
       ))}

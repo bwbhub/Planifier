@@ -13,6 +13,10 @@
 
 ## 2. Prochain ticket
 
+Urgents (2026-11-05) : composants de base (`869fhwtg1`) et navigation (`869fhwtg4`) faits en code sur `feat/ui-composants-base`
+puis `feat/navigation-modules` (empilées, non poussées). Reste : revue visuelle, `/code-review` faite, push + PR.
+Ensuite : Aujourd'hui (`869fhwtu9`), composants de retour (`869fp54cr`), Nouvelle tâche (bouton « + »).
+
 Agenda (`feat/agenda-modele`, empilée sur `feat/todo-partage-lecture`) : modèle, droits, API, écran Jour, Semaine, Mois
 et vue fusionnée faits ; ni commit ni PR. Ensuite : Aujourd'hui (`869fhwtu9`), iCal (`869fjgrcc`, `869fhwtup`).
 Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
@@ -149,3 +153,19 @@ Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
 - Tests E2E : `DATABASE_URL=…/planifier_test pnpm test:e2e` ; la limitation de débit de Better Auth (par IP, 10 s)
   refuse un compte par test : partager un compte en série.
 - GitGuardian : exclusions dans le tableau de bord (`project-context` §5), pas dans le dépôt.
+
+- **Composants de base et navigation (revue de `feat/navigation-modules`), à trancher** :
+  - `me.get` lit `modules` par une seconde requête (la session Better Auth ne les porte pas) : à chaque rendu du
+    layout. Les déclarer en champ additionnel de Better Auth les ferait venir avec la session ; à voir si le coût compte.
+  - `Button loading` : désactivé + `aria-busy`, sans indicateur visuel. Ajouter un spinner (composant ou token) ?
+  - `SegmentedControl` et `Tabs` ne sont pas encore utilisés par l'agenda et le Todo (navigation par liens/URL).
+    Les migrer, ou les garder pour les vues sans URL ?
+  - Bouton flottant de l'agenda en `max-sm:bottom-20`, calé à la main sur la barre basse (`min-h-14`) : à relier si la
+    hauteur de la barre change (variable CSS ou token).
+  - Contraste non-texte AA du rail de l'interrupteur (`bg-line`) non mesuré ; `/composants` sans cas survol/focus
+    ni lien depuis la navigation, et livrée en production derrière la connexion : à garder ?
+  - Libellés de la barre basse sur 375 px quand « Événements » arrivera (sans icônes).
+  - Revue humaine : migration `20261105230000_modules_utilisateur` (met à jour des comptes existants), procédure
+    `account.me.setModules`.
+  - Test serveur `server.test.ts` : « session lue » prouvée par une erreur interne faute de base (fragile) ; à refaire
+    quand une procédure du plan utilisateur n'aura pas besoin de la base.

@@ -363,6 +363,7 @@ model AgendaEntry {
   description  String?   @db.Text
   location     String?
   /// Noms en texte libre, sans compte : personne n'est prévenu ni lié.
+  /// @pii identité durée-de-l'entrée
   participants String[]  @default([])
   startsAt     DateTime? @map("starts_at")
   endsAt       DateTime? @map("ends_at")

@@ -23,7 +23,10 @@ const locationSchema = z.string().trim().min(1).max(AGENDA_LOCATION_MAX_LENGTH);
 const participantsSchema = z
   .array(z.string().trim().min(1).max(AGENDA_PARTICIPANT_MAX_LENGTH))
   .max(AGENDA_MAX_PARTICIPANTS)
-  .refine((names) => new Set(names).size === names.length, "Chaque participant une seule fois.");
+  .refine(
+    (names) => new Set(names.map((name) => name.toLocaleLowerCase("fr"))).size === names.length,
+    "Chaque participant une seule fois.",
+  );
 const tintSchema = z.enum(LIST_TINTS);
 /** Jour `AAAA-MM-JJ`, sans heure ni fuseau. */
 const daySchema = z.iso.date();
@@ -122,9 +125,9 @@ export const updateEntryInputSchema = z
     taskId: taskIdSchema.nullable().optional(),
   })
   .refine(
-    ({ title, description, location, participants, when, tint, hidden, taskId }) =>
-      [title, description, location, participants, when, tint, hidden, taskId].some(
-        (field) => field !== undefined,
+    (input) =>
+      Object.entries(input).some(
+        ([key, value]) => key !== "entryId" && key !== "version" && value !== undefined,
       ),
     "Aucun champ à modifier.",
   );

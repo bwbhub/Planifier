@@ -3,7 +3,8 @@ import { cn } from "@planifier/ui/lib/cn";
 import type { CSSProperties } from "react";
 
 import type { AgendaItem } from "../utils/agenda-items";
-import { itemLabel, participantsLabel, whenLabel } from "../utils/agenda-items";
+import { itemLabel, whenLabel } from "../utils/agenda-items";
+import { participantsLabel } from "../utils/agenda-participants";
 
 /** Détail montré au survol ou au focus (le lieu, toujours : maquette). */
 const ON_HOVER = "hidden text-muted group-hover:inline group-focus:inline";
@@ -37,7 +38,8 @@ export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockP
       <span className="font-semibold">{title}</span>
       <span className={details}>{whenLabel(when)}</span>
       {location === null ? null : <span className={ON_HOVER}>{location}</span>}
-      {withPeople === null ? null : <span className={ON_HOVER}>{withPeople}</span>}
+      {/* Participants toujours montrés quand la place le permet (maquette). */}
+      {withPeople === null ? null : <span className={details}>{withPeople}</span>}
       {owner === null ? null : (
         <span className={cn(compact && "hidden group-hover:block group-focus:block")}>
           <Avatar id={owner.userId} name={owner.name} size="sm" />

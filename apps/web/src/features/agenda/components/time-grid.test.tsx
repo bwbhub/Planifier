@@ -4,44 +4,22 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { entryWith, itemWith } from "../testing/agenda-fixtures";
 import type { AgendaItem } from "../utils/agenda-items";
 import { TimeGrid } from "./time-grid";
 
-const WHEN = {
-  allDay: false,
-  startsAt: new Date("2026-11-05T09:00"),
-  endsAt: new Date("2026-11-05T10:00"),
-} as const;
-
-const OTHERS: AgendaItem = {
+const OTHERS = itemWith({
   id: "autre",
   title: "Réunion",
-  location: null,
-  participants: [],
-  when: WHEN,
   background: "bg-tint-work",
   owner: { userId: "bob", name: "Bob" },
-  entry: null,
-};
+});
 
-const MINE: AgendaItem = {
-  ...OTHERS,
+const MINE = itemWith({
   id: "mienne",
   title: "Dentiste",
-  owner: null,
-  entry: {
-    id: "mienne",
-    title: "Dentiste",
-    location: null,
-    participants: [],
-    description: null,
-    when: WHEN,
-    tint: "general",
-    hidden: true,
-    taskId: null,
-    version: 1,
-  },
-};
+  entry: entryWith({ id: "mienne", title: "Dentiste", hidden: true }),
+});
 
 function renderGrid(items: readonly AgendaItem[], days = ["2026-11-05"]) {
   const onOpen = vi.fn();

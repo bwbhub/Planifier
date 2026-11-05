@@ -27,7 +27,13 @@ Modèle d'entrée :
 **Décisions** : texte libre, aucun compte lié ni prévenu. Visibles par l'Espace comme le lieu, puisque la maquette les
 montre sur la vue fusionnée.
 
-**Vérifié** : `check-types`, `lint`, `test` (web 225/225), `build`, `format --check` ; `test:integration` api 159/159,
+`/code-review` passée après le push (oubli), corrigée dans un second commit : `@pii` sur la colonne, contrainte
+`participants IS NOT NULL` (migration modifiée, rejouée sur les bases locales), doublons insensibles à la casse,
+fabriques de test partagées (`agenda/testing`), lecture des noms dans `utils/agenda-participants.ts`, participants
+visibles sans survol quand la place le permet, `maxLength` du champ. Laissé : champs communs recopiés à la main entre
+sélection, sortie et élément de grille (jugement, peu de gain).
+
+**Vérifié** : `check-types`, `lint`, `test` (web 229/229), `build`, `format --check` ; `test:integration` api 159/159,
 api-server 14/14, auth 1/1 ; `test:e2e` 58/58 ; migration appliquée sur `planifier` et `planifier_test`, sans dérive ;
 seed relancé. Pas de capture d'écran.
 

@@ -100,7 +100,9 @@ Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
     a aussi une teinte pour les entrées communes (`t-couple`) et les événements (`t-trip`) : à venir avec eux.
   - **Écarts à la maquette** :
     - participants en texte libre (accepté le 2026-11-05) : écrits « avec Marie, Léo », pas en avatars comme la
-      maquette ; visibles par l'Espace comme le lieu (la maquette les montre) ;
+      maquette (où ce sont des membres de l'Espace, propriétaire compris) ; montrés quand le créneau a la place, au
+      survol sinon ; visibles par l'Espace comme le lieu (la maquette les montre) : noms de tiers, à confirmer en
+      revue droits ;
     - filtres par personne : pastilles pleine taille sur mobile, pas les pastilles compactes de la ligne de bascule ;
     - ajout non demandé : entrée masquée en pointillés dans mon agenda, gardé pour que ça se voie ;
     - pas de « Peut-être », ni d'événements dans les filtres (« Anniversaire de Léo ») : module Événements ;

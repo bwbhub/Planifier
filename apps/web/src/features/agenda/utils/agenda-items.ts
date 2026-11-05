@@ -12,6 +12,7 @@ import { TINTS } from "@/features/_shared/utils/tints";
 import { formatDay, formatTime, today } from "@/lib/format-date";
 
 import { dayMonthLabel } from "./agenda-dates";
+import { participantsLabel } from "./agenda-participants";
 
 const MINUTES_PER_DAY = 1440;
 /** Un créneau très court garde une hauteur lisible, et se place comme tel. */
@@ -114,11 +115,6 @@ export function whenLabel(when: AgendaWhen): string {
   const { startsAt, endsAt } = when;
   if (today(startsAt) === today(endsAt)) return `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
   return `${formatDay(startsAt)} ${formatTime(startsAt)} – ${formatDay(endsAt)} ${formatTime(endsAt)}`;
-}
-
-/** « avec Marie, Léo », ou `null` sans participant. */
-export function participantsLabel(participants: readonly string[]): string | null {
-  return participants.length === 0 ? null : `avec ${participants.join(", ")}`;
 }
 
 /** Ce qu'on sait d'une entrée, en une phrase : lecteur d'écran et infobulle. */

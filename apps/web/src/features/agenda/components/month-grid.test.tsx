@@ -3,23 +3,21 @@ import { axeViolations } from "@planifier/ui/testing/axe";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { itemWith } from "../testing/agenda-fixtures";
 import type { AgendaItem } from "../utils/agenda-items";
 import { MonthGrid } from "./month-grid";
 
-const TEAM_LUNCH: AgendaItem = {
+const TEAM_LUNCH = itemWith({
   id: "1",
   title: "Déjeuner",
   location: "Cantine",
-  participants: [],
   when: {
     allDay: false,
     startsAt: new Date("2026-11-05T12:00"),
     endsAt: new Date("2026-11-05T13:00"),
   },
-  background: "bg-tint-work",
   owner: { userId: "bob", name: "Bob" },
-  entry: null,
-};
+});
 
 const DAYS = ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05"];
 

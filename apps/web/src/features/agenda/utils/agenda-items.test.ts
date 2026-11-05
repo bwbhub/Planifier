@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { itemWith } from "../testing/agenda-fixtures";
 import {
   type AgendaItem,
   dayContent,
@@ -11,16 +12,7 @@ import {
 } from "./agenda-items";
 
 function item(id: string, when: AgendaItem["when"]): AgendaItem {
-  return {
-    id,
-    title: id,
-    location: null,
-    participants: [],
-    when,
-    background: "bg",
-    owner: null,
-    entry: null,
-  };
+  return itemWith({ id, title: id, when });
 }
 
 const timed = (id: string, start: string, end: string) =>

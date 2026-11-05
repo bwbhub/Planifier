@@ -202,7 +202,7 @@ describe("agenda : participants en texte libre (base réelle)", () => {
   });
 
   it("refuse deux fois le même participant", async () => {
-    await expect(createEntry(alice, { participants: ["Marie", "Marie"] })).rejects.toMatchObject({
+    await expect(createEntry(alice, { participants: ["Marie", "marie"] })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     });
   });

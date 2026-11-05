@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { replyRpc } from "@/lib/testing/rpc-fetch";
 
+import { entryWith } from "../testing/agenda-fixtures";
 import { EntryForm } from "./entry-form";
 
 const fetchMock = vi.hoisted(() => {
@@ -20,22 +21,13 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-const ENTRY: AgendaEntryOutput = {
+const ENTRY = entryWith({
   id: "0199f3a2-7c4e-7d10-9a51-00000000e001",
   title: "Dentiste",
   location: "Cabinet",
   participants: ["Marie"],
-  description: null,
-  when: {
-    allDay: false,
-    startsAt: new Date("2026-11-05T09:00"),
-    endsAt: new Date("2026-11-05T10:00"),
-  },
-  tint: "general",
-  hidden: false,
-  taskId: null,
   version: 3,
-};
+});
 
 function renderForm(entry?: AgendaEntryOutput) {
   const onDone = vi.fn();

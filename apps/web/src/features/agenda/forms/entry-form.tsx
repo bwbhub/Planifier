@@ -8,6 +8,8 @@ import {
 import {
   AGENDA_DESCRIPTION_MAX_LENGTH,
   AGENDA_LOCATION_MAX_LENGTH,
+  AGENDA_MAX_PARTICIPANTS,
+  AGENDA_PARTICIPANT_MAX_LENGTH,
   AGENDA_TITLE_MAX_LENGTH,
 } from "@planifier/constants/agenda";
 import { Button } from "@planifier/ui/components/button";
@@ -25,17 +27,21 @@ import { COMMON_LABELS } from "@/lib/labels";
 import { useCreateEntry, useDeleteEntry, useUpdateEntry } from "../queries/agenda.queries";
 import { toLocalInput } from "../utils/agenda-dates";
 import { agendaErrorMessage } from "../utils/agenda-error-message";
+import { participantsFromText } from "../utils/agenda-participants";
 
 /** Horaire proposé par défaut. */
 const DEFAULT_START = "09:00";
 const DEFAULT_END = "10:00";
 
-const FIELDS = ["title", "when", "location", "description"] as const;
+const FIELDS = ["title", "when", "location", "participants", "description"] as const;
 type Field = (typeof FIELDS)[number];
 
 const TITLE_ERROR = `Donne un titre à l'entrée, ${String(AGENDA_TITLE_MAX_LENGTH)} caractères au plus.`;
 const WHEN_ERROR = "La fin doit suivre le début, sur un an au plus.";
 const LOCATION_ERROR = `${String(AGENDA_LOCATION_MAX_LENGTH)} caractères au plus.`;
+const PARTICIPANTS_ERROR = `${String(AGENDA_MAX_PARTICIPANTS)} noms au plus, de ${String(AGENDA_PARTICIPANT_MAX_LENGTH)} caractères chacun.`;
+/** Tous les noms au plus long, et leurs virgules. */
+const PARTICIPANTS_MAX_LENGTH = AGENDA_MAX_PARTICIPANTS * (AGENDA_PARTICIPANT_MAX_LENGTH + 2);
 const DESCRIPTION_ERROR = `${String(AGENDA_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
 
 /** Champ facultatif laissé vide : `null`. */
@@ -134,6 +140,15 @@ function EntryDetails({ entry, invalid }: EntryFieldsProps) {
         maxLength={AGENDA_LOCATION_MAX_LENGTH}
         error={invalid.has("location") ? LOCATION_ERROR : undefined}
       />
+      <TextField
+        label="Participants"
+        name="participants"
+        hint="Séparés par des virgules. Juste un nom : personne n'est prévenu."
+        placeholder="Ex. : Marie, Léo"
+        defaultValue={entry?.participants.join(", ")}
+        maxLength={PARTICIPANTS_MAX_LENGTH}
+        error={invalid.has("participants") ? PARTICIPANTS_ERROR : undefined}
+      />
       <TextAreaField
         label="Description"
         name="description"
@@ -221,6 +236,7 @@ function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, o
       when: whenFromForm(data, allDay),
       tint: data.get("tint"),
       hidden: data.get("hidden") === "on",
+      participants: participantsFromText(asText(data.get("participants"))),
     };
     const location = optionalText(data.get("location"));
     const description = optionalText(data.get("description"));

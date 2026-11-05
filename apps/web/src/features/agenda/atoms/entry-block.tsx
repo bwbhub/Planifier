@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 
 import type { AgendaItem } from "../utils/agenda-items";
 import { itemLabel, whenLabel } from "../utils/agenda-items";
+import { participantsLabel } from "../utils/agenda-participants";
 
 /** Détail montré au survol ou au focus (le lieu, toujours : maquette). */
 const ON_HOVER = "hidden text-muted group-hover:inline group-focus:inline";
@@ -22,7 +23,8 @@ interface EntryBlockProps {
  * personne se lit seulement : elle prend le focus sans être un bouton.
  */
 export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockProps) {
-  const { title, location, when, background, owner, entry } = item;
+  const { title, location, participants, when, background, owner, entry } = item;
+  const withPeople = participantsLabel(participants);
   const placed = style !== undefined;
   const className = cn(
     "flex flex-col gap-0.5 overflow-hidden rounded-control border-2 border-surface px-2 py-1 text-left text-xs text-ink",
@@ -36,6 +38,8 @@ export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockP
       <span className="font-semibold">{title}</span>
       <span className={details}>{whenLabel(when)}</span>
       {location === null ? null : <span className={ON_HOVER}>{location}</span>}
+      {/* Participants toujours montrés quand la place le permet (maquette). */}
+      {withPeople === null ? null : <span className={details}>{withPeople}</span>}
       {owner === null ? null : (
         <span className={cn(compact && "hidden group-hover:block group-focus:block")}>
           <Avatar id={owner.userId} name={owner.name} size="sm" />

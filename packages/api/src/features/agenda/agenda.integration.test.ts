@@ -33,7 +33,10 @@ const WINDOW = {
   toDay: "2026-11-08",
 };
 
-function createEntry(owner: SessionUser, fields: { hidden?: boolean; title?: string } = {}) {
+function createEntry(
+  owner: SessionUser,
+  fields: { hidden?: boolean; title?: string; participants?: string[] } = {},
+) {
   return call(
     entries.create,
     { title: "Dentiste", tint: "general", when: TIMED, ...fields },
@@ -181,15 +184,40 @@ describe("agenda : modifier et valider (base réelle)", () => {
   });
 });
 
+describe("agenda : participants en texte libre (base réelle)", () => {
+  it("remplace les participants, et `[]` les retire", async () => {
+    const entry = await createEntry(alice, { participants: ["Marie"] });
+    const updated = await call(
+      entries.update,
+      { entryId: entry.id, version: entry.version, participants: ["Léo", "Sarah"] },
+      asUser(alice),
+    );
+    expect(updated.participants).toEqual(["Léo", "Sarah"]);
+    const cleared = await call(
+      entries.update,
+      { entryId: entry.id, version: updated.version, participants: [] },
+      asUser(alice),
+    );
+    expect(cleared.participants).toEqual([]);
+  });
+
+  it("refuse deux fois le même participant", async () => {
+    await expect(createEntry(alice, { participants: ["Marie", "marie"] })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+});
+
 describe("agenda : vue fusionnée d'un Espace (base réelle)", () => {
-  it("montre titre, horaire, lieu et nom des membres, rien de plus", async () => {
-    const entry = await createEntry(alice);
+  it("montre titre, horaire, lieu, participants et nom des membres, rien de plus", async () => {
+    const entry = await createEntry(alice, { participants: ["Marie", "Léo"] });
     const { items } = await call(entries.listInSpace, { ...WINDOW, spaceId }, asUser(bob));
     expect(items).toEqual([
       {
         id: entry.id,
         title: entry.title,
         location: null,
+        participants: ["Marie", "Léo"],
         when: entry.when,
         owner: { userId: alice.id, name: "alice" },
       },

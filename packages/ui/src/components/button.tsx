@@ -34,6 +34,8 @@ export interface ButtonStyle {
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Action en cours : le bouton garde sa place, devient inerte et l'annonce (`aria-busy`). */
+  loading?: boolean;
 }
 
 /** Classes d'un bouton, pour donner son allure à un lien (`<Link>` de l'app) sans en faire un `<button>`. */
@@ -52,8 +54,22 @@ export function buttonClassName({
 }
 
 /** Bouton d'action. `type="button"` par défaut : un envoi de formulaire se déclare (`type="submit"`). */
-export function Button({ variant, size, type = "button", className, ...props }: ButtonProps) {
+export function Button({
+  variant,
+  size,
+  type = "button",
+  loading = false,
+  disabled,
+  className,
+  ...props
+}: ButtonProps) {
   return (
-    <button type={type} className={buttonClassName({ variant, size, className })} {...props} />
+    <button
+      type={type}
+      disabled={disabled === true || loading}
+      aria-busy={loading || undefined}
+      className={buttonClassName({ variant, size, className })}
+      {...props}
+    />
   );
 }

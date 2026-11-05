@@ -18,6 +18,26 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-05 — Agenda : déplacer une entrée (branche `feat/agenda-deplacer`, empilée sur #28)
+
+**Fait** : glisser-déposer à la souris (aperçu en pointillés à l'endroit visé), appui long au doigt qui décolle l'entrée
+(bandeau en surimpression, « Annuler », Échap), toucher d'un créneau pour la poser. Règle pure `shiftedWhen` dans
+`@planifier/domain-agenda/move` (décalage depuis le point de prise, heure d'horloge, durée gardée) ; zones de dépôt et
+lecture de l'écran dans `move-zones.ts` ; crochet `use-entry-move.ts` ; contexte `grid-actions.tsx`. Envoi par
+l'`update` existant avec `version`, relu après un refus (`onSettled`). Deux commits : découpage sans changement de
+comportement, puis le déplacement.
+
+`/code-review` avant push, corrigée : saut d'une entrée prise par son milieu ou par son deuxième jour, clic qui suit un
+appui long pris pour une pose, clic avalé bloquant ensuite le clavier, second déplacement parti avec une version
+périmée, menu contextuel coupé à la souris, glisser coincé si le bouton est relâché hors de la fenêtre, règle hors du
+package `domain-*`, props sur trois niveaux, nombres en dur, stub global de test non restauré.
+
+**Vérifié** : `check-types`, `lint`, `test` (web 235/235, domain-agenda 18/18), `build`, `format --check` ;
+`test:e2e` 58/58, dont le déplacement à la souris (PC) et à l'appui long (mobile). Commit de découpage vérifié seul
+(types, lint, test web). Pas vu à l'œil dans un vrai navigateur tactile.
+
+**Ouvert** : limites listées en `SUITE` §4.
+
 ## 2026-11-05 — Agenda : participants en texte libre (branche `feat/agenda-participants`, empilée sur #27)
 
 **Fait** : #27 (Agenda) poussée après rebase sur `master` (#26 fusionnée). Colonne `participants` (migration

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { itemWith } from "../testing/agenda-fixtures";
 import {
   type AgendaItem,
   dayContent,
@@ -11,7 +12,7 @@ import {
 } from "./agenda-items";
 
 function item(id: string, when: AgendaItem["when"]): AgendaItem {
-  return { id, title: id, location: null, when, background: "bg", owner: null, entry: null };
+  return itemWith({ id, title: id, when });
 }
 
 const timed = (id: string, start: string, end: string) =>
@@ -150,8 +151,8 @@ describe("itemLabel", () => {
   it("dit l'horaire, le lieu et la personne", () => {
     const owner = { userId: "bob", name: "Bob" };
     const entry = { ...timed("Dentiste", "2026-11-05T09:00", "2026-11-05T10:00"), owner };
-    expect(itemLabel({ ...entry, location: "Cabinet" })).toBe(
-      "Dentiste, 09:00 – 10:00, Cabinet, Bob",
+    expect(itemLabel({ ...entry, location: "Cabinet", participants: ["Marie", "Léo"] })).toBe(
+      "Dentiste, 09:00 – 10:00, Cabinet, avec Marie, Léo, Bob",
     );
   });
 });

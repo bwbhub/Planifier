@@ -77,9 +77,10 @@ export function useCreateEntry() {
   return useMutation(orpc.agenda.entries.create.mutationOptions({ onSuccess }));
 }
 
+/** Relue aussi après un refus : un conflit de version se règle en repartant de la dernière version. */
 export function useUpdateEntry() {
-  const onSuccess = useInvalidateAgenda();
-  return useMutation(orpc.agenda.entries.update.mutationOptions({ onSuccess }));
+  const onSettled = useInvalidateAgenda();
+  return useMutation(orpc.agenda.entries.update.mutationOptions({ onSettled }));
 }
 
 export function useDeleteEntry() {

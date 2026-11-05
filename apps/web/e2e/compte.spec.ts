@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { type Cookie, expect, type Page, test } from "@playwright/test";
+import { type Cookie, expect, type Locator, type Page, test } from "@playwright/test";
 
 import { waitForLink } from "./mailpit";
 import { ATTEMPT_TIMEOUT, submitPastRateLimit } from "./rate-limit";
@@ -54,8 +54,37 @@ async function createListAndCheckTask(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
-/** Sur l'Agenda : ajoute une entrée, la retrouve après rechargement, la modifie, puis la supprime. */
-async function addEditThenDeleteEntry(page: Page) {
+/**
+ * Déplace d'une heure vers le bas une entrée de la vue Jour, prise par son milieu : le décalage compte, pas le point
+ * visé. PC : glisser-déposer à la souris. Mobile : appui long qui la décolle, puis toucher du créneau.
+ */
+async function moveEntryOneHourLater(page: Page, entry: Locator, day: string) {
+  const column = page.locator(`[data-move-day="${day}"][data-move-first-hour]`);
+  const hourHeight = Number(await column.getAttribute("data-move-hour-height"));
+  const box = await entry.boundingBox();
+  if (box === null) throw new Error("Entrée invisible.");
+  const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  if (test.info().project.name === "mobile") {
+    await entry.dispatchEvent("pointerdown", {
+      pointerType: "touch",
+      isPrimary: true,
+      clientX: start.x,
+      clientY: start.y,
+    });
+    await expect(page.getByRole("status")).toContainText("est décollée");
+    // Le clic qui suit un appui long est avalé : on laisse passer son délai (600 ms) avant de poser.
+    await page.waitForTimeout(700);
+    await page.touchscreen.tap(start.x, start.y + hourHeight);
+    return;
+  }
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x, start.y + hourHeight, { steps: 8 });
+  await page.mouse.up();
+}
+
+/** Sur l'Agenda : ajoute une entrée, la retrouve après rechargement, la déplace, la modifie, puis la supprime. */
+async function addMoveEditThenDeleteEntry(page: Page, day: string) {
   await page.getByRole("button", { name: "+ Nouvelle entrée" }).click();
   await page.getByLabel("Titre").fill("Dentiste");
   await page.getByLabel("Lieu").fill("Cabinet");
@@ -63,7 +92,10 @@ async function addEditThenDeleteEntry(page: Page) {
   const entry = page.getByRole("button", { name: /^Dentiste, 09:00 – 10:00/ });
   await expect(entry).toBeVisible();
   await page.reload();
-  await entry.click();
+  await moveEntryOneHourLater(page, entry, day);
+  const moved = page.getByRole("button", { name: /^Dentiste, 10:00 – 11:00/ });
+  await expect(moved).toBeVisible();
+  await moved.click();
   await page.getByLabel("Titre").fill("Dentiste Martin");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   const renamed = page.getByRole("button", { name: /^Dentiste Martin/ });
@@ -191,10 +223,12 @@ test.describe.serial("parcours d'un compte", () => {
     await editThenDeleteTaskAndList(page);
   });
 
-  test("ajoute, modifie puis supprime une entrée quand on ouvre l'Agenda", async ({ page }) => {
+  test("ajoute, déplace, modifie puis supprime une entrée quand on ouvre l'Agenda", async ({
+    page,
+  }) => {
     await page.context().addCookies(session);
     await page.goto("/agenda?vue=jour&jour=2030-06-12");
-    await addEditThenDeleteEntry(page);
+    await addMoveEditThenDeleteEntry(page, "2030-06-12");
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {

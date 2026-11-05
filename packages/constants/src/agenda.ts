@@ -7,6 +7,10 @@ export const AGENDA_TITLE_MAX_LENGTH = 200;
 export const AGENDA_LOCATION_MAX_LENGTH = 200;
 export const AGENDA_DESCRIPTION_MAX_LENGTH = 2000;
 
+/** Participants en texte libre : de quoi noter une tablée, pas un annuaire (noms de tiers, données minimales). */
+export const AGENDA_MAX_PARTICIPANTS = 20;
+export const AGENDA_PARTICIPANT_MAX_LENGTH = 100;
+
 /** Grille horaire par défaut (maquette) : elle s'élargit aux créneaux qui en sortent. */
 export const AGENDA_GRID_FIRST_HOUR = 8;
 export const AGENDA_GRID_LAST_HOUR = 22;

@@ -91,16 +91,23 @@ Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
   - Revue humaine (droits) : `canAccessTodoList` (`isReader`), `visibleTo`, `nextSharing`, `deleteMembership`.
 
 - **Agenda (branche `feat/agenda-modele`), à trancher** : choix pris d'après la maquette nuit, à confirmer.
-  - **Glisser-déposer** (bouger une entrée sur PC) : demandé le 2026-11-02 « comme prévu », aucune trace dans les
-    tickets, `CONTEXT`, ADR, maquette ni code. À décider : si oui, `update` existant (`when` + `version`), PC seulement,
-    bouton ou formulaire gardé pour le clavier et le mobile ; dépendance éventuelle avec fiche.
+  - **Déplacer une entrée** (accepté le 2026-11-05) : PC, glisser-déposer à la souris ; mobile, appui long (~1 s) qui
+    la décolle, puis toucher d'un créneau (toucher un jour de l'en-tête change de jour, l'entrée reste décollée). Le
+    décalage compte depuis l'endroit où l'entrée a été prise ; pas de 15 min, durée gardée, sans dépendance. Clavier :
+    le formulaire. Limites : grilles Jour et Semaine seulement (pas le Mois) ; un créneau horaire ne devient pas « à la
+    journée » ni l'inverse ; pas de rendu optimiste (estompée pendant l'envoi, puis à sa place) ; un déplacement à la
+    fois ; pas de défilement auto en tirant près du bord ; pas de redimensionnement ; une heure qui n'existe pas
+    (02:30 au passage à l'heure d'été) devient l'heure suivante. Pas essayé sur un vrai téléphone (iOS, Firefox
+    Android) : l'appui long n'y est vu que par Playwright.
   - **Vie privée** (accepté par l'utilisateur le 2026-11-02) : un Espace avec Agenda voit titre, horaire et lieu de toutes
     tes entrées non masquées, passées comprises ; jamais la description.
   - Couleur : teinte de l'entrée dans mon agenda, teinte de la personne dans la vue fusionnée (maquette). La maquette
     a aussi une teinte pour les entrées communes (`t-couple`) et les événements (`t-trip`) : à venir avec eux.
   - **Écarts à la maquette** :
-    - pas de participants sur une entrée (Marie, Léo n'y sont pas membres) : texte libre retenu si « 2. oui » du
-      2026-11-02 valait aussi pour ça, à confirmer ; pas construit ;
+    - participants en texte libre (accepté le 2026-11-05) : écrits « avec Marie, Léo », pas en avatars comme la
+      maquette (où ce sont des membres de l'Espace, propriétaire compris) ; montrés quand le créneau a la place, au
+      survol sinon ; visibles par l'Espace comme le lieu (la maquette les montre) : noms de tiers, à confirmer en
+      revue droits ;
     - filtres par personne : pastilles pleine taille sur mobile, pas les pastilles compactes de la ligne de bascule ;
     - ajout non demandé : entrée masquée en pointillés dans mon agenda, gardé pour que ça se voie ;
     - pas de « Peut-être », ni d'événements dans les filtres (« Anniversaire de Léo ») : module Événements ;

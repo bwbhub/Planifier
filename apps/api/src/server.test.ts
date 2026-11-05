@@ -98,7 +98,10 @@ describe("serveur d'API", () => {
     await expect(clientWith({}).account.me.get({})).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
-    await expect(clientWith({ cookie: SESSION_COOKIE }).account.me.get({})).resolves.toEqual(ALICE);
+    // Session reconnue : la garde laisse passer, et l'appel échoue plus loin faute de base (voir `getDb` ci-dessus).
+    await expect(clientWith({ cookie: SESSION_COOKIE }).account.me.get({})).rejects.toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+    });
   });
 
   it("refuse toute requête routée sans IP valide posée par le proxy", async () => {

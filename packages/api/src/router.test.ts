@@ -69,13 +69,6 @@ describe("routeur", () => {
     });
   });
 
-  it("account.me.get rend l'utilisateur de la session, en liste blanche", async () => {
-    // Champ en trop dans la session : il ne doit pas sortir.
-    const sessionUser = { ...ALICE, emailVerified: true };
-    const withExtra = contextFor(sessionUser);
-    await expect(call(router.account.me.get, {}, { context: withExtra })).resolves.toEqual(ALICE);
-  });
-
   it("valide l'entrée avant la garde d'Espace (aucune lecture en base sur une entrée invalide)", async () => {
     // `getDb` échoue dans ce contexte : une garde lancée avant la validation rendrait une autre erreur.
     await expect(

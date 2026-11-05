@@ -16,6 +16,9 @@ export const COMMON_LABELS = {
   nothingLost: "Rien n'est perdu.",
 } as const;
 
+/** Noms des modules, tels que la navigation et le profil les écrivent. */
+export const MODULE_LABELS = { TODO: "Todo", AGENDA: "Agenda", EVENTS: "Événements" } as const;
+
 /** Titre d'onglet d'une page : « Mes Espaces · Planifier ». */
 export function pageTitle(page: string): string {
   return `${page} · ${COMMON_LABELS.appName}`;

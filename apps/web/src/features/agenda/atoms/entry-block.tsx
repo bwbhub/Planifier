@@ -18,22 +18,17 @@ interface EntryBlockProps {
   onOpen: (item: AgendaItem) => void;
 }
 
-/**
- * Créneau d'une grille. Serré parmi d'autres, il s'étale au survol ou au focus (maquette). Une entrée d'une autre
- * personne se lit seulement : elle prend le focus sans être un bouton.
- */
-export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockProps) {
-  const { title, location, participants, when, background, owner, entry } = item;
+const BLOCK =
+  "flex flex-col gap-0.5 overflow-hidden rounded-control border-2 border-surface px-2 py-1 text-left text-xs text-ink";
+/** Placé dans sa colonne ; serré parmi d'autres, il s'étale au survol ou au focus (maquette). */
+const PLACED =
+  "absolute transition-[left,width] hover:left-0! hover:z-20 hover:h-auto! hover:w-full! focus:left-0! focus:z-20 focus:h-auto! focus:w-full! motion-reduce:transition-none";
+
+function BlockContent({ item, compact }: { item: AgendaItem; compact: boolean }) {
+  const { title, location, participants, when, owner } = item;
   const withPeople = participantsLabel(participants);
-  const placed = style !== undefined;
-  const className = cn(
-    "flex flex-col gap-0.5 overflow-hidden rounded-control border-2 border-surface px-2 py-1 text-left text-xs text-ink",
-    background,
-    placed &&
-      "absolute transition-[left,width] hover:left-0! hover:z-20 hover:h-auto! hover:w-full! focus:left-0! focus:z-20 focus:h-auto! focus:w-full! motion-reduce:transition-none",
-  );
   const details = compact ? ON_HOVER : "text-muted";
-  const content = (
+  return (
     <>
       <span className="font-semibold">{title}</span>
       <span className={details}>{whenLabel(when)}</span>
@@ -47,14 +42,23 @@ export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockP
       )}
     </>
   );
-  if (entry === null) {
+}
+
+/**
+ * Créneau d'une grille. Une entrée d'une autre personne se lit seulement : elle prend le focus sans être un bouton.
+ * La mienne s'ouvre au clic.
+ */
+export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockProps) {
+  const className = cn(BLOCK, "group", item.background, style !== undefined && PLACED);
+  const content = <BlockContent item={item} compact={compact} />;
+  if (item.entry === null) {
     return (
       <div
         role="group"
         tabIndex={0}
         aria-label={itemLabel(item)}
         style={style}
-        className={cn(className, "group")}
+        className={className}
       >
         {content}
       </div>
@@ -65,7 +69,7 @@ export function EntryBlock({ item, style, compact = false, onOpen }: EntryBlockP
       type="button"
       aria-label={itemLabel(item)}
       style={style}
-      className={cn(className, "group", entry.hidden && "border-dashed border-muted")}
+      className={cn(className, item.entry.hidden && "border-dashed border-muted")}
       onClick={() => {
         onOpen(item);
       }}

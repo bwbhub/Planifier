@@ -1,12 +1,17 @@
+import { type GridPoint, shiftedWhen } from "@planifier/domain-agenda/move";
 import { viewDays } from "@planifier/domain-agenda/view-days";
+import { Button } from "@planifier/ui/components/button";
 import { cn } from "@planifier/ui/lib/cn";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { dayNumber, fullDayLabel, weekdayLabel } from "../utils/agenda-dates";
+import { agendaErrorMessage } from "../utils/agenda-error-message";
 import type { AgendaItem, DayContent } from "../utils/agenda-items";
 import { dayContent, hoursRange } from "../utils/agenda-items";
-import { EntryBlock } from "../atoms/entry-block";
+import { type GridScale, moveZone } from "../utils/move-zones";
+import { type EntryMove, type MoveState, useEntryMove } from "../utils/use-entry-move";
+import { GridActionsProvider, GridEntry } from "./grid-actions";
 
 /** Hauteur d'une heure, en pixels : la vue Jour respire davantage (maquette). */
 const HOUR_HEIGHT = { day: 50, week: 42 };
@@ -27,14 +32,6 @@ interface TimeGridProps {
 
 type DaySlot = DayContent["slots"][number];
 
-/** Échelle des heures : première heure affichée, hauteur d'une heure en pixels. */
-interface GridScale {
-  firstHour: number;
-  hourHeight: number;
-}
-
-type OpenEntry = (item: AgendaItem) => void;
-
 function slotStyle({ start, end, column, columns }: DaySlot, scale: GridScale): CSSProperties {
   const height = ((end - start) / 60) * scale.hourHeight;
   return {
@@ -46,30 +43,54 @@ function slotStyle({ start, end, column, columns }: DaySlot, scale: GridScale): 
   };
 }
 
+/** Point visé par l'entrée tirée à la souris, s'il tombe sur ce jour (heures, ou ligne des journées). */
+function dropPointOn(state: MoveState, day: string, inHours: boolean): GridPoint | null {
+  if (state.kind !== "dragging" || state.to?.day !== day) return null;
+  return (state.to.minute !== null) === inHours ? state.to : null;
+}
+
+/** Où tomberait l'entrée tirée, dans cette colonne : la place qu'elle y prendrait. */
+function DropPreview({ day, scale, state }: { day: string; scale: GridScale; state: MoveState }) {
+  const to = dropPointOn(state, day, true);
+  if (to === null || state.kind !== "dragging" || state.item.entry === null) return null;
+  const when = shiftedWhen(state.item.entry.when, state.from, to);
+  const slot = when === null ? undefined : dayContent([{ ...state.item, when }], day).slots[0];
+  if (slot === undefined) return null;
+  const { top, height } = slotStyle(slot, scale);
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 z-10 rounded-control border-2 border-dashed border-accent"
+      style={{ top, height }}
+    />
+  );
+}
+
 interface DayColumnProps {
   day: string;
   content: DayContent;
   scale: GridScale;
   hours: number;
   isToday: boolean;
-  onOpen: OpenEntry;
+  state: MoveState;
 }
 
-function DayColumn({ content, scale, hours, isToday, onOpen }: DayColumnProps) {
+function DayColumn({ day, content, scale, hours, isToday, state }: DayColumnProps) {
   return (
     <div
+      {...moveZone(day, scale)}
       className={cn("relative min-w-0 flex-1 border-l border-line", isToday && "bg-today")}
       style={{ height: hours * scale.hourHeight }}
     >
+      <DropPreview day={day} scale={scale} state={state} />
       {content.slots.map((slot) => {
         const style = slotStyle(slot, scale);
         return (
-          <EntryBlock
+          <GridEntry
             key={slot.item.id}
             item={slot.item}
             style={style}
             compact={Number(style.height) < COMPACT_HEIGHT}
-            onOpen={onOpen}
           />
         );
       })}
@@ -106,17 +127,53 @@ function DayHeading({ day, isToday, selected, href }: DayHeadingProps) {
   );
 }
 
+/** Entrée décollée au doigt : dit quoi faire ensuite. Échec d'un déplacement : dit pourquoi. */
+function MoveStatus({ move }: { move: EntryMove }) {
+  const { state, error, cancel } = move;
+  return (
+    <>
+      <div role="status" aria-live="polite">
+        {state.kind === "lifted" ? (
+          // En surimpression : la grille ne doit pas bouger sous le doigt qui vise un créneau.
+          <div className="fixed inset-x-4 bottom-20 z-30 mx-auto flex max-w-md flex-wrap items-center gap-2 rounded-card bg-ink p-3 text-sm text-surface">
+            <span>
+              « {state.item.title} » est décollée : touche un créneau pour la poser, ou un jour pour
+              changer de jour.
+            </span>
+            <Button variant="secondary" onClick={cancel}>
+              Annuler
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      {error === null ? null : (
+        <p role="alert" className="pb-2 text-sm text-accent-text">
+          {agendaErrorMessage(error)}
+        </p>
+      )}
+    </>
+  );
+}
+
 type DayContents = readonly (DayContent & { day: string })[];
 
-/** Entrées à la journée, jour par jour. */
-function AllDayRow({ contents, onOpen }: { contents: DayContents; onOpen: OpenEntry }) {
+/** Entrées à la journée : chaque jour est une cible pour en déplacer une. */
+function AllDayRow({ contents, state }: { contents: DayContents; state: MoveState }) {
   return (
     <div className="flex border-t border-line py-1">
       <div className={cn(HOURS_GUTTER, "text-xs text-muted")}>Jour</div>
       {contents.map(({ day, allDay }) => (
-        <div key={day} className="flex min-w-0 flex-1 flex-col gap-1 px-0.5">
+        <div
+          key={day}
+          {...moveZone(day)}
+          className={cn(
+            "flex min-w-0 flex-1 flex-col gap-1 px-0.5",
+            dropPointOn(state, day, false) !== null &&
+              "rounded-control outline-2 outline-accent outline-dashed",
+          )}
+        >
           {allDay.map((item) => (
-            <EntryBlock key={item.id} item={item} compact onOpen={onOpen} />
+            <GridEntry key={item.id} item={item} compact />
           ))}
         </div>
       ))}
@@ -129,10 +186,10 @@ interface HoursBodyProps {
   today: string;
   scale: GridScale;
   hours: number;
-  onOpen: OpenEntry;
+  state: MoveState;
 }
 
-function HoursBody({ contents, today, scale, hours, onOpen }: HoursBodyProps) {
+function HoursBody({ contents, today, scale, hours, state }: HoursBodyProps) {
   return (
     <div className="flex border-t border-line">
       <div className={HOURS_GUTTER} aria-hidden="true">
@@ -160,7 +217,7 @@ function HoursBody({ contents, today, scale, hours, onOpen }: HoursBodyProps) {
             scale={scale}
             hours={hours}
             isToday={content.day === today}
-            onOpen={onOpen}
+            state={state}
           />
         ))}
       </div>
@@ -170,6 +227,7 @@ function HoursBody({ contents, today, scale, hours, onOpen }: HoursBodyProps) {
 
 /** Grille horaire d'un ou plusieurs jours : en-tête, entrées à la journée, puis créneaux placés sans se recouvrir. */
 export function TimeGrid({ days, day: shownDay, today, items, dayHref, onOpen }: TimeGridProps) {
+  const move = useEntryMove();
   const contents = days.map((day) => ({ day, ...dayContent(items, day) }));
   const { first, last } = hoursRange(contents);
   const scale = {
@@ -181,29 +239,44 @@ export function TimeGrid({ days, day: shownDay, today, items, dayHref, onOpen }:
   const headings = singleDay ? viewDays("WEEK", shownDay) : days;
 
   return (
-    <section aria-label="Grille de l'agenda" className="rounded-card bg-surface p-3">
-      <div className="flex">
-        {singleDay ? null : <div className={HOURS_GUTTER} />}
-        {headings.map((day) => (
-          <DayHeading
-            key={day}
-            day={day}
-            isToday={day === today}
-            selected={singleDay && day === shownDay}
-            href={dayHref(day)}
-          />
-        ))}
-      </div>
-      {contents.some(({ allDay }) => allDay.length > 0) ? (
-        <AllDayRow contents={contents} onOpen={onOpen} />
-      ) : null}
-      <HoursBody
-        contents={contents}
-        today={today}
-        scale={scale}
-        hours={last - first}
-        onOpen={onOpen}
-      />
-    </section>
+    <GridActionsProvider value={{ move, onOpen }}>
+      {/* Hors de la grille : toucher « Annuler » ne doit pas poser l'entrée. */}
+      <MoveStatus move={move} />
+      <section
+        aria-label="Grille de l'agenda"
+        className={cn(
+          "rounded-card bg-surface p-3",
+          move.state.kind === "dragging" && "cursor-grabbing",
+        )}
+        onClickCapture={(event) => {
+          if (!move.claimClick(event.clientX, event.clientY, event.target)) return;
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <div className="flex">
+          {singleDay ? null : <div className={HOURS_GUTTER} />}
+          {headings.map((day) => (
+            <DayHeading
+              key={day}
+              day={day}
+              isToday={day === today}
+              selected={singleDay && day === shownDay}
+              href={dayHref(day)}
+            />
+          ))}
+        </div>
+        {contents.some(({ allDay }) => allDay.length > 0) ? (
+          <AllDayRow contents={contents} state={move.state} />
+        ) : null}
+        <HoursBody
+          contents={contents}
+          today={today}
+          scale={scale}
+          hours={last - first}
+          state={move.state}
+        />
+      </section>
+    </GridActionsProvider>
   );
 }

@@ -28,7 +28,7 @@ Langue du dépôt (code, commentaires, commits, docs) : français ; identifiants
 | auth                   | `@planifier/auth`                                          | posé (Better Auth)                                                                                                                                |
 | droits (logique pure)  | `@planifier/domain-access`                                 | posé                                                                                                                                              |
 | récurrence (pure)      | `@planifier/domain-recurrence`                             | posé                                                                                                                                              |
-| agenda (pur)           | `@planifier/domain-agenda`                                 | posé (jours affichés, chevauchements)                                                                                                             |
+| agenda (pur)           | `@planifier/domain-agenda`                                 | posé (jours affichés, chevauchements, décalage d'une entrée déplacée)                                                                             |
 | e-mails                | `@planifier/mails`                                         | posé (Resend / Mailpit, gabarits React Email)                                                                                                     |
 
 ## 3. Bibliothèques canoniques (une seule par besoin)

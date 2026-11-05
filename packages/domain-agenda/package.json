@@ -7,6 +7,7 @@
   "sideEffects": false,
   "exports": {
     "./layout": "./src/layout.ts",
+    "./move": "./src/move.ts",
     "./view-days": "./src/view-days.ts"
   },
   "scripts": {

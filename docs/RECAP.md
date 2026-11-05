@@ -18,6 +18,18 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-05 (fin de session) — Fusions, nettoyage git, barre d'état
+
+**Fait** : PR #30, #31, #33, #34 fusionnées dans `master` (l'Agenda complet, composants de base, navigation par modules). Branches locales fusionnées supprimées. `/code-review` (Standards et Spec) faite sur #31 et #34, corrigée, points à trancher dans `SUITE` §4. Barre d'état du contexte (`~/.claude/statusline-context.sh`, hors dépôt).
+
+**Vérifié** : voir l'entrée suivante (chaîne complète, intégration, e2e 60/60). Après fusion : rien relancé sur `master`.
+
+**Ouvert** : #32, #28 et #29 avaient été fusionnées dans leurs branches de base et pas dans `master` ; leur contenu est arrivé par #30, #33 et #34. Branches distantes fusionnées non supprimées (refus de l'auto mode). Barre d'état : champ `context_window.used_percentage` non confirmé.
+
+**Attendu ensuite** : `SUITE` §2.
+
+---
+
 ## 2026-11-05 — Composants de base et navigation par modules (branches `feat/ui-composants-base` puis `feat/navigation-modules`, empilées)
 
 **Fait**

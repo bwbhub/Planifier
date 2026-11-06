@@ -18,6 +18,27 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Toast (branche `feat/ui-toast`)
+
+**Fait** : plan 1/4, PR 2 (ticket `869fp54cr`). `packages/ui` `ToastProvider` + `useToast().notify(texte, { tone, action })` :
+un message à la fois, zones d'annonce `aria-live` (poli : confirmation ; assertif : erreur) toujours présentes,
+5 s (8 s en erreur, 12 s avec action), minuterie suspendue au survol et tant que le focus est dans le message, bouton de
+fermeture (libellé fourni par l'app). Monté dans `AppShell`, qui pose `--nav-height` ; utilitaire `bottom-above-nav`
+(tokens) pour le toast, le bouton flottant et la barre de déplacement de l'agenda (position PC inchangée). Règle « toute
+action réussie annonce son résultat par un toast » dans `frontend-data-state`. Section « Messages » sur `/composants`.
+**Décisions** : toast pour toutes les confirmations (utilisateur, 2026-11-06). Brancher les toasts sur les mutations
+existantes : pas dans cette PR, module par module (voir `SUITE.md`).
+**Correctif CI (#39)** : (1) `format:check` : ligne avec espaces dans `ui-showcase.tsx`, issue de la résolution du
+conflit avec #38 ; (2) E2E : mes zones permanentes `role="status"` / `role="alert"` doublaient celles des écrans
+(`getByRole("status")` : « strict mode violation ») ⇒ `aria-live` sans `role`.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (12 tests du toast), `pnpm build`, `pnpm format:check` OK ;
+**60 E2E passent en local** (base `planifier_test`), dont les confirmations d'Espaces de #38. Rien vu au navigateur
+(position au-dessus de la barre basse à 375 px, contraste AA clair/nuit).
+**Ouvert** : brancher les toasts sur les mutations existantes (ticket à créer) ; limites dans `SUITE.md`.
+**Attendu ensuite** : plan 1, PR 3 (skeleton + état vide), PR 4 (menu).
+
+---
+
 ## 2026-11-07 — `ConfirmDialog` et `Sheet size="form"` (branche `feat/ui-confirm-dialog`)
 
 **Fait** : plan 1/4, PR 1 (ticket `869fp54cr`). `packages/ui` : `ConfirmDialog` (confirmation d'action définitive, option

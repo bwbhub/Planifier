@@ -2,6 +2,7 @@
 
 import type { CreatedInviteOutput } from "@planifier/api-contract";
 import { SPACE_INVITE_TTL_DAYS } from "@planifier/constants/spaces";
+import { ConfirmDialog } from "@planifier/ui/components/confirm-dialog";
 import { Button } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { TextField } from "@planifier/ui/components/text-field";
@@ -14,7 +15,6 @@ import { COMMON_LABELS } from "@/lib/labels";
 import { formatDay, formatTime } from "@/lib/format-date";
 
 import { ActionError } from "../atoms/action-error";
-import { ConfirmSheet } from "../atoms/confirm-sheet";
 import { SPACE_LABELS } from "../labels";
 import { useCreateInvite, useRevokeInvite, useSpaceInvites } from "../queries/spaces.queries";
 import { inviteLinkOf } from "../utils/invite-link";
@@ -114,14 +114,14 @@ function RevokeInviteSheet({
 }) {
   const revokeInvite = useRevokeInvite();
   return (
-    <ConfirmSheet
+    <ConfirmDialog
       title="Révoquer ce lien ?"
       description={`${invite.label}. Il ne marchera plus ; si quelqu'un l'attend encore, crée-en un autre.`}
       confirmLabel="Révoquer"
       pendingLabel="Révocation…"
       cancelLabel="Garder le lien"
       pending={revokeInvite.isPending}
-      error={revokeInvite.error}
+      error={<ActionError error={revokeInvite.error} />}
       onConfirm={() => {
         revokeInvite.mutate({ spaceId, inviteId: invite.id }, { onSuccess: onClose });
       }}

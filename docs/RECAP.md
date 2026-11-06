@@ -18,6 +18,23 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — `ConfirmDialog` et `Sheet size="form"` (branche `feat/ui-confirm-dialog`)
+
+**Fait** : plan 1/4, PR 1 (ticket `869fp54cr`). `packages/ui` : `ConfirmDialog` (confirmation d'action définitive, option
+`acknowledgement` = case à cocher obligatoire) et `Sheet size="form"` (formulaire long, défile dans la feuille).
+`spaces/atoms/confirm-sheet.tsx` supprimé : ses 4 usages (quitter, supprimer, retirer, révoquer) passent par
+`ConfirmDialog` (l'erreur arrive en `ReactNode`, `ActionError` reste dans `spaces`). Section « Dialogues » dans `/composants`.
+**Décisions** : confirmation renforcée = case à cocher (réponse utilisateur 2026-11-06) ; `size="form"` posé tout de
+suite pour la feuille « Nouvelle tâche » (décision : feuille, pas page).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK. **Non lancés** : E2E (base locale arrêtée,
+ils couvrent les confirmations des Espaces) ; rien vu au navigateur (focus piégé, Échap, contraste AA clair/nuit à voir
+sur `/composants`).
+**Ouvert** : revue visuelle des dialogues ; règle « toast pour toute confirmation d'action » à écrire dans une skill
+avec la PR toast.
+**Attendu ensuite** : plan 1, PR 2 (toast), PR 3 (skeleton + état vide), PR 4 (menu).
+
+---
+
 ## 2026-11-06 — Composant `TitledSection` (branche `feat/ui-section-titree`, empilée sur #35)
 
 **Fait** : `packages/ui` `TitledSection` (`Card` + `h2` + `aria-labelledby` par `useId`), test, axe ; adopté par `/profil` (3), `/composants`, formulaire de nouvelle liste du Todo.

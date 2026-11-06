@@ -2,6 +2,7 @@
 
 import type { SpaceDetailOutput } from "@planifier/api-contract";
 import { canAccessSpace, departureOutcome } from "@planifier/domain-access/space";
+import { ConfirmDialog } from "@planifier/ui/components/confirm-dialog";
 import { Button, buttonClassName } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,7 @@ import { SectionTitle, SettingCard, SettingRow } from "@planifier/ui/components/
 
 import { ROUTES } from "@/lib/routes";
 
-import { ConfirmSheet } from "../atoms/confirm-sheet";
+import { ActionError } from "../atoms/action-error";
 import { MEMBERS_SECTION_ID } from "../constants";
 import { peopleCount, SPACE_LABELS } from "../labels";
 import { useDeleteSpace, useLeaveSpace } from "../queries/spaces.queries";
@@ -114,7 +115,7 @@ function LeaveSheet({ space, meId, onClose }: ExitSectionProps & { onClose: () =
   }
 
   return (
-    <ConfirmSheet
+    <ConfirmDialog
       title={`Quitter « ${space.name} » ?`}
       description={
         <p>
@@ -127,7 +128,7 @@ function LeaveSheet({ space, meId, onClose }: ExitSectionProps & { onClose: () =
       pendingLabel="Départ…"
       cancelLabel="Rester"
       pending={leave.isPending}
-      error={leave.error}
+      error={<ActionError error={leave.error} />}
       onConfirm={() => {
         leave.mutate({ spaceId: space.id }, { onSuccess: returnToList });
       }}
@@ -141,7 +142,7 @@ function DeleteSheet({ space, onClose }: { space: SpaceDetailOutput; onClose: ()
   const returnToList = useReturnToList();
 
   return (
-    <ConfirmSheet
+    <ConfirmDialog
       title={`Supprimer « ${space.name} » ?`}
       description={
         <p>
@@ -161,7 +162,7 @@ function DeleteSheet({ space, onClose }: { space: SpaceDetailOutput; onClose: ()
       pendingLabel="Suppression…"
       cancelLabel="Garder l'Espace"
       pending={deleteSpace.isPending}
-      error={deleteSpace.error}
+      error={<ActionError error={deleteSpace.error} />}
       onConfirm={() => {
         deleteSpace.mutate({ spaceId: space.id }, { onSuccess: returnToList });
       }}

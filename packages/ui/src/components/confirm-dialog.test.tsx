@@ -67,6 +67,31 @@ describe("ConfirmDialog", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
+  it("donne le focus à « renoncer », pas à l'action destructive", () => {
+    renderDialog();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Garder la tâche" }));
+  });
+
+  it("démonté puis remonté, repart avec la case décochée", async () => {
+    const props = {
+      title: "Supprimer ?",
+      description: "Définitif.",
+      confirmLabel: "Supprimer",
+      pendingLabel: "…",
+      cancelLabel: "Garder",
+      pending: false,
+      acknowledgement: "Je comprends",
+      onConfirm: vi.fn(),
+      onClose: vi.fn(),
+    };
+    const { unmount } = render(<ConfirmDialog {...props} />);
+    await userEvent.click(screen.getByRole("checkbox", { name: "Je comprends" }));
+    expect(screen.getByRole("button", { name: "Supprimer" })).toHaveProperty("disabled", false);
+    unmount();
+    render(<ConfirmDialog {...props} />);
+    expect(screen.getByRole("button", { name: "Supprimer" })).toHaveProperty("disabled", true);
+  });
+
   it("montre l'erreur reçue", () => {
     renderDialog({ error: <p role="alert">Rien n'a été supprimé.</p> });
     expect(screen.getByRole("alert").textContent).toBe("Rien n'a été supprimé.");

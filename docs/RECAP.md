@@ -29,6 +29,9 @@ suite pour la feuille « Nouvelle tâche » (décision : feuille, pas page).
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK. **Non lancés** : E2E (base locale arrêtée,
 ils couvrent les confirmations des Espaces) ; rien vu au navigateur (focus piégé, Échap, contraste AA clair/nuit à voir
 sur `/composants`).
+**Revue (code-review, 2026-11-07)** : focus initial sur « Garder » (pas sur l'action destructive), contrat de montage
+écrit et testé, `Button` accepte `ref`. **Non prouvés** : piège du focus et Échap (natifs `<dialog>`, jsdom ne les joue
+pas) : pas de test E2E écrit, à voir à l'œil sur `/composants` ou à ajouter à la suite Playwright.
 **Ouvert** : revue visuelle des dialogues ; règle « toast pour toute confirmation d'action » à écrire dans une skill
 avec la PR toast.
 **Attendu ensuite** : plan 1, PR 2 (toast), PR 3 (skeleton + état vide), PR 4 (menu).

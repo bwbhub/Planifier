@@ -64,6 +64,7 @@ export function Sheet({
       onClose={onClose}
       className={cn(
         "mx-4 w-auto rounded-sheet bg-surface px-5 pt-6 pb-5 text-ink backdrop:bg-overlay",
+        // 90dvh : laisse voir le voile au-dessus de la feuille, et suit la barre d'adresse mobile (contrairement à vh).
         size === "form" ? "max-h-[90dvh] max-w-xl overflow-y-auto" : "max-w-md",
         // Le reset de Tailwind annule la marge automatique du <dialog> : la position se pose ici.
         "max-sm:mt-auto max-sm:mb-6 sm:mx-auto sm:my-auto",

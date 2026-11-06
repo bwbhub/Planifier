@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
@@ -29,7 +29,11 @@ export interface ConfirmDialogProps {
 
 /**
  * Confirmation d'une action définitive (supprimer, retirer, désactiver) : annoncée comme une alerte, action nommée et
- * sortie douce. Avec `acknowledgement`, le bouton reste inactif tant que la case n'est pas cochée. Sans métier.
+ * sortie douce. Le focus arrive sur « renoncer » (jamais sur l'action destructive). Avec `acknowledgement`, le bouton
+ * reste inactif tant que la case n'est pas cochée.
+ *
+ * À monter à l'ouverture et à démonter à la fermeture (`{open ? <ConfirmDialog … /> : null}`) : la case cochée ne
+ * survit pas à un démontage, une confirmation rouverte repart décochée. Sans métier.
  */
 export function ConfirmDialog({
   title,
@@ -44,6 +48,11 @@ export function ConfirmDialog({
   onClose,
 }: ConfirmDialogProps) {
   const [acknowledged, setAcknowledged] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Après l'ouverture modale de `Sheet` (effet enfant, déjà passé) : `showModal` aurait focalisé le premier contrôle.
+  useLayoutEffect(() => {
+    cancelRef.current?.focus();
+  }, []);
   const blocked = acknowledgement !== undefined && !acknowledged;
   return (
     <Sheet open onClose={onClose} role="alertdialog" title={title} description={description}>
@@ -60,7 +69,7 @@ export function ConfirmDialog({
       <Button variant="strong" disabled={pending || blocked} onClick={onConfirm}>
         {pending ? pendingLabel : confirmLabel}
       </Button>
-      <Button variant="secondary" onClick={onClose}>
+      <Button ref={cancelRef} variant="secondary" onClick={onClose}>
         {cancelLabel}
       </Button>
     </Sheet>

@@ -7,7 +7,13 @@ import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
 import { useState } from "react";
 
-type Opened = "confirm" | "strong" | "form" | null;
+const OPENERS = [
+  { value: "confirm", label: "Confirmation" },
+  { value: "strong", label: "Confirmation renforcée" },
+  { value: "form", label: "Feuille de formulaire" },
+] as const;
+
+type Opened = (typeof OPENERS)[number]["value"] | null;
 
 /** Les dialogues de `packages/ui`, ouverts à la demande sur la page de référence. */
 export function DialogsDemo() {
@@ -18,30 +24,17 @@ export function DialogsDemo() {
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setDialog("confirm");
-          }}
-        >
-          Confirmation
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setDialog("strong");
-          }}
-        >
-          Confirmation renforcée
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setDialog("form");
-          }}
-        >
-          Feuille de formulaire
-        </Button>
+        {OPENERS.map(({ value, label }) => (
+          <Button
+            key={value}
+            variant="secondary"
+            onClick={() => {
+              setDialog(value);
+            }}
+          >
+            {label}
+          </Button>
+        ))}
       </div>
       {dialog === "confirm" || dialog === "strong" ? (
         <ConfirmDialog

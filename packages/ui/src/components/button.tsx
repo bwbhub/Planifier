@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 
 import { cn } from "../lib/cn";
 
@@ -36,6 +36,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
   /** Action en cours : le bouton garde sa place, devient inerte et l'annonce (`aria-busy`). */
   loading?: boolean;
+  /** Accès au `<button>` (focus donné par un parent). */
+  ref?: Ref<HTMLButtonElement> | undefined;
 }
 
 /** Classes d'un bouton, pour donner son allure à un lien (`<Link>` de l'app) sans en faire un `<button>`. */

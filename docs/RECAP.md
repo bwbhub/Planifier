@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-06 — Composant `TitledSection` (branche `feat/ui-section-titree`, empilée sur #35)
+
+**Fait** : `packages/ui` `TitledSection` (`Card` + `h2` + `aria-labelledby` par `useId`), test, axe ; adopté par `/profil` (3), `/composants`, formulaire de nouvelle liste du Todo.
+**Décisions** : titre en `h2` fixe ; `useId` remplace les `id` écrits à la main.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK. E2E non relancés (le nom accessible des régions est inchangé). Rien vu au navigateur.
+**Ouvert** : revue visuelle ; fusionner #35 avant cette PR (ou la viser sur `master` après).
+**Attendu ensuite** : composants de retour (`869fp54cr`), composants de domaine (`869fhwtg9`), Nouvelle tâche (`869fhwtr3`).
+
+---
+
 ## 2026-11-06 — Composants `Card` et `PageHeader` (branche `docs/suite-navigation`)
 
 **Fait** : `packages/ui` `Card` (balise `section`/`div`/`article`, 3 paddings) et `PageHeader` (h1, précision, actions), testés ; adoptés par `/profil`, `/todo`, `/composants`.

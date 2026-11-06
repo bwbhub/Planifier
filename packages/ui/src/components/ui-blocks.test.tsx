@@ -10,6 +10,7 @@ import { ListSkeleton } from "./list-skeleton";
 import { LoadError } from "./load-error";
 import { MessageCard } from "./message-card";
 import { PageHeader } from "./page-header";
+import { TitledSection } from "./titled-section";
 import { SectionTitle, SettingCard, SettingRow } from "./setting-list";
 
 describe("blocs d'écran", () => {
@@ -55,6 +56,12 @@ describe("blocs d'écran", () => {
     expect(screen.getByRole("button", { name: "Agir" })).toBeTruthy();
   });
 
+  it("TitledSection est une région nommée par son titre", () => {
+    render(<TitledSection title="Mot de passe">Contenu</TitledSection>);
+    expect(screen.getByRole("region", { name: "Mot de passe" }).textContent).toContain("Contenu");
+    expect(screen.getByRole("heading", { level: 2, name: "Mot de passe" })).toBeTruthy();
+  });
+
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = render(
       <main>
@@ -62,6 +69,9 @@ describe("blocs d'écran", () => {
         <Card as="section" aria-label="Résumé">
           <p>Contenu</p>
         </Card>
+        <TitledSection title="Réglages">
+          <p>Contenu</p>
+        </TitledSection>
         <MessageCard title="Aucun Espace">
           <p>Crée le premier.</p>
         </MessageCard>

@@ -18,6 +18,30 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-06 — Composants `Card` et `PageHeader` (branche `docs/suite-navigation`)
+
+**Fait** : `packages/ui` `Card` (balise `section`/`div`/`article`, 3 paddings) et `PageHeader` (h1, précision, actions), testés ; adoptés par `/profil`, `/todo`, `/composants`.
+**Décisions** : reste de `869fhwtg4` bloqué par d'autres tickets : « + » (Nouvelle tâche `869fhwtr3`), pastille non-lus
+(Notifications : ni écran ni API), entrées Aujourd'hui (`869fhwtu9`) et Événements. Autres `rounded-card bg-surface` et
+`h1` du web (agenda, Espaces, accueil) non migrés.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (236 tests web), `pnpm build` OK. Rien vu au navigateur.
+**Ouvert** : revue visuelle de `869fhwtg4` / `869fhwtg1` ; migration `modules_utilisateur` à appliquer.
+**Attendu ensuite** : Aujourd'hui (`869fhwtu9`), puis composants de retour (`869fp54cr`), Nouvelle tâche (`869fhwtr3`).
+
+---
+
+## 2026-11-05 (fin de session) — Fusions, nettoyage git, barre d'état
+
+**Fait** : PR #30, #31, #33, #34 fusionnées dans `master` (l'Agenda complet, composants de base, navigation par modules). Branches locales fusionnées supprimées. `/code-review` (Standards et Spec) faite sur #31 et #34, corrigée, points à trancher dans `SUITE` §4. Barre d'état du contexte (`~/.claude/statusline-context.sh`, hors dépôt).
+
+**Vérifié** : voir l'entrée suivante (chaîne complète, intégration, e2e 60/60). Après fusion : rien relancé sur `master`.
+
+**Ouvert** : #32, #28 et #29 avaient été fusionnées dans leurs branches de base et pas dans `master` ; leur contenu est arrivé par #30, #33 et #34. Branches distantes fusionnées non supprimées (refus de l'auto mode). Barre d'état : champ `context_window.used_percentage` non confirmé.
+
+**Attendu ensuite** : `SUITE` §2.
+
+---
+
 ## 2026-11-05 — Composants de base et navigation par modules (branches `feat/ui-composants-base` puis `feat/navigation-modules`, empilées)
 
 **Fait**

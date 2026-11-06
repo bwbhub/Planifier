@@ -4,22 +4,33 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Fusionner** la PR du partage en lecture seule (`feat/todo-partage-lecture`).
-- **Tester le Todo** : `docker compose up -d`, `pnpm --filter @planifier/db migrate:deploy`, `pnpm seed`, `pnpm dev`,
-  puis `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées, tâches,
-  sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
-- Revue humaine : droits des listes et de l'agenda (voir §4).
+- **Appliquer la migration** `20261105230000_modules_utilisateur` sur la base locale (`pnpm --filter @planifier/db migrate:deploy`),
+  puis `pnpm seed` si besoin. Sans elle, les comptes existants n'ont aucun module (navigation vide).
+- **Voir à l'œil** (`pnpm dev`) : navigation (panneau latéral PC, barre basse mobile 375 px), `/profil` (section
+  Modules), `/composants` ; clair et nuit. Rien de ceci n'a été vu dans un navigateur.
+- **Tester le Todo** : `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées,
+  tâches, sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
+- Revue humaine : droits des listes et de l'agenda (voir §4) ; migration des modules et `account.me.setModules`.
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
+- **Git** : supprimer les branches distantes fusionnées (refusé par l'auto mode, à faire à la main ou à autoriser).
+  Branches locales gardées, non fusionnées : `backup/espaces-ui-avant-redecoupage`, `feat/e2e-playwright` (2 commits
+  locaux), `feat/premier-espace`, `feat/profil` : à regarder avant de les supprimer.
+- **Barre d'état** du contexte posée (`~/.claude/statusline-context.sh`, orange dès 40 %). Champ lu :
+  `context_window.used_percentage`, non confirmé par la doc : si elle affiche `ctx --`, corriger le champ.
 
 ## 2. Prochain ticket
 
-Urgents (2026-11-05) : composants de base (`869fhwtg1`) et navigation (`869fhwtg4`) faits en code sur `feat/ui-composants-base`
-puis `feat/navigation-modules` (empilées, non poussées). Reste : revue visuelle, `/code-review` faite, push + PR.
-Ensuite : Aujourd'hui (`869fhwtu9`), composants de retour (`869fp54cr`), Nouvelle tâche (bouton « + »).
+État au 2026-11-05 : `master` contient l'Agenda complet (entrées, participants, déplacement), les composants de base
+(`869fhwtg1`) et la navigation par modules (`869fhwtg4`, PR #34). Les deux tickets restent ouverts dans ClickUp
+(commentés) : revue visuelle d'abord. Piège vu 3 fois : une PR empilée fusionnée dans sa branche de base **après**
+la fusion de la base dans `master` laisse ses commits hors de `master`. Fusionner de bas en haut en changeant la base
+de la suivante vers `master`, ou viser `master` directement.
 
-Agenda (`feat/agenda-modele`, empilée sur `feat/todo-partage-lecture`) : modèle, droits, API, écran Jour, Semaine, Mois
-et vue fusionnée faits ; ni commit ni PR. Ensuite : Aujourd'hui (`869fhwtu9`), iCal (`869fjgrcc`, `869fhwtup`).
-Changement d'e-mail (`869fmk5dw`) : rapide, à glisser quand on veut.
+Priorités ClickUp (urgent d'abord) : `869fhwtg4` (reste : bouton « + », pastille de non-lus, carte, entrées sans
+écran), `869fhwtg1` (clore après revue visuelle), `869fhwtce` (db : reste la migration sur une vraie branche Neon,
+avec `869fhwtv0`). Puis, en high : Aujourd'hui (`869fhwtu9`, la navigation est prête), composants de retour
+(`869fp54cr`), composants de domaine partagés (`869fhwtg9`), Nouvelle tâche (`869fhwtr3`, donne le « + »), Détail de
+tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail (`869fmk5dw`) : rapide, à glisser.
 
 ## 3. Ensuite
 

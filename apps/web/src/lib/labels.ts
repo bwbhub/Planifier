@@ -5,6 +5,7 @@
 export const COMMON_LABELS = {
   appName: "Planifier",
   cancel: "Annuler",
+  close: "Fermer",
   save: "Enregistrer",
   saving: "Enregistrement…",
   creating: "Création…",

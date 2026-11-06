@@ -18,6 +18,26 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Toast (branche `feat/ui-toast`)
+
+**Fait** : plan 1/4, PR 2 (ticket `869fp54cr`). `packages/ui` `ToastProvider` + `useToast().notify(texte, { tone, action })` :
+un message à la fois, zones `role="status"` (confirmation) et `role="alert"` (erreur) toujours présentes, disparition
+après 5 s (8 s en erreur) **suspendue au survol et au focus**, action facultative (« Annuler »), bouton de fermeture
+(libellé fourni par l'app : `ui` n'écrit aucun mot). Monté dans `AppShell`, qui pose `--nav-height` (barre basse mobile) :
+le toast, le bouton flottant et la barre d'action de l'agenda s'y calent (fini le `bottom-20` écrit à la main).
+Règle « toute action réussie annonce son résultat par un toast » écrite dans `frontend-data-state`. Section « Messages »
+sur `/composants`.
+**Décisions** : toast pour toutes les confirmations (utilisateur, 2026-11-06). Brancher les toasts sur les mutations
+existantes (Todo, Agenda, Espaces) : **pas dans cette PR** (une PR par sujet) ; à faire module par module.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (9 tests du toast, dont minuterie en faux temps et axe),
+`pnpm build` OK. **Non lancés** : E2E ; rien vu au navigateur (position au-dessus de la barre basse à 375 px, contraste
+AA clair/nuit).
+**Ouvert** : brancher les toasts sur les mutations existantes (ticket à créer ou suite du 869fp54cr) ; conflit probable
+avec #38 sur `ui-showcase.tsx` (sections voisines).
+**Attendu ensuite** : plan 1, PR 3 (skeleton + état vide), PR 4 (menu).
+
+---
+
 ## 2026-11-06 — Composant `TitledSection` (branche `feat/ui-section-titree`, empilée sur #35)
 
 **Fait** : `packages/ui` `TitledSection` (`Card` + `h2` + `aria-labelledby` par `useId`), test, axe ; adopté par `/profil` (3), `/composants`, formulaire de nouvelle liste du Todo.

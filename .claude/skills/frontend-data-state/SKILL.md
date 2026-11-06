@@ -25,6 +25,7 @@ La donnée serveur n'est **jamais** copiée dans un store. (Outils de store, d'U
 - `QueryClient` **par requête** côté serveur ; préchargement + hydratation.
 - Erreurs globales : `UNAUTHORIZED` → reconnexion, `CONFLICT` → proposer de recharger, `TOO_MANY_REQUESTS` → message.
 - États obligatoires : chargement (squelette), vide, erreur avec reprise.
+- **Toute action de l'utilisateur qui réussit annonce son résultat par un toast** (`useToast` de `@planifier/ui/components/toast`, ton neutre : « Tâche ajoutée à « Courses » »), avec « Annuler » quand elle est réversible. Appelé dans le `onSuccess` de la mutation côté composant ; le texte vient des libellés du module. Un échec reste affiché à l'endroit de l'action (`role="alert"` du formulaire) ; le toast `error` est pour ce qui n'a plus d'écran où s'afficher.
 
 ## Stores
 

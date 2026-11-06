@@ -12,6 +12,8 @@ import { TextField } from "@planifier/ui/components/text-field";
 import { TitledSection } from "@planifier/ui/components/titled-section";
 import { type ReactNode, useState } from "react";
 
+import { ToastsDemo } from "./ui-showcase-toasts";
+
 const VIEWS = [
   { value: "day", label: "Jour" },
   { value: "week", label: "Semaine" },
@@ -101,6 +103,10 @@ export function UiShowcase() {
           value={view}
           onValueChange={setView}
         />
+      </Section>
+
+      <Section title="Messages">
+        <ToastsDemo />
       </Section>
 
       <Section title="Pastilles">

@@ -18,26 +18,23 @@ Modèle d'entrée :
 
 ---
 
-## 2026-11-07 — Toast (branche `feat/ui-toast`)
+## 2026-11-07 — `ConfirmDialog` et `Sheet size="form"` (branche `feat/ui-confirm-dialog`)
 
-**Fait** : plan 1/4, PR 2 (ticket `869fp54cr`). `packages/ui` `ToastProvider` + `useToast().notify(texte, { tone, action })` :
-un message à la fois, zones `role="status"` (confirmation) et `role="alert"` (erreur) toujours présentes, disparition
-après 5 s (8 s en erreur) **suspendue au survol et au focus**, action facultative (« Annuler »), bouton de fermeture
-(libellé fourni par l'app : `ui` n'écrit aucun mot). Monté dans `AppShell`, qui pose `--nav-height` (barre basse mobile) :
-le toast, le bouton flottant et la barre d'action de l'agenda s'y calent (fini le `bottom-20` écrit à la main).
-Règle « toute action réussie annonce son résultat par un toast » écrite dans `frontend-data-state`. Section « Messages »
-sur `/composants`.
-**Décisions** : toast pour toutes les confirmations (utilisateur, 2026-11-06). Brancher les toasts sur les mutations
-existantes (Todo, Agenda, Espaces) : **pas dans cette PR** (une PR par sujet) ; à faire module par module.
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (12 tests du toast, dont minuterie en faux temps et axe),
-`pnpm build` OK. **Non lancés** : E2E ; rien vu au navigateur (position au-dessus de la barre basse à 375 px, contraste
-AA clair/nuit).
-**Revue (code-review, 2026-11-07)** : barre de déplacement de l'agenda remise à sa place sur PC (`sm:bottom-20`),
-utilitaire `bottom-above-nav` (tokens) au lieu de la formule copiée 3 fois, message avec action : 12 s, pause tant que
-le focus reste dans le message, 3 tests ajoutés (12 au total). Limites notées dans `SUITE.md`.
-**Ouvert** : brancher les toasts sur les mutations existantes (ticket à créer ou suite du 869fp54cr) ; conflit probable
-avec #38 sur `ui-showcase.tsx` (sections voisines).
-**Attendu ensuite** : plan 1, PR 3 (skeleton + état vide), PR 4 (menu).
+**Fait** : plan 1/4, PR 1 (ticket `869fp54cr`). `packages/ui` : `ConfirmDialog` (confirmation d'action définitive, option
+`acknowledgement` = case à cocher obligatoire) et `Sheet size="form"` (formulaire long, défile dans la feuille).
+`spaces/atoms/confirm-sheet.tsx` supprimé : ses 4 usages (quitter, supprimer, retirer, révoquer) passent par
+`ConfirmDialog` (l'erreur arrive en `ReactNode`, `ActionError` reste dans `spaces`). Section « Dialogues » dans `/composants`.
+**Décisions** : confirmation renforcée = case à cocher (réponse utilisateur 2026-11-06) ; `size="form"` posé tout de
+suite pour la feuille « Nouvelle tâche » (décision : feuille, pas page).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` OK. **Non lancés** : E2E (base locale arrêtée,
+ils couvrent les confirmations des Espaces) ; rien vu au navigateur (focus piégé, Échap, contraste AA clair/nuit à voir
+sur `/composants`).
+**Revue (code-review, 2026-11-07)** : focus initial sur « Garder » (pas sur l'action destructive), contrat de montage
+écrit et testé, `Button` accepte `ref`. **Non prouvés** : piège du focus et Échap (natifs `<dialog>`, jsdom ne les joue
+pas) : pas de test E2E écrit, à voir à l'œil sur `/composants` ou à ajouter à la suite Playwright.
+**Ouvert** : revue visuelle des dialogues ; règle « toast pour toute confirmation d'action » à écrire dans une skill
+avec la PR toast.
+**Attendu ensuite** : plan 1, PR 2 (toast), PR 3 (skeleton + état vide), PR 4 (menu).
 
 ---
 

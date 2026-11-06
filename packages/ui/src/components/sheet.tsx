@@ -13,6 +13,11 @@ export interface SheetProps {
   description?: ReactNode;
   /** `alertdialog` : confirmation d'une action définitive (le lecteur d'écran l'annonce comme une alerte). */
   role?: "dialog" | "alertdialog";
+  /**
+   * `form` : formulaire long — presque toute la hauteur sur mobile (le contenu défile dans la feuille), plus large sur
+   * grand écran.
+   */
+  size?: "default" | "form";
   /** Actions, empilées sur toute la largeur. */
   children: ReactNode;
   className?: string;
@@ -29,6 +34,7 @@ export function Sheet({
   title,
   description,
   role = "dialog",
+  size = "default",
   children,
   className,
 }: SheetProps) {
@@ -57,7 +63,9 @@ export function Sheet({
       aria-describedby={description === undefined ? undefined : descriptionId}
       onClose={onClose}
       className={cn(
-        "mx-4 w-auto max-w-md rounded-sheet bg-surface px-5 pt-6 pb-5 text-ink backdrop:bg-overlay",
+        "mx-4 w-auto rounded-sheet bg-surface px-5 pt-6 pb-5 text-ink backdrop:bg-overlay",
+        // 90dvh : laisse voir le voile au-dessus de la feuille, et suit la barre d'adresse mobile (contrairement à vh).
+        size === "form" ? "max-h-[90dvh] max-w-xl overflow-y-auto" : "max-w-md",
         // Le reset de Tailwind annule la marge automatique du <dialog> : la position se pose ici.
         "max-sm:mt-auto max-sm:mb-6 sm:mx-auto sm:my-auto",
         className,

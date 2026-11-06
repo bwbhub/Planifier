@@ -2,6 +2,7 @@
 
 import type { SpaceDetailOutput, SpaceMemberOutput } from "@planifier/api-contract";
 import { canAccessSpace, removalOutcome, roleChangeOutcome } from "@planifier/domain-access/space";
+import { ConfirmDialog } from "@planifier/ui/components/confirm-dialog";
 import { Button } from "@planifier/ui/components/button";
 import { Sheet } from "@planifier/ui/components/sheet";
 import { useState } from "react";
@@ -12,7 +13,6 @@ import { COMMON_LABELS } from "@/lib/labels";
 import { formatDay } from "@/lib/format-date";
 
 import { ActionError } from "../atoms/action-error";
-import { ConfirmSheet } from "../atoms/confirm-sheet";
 import { RolePill } from "../atoms/role-pill";
 import { MEMBERS_SECTION_ID } from "../constants";
 import { SPACE_LABELS, SPACE_ROLE_LABELS } from "../labels";
@@ -108,14 +108,14 @@ function ManageMemberSheet({ space, member, onClose }: ManageMemberSheetProps) {
 
   if (confirmRemove) {
     return (
-      <ConfirmSheet
+      <ConfirmDialog
         title={`Retirer ${member.name} ?`}
         description={`Cette personne ne verra plus ce qui est partagé dans l'Espace. ${SPACE_LABELS.comeBackWithLink}`}
         confirmLabel={SPACE_LABELS.remove}
         pendingLabel="Retrait…"
         cancelLabel={COMMON_LABELS.cancel}
         pending={pending}
-        error={remove.error}
+        error={<ActionError error={remove.error} />}
         onConfirm={() => {
           remove.mutate(target, { onSuccess: onClose });
         }}

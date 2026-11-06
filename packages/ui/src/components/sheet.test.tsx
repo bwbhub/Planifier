@@ -101,4 +101,15 @@ describe("Sheet", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
+
+  it('size="form" borne la hauteur et fait défiler le contenu dans la feuille', () => {
+    render(
+      <Sheet open onClose={vi.fn()} title="Nouvelle tâche" size="form">
+        <p>Champs</p>
+      </Sheet>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Nouvelle tâche" });
+    expect(dialog.className).toContain("overflow-y-auto");
+    expect(dialog.className).toContain("max-h-");
+  });
 });

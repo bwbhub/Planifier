@@ -13,6 +13,7 @@ import { TitledSection } from "@planifier/ui/components/titled-section";
 import { type ReactNode, useState } from "react";
 
 import { ToastsDemo } from "./ui-showcase-toasts";
+import { DialogsDemo } from "./ui-showcase-dialogs";
 
 const VIEWS = [
   { value: "day", label: "Jour" },
@@ -107,6 +108,10 @@ export function UiShowcase() {
 
       <Section title="Messages">
         <ToastsDemo />
+      </Section>
+      
+      <Section title="Dialogues">
+        <DialogsDemo />
       </Section>
 
       <Section title="Pastilles">

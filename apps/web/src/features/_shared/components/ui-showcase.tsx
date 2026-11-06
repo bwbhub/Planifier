@@ -2,7 +2,6 @@
 
 import { Badge } from "@planifier/ui/components/badge";
 import { Button } from "@planifier/ui/components/button";
-import { Card } from "@planifier/ui/components/card";
 import { Checkbox } from "@planifier/ui/components/checkbox";
 import { SegmentedControl } from "@planifier/ui/components/segmented-control";
 import { SelectField } from "@planifier/ui/components/select-field";
@@ -10,6 +9,7 @@ import { Switch } from "@planifier/ui/components/switch";
 import { Tabs } from "@planifier/ui/components/tabs";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
+import { TitledSection } from "@planifier/ui/components/titled-section";
 import { type ReactNode, useState } from "react";
 
 const VIEWS = [
@@ -28,10 +28,9 @@ type ListId = (typeof LISTS)[number]["value"];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card as="section" aria-label={title} className="p-6">
-      <h2 className="mb-4 font-display text-xl font-bold">{title}</h2>
+    <TitledSection title={title} className="p-6">
       <div className="flex flex-col gap-4">{children}</div>
-    </Card>
+    </TitledSection>
   );
 }
 

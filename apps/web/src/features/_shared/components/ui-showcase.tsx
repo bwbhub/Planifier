@@ -2,6 +2,7 @@
 
 import { Badge } from "@planifier/ui/components/badge";
 import { Button } from "@planifier/ui/components/button";
+import { Card } from "@planifier/ui/components/card";
 import { Checkbox } from "@planifier/ui/components/checkbox";
 import { SegmentedControl } from "@planifier/ui/components/segmented-control";
 import { SelectField } from "@planifier/ui/components/select-field";
@@ -27,10 +28,10 @@ type ListId = (typeof LISTS)[number]["value"];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section aria-label={title} className="rounded-card bg-surface p-6">
+    <Card as="section" aria-label={title} className="p-6">
       <h2 className="mb-4 font-display text-xl font-bold">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
-    </section>
+    </Card>
   );
 }
 

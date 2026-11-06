@@ -5,9 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { axeViolations } from "../testing/axe";
 import { Avatar } from "./avatar";
 import { AvatarStack } from "./avatar-stack";
+import { Card } from "./card";
 import { ListSkeleton } from "./list-skeleton";
 import { LoadError } from "./load-error";
 import { MessageCard } from "./message-card";
+import { PageHeader } from "./page-header";
 import { SectionTitle, SettingCard, SettingRow } from "./setting-list";
 
 describe("blocs d'écran", () => {
@@ -37,10 +39,30 @@ describe("blocs d'écran", () => {
     expect(stack.textContent).toBe("AB");
   });
 
+  it("Card rend la balise demandée, nommée, avec son contenu", () => {
+    render(
+      <Card as="section" aria-label="Infos" padding="lg">
+        Contenu
+      </Card>,
+    );
+    expect(screen.getByRole("region", { name: "Infos" }).textContent).toBe("Contenu");
+  });
+
+  it("PageHeader porte le h1 et ses actions", () => {
+    render(<PageHeader title="Mon profil" subtitle="a@b.test" actions={<button>Agir</button>} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Mon profil" })).toBeTruthy();
+    expect(screen.getByText("a@b.test")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Agir" })).toBeTruthy();
+  });
+
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = render(
       <main>
-        <MessageCard title="Aucun Espace" level={1}>
+        <PageHeader title="Espaces" subtitle="Tes groupes" actions={<button>Créer</button>} />
+        <Card as="section" aria-label="Résumé">
+          <p>Contenu</p>
+        </Card>
+        <MessageCard title="Aucun Espace">
           <p>Crée le premier.</p>
         </MessageCard>
         <SectionTitle id="membres">Membres</SectionTitle>

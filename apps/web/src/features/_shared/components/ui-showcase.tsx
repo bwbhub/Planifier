@@ -109,7 +109,7 @@ export function UiShowcase() {
       <Section title="Messages">
         <ToastsDemo />
       </Section>
-      
+
       <Section title="Dialogues">
         <DialogsDemo />
       </Section>

@@ -122,8 +122,10 @@ export interface ToastProviderProps {
 
 /**
  * Fournit `useToast` et affiche les messages en bas de l'écran, au-dessus de la barre de navigation mobile
- * (`--nav-height`). Les deux zones d'annonce existent en permanence : un lecteur d'écran n'annonce que ce qui change
- * dans une zone déjà présente.
+ * (`--nav-height`). Les deux zones d'annonce (`aria-live` poli pour une confirmation, assertif pour une erreur)
+ * existent en permanence : un lecteur d'écran n'annonce que ce qui change dans une zone déjà présente. Elles n'ont
+ * volontairement pas de `role` (`status`, `alert`) : deux régions permanentes et vides feraient doublon avec celles des
+ * écrans, et de leurs tests.
  */
 export function ToastProvider({ dismissLabel, children }: ToastProviderProps) {
   const [message, setMessage] = useState<ToastMessage | null>(null);
@@ -150,8 +152,10 @@ export function ToastProvider({ dismissLabel, children }: ToastProviderProps) {
     <ToastContext value={api}>
       {children}
       <div className="pointer-events-none fixed inset-x-4 bottom-above-nav z-40 flex flex-col gap-2">
-        <div role="status">{isError ? null : view}</div>
-        <div role="alert">{isError ? view : null}</div>
+        <div aria-live="polite">{isError ? null : view}</div>
+        <div aria-live="assertive" aria-atomic="true">
+          {isError ? view : null}
+        </div>
       </div>
     </ToastContext>
   );

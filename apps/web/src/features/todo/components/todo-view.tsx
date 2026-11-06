@@ -1,5 +1,6 @@
 "use client";
 
+import { TitledSection } from "@planifier/ui/components/titled-section";
 import type { TodoListOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { cn } from "@planifier/ui/lib/cn";
@@ -93,17 +94,14 @@ export function TodoView({ selectedListId }: TodoViewProps) {
 
   const selected = items.find(({ id }) => id === selectedListId) ?? items[0];
   const listForm = (
-    <section aria-labelledby="nouvelle-liste" className="rounded-card bg-surface p-5">
-      <h2 id="nouvelle-liste" className="mb-4 font-display text-xl font-bold">
-        Nouvelle liste
-      </h2>
+    <TitledSection title="Nouvelle liste">
       <ListForm
         onSaved={showList}
         onCancel={() => {
           setCreating(false);
         }}
       />
-    </section>
+    </TitledSection>
   );
 
   if (selected === undefined) {

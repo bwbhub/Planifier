@@ -135,7 +135,7 @@ function MoveStatus({ move }: { move: EntryMove }) {
       <div role="status" aria-live="polite">
         {state.kind === "lifted" ? (
           // En surimpression : la grille ne doit pas bouger sous le doigt qui vise un créneau.
-          <div className="fixed inset-x-4 bottom-[calc(var(--nav-height,0px)+1rem)] z-30 mx-auto flex max-w-md flex-wrap items-center gap-2 rounded-card bg-ink p-3 text-sm text-surface">
+          <div className="fixed inset-x-4 bottom-above-nav z-30 sm:bottom-20 mx-auto flex max-w-md flex-wrap items-center gap-2 rounded-card bg-ink p-3 text-sm text-surface">
             <span>
               « {state.item.title} » est décollée : touche un créneau pour la poser, ou un jour pour
               changer de jour.

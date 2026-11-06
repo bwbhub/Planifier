@@ -14,6 +14,8 @@ import { Button } from "./button";
 
 /** Durée d'affichage : une erreur reste plus longtemps, le temps de la lire. */
 const DURATION_MS = { confirmation: 5000, error: 8000 } as const;
+/** Avec une action : le temps d'y arriver, au clavier aussi (WCAG 2.2.1). */
+const ACTION_DURATION_MS = 12000;
 
 export type ToastTone = keyof typeof DURATION_MS;
 
@@ -65,11 +67,14 @@ function ToastView({ message, dismissLabel, onDismiss }: ToastViewProps) {
 
   useEffect(() => {
     if (paused) return;
-    const timer = setTimeout(onDismiss, DURATION_MS[tone]);
+    const timer = setTimeout(
+      onDismiss,
+      action === undefined ? DURATION_MS[tone] : ACTION_DURATION_MS,
+    );
     return () => {
       clearTimeout(timer);
     };
-  }, [paused, tone, onDismiss]);
+  }, [paused, tone, action, onDismiss]);
 
   return (
     <div
@@ -82,8 +87,9 @@ function ToastView({ message, dismissLabel, onDismiss }: ToastViewProps) {
       onFocus={() => {
         setPaused(true);
       }}
-      onBlur={() => {
-        setPaused(false);
+      onBlur={(event) => {
+        // Le focus passe d'un bouton du message à l'autre : toujours en pause.
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
       }}
       className="pointer-events-auto mx-auto flex max-w-md items-center gap-2 rounded-card bg-ink py-2 pr-2 pl-4 text-sm text-surface"
     >
@@ -130,34 +136,22 @@ export function ToastProvider({ dismissLabel, children }: ToastProviderProps) {
   const api = useMemo(() => ({ notify }), [notify]);
   const isError = message?.tone === "error";
 
+  const view =
+    message === null ? null : (
+      <ToastView
+        key={message.id}
+        message={message}
+        dismissLabel={dismissLabel}
+        onDismiss={dismiss}
+      />
+    );
+
   return (
     <ToastContext value={api}>
       {children}
-      <div
-        className={
-          "pointer-events-none fixed inset-x-4 bottom-[calc(var(--nav-height,0px)+1rem)] z-40 flex flex-col gap-2"
-        }
-      >
-        <div role="status">
-          {message === null || isError ? null : (
-            <ToastView
-              key={message.id}
-              message={message}
-              dismissLabel={dismissLabel}
-              onDismiss={dismiss}
-            />
-          )}
-        </div>
-        <div role="alert">
-          {message !== null && isError ? (
-            <ToastView
-              key={message.id}
-              message={message}
-              dismissLabel={dismissLabel}
-              onDismiss={dismiss}
-            />
-          ) : null}
-        </div>
+      <div className="pointer-events-none fixed inset-x-4 bottom-above-nav z-40 flex flex-col gap-2">
+        <div role="status">{isError ? null : view}</div>
+        <div role="alert">{isError ? view : null}</div>
       </div>
     </ToastContext>
   );

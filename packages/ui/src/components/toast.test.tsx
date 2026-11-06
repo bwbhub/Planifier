@@ -1,4 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,7 +19,7 @@ function Trigger({ text, options }: { text: string; options?: ToastOptions }) {
   );
 }
 
-function renderToast(ui: React.ReactNode) {
+function renderToast(ui: ReactNode) {
   return render(<ToastProvider dismissLabel="Fermer">{ui}</ToastProvider>);
 }
 
@@ -50,6 +51,56 @@ describe("Toast", () => {
       vi.advanceTimersByTime(5000);
     });
     expect(screen.getByRole("status").textContent).toBe("");
+  });
+});
+
+describe("Toast : durées", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("une erreur reste 8 s, plus longtemps qu'une confirmation, et se ferme au bouton", async () => {
+    renderToast(<Trigger text="Échec" options={{ tone: "error" }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Échec" }));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(screen.getByRole("alert").textContent).toContain("Échec");
+    await userEvent.click(screen.getByRole("button", { name: "Fermer" }));
+    expect(screen.getByRole("alert").textContent).toBe("");
+  });
+
+  it("un message avec action reste assez pour l'atteindre", async () => {
+    renderToast(
+      <Trigger text="Fait" options={{ action: { label: "Annuler", onAction: () => undefined } }} />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Fait" }));
+    act(() => {
+      vi.advanceTimersByTime(11000);
+    });
+    expect(screen.getByRole("status").textContent).toContain("Fait");
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("reste en pause tant que le focus est dans le message", async () => {
+    renderToast(
+      <Trigger text="Fait" options={{ action: { label: "Annuler", onAction: () => undefined } }} />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Fait" }));
+    act(() => {
+      screen.getByRole("button", { name: "Annuler" }).focus();
+    });
+    const status = screen.getByRole("status");
+    act(() => {
+      vi.advanceTimersByTime(60000);
+    });
+    expect(status.textContent).toContain("Fait");
   });
 
   it("reste tant que la souris est dessus, puis repart", async () => {

@@ -29,9 +29,12 @@ Règle « toute action réussie annonce son résultat par un toast » écrite da
 sur `/composants`.
 **Décisions** : toast pour toutes les confirmations (utilisateur, 2026-11-06). Brancher les toasts sur les mutations
 existantes (Todo, Agenda, Espaces) : **pas dans cette PR** (une PR par sujet) ; à faire module par module.
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (9 tests du toast, dont minuterie en faux temps et axe),
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (12 tests du toast, dont minuterie en faux temps et axe),
 `pnpm build` OK. **Non lancés** : E2E ; rien vu au navigateur (position au-dessus de la barre basse à 375 px, contraste
 AA clair/nuit).
+**Revue (code-review, 2026-11-07)** : barre de déplacement de l'agenda remise à sa place sur PC (`sm:bottom-20`),
+utilitaire `bottom-above-nav` (tokens) au lieu de la formule copiée 3 fois, message avec action : 12 s, pause tant que
+le focus reste dans le message, 3 tests ajoutés (12 au total). Limites notées dans `SUITE.md`.
 **Ouvert** : brancher les toasts sur les mutations existantes (ticket à créer ou suite du 869fp54cr) ; conflit probable
 avec #38 sur `ui-showcase.tsx` (sections voisines).
 **Attendu ensuite** : plan 1, PR 3 (skeleton + état vide), PR 4 (menu).

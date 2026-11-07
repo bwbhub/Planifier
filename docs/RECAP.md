@@ -18,6 +18,33 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Menu (branche `feat/ui-menu`)
+
+**Fait** : plan 1/4, PR 4 (dernier bloc du ticket `869fp54cr`). `packages/ui` `Menu` : bouton `aria-haspopup="menu"` /
+`aria-expanded`, liste `role="menu"` / `menuitem`, couche supérieure par l'API Popover (aucun parent ne le rogne), placé
+sous le bouton et gardé dans l'écran. Clavier : flèche bas / haut / Entrée / Espace ouvrent (première ou dernière
+action), flèches, Début et Fin circulent (actions indisponibles sautées), Échap ferme et rend le focus, Tab et un
+appui ailleurs ferment. Section « Menu » sur `/composants`.
+**Prouvé en navigateur** : nouveau test E2E (`compte.spec.ts`, PC et mobile) sur `/composants` : focus sur « renoncer »
+et gardé dans le `<dialog>`, Échap ferme et rend le focus, confirmation renforcée inactive tant que la case n'est pas
+cochée, menu aux flèches, Échap, clic ailleurs. Ça solde le « non prouvé » de la PR 1 (#38).
+**Décisions** : le menu n'est pas encore branché sur la ligne de tâche (`TaskActions` de `todo/atoms/task-row.tsx`) :
+c'est le ticket des composants de domaine (`869fhwtg9`, plan 2), où la ligne de tâche est refaite.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (9 tests du menu + axe), `pnpm build`, `pnpm format:check`
+OK ; **62 E2E passent** en local. Rien vu au navigateur par un humain (placement, contraste AA clair/nuit).
+**Revue (code-review, 2026-11-07)** : anneau de focus d'accent sur les actions (le focus ne se confond plus avec le survol),
+le menu se ferme au défilement et au redimensionnement (il ne suit pas son bouton) et se retourne vers le haut s'il
+manque la place en bas, Tab rend le focus au bouton avant de partir, un seul état d'ouverture (`first` / `last` /
+`null`), 14 tests (flèche bas, Tab, action indisponible, défilement, écouteurs au démontage). E2E découpé en trois
+helpers. **Constat** : un `<dialog>` modal ne piège pas le focus au sens strict (Tab sort vers l'interface du navigateur) ;
+la garantie testée est qu'il n'atteint jamais la page derrière, qui est inerte.
+**Ouvert** : pas de recherche à la frappe (typeahead) ; l'action indisponible est `disabled` (pas `aria-disabled`, donc
+non focalisable) ; le test des composants vit dans la suite « parcours d'un compte » parce que la page est derrière la
+connexion (il dépend de la session et de l'ordre).
+**Attendu ensuite** : ticket `869fp54cr` complet (4 PR) à clore après revue visuelle ; plan 2 (`869fhwtg9`).
+
+---
+
 ## 2026-11-07 — Skeleton et état vide (branche `feat/ui-skeleton-etat-vide`)
 
 **Fait** : plan 1/4, PR 3 (ticket `869fp54cr`). `packages/ui` : `Skeleton` (formes `line`, `circle`, `block`, `card`, décoratif),

@@ -13,6 +13,7 @@ import { TitledSection } from "@planifier/ui/components/titled-section";
 import { type ReactNode, useState } from "react";
 
 import { DialogsDemo } from "./ui-showcase-dialogs";
+import { MenuDemo } from "./ui-showcase-menu";
 import { StatesDemo } from "./ui-showcase-states";
 import { ToastsDemo } from "./ui-showcase-toasts";
 
@@ -109,6 +110,10 @@ export function UiShowcase() {
 
       <Section title="Chargement, vide, erreur">
         <StatesDemo />
+      </Section>
+
+      <Section title="Menu">
+        <MenuDemo />
       </Section>
 
       <Section title="Messages">

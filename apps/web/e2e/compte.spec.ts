@@ -190,6 +190,87 @@ async function toggleAgendaModule(page: Page, session: Cookie[]) {
 }
 
 /**
+ * Page des composants : ce que jsdom ne joue pas (`<dialog>` modal, API Popover). Échap ferme et le focus revient à
+ * l'élément d'origine ; la confirmation renforcée reste inactive tant que la case n'est pas cochée ; le menu se
+ * parcourt aux flèches et se ferme d'un clic ailleurs.
+ */
+async function checkDialog(page: Page) {
+  const opener = page.getByRole("button", { name: "Confirmation", exact: true });
+  await opener.click();
+  const dialog = page.getByRole("alertdialog", { name: "Supprimer la tâche ?" });
+  await expect(dialog).toBeVisible();
+  // Le focus arrive sur « renoncer » (jamais sur l'action destructive).
+  await expect(dialog.getByRole("button", { name: "Garder la tâche" })).toBeFocused();
+  // Modal : plus de Tab que le dialogue n'a de contrôles, dans les deux sens. Le focus peut sortir vers l'interface du
+  // navigateur (`body`), jamais atteindre la page derrière (inerte).
+  for (const key of ["Tab", "Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab", "Shift+Tab"]) {
+    await page.keyboard.press(key);
+    const behindPage = await dialog.evaluate(
+      (element) =>
+        document.activeElement !== document.body && !element.contains(document.activeElement),
+    );
+    expect(behindPage).toBe(false);
+  }
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+}
+
+async function checkStrongConfirmation(page: Page) {
+  await page.getByRole("button", { name: "Confirmation renforcée" }).click();
+  const dialog = page.getByRole("alertdialog", { name: "Supprimer la tâche ?" });
+  const confirm = dialog.getByRole("button", { name: "Supprimer définitivement" });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByRole("checkbox", { name: "Je comprends que c'est définitif" }).check();
+  await expect(confirm).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+}
+
+async function checkMenu(page: Page) {
+  const trigger = page.getByRole("button", { name: "Actions de la tâche d'exemple" });
+  const menu = page.getByRole("menu", { name: "Actions de la tâche d'exemple" });
+  await trigger.click();
+  await expect(menu.getByRole("menuitem", { name: "Modifier" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(menu.getByRole("menuitem", { name: "Reporter à demain" })).toBeFocused();
+  // Indisponible : sautée par les flèches, sans effet au clic.
+  await expect(menu.getByRole("menuitem", { name: /indisponible/ })).toBeDisabled();
+  await page.keyboard.press("ArrowDown");
+  await expect(menu.getByRole("menuitem", { name: "Modifier" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(trigger).toBeFocused();
+  // Un appui ailleurs ferme.
+  await trigger.click();
+  await page.getByRole("heading", { name: "Menu", exact: true }).click();
+  await expect(menu).toBeHidden();
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "Reporter à demain" }).click();
+  await expect(page.getByText("Tâche reportée à demain.")).toBeVisible();
+  await expect(trigger).toBeFocused();
+}
+
+async function checkOverlays(page: Page) {
+  await checkDialog(page);
+  await checkStrongConfirmation(page);
+  await checkMenu(page);
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+}
+
+const greeting = (page: Page) => page.getByRole("heading", { name: GREETING });
+
+async function openSignedIn(page: Page, session: Cookie[], path: string) {
+  await page.context().addCookies(session);
+  await page.goto(path);
+}
+
+async function openHomeSignedIn(page: Page, session: Cookie[]) {
+  await openSignedIn(page, session, "/");
+  await expect(greeting(page)).toBeVisible();
+}
+
+/**
  * Parcours d'un même compte, dans l'ordre, la session et les e-mails passant d'un test à l'autre. La limitation de
  * débit de Better Auth (par IP et par route : 3 connexions sur 10 s, 3 demandes de lien sur 60 s) refuserait un
  * compte par test, tout venant de localhost : une inscription et une connexion par format.
@@ -198,14 +279,6 @@ test.describe.serial("parcours d'un compte", () => {
   const { email, password } = newAccount();
   const newPassword = randomUUID();
   let session: Cookie[] = [];
-
-  const greeting = (page: Page) => page.getByRole("heading", { name: GREETING });
-
-  async function openHomeSignedIn(page: Page) {
-    await page.context().addCookies(session);
-    await page.goto("/");
-    await expect(greeting(page)).toBeVisible();
-  }
 
   test("annonce l'e-mail de confirmation quand l'inscription réussit", async ({ page }) => {
     await page.goto("/inscription");
@@ -225,29 +298,34 @@ test.describe.serial("parcours d'un compte", () => {
   });
 
   test("ne déborde pas en largeur quand on ouvre l'accueil", async ({ page }) => {
-    await openHomeSignedIn(page);
+    await openHomeSignedIn(page, session);
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   });
 
   test("crée une liste, ajoute une tâche et la coche quand on ouvre le Todo", async ({ page }) => {
-    await openHomeSignedIn(page);
+    await openHomeSignedIn(page, session);
     await createListAndCheckTask(page);
   });
 
   test("ajoute une sous-tâche, modifie puis supprime la tâche et la liste quand on le demande", async ({
     page,
   }) => {
-    await page.context().addCookies(session);
-    await page.goto("/todo");
+    await openSignedIn(page, session, "/todo");
     await editThenDeleteTaskAndList(page);
   });
 
   test("ajoute, déplace, modifie puis supprime une entrée quand on ouvre l'Agenda", async ({
     page,
   }) => {
-    await page.context().addCookies(session);
-    await page.goto("/agenda?vue=jour&jour=2030-06-12");
+    await openSignedIn(page, session, "/agenda?vue=jour&jour=2030-06-12");
     await addMoveEditThenDeleteEntry(page, "2030-06-12");
+  });
+
+  test("garde le focus et ferme à Échap dans les dialogues et le menu de la page des composants", async ({
+    page,
+  }) => {
+    await openSignedIn(page, session, "/composants");
+    await checkOverlays(page);
   });
 
   test("retire un module de la navigation quand on l'éteint", async ({ page }) => {
@@ -255,7 +333,7 @@ test.describe.serial("parcours d'un compte", () => {
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {
-    await openHomeSignedIn(page);
+    await openHomeSignedIn(page, session);
     await page.getByRole("button", { name: "Se déconnecter" }).click();
     await expect(page).toHaveURL("/connexion");
   });

@@ -18,6 +18,34 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Récurrence par jours de la semaine (branche `feat/recurrence-jours-semaine`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), PR 1 : le modèle. « Tous les mardis », « un lundi sur deux ». `constants` :
+`WEEKDAYS`, `weekdayIndex`, `weekdayOf`. `domain-recurrence` : `Recurrence.weekdays`, `nextDueDate` à jours (premier jour
+voulu après aujourd'hui et l'échéance, parité des semaines depuis l'ancre), `seriesAnchor(rule, series, today)` (la
+première occurrence fait ancre pour une règle à jours sans échéance), forme stockée v2 (v1 toujours lue). Contrat :
+`recurrenceSchema.weekdays` facultatif (additif), refusé hors rythme hebdomadaire et en double. API : le service passe
+les jours et la nouvelle ancre. Web : `recurrenceLabel` dit « Tous les mardis » / « Toutes les 2 semaines, le lundi et
+le jeudi ». ADR 0017 amendée.
+**Décisions** : aucune échéance posée d'office (rien ne s'ajoute à l'insu) ; écran Aujourd'hui : « la règle tombe ce
+jour » se calculera avec la règle (plan 4).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (22 tests du domaine, propriétés comprises), `pnpm build`,
+`pnpm format:check` OK ; **165 tests d'intégration de l'API** passent (6 nouveaux).
+**Revue (code-review, 2026-11-07)** : (1) le formulaire de tâche **effaçait à l'insu** les jours et remettait l'ancre de la
+série à zéro à chaque modification (il renvoyait toujours `recurrence` et `dueDate`, défaut déjà présent pour toute
+tâche répétée) : il n'envoie plus que ce qui change (`recurrenceChange`, test d'intégration « modifier le titre ne
+touche ni les jours ni l'ancre ») ; (2) la règle « jours ⇒ hebdomadaire, sans doublon » est une seule fonction
+(`isValidWeekdayRule`) pour le contrat et la forme stockée ; (3) `WEEKDAYS` / `Weekday` passent dans `constants/days`
+(plus de dépendance days → todo) ; (4) tests : dimanche-lundi, deux jours une semaine sur deux, intervalle 99, ancre dans
+le futur, `update`, `undoCompletion`, `finish`. E2E : 62 passent.
+**Ouvert** : le critère « tous les mardis sans heure est accepté » (ticket Nouvelle tâche) n'est pas atteignable à
+l'écran avant `RecurrenceField` (PR suivante du plan 2) ; l'écran Aujourd'hui devra calculer qu'une règle à jours
+tombe un jour donné (une tâche sans échéance n'a pas de date). Pas de migration (champ JSON versionné).
+**Attendu ensuite** : plan 2, PR 2 : `TaskLine` (`_shared`), PR 3 : `SlotBlock`, PR 4 : `DateTimeField`,
+PR 5 : `RecurrenceField`.
+
+---
+
 ## 2026-11-07 — Menu (branche `feat/ui-menu`)
 
 **Fait** : plan 1/4, PR 4 (dernier bloc du ticket `869fp54cr`). `packages/ui` `Menu` : bouton `aria-haspopup="menu"` /

@@ -21,3 +21,30 @@ export function addDays(day: string, days: number): string {
 export function daysBetween(from: string, to: string): number {
   return Math.round((dayToUtcDate(to).getTime() - dayToUtcDate(from).getTime()) / MS_PER_DAY);
 }
+
+/**
+ * Jours de la semaine, lundi en premier (la semaine commence le lundi). Une liste de jours se range toujours dans cet
+ * ordre.
+ */
+export const WEEKDAYS = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+
+/** Rang du jour dans la semaine, lundi = 0 (la semaine commence le lundi). */
+export function weekdayIndex(day: string): number {
+  return (dayToUtcDate(day).getUTCDay() + 6) % 7;
+}
+
+/** Jour de la semaine d'un jour civil. */
+export function weekdayOf(day: string): Weekday {
+  const weekday = WEEKDAYS[weekdayIndex(day)];
+  if (weekday === undefined) throw new Error(`Jour de la semaine introuvable pour ${day}.`);
+  return weekday;
+}

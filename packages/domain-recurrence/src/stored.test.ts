@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { Recurrence } from "./recurrence";
 import { fromStoredRecurrence, toStoredRecurrence } from "./stored";
 
 describe("forme stockée", () => {
@@ -9,9 +10,65 @@ describe("forme stockée", () => {
     expect(fromStoredRecurrence(null)).toBeNull();
   });
 
+  it("écrit la dernière version, jours rangés dans l'ordre de la semaine et sans doublon", () => {
+    const rule: Recurrence = {
+      frequency: "WEEKLY",
+      interval: 1,
+      weekdays: ["THURSDAY", "MONDAY", "THURSDAY"],
+    };
+    expect(toStoredRecurrence(rule)).toEqual({
+      schemaVersion: 2,
+      frequency: "WEEKLY",
+      interval: 1,
+      weekdays: ["MONDAY", "THURSDAY"],
+    });
+    expect(fromStoredRecurrence(toStoredRecurrence(rule))).toEqual({
+      frequency: "WEEKLY",
+      interval: 1,
+      weekdays: ["MONDAY", "THURSDAY"],
+    });
+  });
+
+  it("relit une règle de la première version, sans jours", () => {
+    expect(fromStoredRecurrence({ schemaVersion: 1, frequency: "WEEKLY", interval: 2 })).toEqual({
+      frequency: "WEEKLY",
+      interval: 2,
+    });
+  });
+
+  it("refuse des jours avec un autre rythme que hebdomadaire, ou en double (même règle que le contrat)", () => {
+    expect(() =>
+      fromStoredRecurrence({
+        schemaVersion: 2,
+        frequency: "DAILY",
+        interval: 1,
+        weekdays: ["MONDAY"],
+      }),
+    ).toThrow();
+    expect(() =>
+      fromStoredRecurrence({
+        schemaVersion: 2,
+        frequency: "WEEKLY",
+        interval: 1,
+        weekdays: ["MONDAY", "MONDAY"],
+      }),
+    ).toThrow();
+  });
+
   it("refuse une version ou une valeur inconnue", () => {
     expect(() =>
-      fromStoredRecurrence({ schemaVersion: 2, frequency: "DAILY", interval: 1 }),
+      fromStoredRecurrence({ schemaVersion: 3, frequency: "DAILY", interval: 1 }),
+    ).toThrow();
+    expect(() =>
+      fromStoredRecurrence({ schemaVersion: 2, frequency: "WEEKLY", interval: 1, weekdays: [] }),
+    ).toThrow();
+    expect(() =>
+      fromStoredRecurrence({
+        schemaVersion: 1,
+        frequency: "WEEKLY",
+        interval: 1,
+        weekdays: ["MONDAY"],
+      }),
     ).toThrow();
     expect(() =>
       fromStoredRecurrence({ schemaVersion: 1, frequency: "HOURLY", interval: 1 }),

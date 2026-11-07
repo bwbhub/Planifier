@@ -1,3 +1,5 @@
+import type { Weekday } from "./days";
+
 // Teintes de liste de la maquette « Doux et vivant » (packages/tokens).
 export const LIST_TINTS = ["general", "work", "couple", "trip"] as const;
 export type ListTint = (typeof LIST_TINTS)[number];
@@ -24,3 +26,15 @@ export type RecurrenceFrequency = (typeof RECURRENCE_FREQUENCIES)[number];
 
 /** Intervalle d'une répétition (« toutes les N semaines ») au plus. */
 export const RECURRENCE_MAX_INTERVAL = 99;
+
+/**
+ * Jours de la semaine d'une règle de répétition valides : sans jours, ou rythme hebdomadaire et sans doublon. Une seule
+ * définition pour le contrat d'API et la forme stockée.
+ */
+export function isValidWeekdayRule(
+  frequency: RecurrenceFrequency,
+  weekdays: readonly Weekday[] | undefined,
+): boolean {
+  if (weekdays === undefined) return true;
+  return frequency === "WEEKLY" && new Set(weekdays).size === weekdays.length;
+}

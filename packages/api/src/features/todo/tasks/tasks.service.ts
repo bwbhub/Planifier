@@ -223,7 +223,7 @@ export async function completeOccurrence(
   return writeVersioned(db, taskId, version, {
     dueDate: dayToUtcDate(next),
     // Ancre gardée : la série compte toujours depuis son premier jour (le 31 revient après un mois court).
-    recurrenceAnchor: dayToUtcDate(seriesAnchor(series, today)),
+    recurrenceAnchor: dayToUtcDate(seriesAnchor(recurrence, series, today)),
     ...NOT_DONE,
   });
 }

@@ -2,26 +2,13 @@ import { addDays } from "@planifier/constants/days";
 import { describe, expect, it } from "vitest";
 
 import { nextDueDate, type Recurrence, seriesAnchor } from "./recurrence";
+import { checkedOnTime, fresh } from "./recurrence.testing";
 
 const daily: Recurrence = { frequency: "DAILY", interval: 1 };
 const weekly: Recurrence = { frequency: "WEEKLY", interval: 1 };
 const everyTwoWeeks: Recurrence = { frequency: "WEEKLY", interval: 2 };
 const monthly: Recurrence = { frequency: "MONTHLY", interval: 1 };
 const yearly: Recurrence = { frequency: "YEARLY", interval: 1 };
-
-/** Série neuve : rien n'a encore été fait, l'échéance sert d'ancre. */
-const fresh = (due: string | null) => ({ anchor: null, due });
-
-/** Coche les occurrences une à une, le jour prévu, comme le ferait le serveur (ancre gardée). */
-function checkedOnTime(rule: Recurrence, firstDue: string, times: number): string[] {
-  const dues = [];
-  let due = firstDue;
-  for (let i = 0; i < times; i += 1) {
-    due = nextDueDate(rule, { anchor: firstDue, due }, due);
-    dues.push(due);
-  }
-  return dues;
-}
 
 describe("nextDueDate : cas d'or", () => {
   it("cochée le jour prévu : occurrence suivante", () => {
@@ -59,11 +46,17 @@ describe("nextDueDate : cas d'or", () => {
   });
 
   it("ancre : celle gardée, sinon l'échéance, sinon aujourd'hui", () => {
-    expect(seriesAnchor({ anchor: "2026-01-31", due: "2026-02-28" }, "2026-02-28")).toBe(
+    expect(seriesAnchor(weekly, { anchor: "2026-01-31", due: "2026-02-28" }, "2026-02-28")).toBe(
       "2026-01-31",
     );
-    expect(seriesAnchor(fresh("2026-02-28"), "2026-03-01")).toBe("2026-02-28");
-    expect(seriesAnchor(fresh(null), "2026-03-01")).toBe("2026-03-01");
+    expect(seriesAnchor(weekly, fresh("2026-02-28"), "2026-03-01")).toBe("2026-02-28");
+    expect(seriesAnchor(weekly, fresh(null), "2026-03-01")).toBe("2026-03-01");
+  });
+
+  it("ancre d'une règle à jours, sans échéance : la première occurrence, pas le jour de la coche", () => {
+    const tuesdays: Recurrence = { frequency: "WEEKLY", interval: 2, weekdays: ["TUESDAY"] };
+    // Mercredi 28 octobre : la première occurrence est le mardi 3 novembre, et c'est elle qui fixe la parité.
+    expect(seriesAnchor(tuesdays, fresh(null), "2026-10-28")).toBe("2026-11-03");
   });
 });
 

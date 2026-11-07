@@ -313,3 +313,46 @@ describe("TaskForm, échéance et heure", () => {
     expect(calls[0]?.input).not.toHaveProperty("dueTime");
   });
 });
+
+describe("TaskForm, modifier jour et heure", () => {
+  const timed = taskWith({
+    id: "0199f3a2-7c4e-7d10-9a51-0000000000dd",
+    title: "Dentiste",
+    dueDate: "2026-11-10",
+    dueTime: "09:30",
+  });
+
+  it("efface l'heure en recochant « Sans heure », explicitement", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/update": { data: timed } });
+    renderForm({ task: timed, onDone: vi.fn() });
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({ dueTime: null });
+    });
+    expect(calls[0]?.input).not.toHaveProperty("dueDate");
+  });
+
+  it("refuse en ligne un jour effacé dont l'heure reste, sans appeler l'API", async () => {
+    renderForm({ task: timed, onDone: vi.fn() });
+    await userEvent.clear(screen.getByLabelText("Échéance"));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Une heure demande un jour : choisis d'abord le jour.")).toBeTruthy();
+  });
+
+  it("refuse en ligne une heure posée sur une tâche sans jour", async () => {
+    renderForm({
+      task: taskWith({ id: "0199f3a2-7c4e-7d10-9a51-0000000000ee", title: "Sans jour" }),
+      onDone: vi.fn(),
+    });
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.type(screen.getByLabelText("Heure"), "0930");
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Une heure demande un jour : choisis d'abord le jour.")).toBeTruthy();
+  });
+});

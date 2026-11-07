@@ -53,13 +53,16 @@ export function updateValues(
   version: number | undefined,
   values: TaskFormValues,
 ) {
+  // Une heure sans jour part avec son `dueDate: null` et son heure, même inchangés : le contrat la refuse, le champ le dit en ligne
+  // (sinon le serveur effacerait l'heure en silence, ou la refuserait sans désigner le champ).
+  const timeWithoutDay = values.dueDate === null && values.dueTime !== null;
   return {
     taskId: task.id,
     version,
     title: values.title,
     description: values.description,
-    dueDate: values.dueDate === task.dueDate ? undefined : values.dueDate,
-    dueTime: values.dueTime === task.dueTime ? undefined : values.dueTime,
+    dueDate: values.dueDate === task.dueDate && !timeWithoutDay ? undefined : values.dueDate,
+    dueTime: values.dueTime === task.dueTime && !timeWithoutDay ? undefined : values.dueTime,
     recurrence: recurrenceChange(task.recurrence, values.recurrence),
     assigneeId: values.assigneeId,
   };

@@ -20,8 +20,8 @@ import { useFormValidation } from "@/features/_shared/forms/use-form-validation"
 import { COMMON_LABELS, TASK_LABELS } from "@/lib/labels";
 
 import { DueFields } from "./due-fields";
-import { createValues, readTaskForm, updateValues } from "./task-form-values";
 import { RecurrenceFields } from "./recurrence-fields";
+import { createValues, readTaskForm, updateValues } from "./task-form-values";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
@@ -35,7 +35,6 @@ type Field = (typeof FIELDS)[number];
 const TITLE_ERROR = `Donne un titre à la tâche, ${String(TASK_TITLE_MAX_LENGTH)} caractères au plus.`;
 const DESCRIPTION_ERROR = `${String(TASK_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
 const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
-const DUE_TIME_ERROR = "Une heure demande un jour : choisis d'abord le jour.";
 
 const COPY = {
   create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
@@ -58,6 +57,12 @@ interface TaskDetailsProps {
 interface AssigneeProps {
   listId: string;
   task: TaskOutput | undefined;
+}
+
+/** Erreur du jour d'échéance, ou de l'heure sans jour : les deux se lisent sous le champ du jour. */
+function dueError(invalid: ReadonlySet<Field>): string | undefined {
+  if (invalid.has("dueDate")) return DUE_DATE_ERROR;
+  return invalid.has("dueTime") ? TODO_LABELS.timeNeedsDay : undefined;
 }
 
 /** Champs rangés dans les détails repliables (le titre reste toujours visible). */
@@ -114,16 +119,7 @@ function TaskDetails({ listId, task, invalid }: TaskDetailsProps & AssigneeProps
           maxLength={TASK_DESCRIPTION_MAX_LENGTH}
           error={invalid.has("description") ? DESCRIPTION_ERROR : undefined}
         />
-        <DueFields
-          task={task}
-          error={
-            invalid.has("dueDate")
-              ? DUE_DATE_ERROR
-              : invalid.has("dueTime")
-                ? DUE_TIME_ERROR
-                : undefined
-          }
-        />
+        <DueFields task={task} error={dueError(invalid)} />
         <RecurrenceFields task={task} intervalInvalid={invalid.has("recurrence")} />
         {shared ? <AssigneeField listId={listId} task={task} /> : null}
       </div>

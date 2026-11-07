@@ -10,9 +10,14 @@ import {
   undoCompletion,
   updateTask,
 } from "./tasks.service";
+import { todayTasks } from "./today.service";
 
 // Supprimer une tâche est une écriture dans sa liste : même droit que la modifier.
 export const tasksRouter = {
+  // Filtré par l'appelant : ses seules tâches (listes perso, assignées dans une liste partagée).
+  today: userProcedure.todo.tasks.today.handler(({ context, input }) =>
+    todayTasks(context.getDb(), context.user.id, input.date),
+  ),
   list: userProcedure.todo.tasks.list
     .use(listGuard("read"))
     .handler(({ context, input }) => listTasks(context.getDb(), input.listId)),

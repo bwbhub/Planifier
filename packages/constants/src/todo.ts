@@ -15,6 +15,9 @@ export const TASK_DESCRIPTION_MAX_LENGTH = 2000;
 export const TODO_MAX_LISTS = 50;
 export const TODO_LIST_MAX_TASKS = 500;
 
+/** Tâches rendues au plus par section de l'écran Aujourd'hui (du jour, en cours, en retard) ; `total` dit le reste. */
+export const TODAY_SECTION_MAX = 100;
+
 /** Teinte connue : la colonne est une chaîne libre en base, relue avec ce garde. */
 export function isListTint(value: string): value is ListTint {
   return LIST_TINTS.some((tint) => tint === value);

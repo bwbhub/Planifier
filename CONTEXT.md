@@ -36,6 +36,8 @@ Vocabulaire du produit, sans détail d'implémentation. À copier à la racine d
 - **Rappel** : option d'une tâche, choisie explicitement.
 - **Relance** : rappel doux répété. Entièrement paramétrable par l'utilisateur.
 - **Tâche en retard** : montrée sans accusation, avec proposition de report.
+- **Mes tâches** (écran Aujourd'hui) : les tâches à faire de mes listes perso, et celles qui me sont assignées dans une liste partagée. Les listes que d'autres me montrent en lecture seule n'y sont pas. Sous-tâches et cochées exclues.
+- **Du jour / En cours / En retard** : parmi mes tâches, celles dont l'échéance est aujourd'hui (par heure) ; celles sans échéance ; celles dont l'échéance est passée (la plus ancienne d'abord). « En retard » garde le ton sans accusation : « à reprendre ».
 
 ## Agenda
 

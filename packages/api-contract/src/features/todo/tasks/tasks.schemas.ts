@@ -1,6 +1,8 @@
 import {
   TASK_DESCRIPTION_MAX_LENGTH,
+  LIST_TINTS,
   TASK_TITLE_MAX_LENGTH,
+  TODAY_SECTION_MAX,
   TODO_LIST_MAX_TASKS,
 } from "@planifier/constants/todo";
 import { z } from "zod";
@@ -121,12 +123,43 @@ export const taskSchema = z.strictObject({
   version: z.int(),
 });
 
+/** Jour de l'appareil (`AAAA-MM-JJ`) : le serveur ne connaît pas le fuseau de l'utilisateur. */
+export const todayTasksInputSchema = z.strictObject({ date: dueDateSchema });
+
+/** Tâche de l'écran Aujourd'hui, avec la liste où elle est (pastille). */
+const todayTaskSchema = taskSchema.extend({
+  list: z.strictObject({ id: listIdSchema, name: z.string(), tint: z.enum(LIST_TINTS) }),
+});
+
+/** Une section : les premières tâches (bornées) et leur nombre total. */
+function todaySection() {
+  return z.strictObject({
+    items: z.array(todayTaskSchema).max(TODAY_SECTION_MAX),
+    total: z.int().min(0),
+  });
+}
+
+/**
+ * Tâches à faire de l'appelant : celles de ses listes perso, et celles qui lui sont assignées dans une liste partagée.
+ * Cochées et sous-tâches exclues.
+ */
+export const todayTasksOutputSchema = z.strictObject({
+  /** Échéance aujourd'hui, par heure puis par ordre de création. */
+  dueToday: todaySection(),
+  /** Sans échéance. */
+  ongoing: todaySection(),
+  /** Échéance passée, la plus ancienne d'abord. */
+  overdue: todaySection(),
+});
+
 /** Toutes les tâches de la liste (bornées), sous-tâches comprises, par ordre de création. */
 export const listTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });
 
 export type TaskOutput = z.infer<typeof taskSchema>;
+export type TodayTasksOutput = z.infer<typeof todayTasksOutputSchema>;
+export type TodayTaskOutput = z.infer<typeof todayTaskSchema>;
 export type ListTasksOutput = z.infer<typeof listTasksOutputSchema>;
 export type CreateTaskInput = z.output<typeof createTaskInputSchema>;
 export type UpdateTaskInput = z.output<typeof updateTaskInputSchema>;

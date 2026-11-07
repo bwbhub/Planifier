@@ -18,6 +18,15 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Fin de session (branche `docs/suite-fin-session`)
+
+**Fait** : session Sonnet, PR #42 à #52 fusionnées : récurrence par jours, `TaskLine`, menu d'actions de la ligne, `SlotBlock`, `DateTimeField`, `RecurrenceField`, heure d'échéance (modèle, formulaire), feuille « Nouvelle tâche » + « + », `todo.tasks.today`, `todo.tasks.postpone`. Plans 1 à 3 terminés ; plan 4 : PR 1 et 2 sur 4. `docs/SUITE.md` réécrit (état, ordre du reste, pièges, questions).
+**Vérifié** : chaque PR : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e` (62), et `pnpm test:integration` (api 185) pour l'API, verts avant push. Documentation seule dans cette branche : rien à exécuter.
+**Ouvert** : rien vu à l'œil ; revues humaines (droits, migrations, ADR 0018) ; questions de `SUITE.md` §4.
+**Attendu ensuite** : l'écran Aujourd'hui (plan 4, PR 3 et 4), voir `SUITE.md` §2.
+
+---
+
 ## 2026-11-07 — Report de tâches, API (branche `feat/report-taches`)
 
 **Fait** : plan 4/4 (ticket `869fhwtu9`), PR 2. Procédure `todo.tasks.postpone` : `{ date, tasks: [{ taskId, version }] (1 à 100, sans doublon) }` ⇒ `{ items: tâches à jour }` ; échéance au jour demandé, **heure retirée** ; tout ou rien (une version périmée ⇒ `STALE_VERSION`, une tâche répétée ⇒ nouvelle raison `RECURRING_TASK`, rien n'est écrit). Droits par une garde de lot `tasksGuard("write")` (même chaîne que `taskGuard`) : une tâche illisible ⇒ `NOT_FOUND` pour tout le lot, liste en lecture seule ⇒ `FORBIDDEN`. 6 tests d'intégration. Message d'erreur web pour `RECURRING_TASK`.

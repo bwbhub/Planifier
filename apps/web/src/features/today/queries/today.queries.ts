@@ -53,6 +53,12 @@ export function useCheckTask(day: string) {
   );
   const undoCompletion = useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
 
+  function confirm(task: TodayTaskOutput, undo: () => void) {
+    notify(TODAY_LABELS.checked(task.title), {
+      action: { label: TODAY_LABELS.undo, onAction: undo },
+    });
+  }
+
   function check(task: TodayTaskOutput) {
     const { recurrence } = task;
     if (recurrence === null) {
@@ -60,13 +66,8 @@ export function useCheckTask(day: string) {
         { taskId: task.id, done: true },
         {
           onSuccess: () => {
-            notify(TODAY_LABELS.checked(task.title), {
-              action: {
-                label: TODAY_LABELS.undo,
-                onAction: () => {
-                  setDone.mutate({ taskId: task.id, done: false });
-                },
-              },
+            confirm(task, () => {
+              setDone.mutate({ taskId: task.id, done: false });
             });
           },
         },
@@ -77,18 +78,13 @@ export function useCheckTask(day: string) {
       { taskId: task.id, version: task.version, today: day },
       {
         onSuccess: (next) => {
-          notify(TODAY_LABELS.checked(task.title), {
-            action: {
-              label: TODAY_LABELS.undo,
-              onAction: () => {
-                undoCompletion.mutate({
-                  taskId: task.id,
-                  version: next.version,
-                  dueDate: task.dueDate,
-                  recurrence,
-                });
-              },
-            },
+          confirm(task, () => {
+            undoCompletion.mutate({
+              taskId: task.id,
+              version: next.version,
+              dueDate: task.dueDate,
+              recurrence,
+            });
           });
         },
       },
@@ -98,7 +94,6 @@ export function useCheckTask(day: string) {
   const failed = [setDone, completeOccurrence, undoCompletion].find((mutation) => mutation.isError);
   return {
     check,
-    pending: setDone.isPending || completeOccurrence.isPending || undoCompletion.isPending,
     error: failed?.error ?? null,
   };
 }

@@ -18,9 +18,14 @@ export function longDayLabel(day: string): string {
   return text.charAt(0).toLocaleUpperCase("fr") + text.slice(1);
 }
 
+/** Minuit, heure de l'appareil, du jour `AAAA-MM-JJ`. */
+function dayStart(day: string): Date {
+  return new Date(`${day}T00:00`);
+}
+
 /** Période d'une journée de l'appareil, dans les deux formes du contrat de l'agenda. */
 export function dayWindow(day: string): EntriesWindow {
-  const from = new Date(`${day}T00:00`);
+  const from = dayStart(day);
   const to = new Date(from);
   to.setDate(to.getDate() + 1);
   return { from, to, fromDay: day, toDay: day };
@@ -41,5 +46,5 @@ export function sortedSlots(entries: readonly AgendaEntryOutput[]): AgendaEntryO
 
 /** « 3 novembre » : le jour d'une tâche en retard. */
 export function overdueDayLabel(day: string): string {
-  return formatDay(new Date(`${day}T00:00`));
+  return formatDay(dayStart(day));
 }

@@ -1,19 +1,18 @@
 "use client";
 
 import type { TaskOutput } from "@planifier/api-contract";
-import { Avatar } from "@planifier/ui/components/avatar";
 import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
 import { useState } from "react";
 
 import { TaskForm } from "../forms/task-form";
-import { ASSIGNEE_LABEL } from "../labels";
 import { useDeleteTask } from "../queries/todo.queries";
 import { useListView } from "../utils/list-view";
 import { recurrenceLabel } from "../utils/recurrence";
-import { deleteQuestion, isSubtask, subtaskCountLabel } from "../utils/subtasks";
+import { deleteQuestion, isSubtask, subtaskProgress } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { DueDate } from "./due-date";
+import { TaskLine } from "./task-line";
 import { TodoErrorAlert } from "./todo-error-alert";
 
 /**
@@ -39,67 +38,32 @@ function Subtasks({ task, subtasks, adding, completion, onStopAdding }: Subtasks
   return (
     <div className="flex flex-col gap-2 pl-8">
       {subtasks.length === 0 ? null : (
-        <>
-          <p className="text-sm text-muted">{subtaskCountLabel(subtasks)}</p>
-          <ul
-            className="flex flex-col gap-1 border-l-2 border-line pl-3"
-            aria-label={`Sous-tâches de « ${task.title} »`}
-          >
-            {subtasks.map((subtask) => (
-              <TaskRow key={subtask.id} task={subtask} completion={completion} />
-            ))}
-          </ul>
-        </>
+        <ul
+          className="flex flex-col gap-1 border-l-2 border-line pl-3"
+          aria-label={`Sous-tâches de « ${task.title} »`}
+        >
+          {subtasks.map((subtask) => (
+            <TaskRow key={subtask.id} task={subtask} completion={completion} />
+          ))}
+        </ul>
       )}
       {adding ? <TaskForm listId={task.listId} parentId={task.id} onDone={onStopAdding} /> : null}
     </div>
   );
 }
 
-/** Case à cocher et titre, puis échéance, répétition, description et, liste partagée, assigné et qui l'a cochée. */
-function TaskMain({
-  task,
-  done,
-  onToggle,
-}: {
-  task: TaskOutput;
-  done: boolean;
-  onToggle: TaskCompletion["toggle"];
-}) {
-  const { shared, readOnly } = useListView();
+/** Échéance, répétition et description : ce qui précise la tâche sous son titre. */
+function TaskDetails({ task, done }: { task: TaskOutput; done: boolean }) {
   return (
-    <div className="flex flex-1 flex-col gap-0.5">
-      <label className="flex min-h-11 items-start gap-3 pt-2.5 has-enabled:cursor-pointer">
-        <input
-          type="checkbox"
-          checked={done}
-          disabled={readOnly}
-          onChange={(event) => {
-            onToggle(task, event.target.checked);
-          }}
-          className="mt-0.5 size-5 shrink-0 accent-accent enabled:cursor-pointer"
-        />
-        <span className={done ? "text-muted line-through" : "font-semibold"}>{task.title}</span>
-      </label>
-      <div className="flex flex-col gap-0.5 pl-8">
-        <DueDate task={task} done={done} />
-        {task.recurrence === null ? null : (
-          <span className="text-sm text-muted">{recurrenceLabel(task.recurrence)}</span>
-        )}
-        {task.description === null ? null : (
-          <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
-        )}
-        {task.assignee === null ? null : (
-          <span className="flex items-center gap-1.5 text-sm text-muted">
-            <Avatar id={task.assignee.userId} name={task.assignee.name} size="sm" />
-            {ASSIGNEE_LABEL} {task.assignee.name}
-          </span>
-        )}
-        {shared && done && task.completedBy !== null ? (
-          <span className="text-sm text-muted">Cochée par {task.completedBy.name}</span>
-        ) : null}
-      </div>
-    </div>
+    <>
+      <DueDate task={task} done={done} />
+      {task.recurrence === null ? null : (
+        <span className="text-sm text-muted">{recurrenceLabel(task.recurrence)}</span>
+      )}
+      {task.description === null ? null : (
+        <span className="text-sm whitespace-pre-line text-muted">{task.description}</span>
+      )}
+    </>
   );
 }
 
@@ -145,6 +109,61 @@ function TaskActions({ task, done, onAddSubtask, onFinish, onEdit, onDelete }: T
   );
 }
 
+interface TodoTaskLineProps {
+  task: TaskOutput;
+  subtasks: readonly TaskOutput[];
+  completion: TaskCompletion;
+  /** Les actions de la tâche (hors modification et confirmation de suppression), jamais en lecture seule. */
+  showActions: boolean;
+  onAddSubtask: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+/** La ligne partagée (`TaskLine`) branchée sur le Todo : coche, atténuation, personnes, actions de la tâche. */
+function TodoTaskLine({
+  task,
+  subtasks,
+  completion,
+  showActions,
+  onAddSubtask,
+  onEdit,
+  onDelete,
+}: TodoTaskLineProps) {
+  const { isDimmed, readOnly, shared } = useListView();
+  const done = task.completedAt !== null;
+  return (
+    <TaskLine
+      title={task.title}
+      done={done}
+      onToggle={
+        readOnly
+          ? undefined
+          : (checked) => {
+              completion.toggle(task, checked);
+            }
+      }
+      dimmed={isDimmed(task)}
+      subtasks={subtasks.length === 0 ? undefined : subtaskProgress(subtasks)}
+      assignee={task.assignee}
+      completedByName={shared && done ? task.completedBy?.name : undefined}
+      details={<TaskDetails task={task} done={done} />}
+      actions={
+        showActions && !readOnly ? (
+          <TaskActions
+            task={task}
+            done={done}
+            onAddSubtask={onAddSubtask}
+            onFinish={completion.finish}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ) : null
+      }
+    />
+  );
+}
+
 interface TaskRowProps {
   task: TaskOutput;
   /** Sous-tâches de `task` ; absent pour une sous-tâche (un seul niveau). */
@@ -157,11 +176,9 @@ interface TaskRowProps {
  * seule : la coche montre l'état, sans geste possible.
  */
 export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
-  const { isDimmed, readOnly } = useListView();
   const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
-  const done = task.completedAt !== null;
   const subtaskList = (
     <Subtasks
       task={task}
@@ -192,24 +209,17 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
           : "flex flex-col gap-2 rounded-control bg-surface px-4 py-3"
       }
     >
-      <div
-        data-dimmed={isDimmed(task) ? true : undefined}
-        className="flex flex-col data-dimmed:opacity-45 sm:flex-row sm:items-start sm:gap-3"
-      >
-        <TaskMain task={task} done={done} onToggle={completion.toggle} />
-        {mode === "view" && !readOnly ? (
-          <TaskActions
-            task={task}
-            done={done}
-            onAddSubtask={() => {
-              setAddingSubtask(true);
-            }}
-            onFinish={completion.finish}
-            onEdit={showEdit}
-            onDelete={showConfirmDelete}
-          />
-        ) : null}
-      </div>
+      <TodoTaskLine
+        task={task}
+        subtasks={subtasks}
+        completion={completion}
+        showActions={mode === "view"}
+        onAddSubtask={() => {
+          setAddingSubtask(true);
+        }}
+        onEdit={showEdit}
+        onDelete={showConfirmDelete}
+      />
       {mode === "confirmDelete" ? (
         <ConfirmPanel
           question={deleteQuestion(task.title, subtasks.length)}

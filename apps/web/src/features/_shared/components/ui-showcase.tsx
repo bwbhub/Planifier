@@ -9,13 +9,10 @@ import { Switch } from "@planifier/ui/components/switch";
 import { Tabs } from "@planifier/ui/components/tabs";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
-import { TitledSection } from "@planifier/ui/components/titled-section";
 import { type ReactNode, useState } from "react";
 
-import { DialogsDemo } from "./ui-showcase-dialogs";
-import { MenuDemo } from "./ui-showcase-menu";
-import { StatesDemo } from "./ui-showcase-states";
-import { ToastsDemo } from "./ui-showcase-toasts";
+import { Section } from "./showcase-section";
+import { FeedbackSections } from "./ui-showcase-feedback";
 
 const VIEWS = [
   { value: "day", label: "Jour" },
@@ -30,14 +27,6 @@ const LISTS = [
 ] as const;
 
 type ListId = (typeof LISTS)[number]["value"];
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <TitledSection title={title} className="p-6">
-      <div className="flex flex-col gap-4">{children}</div>
-    </TitledSection>
-  );
-}
 
 function Row({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap items-center gap-3">{children}</div>;
@@ -108,21 +97,7 @@ export function UiShowcase() {
         />
       </Section>
 
-      <Section title="Chargement, vide, erreur">
-        <StatesDemo />
-      </Section>
-
-      <Section title="Menu">
-        <MenuDemo />
-      </Section>
-
-      <Section title="Messages">
-        <ToastsDemo />
-      </Section>
-
-      <Section title="Dialogues">
-        <DialogsDemo />
-      </Section>
+      <FeedbackSections />
 
       <Section title="Pastilles">
         <Row>

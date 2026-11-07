@@ -135,6 +135,11 @@ interface TaskFormProps {
   parentId?: string | undefined;
   /** Fin de la modification, ou abandon de l'ajout de sous-tâches ; absent : formulaire toujours ouvert. */
   onDone?: (() => void) | undefined;
+  /**
+   * Création terminée : l'appelant prend la suite (fermer la feuille, annoncer l'ajout). Absent : le formulaire dit
+   * « Tâche ajoutée. » et se vide pour la saisie suivante.
+   */
+  onCreated?: ((task: TaskOutput) => void) | undefined;
 }
 
 function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
@@ -143,7 +148,7 @@ function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
 }
 
 /** Un seul formulaire pour créer une tâche et la modifier : titre obligatoire, détails facultatifs. */
-export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
+export function TaskForm({ listId, task, parentId, onDone, onCreated }: TaskFormProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const { notify } = useToast();
@@ -162,7 +167,11 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       const input = validate(form, createTaskInputSchema, createValues(listId, parentId, values));
       if (input !== null)
         createTask.mutate(input, {
-          onSuccess: () => {
+          onSuccess: (created) => {
+            if (onCreated !== undefined) {
+              onCreated(created);
+              return;
+            }
             notify(parentId === undefined ? TODO_LABELS.taskAdded : TODO_LABELS.subtaskAdded);
             resetForNext(form);
           },

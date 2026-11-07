@@ -54,6 +54,25 @@ async function createListAndCheckTask(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
+/** Le « + » ajoute une tâche en deux gestes (titre, Entrée), de n'importe quelle page, sans déborder en largeur. */
+async function addTaskWithPlusButton(page: Page) {
+  await page.getByRole("button", { name: "Nouvelle tâche", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Nouvelle tâche" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("combobox", { name: "Liste" })).toBeVisible();
+  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+  await sheet.getByLabel("Nouvelle tâche").fill("Appeler le garagiste");
+  await page.keyboard.press("Enter");
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText("Tâche ajoutée à « Courses ».")).toBeVisible();
+  await page.goto("/todo");
+  await expect(page.getByRole("checkbox", { name: "Appeler le garagiste" })).toBeVisible();
+  // Rangée : les parcours suivants partent d'une liste sans cette tâche.
+  await chooseTaskAction(page, "Appeler le garagiste", "Supprimer");
+  await page.getByRole("button", { name: "Supprimer définitivement" }).click();
+  await expect(page.getByRole("checkbox", { name: "Appeler le garagiste" })).toHaveCount(0);
+}
+
 /**
  * Déplace d'une heure vers le bas une entrée de la vue Jour, prise par son milieu : le décalage compte, pas le point
  * visé. PC : glisser-déposer à la souris. Mobile : appui long qui la décolle, puis toucher du créneau.
@@ -327,6 +346,11 @@ test.describe.serial("parcours d'un compte", () => {
   test("crée une liste, ajoute une tâche et la coche quand on ouvre le Todo", async ({ page }) => {
     await openHomeSignedIn(page, session);
     await createListAndCheckTask(page);
+  });
+
+  test("ajoute une tâche par le « + » depuis le profil", async ({ page }) => {
+    await openSignedIn(page, session, "/profil");
+    await addTaskWithPlusButton(page);
   });
 
   test("ajoute une sous-tâche, modifie puis supprime la tâche et la liste quand on le demande", async ({

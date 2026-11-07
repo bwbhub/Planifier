@@ -30,6 +30,24 @@ describe("AppShell", () => {
     expect(modulesNav()).toBeNull();
   });
 
+  it("montre le « + » donné par la couche app, sauf sur l'Agenda qui a son propre bouton", () => {
+    pathname.current = "/todo";
+    const { rerender } = render(
+      <AppShell modules={["TODO", "AGENDA"]} create={<button>Ajouter</button>}>
+        contenu
+      </AppShell>,
+    );
+    expect(screen.getByRole("button", { name: "Ajouter" })).not.toBeNull();
+
+    pathname.current = "/agenda";
+    rerender(
+      <AppShell modules={["TODO", "AGENDA"]} create={<button>Ajouter</button>}>
+        contenu
+      </AppShell>,
+    );
+    expect(screen.queryByRole("button", { name: "Ajouter" })).toBeNull();
+  });
+
   it("marque la page courante, y compris sous une sous-page", () => {
     pathname.current = "/agenda";
     const { rerender } = render(<AppShell modules={["TODO", "AGENDA"]}>contenu</AppShell>);

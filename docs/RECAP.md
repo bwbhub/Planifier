@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Feuille « Nouvelle tâche » et bouton « + » (branche `feat/bouton-plus-nouvelle-tache`)
+
+**Fait** : plan 3/4 (ticket `869fhwtr3`), fin. `todo/components/new-task-sheet.tsx` : `Sheet size="form"` « Nouvelle tâche » = choix de la liste (listes écrivables seulement : `utils/new-task-list.ts`, 4 tests ; défaut : la liste regardée, sinon la première perso) + le `TaskForm` de la liste (un seul formulaire ; nouvelle prop `onCreated`) ; un ajout ferme la feuille et annonce « Tâche ajoutée à « Liste ». » ; états chargement, erreur, aucune liste écrivable (lien vers le Todo). `new-task-launcher.tsx` : le « + » (`useSearchParams().liste`), donné à `AppShell` par le layout `(app)` (prop `create`) : PC en haut du panneau latéral, mobile flottant au-dessus de la barre basse. Montré si Todo est activé, **caché sur l'Agenda** (son propre bouton, en attendant le choix tâche / entrée). La feuille est retirée une fois fermée (sinon son nom « Nouvelle tâche » se confond avec le champ de titre). 5 tests de la feuille, 1 d'`AppShell`, E2E : ajout par le « + » depuis `/profil` en deux gestes, sans débordement.
+**Décisions** : pas de case « Paramètres avancés » : le formulaire garde ses détails repliables (même critère, 2 gestes). « Rappel » masqué (pas de cron). Pas de sélecteur tâche / entrée tant qu'un seul choix existe hors Agenda.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 277), `pnpm build`, `pnpm test:e2e` (64) exécutés, verts. Rien vu à l'œil.
+**Ouvert** : mobile : le « + » flottant peut recouvrir le ⋯ de la dernière ligne (à voir à l'œil ; remède possible : marge basse de la page) ; sur l'Agenda, pas de « + » ; ticket `869fhwtg4` : reste la pastille de non-lus et les entrées Aujourd'hui / Événements / Notifications. Revue pas encore passée ; ni push ni PR.
+**Attendu ensuite** : revue, PR ; puis plan 4 (Aujourd'hui).
+
+---
+
 ## 2026-11-07 — Heure dans le formulaire de tâche (branche `feat/nouvelle-tache-feuille`)
 
 **Fait** : plan 3/4 (ticket `869fhwtr3`), PR 2 : le formulaire de tâche (création, sous-tâche, modification : un seul formulaire) remplace le champ « Échéance » par `DateTimeField` (jour + « Sans heure » cochée par défaut, heure sinon). `forms/due-fields.tsx` ; `forms/use-reset-key.ts` (le champ repart de sa valeur de départ quand le formulaire se vide, partagé avec la répétition) ; `forms/task-form-values.ts` (lecture du formulaire et entrées de création/modification extraites de `TaskForm`, pour tenir la limite de taille). Heure sans jour refusée avant envoi (« Une heure demande un jour »). En modification, jour et heure ne partent que s'ils changent (ancre de série gardée). 4 tests de formulaire (jour+heure, sans heure, heure sans jour, préremplissage sans envoi inutile).

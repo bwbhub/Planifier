@@ -125,7 +125,7 @@ export function TodoView({ selectedListId }: TodoViewProps) {
               setCreating(true);
             }}
           >
-            Créer ma première liste
+            {TODO_LABELS.createFirstList}
           </Button>
         }
       />

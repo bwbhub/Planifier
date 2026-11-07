@@ -15,6 +15,7 @@ import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
 import { LoadError } from "@planifier/ui/components/load-error";
 import { type SubmitEvent, useState } from "react";
 
@@ -23,7 +24,7 @@ import { useFormValidation } from "@/features/_shared/forms/use-form-validation"
 import { COMMON_LABELS } from "@/lib/labels";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
-import { ASSIGNEE_LABEL } from "../labels";
+import { ASSIGNEE_LABEL, TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
@@ -114,9 +115,7 @@ function AssigneeField({ listId, task }: AssigneeProps) {
         onRetry={() => void members.refetch()}
       />
     ) : (
-      <p role="status" className="text-sm text-muted">
-        Chargement des personnes…
-      </p>
+      <ListSkeleton label={TODO_LABELS.loadingPeople} rows={1} />
     );
   }
   return (

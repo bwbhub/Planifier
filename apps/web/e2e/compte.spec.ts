@@ -137,7 +137,7 @@ async function editThenDeleteTaskAndList(page: Page) {
     page.getByRole("group", { name: "Supprimer « Acheter du pain complet » et sa sous-tâche ?" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Supprimer définitivement" }).click();
-  await expect(page.getByText("Aucune tâche dans cette liste.")).toBeVisible();
+  await expect(page.getByText("Aucune tâche dans cette liste")).toBeVisible();
 
   // Tâche répétée : cochée, elle reste à faire et annonce sa prochaine échéance.
   await page.getByLabel("Nouvelle tâche").fill("Arroser les plantes");

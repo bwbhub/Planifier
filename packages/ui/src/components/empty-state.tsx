@@ -9,14 +9,14 @@ export interface EmptyStateProps {
   description: ReactNode;
   /** Le geste qui sort du vide (bouton ou lien), s'il y en a un. */
   action?: ReactNode;
-  /** `1` quand l'état vide est tout le contenu de la page. */
-  level?: 1 | 2;
+  /** Niveau du titre : `1` si l'état vide est toute la page, `3` sous un titre de niveau 2. */
+  level?: 1 | 2 | 3;
 }
 
 /** État vide : un titre, une phrase utile et, si possible, l'action qui le remplit. Sans métier. */
-export function EmptyState({ title, description, action, level }: EmptyStateProps) {
+export function EmptyState({ title, description, action, level = 2 }: EmptyStateProps) {
   return (
-    <MessageCard title={title} {...(level === undefined ? {} : { level })}>
+    <MessageCard title={title} level={level}>
       <p className="leading-relaxed text-muted">{description}</p>
       {action}
     </MessageCard>

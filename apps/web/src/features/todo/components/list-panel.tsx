@@ -104,6 +104,7 @@ function TaskList({ listId }: { listId: string }) {
     return (
       <EmptyState
         title={TODO_LABELS.noTaskTitle}
+        level={3}
         description={readOnly ? TODO_LABELS.noTaskReadOnly : TODO_LABELS.noTaskHint}
       />
     );

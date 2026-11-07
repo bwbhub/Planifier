@@ -28,8 +28,13 @@ tâche). Section « Chargement, vide, erreur » sur `/composants`.
 **Décisions** : `EmptyState` reste sur `MessageCard` (pas de 2e carte). Libellés du module dans `TODO_LABELS`.
 Vide de la liste d'événement / de la vue Aujourd'hui : avec leurs écrans.
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm format:check` OK ; **60 E2E passent** en
-local (un test attendait le texte « Aucune tâche dans cette liste. » : conservé en titre). Rien vu au navigateur.
-**Ouvert** : « Chargement des personnes… » (champ assigné) reste un texte ; revue visuelle des squelettes.
+local (le test du vide cherche maintenant « Aucune tâche dans cette liste » sans le point). Rien vu au navigateur.
+**Revue (code-review, 2026-11-07)** : titre de l'état vide « aucune tâche » en `h3` (`MessageCard` / `EmptyState`
+acceptent `level` 1 à 3, 2 par défaut), chargement des personnes en `ListSkeleton`, libellés dans `TODO_LABELS`
+(titres sans point final), `aria-busy` retiré de `ListSkeleton`, dette `load-error` retirée de `SUITE.md`. 60 E2E passent
+après les corrections.
+**Ouvert** : revue visuelle des squelettes (le chargement du Todo change d'aspect) ; formes `block` et `card` du
+`Skeleton` seulement dans la démo en attendant la ligne de tâche et le bloc de créneau.
 **Attendu ensuite** : plan 1, PR 4 (menu).
 
 ---

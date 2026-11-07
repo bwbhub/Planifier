@@ -138,8 +138,8 @@ tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail 
   - Revue humaine (droits) : `domain-access/agenda.ts`, `agenda-guard.ts`, `listSpaceEntries`, `assertReadableTask`.
 
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
-  Espaces rapetissent ; à valider à l'œil. `todo/atoms/load-error.tsx` double `LoadError` de `packages/ui` : à
-  remplacer par celui-ci dans une PR Todo.
+  Espaces rapetissent ; à valider à l'œil. (`todo/atoms/load-error.tsx` remplacé par le
+  `LoadError` de `packages/ui`, PR skeleton / état vide.)
 
 ## 5. Pièges de l'environnement
 

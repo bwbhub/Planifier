@@ -39,3 +39,14 @@ export const NAV_LABELS = {
 export function pageTitle(page: string): string {
   return `${page} · ${COMMON_LABELS.appName}`;
 }
+
+/** Jours de la semaine : au singulier (« le lundi »), au pluriel (« tous les lundis »). */
+export const WEEKDAY_LABELS = {
+  MONDAY: { one: "lundi", many: "lundis" },
+  TUESDAY: { one: "mardi", many: "mardis" },
+  WEDNESDAY: { one: "mercredi", many: "mercredis" },
+  THURSDAY: { one: "jeudi", many: "jeudis" },
+  FRIDAY: { one: "vendredi", many: "vendredis" },
+  SATURDAY: { one: "samedi", many: "samedis" },
+  SUNDAY: { one: "dimanche", many: "dimanches" },
+} as const;

@@ -1,3 +1,5 @@
+import { type Weekday, WEEKDAYS } from "./todo";
+
 // Jour civil `AAAA-MM-JJ` (échéance) : sans heure ni fuseau. Lu et écrit en UTC pour ne jamais glisser d'un jour.
 
 /** Jour `AAAA-MM-JJ` ⇒ `Date` à minuit UTC (forme d'une colonne `DATE` lue par Prisma). */
@@ -20,4 +22,16 @@ export function addDays(day: string, days: number): string {
 /** Nombre de jours de `from` à `to` (négatif si `to` est avant). */
 export function daysBetween(from: string, to: string): number {
   return Math.round((dayToUtcDate(to).getTime() - dayToUtcDate(from).getTime()) / MS_PER_DAY);
+}
+
+/** Rang du jour dans la semaine, lundi = 0 (la semaine commence le lundi). */
+export function weekdayIndex(day: string): number {
+  return (dayToUtcDate(day).getUTCDay() + 6) % 7;
+}
+
+/** Jour de la semaine d'un jour civil. */
+export function weekdayOf(day: string): Weekday {
+  const weekday = WEEKDAYS[weekdayIndex(day)];
+  if (weekday === undefined) throw new Error(`Jour de la semaine introuvable pour ${day}.`);
+  return weekday;
 }

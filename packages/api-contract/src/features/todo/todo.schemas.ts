@@ -1,4 +1,8 @@
-import { RECURRENCE_FREQUENCIES, RECURRENCE_MAX_INTERVAL } from "@planifier/constants/todo";
+import {
+  RECURRENCE_FREQUENCIES,
+  RECURRENCE_MAX_INTERVAL,
+  WEEKDAYS,
+} from "@planifier/constants/todo";
 import { z } from "zod";
 
 /** Identifiants générés par la base (`uuid(7)`). */
@@ -38,8 +42,22 @@ export const todoConflictDataSchema = z.strictObject({ reason: z.enum(TODO_CONFL
 /** Erreurs typées des procédures Todo : `CONFLICT` porte toujours sa raison. */
 export const TODO_ERRORS = { CONFLICT: { data: todoConflictDataSchema } };
 
-/** Répétition d'une tâche : tous les `interval` jours, semaines, mois ou ans (ADR 0017). */
-export const recurrenceSchema = z.strictObject({
-  frequency: z.enum(RECURRENCE_FREQUENCIES),
-  interval: z.int().min(1).max(RECURRENCE_MAX_INTERVAL),
-});
+/**
+ * Répétition d'une tâche : tous les `interval` jours, semaines, mois ou ans (ADR 0017). `weekdays` (rythme `WEEKLY`
+ * seulement, sans doublon) : « tous les mardis », « un lundi sur deux » ; absent, la règle suit le jour de l'échéance.
+ */
+export const recurrenceSchema = z
+  .strictObject({
+    frequency: z.enum(RECURRENCE_FREQUENCIES),
+    interval: z.int().min(1).max(RECURRENCE_MAX_INTERVAL),
+    weekdays: z.array(z.enum(WEEKDAYS)).min(1).max(WEEKDAYS.length).optional(),
+  })
+  .refine(
+    ({ frequency, weekdays }) =>
+      weekdays === undefined ||
+      (frequency === "WEEKLY" && new Set(weekdays).size === weekdays.length),
+    {
+      message: "Des jours de la semaine ne vont qu'avec un rythme hebdomadaire, sans doublon.",
+      path: ["weekdays"],
+    },
+  );

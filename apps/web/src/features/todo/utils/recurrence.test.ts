@@ -9,6 +9,25 @@ describe("récurrence côté web", () => {
     expect(recurrenceLabel({ frequency: "MONTHLY", interval: 1 })).toBe("Tous les mois");
   });
 
+  it("dit les jours de la semaine : « Tous les mardis », « Toutes les 2 semaines, le lundi et le jeudi »", () => {
+    expect(recurrenceLabel({ frequency: "WEEKLY", interval: 1, weekdays: ["TUESDAY"] })).toBe(
+      "Tous les mardis",
+    );
+    expect(
+      recurrenceLabel({ frequency: "WEEKLY", interval: 1, weekdays: ["MONDAY", "THURSDAY"] }),
+    ).toBe("Tous les lundis et jeudis");
+    expect(
+      recurrenceLabel({
+        frequency: "WEEKLY",
+        interval: 1,
+        weekdays: ["MONDAY", "WEDNESDAY", "FRIDAY"],
+      }),
+    ).toBe("Tous les lundis, mercredis et vendredis");
+    expect(
+      recurrenceLabel({ frequency: "WEEKLY", interval: 2, weekdays: ["MONDAY", "THURSDAY"] }),
+    ).toBe("Toutes les 2 semaines, le lundi et le jeudi");
+  });
+
   it("lit le formulaire : « Jamais » ⇒ null, sinon rythme et intervalle", () => {
     const never = new FormData();
     never.set("repeat", "NONE");

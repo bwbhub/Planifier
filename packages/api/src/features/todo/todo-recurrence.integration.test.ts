@@ -1,4 +1,5 @@
 import { call } from "@orpc/server";
+import type { CreateTaskInput } from "@planifier/api-contract";
 import type { SessionUser } from "@planifier/auth";
 import { createTestDatabase } from "@planifier/db/testing";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
@@ -45,6 +46,72 @@ async function createWeekly(dueDate?: string) {
     asUser(alice),
   );
 }
+
+const everyOtherMonday: NonNullable<CreateTaskInput["recurrence"]> = {
+  frequency: "WEEKLY",
+  interval: 2,
+  weekdays: ["MONDAY"],
+};
+
+describe("todo.tasks : tâche répétée à jours de la semaine (base réelle)", () => {
+  it("garde les jours (rangés dans l'ordre de la semaine) après un aller-retour en base", async () => {
+    const list = await createAliceList();
+    const task = await call(
+      tasks.create,
+      {
+        listId: list.id,
+        title: "Sport",
+        recurrence: { frequency: "WEEKLY", interval: 1, weekdays: ["THURSDAY", "MONDAY"] },
+      },
+      asUser(alice),
+    );
+    expect(task.recurrence).toEqual({
+      frequency: "WEEKLY",
+      interval: 1,
+      weekdays: ["MONDAY", "THURSDAY"],
+    });
+    const { items } = await call(tasks.list, { listId: list.id }, asUser(alice));
+    expect(items[0]?.recurrence).toEqual(task.recurrence);
+  });
+
+  it("sans échéance, cocher pose la première occurrence et garde la parité des semaines", async () => {
+    const list = await createAliceList();
+    const task = await call(
+      tasks.create,
+      { listId: list.id, title: "Poubelles", recurrence: everyOtherMonday },
+      asUser(alice),
+    );
+    expect(task.dueDate).toBeNull();
+    // Mercredi 28 octobre 2026 : première occurrence le lundi 2 novembre, puis tous les quinze jours.
+    const first = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    expect(first.dueDate).toBe("2026-11-02");
+    const second = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: first.version, today: "2026-11-02" },
+      asUser(alice),
+    );
+    expect(second.dueDate).toBe("2026-11-16");
+  });
+
+  it("refuse des jours avec un autre rythme que hebdomadaire, ou en double", async () => {
+    const list = await createAliceList();
+    const create = (recurrence: NonNullable<CreateTaskInput["recurrence"]>) =>
+      call(tasks.create, { listId: list.id, title: "Sport", recurrence }, asUser(alice));
+    await expect(
+      create({ frequency: "DAILY", interval: 1, weekdays: ["MONDAY"] }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      create({ frequency: "WEEKLY", interval: 1, weekdays: ["MONDAY", "MONDAY"] }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(create({ frequency: "WEEKLY", interval: 1, weekdays: [] })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+});
 
 describe("todo.tasks : coche d'une tâche répétée (base réelle)", () => {
   it("cocher une occurrence avance l'échéance, la tâche reste à faire", async () => {

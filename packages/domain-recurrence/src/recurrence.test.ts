@@ -1,4 +1,4 @@
-import { addDays } from "@planifier/constants/days";
+import { addDays, weekdayOf } from "@planifier/constants/days";
 import { describe, expect, it } from "vitest";
 
 import { nextDueDate, type Recurrence, seriesAnchor } from "./recurrence";
@@ -59,11 +59,17 @@ describe("nextDueDate : cas d'or", () => {
   });
 
   it("ancre : celle gardée, sinon l'échéance, sinon aujourd'hui", () => {
-    expect(seriesAnchor({ anchor: "2026-01-31", due: "2026-02-28" }, "2026-02-28")).toBe(
+    expect(seriesAnchor(weekly, { anchor: "2026-01-31", due: "2026-02-28" }, "2026-02-28")).toBe(
       "2026-01-31",
     );
-    expect(seriesAnchor(fresh("2026-02-28"), "2026-03-01")).toBe("2026-02-28");
-    expect(seriesAnchor(fresh(null), "2026-03-01")).toBe("2026-03-01");
+    expect(seriesAnchor(weekly, fresh("2026-02-28"), "2026-03-01")).toBe("2026-02-28");
+    expect(seriesAnchor(weekly, fresh(null), "2026-03-01")).toBe("2026-03-01");
+  });
+
+  it("ancre d'une règle à jours, sans échéance : la première occurrence, pas le jour de la coche", () => {
+    const tuesdays: Recurrence = { frequency: "WEEKLY", interval: 2, weekdays: ["TUESDAY"] };
+    // Mercredi 28 octobre : la première occurrence est le mardi 3 novembre, et c'est elle qui fixe la parité.
+    expect(seriesAnchor(tuesdays, fresh(null), "2026-10-28")).toBe("2026-11-03");
   });
 });
 
@@ -106,6 +112,78 @@ describe("nextDueDate : propriétés", () => {
         const dues = checkedOnTime(rule, due, 6);
         const last = dues.at(-1) ?? due;
         expect(nextDueDate(rule, { anchor: due, due }, addDays(last, -1))).toBe(last);
+      }
+    }
+  });
+});
+
+describe("nextDueDate : jours de la semaine", () => {
+  // 2026-10-28 est un mercredi.
+  const tuesdays: Recurrence = { frequency: "WEEKLY", interval: 1, weekdays: ["TUESDAY"] };
+  const monThu: Recurrence = { frequency: "WEEKLY", interval: 1, weekdays: ["MONDAY", "THURSDAY"] };
+  const everyOtherMonday: Recurrence = { frequency: "WEEKLY", interval: 2, weekdays: ["MONDAY"] };
+
+  it("sans échéance : le prochain jour voulu, strictement après aujourd'hui", () => {
+    expect(nextDueDate(tuesdays, fresh(null), "2026-10-28")).toBe("2026-11-03");
+    // Un mardi : l'occurrence d'aujourd'hui est faite, la suivante est dans sept jours.
+    expect(nextDueDate(tuesdays, fresh(null), "2026-11-03")).toBe("2026-11-10");
+  });
+
+  it("plusieurs jours : le plus proche, puis le suivant, dans l'ordre de la semaine", () => {
+    expect(nextDueDate(monThu, fresh("2026-10-26"), "2026-10-26")).toBe("2026-10-29");
+    expect(nextDueDate(monThu, fresh("2026-10-29"), "2026-10-29")).toBe("2026-11-02");
+    expect(checkedOnTime(monThu, "2026-10-26", 4)).toEqual([
+      "2026-10-29",
+      "2026-11-02",
+      "2026-11-05",
+      "2026-11-09",
+    ]);
+  });
+
+  it("l'échéance n'a pas à tomber un jour voulu : on repart du prochain jour voulu", () => {
+    expect(nextDueDate(tuesdays, fresh("2026-10-28"), "2026-10-28")).toBe("2026-11-03");
+  });
+
+  it("cochée en avance : après l'échéance, pas après aujourd'hui", () => {
+    expect(nextDueDate(tuesdays, fresh("2026-11-10"), "2026-10-30")).toBe("2026-11-17");
+  });
+
+  it("cochée en retard : saute les occurrences passées", () => {
+    expect(nextDueDate(tuesdays, fresh("2026-09-01"), "2026-10-28")).toBe("2026-11-03");
+  });
+
+  it("toutes les deux semaines : une semaine sur deux, depuis la semaine de l'ancre", () => {
+    expect(checkedOnTime(everyOtherMonday, "2026-10-26", 3)).toEqual([
+      "2026-11-09",
+      "2026-11-23",
+      "2026-12-07",
+    ]);
+    // Ancre un jeudi : la semaine de l'ancre compte (lundi 26 octobre), le lundi suivant voulu est dans deux semaines.
+    expect(
+      nextDueDate(everyOtherMonday, { anchor: "2026-10-29", due: "2026-10-29" }, "2026-10-29"),
+    ).toBe("2026-11-09");
+  });
+
+  it("aucun glissement : l'ancre garde la parité des semaines après une coche en retard", () => {
+    const anchor = "2026-10-26";
+    expect(nextDueDate(everyOtherMonday, { anchor, due: "2026-11-09" }, "2026-12-01")).toBe(
+      "2026-12-07",
+    );
+  });
+
+  it("propriétés : toujours un jour voulu, strictement après aujourd'hui et l'échéance", () => {
+    const rules = [tuesdays, monThu, everyOtherMonday];
+    const days = ["2024-02-29", "2026-01-31", "2026-10-28", "2026-12-31", "2027-03-01"];
+    const wanted = (rule: Recurrence, day: string) =>
+      (rule.weekdays ?? []).some((weekday) => weekday === weekdayOf(day));
+    for (const rule of rules) {
+      for (const due of days) {
+        for (const today of days) {
+          const next = nextDueDate(rule, fresh(due), today);
+          expect(next > today).toBe(true);
+          expect(next > due).toBe(true);
+          expect(wanted(rule, next)).toBe(true);
+        }
       }
     }
   });

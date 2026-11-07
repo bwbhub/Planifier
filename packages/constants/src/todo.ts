@@ -22,5 +22,20 @@ export function isListTint(value: string): value is ListTint {
 export const RECURRENCE_FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
 export type RecurrenceFrequency = (typeof RECURRENCE_FREQUENCIES)[number];
 
+/**
+ * Jours de la semaine d'une répétition hebdomadaire (« tous les mardis »), dans l'ordre de la semaine (lundi en
+ * premier). Une règle les range toujours dans cet ordre.
+ */
+export const WEEKDAYS = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+
 /** Intervalle d'une répétition (« toutes les N semaines ») au plus. */
 export const RECURRENCE_MAX_INTERVAL = 99;

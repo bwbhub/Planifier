@@ -18,6 +18,27 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Récurrence par jours de la semaine (branche `feat/recurrence-jours-semaine`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), PR 1 : le modèle. « Tous les mardis », « un lundi sur deux ». `constants` :
+`WEEKDAYS`, `weekdayIndex`, `weekdayOf`. `domain-recurrence` : `Recurrence.weekdays`, `nextDueDate` à jours (premier jour
+voulu après aujourd'hui et l'échéance, parité des semaines depuis l'ancre), `seriesAnchor(rule, series, today)` (la
+première occurrence fait ancre pour une règle à jours sans échéance), forme stockée v2 (v1 toujours lue). Contrat :
+`recurrenceSchema.weekdays` facultatif (additif), refusé hors rythme hebdomadaire et en double. API : le service passe
+les jours et la nouvelle ancre. Web : `recurrenceLabel` dit « Tous les mardis » / « Toutes les 2 semaines, le lundi et
+le jeudi ». ADR 0017 amendée.
+**Décisions** : aucune échéance posée d'office (rien ne s'ajoute à l'insu) ; écran Aujourd'hui : « la règle tombe ce
+jour » se calculera avec la règle (plan 4).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (22 tests du domaine, propriétés comprises), `pnpm build`,
+`pnpm format:check` OK ; **162 tests d'intégration de l'API** passent (3 nouveaux : aller-retour en base, première
+occurrence et parité, refus). E2E non relancés (pas de changement d'écran).
+**Ouvert** : le formulaire de tâche n'expose pas encore les jours : modifier par le formulaire une tâche qui en a
+(créée par l'API) les efface. À fermer avec `RecurrenceField` (PR suivante). Pas de migration (champ JSON versionné).
+**Attendu ensuite** : plan 2, PR 2 : `TaskLine` (`_shared`), PR 3 : `SlotBlock`, PR 4 : `DateTimeField`,
+PR 5 : `RecurrenceField`.
+
+---
+
 ## 2026-11-07 — Menu (branche `feat/ui-menu`)
 
 **Fait** : plan 1/4, PR 4 (dernier bloc du ticket `869fp54cr`). `packages/ui` `Menu` : bouton `aria-haspopup="menu"` /

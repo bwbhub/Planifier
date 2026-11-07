@@ -11,12 +11,22 @@ import {
   listTasksOutputSchema,
   setTaskDoneInputSchema,
   taskSchema,
+  todayTasksInputSchema,
+  todayTasksOutputSchema,
   undoCompletionInputSchema,
   updateTaskInputSchema,
 } from "./tasks.schemas";
 
 // Une tâche se voit et se modifie selon les droits sur sa liste ; sans lecture : NOT_FOUND.
 export const tasksContract = {
+  today: oc
+    .route({
+      summary: "Mes tâches du jour",
+      description:
+        "Tâches à faire de l'appelant : celles de ses listes perso et celles qui lui sont assignées dans une liste partagée (jamais les listes montrées en lecture seule). Trois sections bornées : échéance aujourd'hui, sans échéance, en retard ; `total` dit le reste. `date` : le jour de l'appareil.",
+    })
+    .input(todayTasksInputSchema)
+    .output(todayTasksOutputSchema),
   list: oc
     .route({ summary: "Tâches d'une liste", description: "Par ordre de création." })
     .input(listTasksInputSchema)

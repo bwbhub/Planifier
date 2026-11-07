@@ -81,6 +81,8 @@ export type {
   ListTasksOutput,
   SetTaskDoneInput,
   TaskOutput,
+  TodayTaskOutput,
+  TodayTasksOutput,
   UndoCompletionInput,
   UpdateTaskInput,
 } from "./features/todo/tasks/tasks.schemas";

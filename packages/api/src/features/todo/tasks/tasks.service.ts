@@ -19,7 +19,7 @@ import { fromStoredRecurrence, toStoredRecurrence } from "@planifier/domain-recu
 import { spaceMemberIds, toPerson } from "../../_shared/list-access";
 import { todoConflict } from "../todo-errors";
 
-const TASK_SELECT = {
+export const TASK_SELECT = {
   id: true,
   listId: true,
   parentId: true,
@@ -42,7 +42,7 @@ function toDay(date: Date | null): string | null {
 }
 
 /** L'assigné n'est rendu que s'il est encore membre : un Espace supprimé laisse des listes perso, qui n'en ont pas. */
-function toTaskOutput(
+export function toTaskOutput(
   { dueDate, recurrence, completedBy, assignee, ...task }: TaskRow,
   spaceMembers: ReadonlySet<string>,
 ): TaskOutput {

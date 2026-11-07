@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Mes tâches du jour, API (branche `feat/today-api`)
+
+**Fait** : plan 4/4 (ticket `869fhwtu9`), PR 1. Procédure `todo.tasks.today` (`{ date }` : jour de l'appareil) ⇒ `{ dueToday, ongoing, overdue }`, chaque section `{ items (100 au plus), total }`, tâche + pastille de liste `{ id, name, tint }`. Mes tâches = listes perso + assignées à moi dans une liste partagée de mon Espace (listes montrées en lecture seule exclues) ; cochées et sous-tâches exclues. Ordre : du jour par heure puis création ; en retard, la plus ancienne d'abord. `TODAY_SECTION_MAX` dans `constants`. Glossaire `CONTEXT.md` (Mes tâches, Du jour / En cours / En retard). 6 tests d'intégration (sections, cochées/sous-tâches, bornes, droits : autre perso, lecture seule, assignées, hors Espace).
+**Décisions** : la procédure vit dans `todo` (le Todo garde ses règles de visibilité) et non dans une feature `today` ; l'écran Aujourd'hui composera `todo.tasks.today` et `agenda.entries.list` (jour de l'appareil) côté web, dans `today/queries`, sans qu'aucun module n'en importe un autre. Pas de contrôle d'accès écrit à la main : la requête ne lit que ce qui est à l'appelant. Module Todo désactivé : l'API répond quand même, le web n'appelle pas.
+**Vérifié** : `pnpm check-types`, `pnpm test:integration` (api 178, base `_test`) exécutés, verts. `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e` (62) aussi verts.
+**Revue** : `/code-review` passée ; droits relus par l'agent (aucun cas d'exclusion raté) ; corrigé : schéma de section en constante, imports. Gardé : `TASK_SELECT`/`toTaskOutput` exportés de `tasks.service.ts` (extraction possible plus tard). **À trancher** : déviation `todo.tasks.today` + composition web ; module Todo désactivé non géré côté API ; listes en lecture seule et sous-tâches exclues (le plan disait « lecture seule visibles » avant la décision « appartenance commune ») ; rappel du jour (répétées sans échéance aujourd'hui non couvertes, plafond 100).
+**Ouvert** : **revue humaine (droits)** : `today.service.ts` (`mine`), jointure `list.space.members`. « Rappel du jour » : déduit côté web des tâches du jour répétées.
+**Attendu ensuite** : fusion de la PR ; puis report (`todo.tasks.postpone`), puis l'écran.
+
+---
+
 ## 2026-11-07 — Feuille « Nouvelle tâche » et bouton « + » (branche `feat/bouton-plus-nouvelle-tache`)
 
 **Fait** : plan 3/4 (ticket `869fhwtr3`), fin. `todo/components/new-task-sheet.tsx` : `Sheet size="form"` « Nouvelle tâche » = choix de la liste (listes écrivables seulement : `utils/new-task-list.ts`, 4 tests ; défaut : la liste regardée, sinon la première perso) + le `TaskForm` de la liste (un seul formulaire ; nouvelle prop `onCreated`) ; un ajout ferme la feuille et annonce « Tâche ajoutée à « Liste ». » ; états chargement, erreur, aucune liste écrivable (lien vers le Todo). `new-task-launcher.tsx` : le « + » (`useSearchParams().liste`), donné à `AppShell` par le layout `(app)` (prop `create`) : PC en haut du panneau latéral, mobile flottant au-dessus de la barre basse. Montré si Todo est activé, **caché sur l'Agenda** (son propre bouton, en attendant le choix tâche / entrée). La feuille est retirée une fois fermée (sinon son nom « Nouvelle tâche » se confond avec le champ de titre). 5 tests de la feuille, 1 d'`AppShell`, E2E : ajout par le « + » depuis `/profil` en deux gestes, sans débordement.

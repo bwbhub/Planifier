@@ -7,8 +7,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { useToast } from "@planifier/ui/components/toast";
+
 import { orpc } from "@/lib/orpc";
 
+import { TODO_LABELS } from "../labels";
 import { type ListPages, withOpenTaskDelta } from "../utils/list-pages";
 import { withOccurrenceDone, withTaskDone } from "../utils/task-done";
 
@@ -110,9 +113,18 @@ export function useUndoCompletion() {
   return useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
 }
 
+/** Le message est posé ici et non à l'appel : la ligne disparaît avec la tâche, un rappel de `mutate` ne tiendrait pas. */
 export function useDeleteTask() {
   const onSettled = useInvalidateTodo();
-  return useMutation(orpc.todo.tasks.delete.mutationOptions({ onSettled }));
+  const { notify } = useToast();
+  return useMutation(
+    orpc.todo.tasks.delete.mutationOptions({
+      onSuccess: () => {
+        notify(TODO_LABELS.taskDeleted);
+      },
+      onSettled,
+    }),
+  );
 }
 
 /**

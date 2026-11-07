@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Menu d'actions de la ligne de tâche (branche `feat/menu-actions-tache`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), suite. Les 4 boutons de `TaskActions` (`task-row.tsx`) deviennent un `Menu` « Actions de « <titre> » » (⋯) : Ajouter une sous-tâche (tâche seulement), Terminer pour de bon (tâche répétée à faire), Modifier, Supprimer. Un toast par action réussie qui n'en avait pas : « Tâche modifiée. » (formulaire) et « Tâche supprimée. » (posé dans `useDeleteTask`, car la ligne disparaît avec la tâche). Terminer garde son annonce dans la liste (avec Annuler). Mots dans `TODO_LABELS`. Tests `task-row`, `list-panel` et E2E `compte.spec.ts` suivent les nouveaux noms ; `ToastProvider` ajouté aux tests qui rendent le formulaire ou la suppression.
+**Décisions** : toast de suppression au niveau du hook (un rappel de `mutate` ne tient pas si le composant disparaît) ; confirmation de suppression inchangée (`ConfirmPanel` sur place).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 247), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. Rien vu à l'œil (menu sur ligne, mobile 375 px, contraste du ⋯).
+**Ouvert** : `/code-review` pas encore passée ; ni push ni PR. Toasts des autres actions (cocher, ajouter) non branchés.
+**Attendu ensuite** : `/code-review`, puis PR ; ensuite `SlotBlock`, `DateTimeField`, `RecurrenceField`.
+
+---
+
 ## 2026-11-07 — Ligne de tâche partagée (branche `feat/ligne-de-tache`)
 
 **Fait** : plan 2/4 (ticket `869fhwtg9`), PR 2. `features/todo/atoms/task-line.tsx` : `TaskLine`, ligne de tâche pure

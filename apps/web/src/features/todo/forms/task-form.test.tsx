@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { ORPCError } from "@orpc/client";
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -34,9 +35,11 @@ function renderForm(props: FormProps = {}, shared = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (formProps: FormProps) => (
     <QueryClientProvider client={client}>
-      <ListViewProvider value={{ shared, readOnly: false, isDimmed: () => false }}>
-        <TaskForm listId={LIST_ID} {...formProps} />
-      </ListViewProvider>
+      <ToastProvider dismissLabel="Fermer">
+        <ListViewProvider value={{ shared, readOnly: false, isDimmed: () => false }}>
+          <TaskForm listId={LIST_ID} {...formProps} />
+        </ListViewProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
   const view = render(ui(props));

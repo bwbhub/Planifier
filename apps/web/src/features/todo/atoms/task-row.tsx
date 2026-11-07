@@ -1,11 +1,12 @@
 "use client";
 
 import type { TaskOutput } from "@planifier/api-contract";
-import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
+import { Menu, type MenuItemSpec } from "@planifier/ui/components/menu";
 import { useState } from "react";
 
 import { TaskForm } from "../forms/task-form";
+import { TODO_LABELS } from "../labels";
 import { useDeleteTask } from "../queries/todo.queries";
 import { useListView } from "../utils/list-view";
 import { recurrenceLabel } from "../utils/recurrence";
@@ -77,35 +78,34 @@ interface TaskActionsProps {
 }
 
 /**
- * Actions discrètes d'une tâche, nommées avec son titre pour les lecteurs d'écran. Sous-tâche : pas d'ajout, un seul
+ * Menu d'actions d'une tâche, nommé avec son titre pour les lecteurs d'écran. Sous-tâche : pas d'ajout, un seul
  * niveau. « Terminer » : tâche répétée à faire seulement.
  */
 function TaskActions({ task, done, onAddSubtask, onFinish, onEdit, onDelete }: TaskActionsProps) {
+  const items: MenuItemSpec[] = [
+    ...(isSubtask(task)
+      ? []
+      : [{ key: "subtask", label: TODO_LABELS.addSubtask, onSelect: onAddSubtask }]),
+    ...(task.recurrence === null || done
+      ? []
+      : [
+          {
+            key: "finish",
+            label: TODO_LABELS.finishForGood,
+            onSelect: () => {
+              onFinish(task);
+            },
+          },
+        ]),
+    { key: "edit", label: TODO_LABELS.edit, onSelect: onEdit },
+    { key: "delete", label: TODO_LABELS.delete, onSelect: onDelete },
+  ];
   return (
-    <div className="-ml-3 flex flex-wrap pl-8 sm:ml-0 sm:shrink-0 sm:justify-end sm:pl-0">
-      {isSubtask(task) ? null : (
-        <Button variant="ghost" size="sm" onClick={onAddSubtask}>
-          + Sous-tâche<span className="sr-only"> à « {task.title} »</span>
-        </Button>
-      )}
-      {task.recurrence === null || done ? null : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            onFinish(task);
-          }}
-        >
-          Terminer<span className="sr-only"> « {task.title} » pour de bon</span>
-        </Button>
-      )}
-      <Button variant="ghost" size="sm" onClick={onEdit}>
-        Modifier<span className="sr-only"> « {task.title} »</span>
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onDelete}>
-        Supprimer<span className="sr-only"> « {task.title} »</span>
-      </Button>
-    </div>
+    <Menu
+      label={TODO_LABELS.actionsOf(task.title)}
+      trigger={<span aria-hidden="true">⋯</span>}
+      items={items}
+    />
   );
 }
 

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { ORPCError } from "@orpc/client";
 import type { TodoListOutput } from "@planifier/api-contract";
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -50,7 +51,9 @@ function renderPanel(list = LIST) {
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <ListPanel list={list} onDeleted={vi.fn()} />
+      <ToastProvider dismissLabel="Fermer">
+        <ListPanel list={list} onDeleted={vi.fn()} />
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -128,7 +131,10 @@ describe("ListPanel, annuler et terminer une tâche répétée", () => {
     renderPanel();
     await screen.findByText("Toutes les semaines");
     server["todo/tasks/list"] = { data: { items: [finished] } };
-    await userEvent.click(screen.getByRole("button", { name: /^Terminer/ }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions de « Sortir les poubelles »" }),
+    );
+    await userEvent.click(screen.getByRole("menuitem", { name: "Terminer pour de bon" }));
 
     await waitFor(() => {
       expect(screen.getByRole("status").textContent).toBe(

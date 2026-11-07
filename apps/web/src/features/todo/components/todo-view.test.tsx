@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { ListListsOutput, TodoListOutput } from "@planifier/api-contract";
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -53,7 +54,9 @@ describe("TodoView, liste de l'adresse", () => {
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
-        <TodoView selectedListId={LATER.id} />
+        <ToastProvider dismissLabel="Fermer">
+          <TodoView selectedListId={LATER.id} />
+        </ToastProvider>
       </QueryClientProvider>,
     );
     expect(await screen.findByRole("heading", { name: "Vacances" })).toBeTruthy();

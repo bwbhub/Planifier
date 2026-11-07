@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
@@ -38,13 +39,24 @@ function completionWith(fields: Partial<TaskCompletion> = {}): TaskCompletion {
 function renderRow(completion = completionWith(), task = parent, shared = false, readOnly = false) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
-      <ul>
-        <ListViewProvider value={{ shared, readOnly, isDimmed: () => false }}>
-          <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
-        </ListViewProvider>
-      </ul>
+      <ToastProvider dismissLabel="Fermer">
+        <ul>
+          <ListViewProvider value={{ shared, readOnly, isDimmed: () => false }}>
+            <TaskRow task={task} subtasks={[bread, milk]} completion={completion} />
+          </ListViewProvider>
+        </ul>
+      </ToastProvider>
     </QueryClientProvider>,
   );
+}
+
+async function openMenu(title: string) {
+  await userEvent.click(screen.getByRole("button", { name: `Actions de « ${title} »` }));
+}
+
+async function chooseAction(title: string, action: string) {
+  await openMenu(title);
+  await userEvent.click(screen.getByRole("menuitem", { name: action }));
 }
 
 describe("TaskRow avec sous-tâches", () => {
@@ -62,22 +74,25 @@ describe("TaskRow avec sous-tâches", () => {
     expect(onToggle).toHaveBeenCalledExactlyOnceWith(bread, true);
   });
 
-  it("ne propose pas de sous-tâche à une sous-tâche (un seul niveau)", () => {
+  it("ne propose pas de sous-tâche à une sous-tâche (un seul niveau)", async () => {
     renderRow();
-    expect(screen.getByRole("button", { name: /^\+ Sous-tâche\s*à « Courses »$/ })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Sous-tâche\s*à « Pain »/ })).toBeNull();
+    await openMenu("Courses");
+    expect(screen.getByRole("menuitem", { name: "Ajouter une sous-tâche" })).toBeTruthy();
+    await userEvent.keyboard("{Escape}");
+    await openMenu("Pain");
+    expect(screen.queryByRole("menuitem", { name: "Ajouter une sous-tâche" })).toBeNull();
   });
 
   it("nomme les sous-tâches dans la question de suppression", async () => {
     renderRow();
-    await userEvent.click(screen.getByRole("button", { name: /^Supprimer\s*« Courses »$/ }));
+    await chooseAction("Courses", "Supprimer");
     expect(screen.getByText("Supprimer « Courses » et ses 2 sous-tâches ?")).toBeTruthy();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("garde les sous-tâches affichées pendant la modification de la tâche", async () => {
     renderRow();
-    await userEvent.click(screen.getByRole("button", { name: /^Modifier\s*« Courses »$/ }));
+    await chooseAction("Courses", "Modifier");
     expect(screen.getByRole("list", { name: "Sous-tâches de « Courses »" })).toBeTruthy();
   });
 
@@ -85,10 +100,10 @@ describe("TaskRow avec sous-tâches", () => {
     const finish = vi.fn<TaskCompletion["finish"]>();
     const weekly = { ...parent, recurrence: { frequency: "WEEKLY", interval: 1 } } as const;
     renderRow(completionWith({ finish }), weekly);
-    expect(screen.queryByRole("button", { name: /^Terminer\s*« Pain »/ })).toBeNull();
-    await userEvent.click(
-      screen.getByRole("button", { name: /^Terminer\s*« Courses » pour de bon$/ }),
-    );
+    await openMenu("Pain");
+    expect(screen.queryByRole("menuitem", { name: "Terminer pour de bon" })).toBeNull();
+    await userEvent.keyboard("{Escape}");
+    await chooseAction("Courses", "Terminer pour de bon");
     expect(finish).toHaveBeenCalledExactlyOnceWith(weekly);
   });
 
@@ -112,5 +127,6 @@ describe("TaskRow, lecture seule", () => {
     renderRow(completion, parent, false, true);
     expect(screen.getAllByRole("checkbox").every((box) => box.hasAttribute("disabled"))).toBe(true);
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 });

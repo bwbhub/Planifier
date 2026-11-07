@@ -1,6 +1,6 @@
 import {
-  TASK_DESCRIPTION_MAX_LENGTH,
   LIST_TINTS,
+  TASK_DESCRIPTION_MAX_LENGTH,
   TASK_TITLE_MAX_LENGTH,
   TODAY_SECTION_MAX,
   TODO_LIST_MAX_TASKS,
@@ -132,12 +132,10 @@ const todayTaskSchema = taskSchema.extend({
 });
 
 /** Une section : les premières tâches (bornées) et leur nombre total. */
-function todaySection() {
-  return z.strictObject({
-    items: z.array(todayTaskSchema).max(TODAY_SECTION_MAX),
-    total: z.int().min(0),
-  });
-}
+const todaySectionSchema = z.strictObject({
+  items: z.array(todayTaskSchema).max(TODAY_SECTION_MAX),
+  total: z.int().min(0),
+});
 
 /**
  * Tâches à faire de l'appelant : celles de ses listes perso, et celles qui lui sont assignées dans une liste partagée.
@@ -145,11 +143,11 @@ function todaySection() {
  */
 export const todayTasksOutputSchema = z.strictObject({
   /** Échéance aujourd'hui, par heure puis par ordre de création. */
-  dueToday: todaySection(),
+  dueToday: todaySectionSchema,
   /** Sans échéance. */
-  ongoing: todaySection(),
+  ongoing: todaySectionSchema,
   /** Échéance passée, la plus ancienne d'abord. */
-  overdue: todaySection(),
+  overdue: todaySectionSchema,
 });
 
 /** Toutes les tâches de la liste (bornées), sous-tâches comprises, par ordre de création. */

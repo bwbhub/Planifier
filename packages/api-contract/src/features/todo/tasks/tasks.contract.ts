@@ -9,10 +9,10 @@ import {
   finishTaskInputSchema,
   listTasksInputSchema,
   listTasksOutputSchema,
-  todayTasksInputSchema,
-  todayTasksOutputSchema,
   setTaskDoneInputSchema,
   taskSchema,
+  todayTasksInputSchema,
+  todayTasksOutputSchema,
   undoCompletionInputSchema,
   updateTaskInputSchema,
 } from "./tasks.schemas";

@@ -47,12 +47,21 @@ describe("DateTimeField", () => {
     render(<Harness initial={{ date: "2026-11-10", time: null }} onChange={onChange} />);
     await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
     const time = screen.getByLabelText("Heure");
-    expect(onChange).toHaveBeenLastCalledWith({ date: "2026-11-10", time: "" });
+    expect(onChange).toHaveBeenLastCalledWith({ date: "2026-11-10", time: null });
     await userEvent.type(time, "0930");
     expect(onChange).toHaveBeenLastCalledWith({ date: "2026-11-10", time: "09:30" });
     await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
     expect(onChange).toHaveBeenLastCalledWith({ date: "2026-11-10", time: null });
     expect(screen.queryByLabelText("Heure")).toBeNull();
+  });
+
+  it("garde le champ heure ouvert quand on l'efface : l'appelant voit `null`", async () => {
+    const onChange = vi.fn<(value: DateTimeValue) => void>();
+    render(<Harness initial={{ date: "2026-11-10", time: "09:30" }} onChange={onChange} />);
+    await userEvent.clear(screen.getByLabelText("Heure"));
+    expect(onChange).toHaveBeenLastCalledWith({ date: "2026-11-10", time: null });
+    expect(screen.getByLabelText("Heure")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Sans heure" })).toHaveProperty("checked", false);
   });
 
   it("rend le jour vidé comme `null`", async () => {
@@ -73,6 +82,34 @@ describe("DateTimeField", () => {
       dueDate: "2026-11-10",
       dueTime: "09:30",
     });
+  });
+
+  it("envoie une chaîne vide pour un jour vidé", async () => {
+    render(<Harness initial={{ date: "2026-11-10", time: null }} />);
+    await userEvent.clear(screen.getByLabelText("Échéance"));
+    const form = screen.getByRole("form");
+    if (!(form instanceof HTMLFormElement)) throw new Error("formulaire attendu");
+    expect(Object.fromEntries(new FormData(form))).toEqual({ dueDate: "" });
+  });
+
+  it("relie l'aide au jour et désactive tout", () => {
+    render(
+      <DateTimeField
+        label="Échéance"
+        timeLabel="Heure"
+        noTimeLabel="Sans heure"
+        value={{ date: null, time: "09:30" }}
+        onChange={vi.fn()}
+        hint="Facultatif."
+        disabled
+      />,
+    );
+    const day = screen.getByLabelText("Échéance");
+    const hintId = day.getAttribute("aria-describedby") ?? "";
+    expect(document.getElementById(hintId)?.textContent).toBe("Facultatif.");
+    for (const control of [day, screen.getByLabelText("Heure"), screen.getByRole("checkbox")]) {
+      expect(control).toHaveProperty("disabled", true);
+    }
   });
 
   it("annonce l'erreur avec le jour", () => {

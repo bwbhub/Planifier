@@ -1,13 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import { cn } from "../lib/cn";
 import { Checkbox } from "./checkbox";
 import { TextField } from "./text-field";
 
-/**
- * Jour (`AAAA-MM-JJ`, `null` si vide) et heure (`HH:MM`). `time` : `null` = sans heure ; `""` = « Sans heure » décochée,
- * heure pas encore saisie.
- */
+/** Jour (`AAAA-MM-JJ`) et heure (`HH:MM`) ; `null` : vide. Heure vide, affichée ou non : `time` est `null`. */
 export interface DateTimeValue {
   date: string | null;
   time: string | null;
@@ -22,7 +21,10 @@ export interface DateTimeFieldProps {
   noTimeLabel: string;
   value: DateTimeValue;
   onChange: (value: DateTimeValue) => void;
-  /** Noms pour `FormData` ; l'heure n'est envoyée que si elle est saisie (sans heure : absente). */
+  /**
+   * Noms pour `FormData`. Un champ vide part en chaîne vide ; le champ heure n'existe pas (rien n'est envoyé) tant que
+   * « Sans heure » est cochée.
+   */
   dateName?: string | undefined;
   timeName?: string | undefined;
   hint?: string | undefined;
@@ -50,7 +52,9 @@ export function DateTimeField({
   disabled,
   className,
 }: DateTimeFieldProps) {
-  const withoutTime = value.time === null;
+  // La case seule décide si le champ heure est montré : une heure vide ne le referme pas, l'appelant ne voit que `null`.
+  const [timeShown, setTimeShown] = useState(value.time !== null);
+  const withoutTime = !timeShown && value.time === null;
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       <TextField
@@ -70,7 +74,8 @@ export function DateTimeField({
         checked={withoutTime}
         disabled={disabled}
         onChange={(event) => {
-          onChange({ ...value, time: event.target.checked ? null : "" });
+          setTimeShown(!event.target.checked);
+          onChange({ ...value, time: null });
         }}
       />
       {withoutTime ? null : (
@@ -81,7 +86,7 @@ export function DateTimeField({
           value={value.time ?? ""}
           disabled={disabled}
           onChange={(event) => {
-            onChange({ ...value, time: event.target.value });
+            onChange({ ...value, time: event.target.value === "" ? null : event.target.value });
           }}
         />
       )}

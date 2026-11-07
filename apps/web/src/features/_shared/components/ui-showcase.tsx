@@ -3,7 +3,11 @@
 import { Badge } from "@planifier/ui/components/badge";
 import { Button } from "@planifier/ui/components/button";
 import { Checkbox } from "@planifier/ui/components/checkbox";
-import { DateTimeField, type DateTimeValue } from "@planifier/ui/components/date-time-field";
+import {
+  DateTimeField,
+  type DateTimeFieldProps,
+  type DateTimeValue,
+} from "@planifier/ui/components/date-time-field";
 import { SegmentedControl } from "@planifier/ui/components/segmented-control";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { Switch } from "@planifier/ui/components/switch";
@@ -36,11 +40,7 @@ function Row({ children }: { children: ReactNode }) {
 function DateTimeDemo({
   initial,
   ...props
-}: {
-  initial: DateTimeValue;
-  error?: string;
-  disabled?: boolean;
-}) {
+}: { initial: DateTimeValue } & Pick<DateTimeFieldProps, "error" | "hint" | "disabled">) {
   const [value, setValue] = useState(initial);
   return (
     <DateTimeField
@@ -96,7 +96,7 @@ export function UiShowcase() {
       </Section>
 
       <Section title="Date et heure">
-        <DateTimeDemo initial={{ date: "2026-11-10", time: null }} />
+        <DateTimeDemo initial={{ date: "2026-11-10", time: null }} hint="Heure facultative." />
         <DateTimeDemo initial={{ date: "2026-11-10", time: "09:30" }} />
         <DateTimeDemo initial={{ date: null, time: null }} error="Choisis un jour valide." />
         <DateTimeDemo initial={{ date: "2026-11-10", time: "09:30" }} disabled />

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { ORPCError } from "@orpc/client";
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -34,9 +35,11 @@ function renderForm(props: FormProps = {}, shared = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (formProps: FormProps) => (
     <QueryClientProvider client={client}>
-      <ListViewProvider value={{ shared, readOnly: false, isDimmed: () => false }}>
-        <TaskForm listId={LIST_ID} {...formProps} />
-      </ListViewProvider>
+      <ToastProvider dismissLabel="Fermer">
+        <ListViewProvider value={{ shared, readOnly: false, isDimmed: () => false }}>
+          <TaskForm listId={LIST_ID} {...formProps} />
+        </ListViewProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
   const view = render(ui(props));
@@ -49,6 +52,14 @@ function renderForm(props: FormProps = {}, shared = false) {
 }
 
 describe("TaskForm, répétition", () => {
+  it("annonce la tâche ajoutée", async () => {
+    replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Pain");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+    expect(await screen.findByText("Tâche ajoutée.")).toBeTruthy();
+  });
+
   it("crée une tâche répétée toutes les deux semaines", async () => {
     const calls = replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
     renderForm();

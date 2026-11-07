@@ -15,6 +15,7 @@ import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
+import { useToast } from "@planifier/ui/components/toast";
 import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
 import { LoadError } from "@planifier/ui/components/load-error";
 import { type SubmitEvent, useState } from "react";
@@ -179,6 +180,7 @@ function copyOf(task: TaskOutput | undefined, parentId: string | undefined) {
 export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const { notify } = useToast();
   const mutation = task === undefined ? createTask : updateTask;
   const copy = copyOf(task, parentId);
   const { invalid, validate } = useFormValidation(FIELDS);
@@ -209,6 +211,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       if (input !== null)
         createTask.mutate(input, {
           onSuccess: () => {
+            notify(parentId === undefined ? TODO_LABELS.taskAdded : TODO_LABELS.subtaskAdded);
             resetForNext(form);
           },
         });
@@ -226,7 +229,13 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       recurrence: recurrenceChange(task.recurrence, recurrence),
       assigneeId,
     });
-    if (input !== null) updateTask.mutate(input, { onSuccess: () => onDone?.() });
+    if (input !== null)
+      updateTask.mutate(input, {
+        onSuccess: () => {
+          notify(TODO_LABELS.taskUpdated);
+          onDone?.();
+        },
+      });
   }
 
   return (

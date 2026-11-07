@@ -9,4 +9,13 @@ export const TODO_LABELS = {
   noTaskTitle: "Aucune tâche dans cette liste",
   noTaskHint: "Ajoute la première ci-dessus.",
   noTaskReadOnly: "Cette liste est en lecture seule.",
+  addSubtask: "Ajouter une sous-tâche",
+  finishForGood: "Terminer pour de bon",
+  edit: "Modifier",
+  delete: "Supprimer",
+  actionsOf: (title: string) => `Actions de « ${title} »`,
+  taskAdded: "Tâche ajoutée.",
+  subtaskAdded: "Sous-tâche ajoutée.",
+  taskUpdated: "Tâche modifiée.",
+  taskDeleted: "Tâche supprimée.",
 } as const;

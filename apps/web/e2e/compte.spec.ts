@@ -107,6 +107,12 @@ async function addMoveEditThenDeleteEntry(page: Page, day: string) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
+/** Ouvre le menu d'actions d'une tâche et choisit une action. */
+async function chooseTaskAction(page: Page, title: string, action: string) {
+  await page.getByRole("button", { name: `Actions de « ${title} »` }).click();
+  await page.getByRole("menuitem", { name: action }).click();
+}
+
 /** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
   // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
@@ -114,7 +120,7 @@ async function editThenDeleteTaskAndList(page: Page) {
   await parent.click();
   await expect(parent).not.toBeChecked();
 
-  await page.getByRole("button", { name: "+ Sous-tâche à « Acheter du pain »" }).click();
+  await chooseTaskAction(page, "Acheter du pain", "Ajouter une sous-tâche");
   const subtaskInput = page.getByLabel("Nouvelle sous-tâche");
   await subtaskInput.fill("Baguette");
   await page
@@ -127,12 +133,12 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
   await expect(parent).not.toBeChecked();
 
-  await page.getByRole("button", { name: "Modifier « Acheter du pain »" }).click();
+  await chooseTaskAction(page, "Acheter du pain", "Modifier");
   await page.getByLabel("Titre").fill("Acheter du pain complet");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("checkbox", { name: "Acheter du pain complet" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Supprimer « Acheter du pain complet »" }).click();
+  await chooseTaskAction(page, "Acheter du pain complet", "Supprimer");
   await expect(
     page.getByRole("group", { name: "Supprimer « Acheter du pain complet » et sa sous-tâche ?" }),
   ).toBeVisible();
@@ -155,7 +161,7 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("status").filter({ hasText: "coche annulée" })).toBeVisible();
 
   // Terminer pour de bon : la répétition s'arrête, la tâche passe dans « Cochées ».
-  await page.getByRole("button", { name: "Terminer « Arroser les plantes » pour de bon" }).click();
+  await chooseTaskAction(page, "Arroser les plantes", "Terminer pour de bon");
   await expect(page.getByRole("status").filter({ hasText: "ne se répète plus" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).toBeChecked();
   await expect(page.getByText("Toutes les semaines")).toBeHidden();

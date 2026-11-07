@@ -22,9 +22,10 @@ Modèle d'entrée :
 
 **Fait** : plan 2/4 (ticket `869fhwtg9`), suite. `agenda/atoms/slot-block.tsx` : `SlotBlock`, présentation pure (titre, horaire, `maybe` = bordure pointillée d'accent + « Peut-être », `greyed` = estompé + « Tâche faite », `hidden` = pointillés discrets, lignes et pied en enfants). `EntryBlock` le compose et garde déplacement, survol et avatar. 5 tests, section « Créneau » sur `/composants`. Comme `TaskLine`, il reste dans `agenda` (règle `_shared` = au moins 2 modules) et montera avec Aujourd'hui.
 **Décisions** : « grisé » et « peut-être » ne sont pas alimentés (la donnée vient du ticket 869fp54da et du module Événements) ; rendu seulement. Le nom accessible d'une entrée (`aria-label`) ne dit pas encore ces états : à ajouter avec la donnée.
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 253), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. Rien vu à l'œil (grille Jour/Semaine, déplacement, `/composants` clair et nuit).
-**Ouvert** : revue pas encore passée ; ni push ni PR.
-**Attendu ensuite** : revue, PR ; puis `DateTimeField`, `RecurrenceField`.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 254), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. Rien vu à l'œil (grille Jour/Semaine, déplacement, `/composants` clair et nuit).
+**Revue** : `/code-review` passée ; corrigé : prop `as` → `interactive`, constante `detailClass`, tests des bordures/opacité/rôle, démo avec bouton et états combinés, commentaire sur l'`aria-label`. Gardé : `background` en classe brute, ordre des exports.
+**Ouvert** :
+**Attendu ensuite** : fusion de la PR ; puis `DateTimeField`, `RecurrenceField`.
 
 ---
 

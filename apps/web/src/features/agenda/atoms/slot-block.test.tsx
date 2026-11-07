@@ -9,7 +9,7 @@ import { SlotBlock, type SlotBlockProps } from "./slot-block";
 function renderBlock(props: Partial<SlotBlockProps> = {}) {
   return render(
     <SlotBlock
-      as="group"
+      interactive={false}
       title="Dentiste"
       time="09:00 – 10:00"
       background="bg-tint-work"
@@ -41,10 +41,39 @@ describe("SlotBlock", () => {
     const onClick = vi.fn();
     const { unmount } = renderBlock();
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByRole("group")).toBeTruthy();
     unmount();
-    renderBlock({ as: "button", onClick, "aria-label": "Dentiste, 09:00" });
+    renderBlock({ interactive: true, onClick, "aria-label": "Dentiste, 09:00" });
     await userEvent.click(screen.getByRole("button", { name: "Dentiste, 09:00" }));
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("pose les bordures par état, « peut-être » avant « masqué », et estompe le grisé", () => {
+    const { rerender } = renderBlock({ hidden: true });
+    expect(screen.getByRole("group").className).toContain("border-muted");
+    rerender(
+      <SlotBlock
+        interactive={false}
+        title="Dentiste"
+        time="09:00"
+        background="bg-tint-work"
+        hidden
+        maybe
+      />,
+    );
+    const block = screen.getByRole("group");
+    expect(block.className).toContain("border-accent-text");
+    expect(block.className).not.toContain("border-muted");
+    rerender(
+      <SlotBlock
+        interactive={false}
+        title="Dentiste"
+        time="09:00"
+        background="bg-tint-work"
+        greyed
+      />,
+    );
+    expect(screen.getByRole("group").className).toContain("opacity-60");
   });
 
   it("ne présente aucune violation d'accessibilité", async () => {

@@ -8,11 +8,16 @@ export function SlotBlocksDemo() {
   return (
     <ul className="grid gap-2 sm:grid-cols-2">
       <li>
-        <SlotBlock as="group" title="Dentiste" time="09:00 – 10:00" background={background} />
+        <SlotBlock
+          interactive={false}
+          title="Dentiste"
+          time="09:00 – 10:00"
+          background={background}
+        />
       </li>
       <li>
         <SlotBlock
-          as="group"
+          interactive={false}
           title="Dîner chez Léo"
           time="19:30 – 22:00"
           background={TINTS.couple.background}
@@ -21,7 +26,7 @@ export function SlotBlocksDemo() {
       </li>
       <li>
         <SlotBlock
-          as="group"
+          interactive={false}
           title="Appeler le garagiste"
           time="14:00 – 14:30"
           background={TINTS.work.background}
@@ -30,11 +35,30 @@ export function SlotBlocksDemo() {
       </li>
       <li>
         <SlotBlock
-          as="group"
+          interactive={false}
           title="Rendez-vous privé"
           time="11:00 – 12:00"
           background={background}
           hidden
+        />
+      </li>
+      <li>
+        <SlotBlock
+          interactive
+          title="Dîner (peut-être, masqué)"
+          time="20:00 – 22:00"
+          background={TINTS.trip.background}
+          maybe
+          hidden
+          aria-label="Dîner, peut-être, masqué"
+        />
+      </li>
+      <li>
+        <SlotBlock
+          interactive
+          title="S'ouvre au clic"
+          time="08:00 – 08:30"
+          background={background}
         />
       </li>
     </ul>

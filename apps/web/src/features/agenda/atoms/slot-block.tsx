@@ -1,15 +1,15 @@
 import { cn } from "@planifier/ui/lib/cn";
 import type { HTMLAttributes, ReactNode } from "react";
 
-/** Mots des états d'un créneau : dits en toutes lettres, jamais par la seule bordure ou l'opacité. */
+/** Mots des états d'un créneau : écrits à l'écran, la bordure ou l'opacité ne suffit pas. */
 const SLOT_LABELS = {
   maybe: "Peut-être",
   greyed: "Tâche faite",
 } as const;
 
 export interface SlotBlockProps extends Omit<HTMLAttributes<HTMLElement>, "title" | "hidden"> {
-  /** `button` : s'ouvre au clic ; `group` : se lit seulement, mais prend le focus. */
-  as: "button" | "group";
+  /** Vrai : un bouton, qui s'ouvre au clic. Faux : se lit seulement (groupe), mais prend le focus. */
+  interactive: boolean;
   title: string;
   /** Horaire déjà formaté. */
   time: string;
@@ -39,11 +39,12 @@ function borderOf({ maybe, hidden }: Pick<SlotBlockProps, "maybe" | "hidden">) {
 
 /**
  * Créneau horaire : titre, horaire, états (peut-être, grisé, masqué). Pure présentation, sans requête ni règle d'agenda :
- * l'appelant donne les mots, la teinte et les gestes (props de l'élément). Reste dans `agenda` tant qu'un seul module
+ * l'appelant donne les mots, la teinte et les gestes (props de l'élément). Un `aria-label` passé par l'appelant remplace le
+ * contenu comme nom accessible : il doit dire lui-même les états (peut-être, tâche faite, masqué). Reste dans `agenda` tant qu'un seul module
  * s'en sert ; l'écran Aujourd'hui le fera monter dans `features/_shared`.
  */
 export function SlotBlock({
-  as,
+  interactive,
   title,
   time,
   timeClassName = "text-muted",
@@ -73,7 +74,7 @@ export function SlotBlock({
       {footer}
     </>
   );
-  if (as === "button") {
+  if (interactive) {
     return (
       <button type="button" className={classes} {...rest}>
         {content}

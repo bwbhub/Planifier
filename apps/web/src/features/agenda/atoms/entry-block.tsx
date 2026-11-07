@@ -10,6 +10,8 @@ import { SlotBlock } from "./slot-block";
 
 /** Détail montré au survol ou au focus (le lieu, toujours : maquette). */
 const ON_HOVER = "hidden text-muted group-hover:inline group-focus:inline";
+/** Ligne secondaire : toujours visible, ou seulement au survol quand le bloc est trop bas. */
+const detailClass = (compact: boolean) => (compact ? ON_HOVER : "text-muted");
 
 export interface EntryBlockProps {
   item: AgendaItem;
@@ -49,9 +51,7 @@ function Details({ item, compact }: { item: AgendaItem; compact: boolean }) {
     <>
       {location === null ? null : <span className={ON_HOVER}>{location}</span>}
       {/* Participants toujours montrés quand la place le permet (maquette). */}
-      {withPeople === null ? null : (
-        <span className={compact ? ON_HOVER : "text-muted"}>{withPeople}</span>
-      )}
+      {withPeople === null ? null : <span className={detailClass(compact)}>{withPeople}</span>}
     </>
   );
 }
@@ -80,18 +80,18 @@ export function EntryBlock({
   const common = {
     title: item.title,
     time: whenLabel(item.when),
-    timeClassName: compact ? ON_HOVER : "text-muted",
+    timeClassName: detailClass(compact),
     background: item.background,
     "aria-label": itemLabel(item),
     style,
     children: <Details item={item} compact={compact} />,
     footer: <OwnerAvatar owner={item.owner} compact={compact} />,
   };
-  const placed = style !== undefined && PLACED;
-  if (item.entry === null) return <SlotBlock as="group" className={cn(placed)} {...common} />;
+  const placed = style === undefined ? undefined : PLACED;
+  if (item.entry === null) return <SlotBlock interactive={false} className={placed} {...common} />;
   return (
     <SlotBlock
-      as="button"
+      interactive
       data-entry-id={item.id}
       aria-busy={moving === "saving" || undefined}
       hidden={item.entry.hidden}

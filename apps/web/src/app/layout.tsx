@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 
 import { getThemePreference, themeAttribute } from "@/features/account";
@@ -8,16 +8,19 @@ import { QueryProvider } from "@/lib/query-provider";
 
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
+// Fichiers dans le dépôt (`fonts/README.md`) : le build ne dépend pas du réseau vers Google Fonts.
+const bricolage = localFont({
+  src: "./fonts/bricolage-grotesque-latin.woff2",
   variable: "--font-bricolage",
-  weight: ["500", "600", "700"],
+  weight: "500 700",
+  display: "swap",
 });
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
+const dmSans = localFont({
+  src: "./fonts/dm-sans-latin.woff2",
   variable: "--font-dm-sans",
-  weight: ["400", "500", "600"],
+  weight: "400 600",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

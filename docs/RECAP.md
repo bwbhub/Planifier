@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Polices dans le dépôt (branche `fix/polices-locales`)
+
+**Fait** : `next/font/google` remplacé par `next/font/local` ; Bricolage Grotesque (500–700) et DM Sans (400–600) en woff2 variables, sous-ensemble `latin` (le même qu'avant), licences OFL et `README.md` d'origine dans `apps/web/src/app/fonts/`. Variables CSS et tokens inchangés. Piège de SUITE §5 mis à jour. Plans de la série 2 écrits (Détail de tâche, changement d'e-mail, iCal).
+**Décisions** : priorité 1 (demande de l'utilisateur) : le build ne doit plus dépendre de Google Fonts (CI de #25 et #54 en échec, relance verte). Aucune dépendance ajoutée (`next/font/local` fait partie de `next`).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` verts ; polices présentes dans `.next/static/media`, aucune URL Google dans la sortie (hors code de `next`). Build dans un espace réseau coupé : non concluant (Turbopack n'y lance pas PostCSS, sans rapport avec les polices). `/code-review` Standards + Spec : rien de bloquant, README précisé (`Ÿ` hors sous-ensemble). Rien vu à l'œil.
+**Ouvert** : coup d'œil au rendu des titres et du texte (clair, nuit). Ligne « actifs tiers embarqués » dans `docs/DEPENDANCES.md` : non faite (non exigée), à trancher.
+**Attendu ensuite** : fusion, puis Détail de tâche (`869fp54d9`).
+
+---
+
 ## 2026-11-08 — Aujourd'hui : navigation et variantes (branche `feat/aujourdhui-variantes`)
 
 **Fait** : entrée « Aujourd'hui » toujours présente dans la barre (ce n'est pas un module) ; accueil sans Todo ni Agenda : « Le module Événements arrive bientôt » (Événements seul) ou renvoi vers le profil (aucun module) ; E2E des 4 variantes (modules activés depuis le profil).

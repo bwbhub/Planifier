@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Champ date et heure (branche `feat/date-time-field`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), suite. `packages/ui/src/components/date-time-field.tsx` : `DateTimeField`, contrôlé (`{ date, time }`), jour en `<input type="date">` natif, case « Sans heure » (cochée par défaut) qui révèle `<input type="time">` ; la recocher efface l'heure ; erreur et aide reliées au jour ; noms pour `FormData` (heure envoyée seulement si saisie). Libellés en props (sans métier). 6 tests (bascule, valeurs, `FormData`, erreur, axe) ; section « Date et heure » sur `/composants` (sans heure, avec heure, erreur, désactivé).
+**Décisions** : natif plutôt que `@mui/x-date-pickers` de l'ancien `front/` (aucune dépendance). `time` : `null` = sans heure, `""` = case décochée, heure pas encore saisie. Pas encore branché au formulaire de tâche : l'heure d'échéance n'existe pas dans le modèle, c'est le plan 3 (migration) qui le consomme.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (ui 97, web 254), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. Rien vu à l'œil (sélecteur natif selon navigateur, mobile, clair et nuit).
+**Ouvert** : revue pas encore passée ; ni push ni PR.
+**Attendu ensuite** : revue, PR ; puis `RecurrenceField`.
+
+---
+
 ## 2026-11-07 — Bloc de créneau (branche `feat/slot-block`)
 
 **Fait** : plan 2/4 (ticket `869fhwtg9`), suite. `agenda/atoms/slot-block.tsx` : `SlotBlock`, présentation pure (titre, horaire, `maybe` = bordure pointillée d'accent + « Peut-être », `greyed` = estompé + « Tâche faite », `hidden` = pointillés discrets, lignes et pied en enfants). `EntryBlock` le compose et garde déplacement, survol et avatar. 5 tests, section « Créneau » sur `/composants`. Comme `TaskLine`, il reste dans `agenda` (règle `_shared` = au moins 2 modules) et montera avec Aujourd'hui.

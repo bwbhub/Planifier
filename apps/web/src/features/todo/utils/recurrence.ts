@@ -1,8 +1,8 @@
 import type { TaskOutput } from "@planifier/api-contract";
 import { RECURRENCE_FREQUENCIES, type RecurrenceFrequency } from "@planifier/constants/todo";
 
+import { RECURRENCE_UNITS } from "@/features/_shared/utils/recurrence-label";
 import { capitalized } from "@/lib/capitalize";
-import { WEEKDAY_LABELS } from "@/lib/labels";
 
 type Recurrence = NonNullable<TaskOutput["recurrence"]>;
 
@@ -15,41 +15,11 @@ export const REPEAT_PRESETS = [
   { value: "YEARLY", label: "Chaque année" },
 ] as const satisfies readonly { value: RecurrenceFrequency | "NONE"; label: string }[];
 
-const UNITS: Record<RecurrenceFrequency, { one: string; many: string; feminine: boolean }> = {
-  DAILY: { one: "jour", many: "jours", feminine: false },
-  WEEKLY: { one: "semaine", many: "semaines", feminine: true },
-  MONTHLY: { one: "mois", many: "mois", feminine: false },
-  YEARLY: { one: "an", many: "ans", feminine: false },
-};
-
 /** Rythmes du choix personnalisé : « Toutes les [2] [Semaines] », dans l'ordre de `RECURRENCE_FREQUENCIES`. */
 export const CUSTOM_FREQUENCY_OPTIONS = RECURRENCE_FREQUENCIES.map((value) => ({
   value,
-  label: capitalized(UNITS[value].many),
+  label: capitalized(RECURRENCE_UNITS[value].many),
 }));
-
-/** « lundis », « lundis et jeudis », « lundis, mercredis et vendredis ». */
-function listOf(words: readonly string[]): string {
-  const last = words.at(-1);
-  if (last === undefined) return "";
-  return words.length === 1 ? last : `${words.slice(0, -1).join(", ")} et ${last}`;
-}
-
-/** « Tous les mardis », « Toutes les 2 semaines, le lundi et le jeudi » : une règle à jours de la semaine. */
-function weekdaysLabel({ interval, weekdays = [] }: Recurrence): string {
-  if (interval === 1) return `Tous les ${listOf(weekdays.map((day) => WEEKDAY_LABELS[day].many))}`;
-  const days = listOf(weekdays.map((day) => `le ${WEEKDAY_LABELS[day].one}`));
-  return `Toutes les ${String(interval)} semaines, ${days}`;
-}
-
-/** « Toutes les semaines », « Tous les 3 jours », « Tous les mardis ». */
-export function recurrenceLabel(rule: Recurrence): string {
-  const { frequency, interval, weekdays } = rule;
-  if (weekdays !== undefined && weekdays.length > 0) return weekdaysLabel(rule);
-  const unit = UNITS[frequency];
-  const every = unit.feminine ? "Toutes les" : "Tous les";
-  return interval === 1 ? `${every} ${unit.many}` : `${every} ${String(interval)} ${unit.many}`;
-}
 
 /** Règle lue du formulaire, avant validation par le contrat : rythme et jours encore bruts. */
 export interface RecurrenceDraft {

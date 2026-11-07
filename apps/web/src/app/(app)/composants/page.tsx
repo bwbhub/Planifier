@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { PageHeader } from "@planifier/ui/components/page-header";
 import { TitledSection } from "@planifier/ui/components/titled-section";
 import { UiShowcase } from "@/features/_shared/components/ui-showcase";
-import { SlotBlocksDemo } from "@/features/agenda";
-import { TaskLinesDemo } from "@/features/todo";
+import { SlotBlocksDemo } from "@/features/_shared/components/slot-blocks-demo";
+import { TaskLinesDemo } from "@/features/_shared/components/task-lines-demo";
 import { pageTitle } from "@/lib/labels";
 
 export const metadata: Metadata = { title: pageTitle("Composants") };

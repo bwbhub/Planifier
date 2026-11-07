@@ -4,33 +4,47 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Appliquer la migration** `20261105230000_modules_utilisateur` sur la base locale (`pnpm --filter @planifier/db migrate:deploy`),
-  puis `pnpm seed` si besoin. Sans elle, les comptes existants n'ont aucun module (navigation vide).
-- **Voir à l'œil** (`pnpm dev`) : navigation (panneau latéral PC, barre basse mobile 375 px), `/profil` (section
-  Modules), `/composants` ; clair et nuit. Rien de ceci n'a été vu dans un navigateur.
-- **Tester le Todo** : `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées,
-  tâches, sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
-- Revue humaine : droits des listes et de l'agenda (voir §4) ; migration des modules et `account.me.setModules`.
-- **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
-- **Git** : supprimer les branches distantes fusionnées (refusé par l'auto mode, à faire à la main ou à autoriser).
-  Branches locales gardées, non fusionnées : `backup/espaces-ui-avant-redecoupage`, `feat/e2e-playwright` (2 commits
-  locaux), `feat/premier-espace`, `feat/profil` : à regarder avant de les supprimer.
-- **Barre d'état** du contexte posée (`~/.claude/statusline-context.sh`, orange dès 40 %). Champ lu :
-  `context_window.used_percentage`, non confirmé par la doc : si elle affiche `ctx --`, corriger le champ.
+- **Voir à l'œil** (`pnpm dev`, clair et nuit, PC et 375 px), rien de ceci n'a été vu par un humain : `/composants` (ligne de tâche, créneau, date et heure, répétition, menu, toasts, squelettes) ; menu ⋯ d'une ligne ; formulaire de tâche (jour + « Sans heure », panneau « Personnalisée… » et jours) ; **« + » flottant sur mobile (recouvre-t-il le ⋯ de la dernière ligne ?)** ; feuille « Nouvelle tâche ». Si OK : clore `869fhwtg1`, `869fp54cr`, `869fhwtr3`.
+- **Revue humaine (droits)** : `domain-access`, `lists.service.ts`, `today.service.ts` (`mine`), `todo-guard.ts` (`tasksGuard`) et `postpone.service.ts` ; migrations `20261105230000_modules_utilisateur` et `20261107140000_heure_echeance` (+ ADR 0018).
+- **Préciser** : « mettre en récurrente » une tâche cochée (dit pendant le report) : quel geste, quel écran ?
+- **Domaine** Resend : session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
+- **Git** : supprimer les branches distantes et locales fusionnées (refusé par l'auto mode). Gardées, non fusionnées : `backup/espaces-ui-avant-redecoupage`, `feat/e2e-playwright`, `feat/premier-espace`, `feat/profil` : à regarder avant de les supprimer.
 
 ## 2. Prochain ticket
 
-État au 2026-11-05 : `master` contient l'Agenda complet (entrées, participants, déplacement), les composants de base
-(`869fhwtg1`) et la navigation par modules (`869fhwtg4`, PR #34). Les deux tickets restent ouverts dans ClickUp
-(commentés) : revue visuelle d'abord. Piège vu 3 fois : une PR empilée fusionnée dans sa branche de base **après**
-la fusion de la base dans `master` laisse ses commits hors de `master`. Fusionner de bas en haut en changeant la base
-de la suivante vers `master`, ou viser `master` directement.
+**État au 2026-11-07.** `master` (`d9b62073`) contient tout le plan 1, le plan 2, le plan 3 et **2 PR sur 4 du plan 4**.
 
-Priorités ClickUp (urgent d'abord) : `869fhwtg4` (reste : bouton « + », pastille de non-lus, carte, entrées sans
-écran), `869fhwtg1` (clore après revue visuelle), `869fhwtce` (db : reste la migration sur une vraie branche Neon,
-avec `869fhwtv0`). Puis, en high : Aujourd'hui (`869fhwtu9`, la navigation est prête), composants de retour
-(`869fp54cr`), composants de domaine partagés (`869fhwtg9`), Nouvelle tâche (`869fhwtr3`, donne le « + »), Détail de
-tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail (`869fmk5dw`) : rapide, à glisser.
+**Plans écrits par Opus, exécutés en Sonnet** (mémoire, un fichier chacun) :
+
+1. `plan-869fp54cr-retour-superposition` : **fait**.
+2. `plan-869fhwtg9-composants-domaine` : **fait** (#42 à #47 : récurrence par jours, `TaskLine`, menu d'actions, `SlotBlock`, `DateTimeField`, `RecurrenceField`).
+3. `plan-869fhwtr3-nouvelle-tache` : **fait** (#48 heure d'échéance, #49 heure dans le formulaire, #50 feuille « Nouvelle tâche » + « + »). Rappel masqué (pas de cron).
+4. `plan-869fhwtu9-aujourdhui` : **PR 1 et 2 faites** : #51 `todo.tasks.today`, #52 `todo.tasks.postpone`. **Reste** : l'écran (PR 3) et les variantes + navigation (PR 4).
+
+**À faire, dans l'ordre (plan 4, PR 3 et 4)** :
+
+- **Remonter `TaskLine` et `SlotBlock` dans `features/_shared/components/`** (avec leurs tests ; démos `TaskLinesDemo` et `SlotBlocksDemo`, exportées par `todo` et `agenda` pour `/composants`, à rediriger) : `today` s'en sert, donc ≥ 2 modules.
+- **Module web `features/today`** (l'ajouter à `FEATURES` dans `packages/eslint-config/next.js`) ; `app/(app)/page.tsx` mince. Il compose, dans `today/queries`, `orpc.todo.tasks.today` (date de l'appareil) et `orpc.agenda.entries.list` (le jour de l'appareil : from/to + fromDay/toDay ; jamais d'import d'un autre module). Si Agenda est désactivé : pas d'appel ; Todo désactivé : idem.
+- **Écran** : `PageHeader` (date longue, « Bonjour, <prénom> »), sections en `TitledSection` : 1) Agenda « Au fil de la journée » (`SlotBlock`), 2) Du jour (heure d'abord), 3) En cours, 4) En retard = « Quelques tâches à reprendre » (5 d'abord, **« Voir plus » déroule sur place**, l'API en rend 100 + `total`). « Rappel du jour » : tâches du jour **répétées**, en texte. Coche : mutation propre à `today/queries` (appel oRPC), invalidations des clés `today`, `todo` et `agenda`. États : skeleton, vide utile par section, erreur `LoadError`.
+- **Report** : bouton « Les reporter à aujourd'hui » (`todo.tasks.postpone`, `{ date, time?, tasks }`), case « Proposer un nouvel horaire » (heure → `time`), toast avec **« Annuler »** : remet jour et heure d'avant par `todo.tasks.update` tâche par tâche (version + 1 lue dans la réponse), dit celles qui n'ont pas pu l'être. Tout ou rien côté serveur ; répétées et cochées reportables.
+- **Variantes (PR 4)** : Todo seul (pas de timeline) ; Agenda seul (pas de « Sans horaire » ni « à reprendre ») ; Événements seuls : état vide honnête « Le module Événements arrive bientôt » ; aucun module : renvoi vers le profil. Entrée « Aujourd'hui » dans `MODULE_PAGES` (toujours présente, ce n'est pas un module). E2E des 4 variantes (modules activés/désactivés par le profil).
+- Accès Notifications : **absent** tant que Notifications n'existe pas (le dire dans la PR).
+
+**`869fhwtg4` (navigation, urgent)** reste ouvert : reste la pastille de non-lus et les entrées Aujourd'hui / Événements / Notifications ; le « + » est fait (absent de l'Agenda, qui a son bouton, tant qu'il n'y a pas de choix tâche / entrée). `869fhwtce` (db) mis de côté.
+
+**Pièges de cette session** :
+
+- Push SSH impossible ; HTTPS marche : `git -c credential.helper='!gh auth git-credential' push -u https://github.com/bwbhub/Planifier.git <branche>`.
+- **Chaque PR : `/code-review` (Standards + Spec), tout corriger, puis PR** ; la suite seulement après « merged ». Entrée `docs/RECAP.md` avant chaque push.
+- Lint : `max-lines-per-function` 80 (les `describe` de tests comptent : scinder), complexité 10. `pnpm lint` et `pnpm test` **avant** de commiter (une erreur de lint est passée une fois).
+- E2E mobile : un toast ou la barre basse recouvre le ⋯ ; le défilement de Playwright referme le menu. `chooseTaskAction` centre le bouton avant de cliquer. Le menu se ferme à tout défilement (voulu).
+- Une feuille fermée gardée dans la page garde son nom accessible : la retirer (comme `NewTaskSheet`) ou les `getByLabel` se confondent.
+- Scripts Python d'édition : jamais `open(p,'w').write(open(p).read())` (vide le fichier).
+- Migrer la base de test avant les tests d'intégration : `DATABASE_URL_UNPOOLED=postgresql://planifier:planifier@localhost:5433/planifier_test pnpm --filter @planifier/db migrate:deploy`.
+- E2E : `docker compose up -d`, puis `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test MAILPIT_URL=http://localhost:8025 pnpm test:e2e`.
+- PR empilée fusionnée après sa base : viser `master` directement.
+
+Priorités ClickUp ensuite (high) : Aujourd'hui (`869fhwtu9`, écran), Détail de tâche (`869fp54d9`, donne le « tap = détail » et peut accueillir « mettre en récurrente »), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail (`869fmk5dw`) : rapide, à glisser.
 
 ## 3. Ensuite
 
@@ -191,9 +205,10 @@ tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail 
     serait mieux.
   - Contraste AA des boutons `ghost` sur `bg-ink` (survol compris) à voir à l'œil sur `/composants`.
 
-- **Ligne de tâche (revue de `feat/ligne-de-tache`), à trancher** :
-  - Le ticket dit « titre seul » dans la ligne ; le Todo montre encore échéance, répétition et description sous le titre
-    (comportement gardé). Garder, ou ne montrer que le titre et la pastille, le reste au détail de tâche (`869fp54d9`) ?
-  - Compteur de sous-tâches : « 1/2 » (pastille de la maquette) remplace « 1 sur 2 sous-tâches cochée » (gardé pour les
-    lecteurs d'écran). D'accord ?
-  - `TaskLine` est dans `todo/atoms` tant qu'un seul module s'en sert ; elle monte dans `_shared` avec l'écran Aujourd'hui.
+- **Plans 2 à 4 (cette session), à trancher** :
+  - Ligne de tâche : le ticket dit « titre seul » ; le Todo montre encore échéance, répétition et description sous le titre. Garder, ou titre + pastille seulement (le reste au détail de tâche `869fp54d9`) ? Compteur de sous-tâches « 1/2 » : d'accord ?
+  - « Nouvelle tâche » : pas de case « Paramètres avancés » (détails repliables gardés, mêmes 2 gestes) ; pas de lien vers la liste dans le toast ; pas de sélecteur tâche / entrée ; « + » absent de l'Agenda. D'accord ?
+  - Répétition : préréglages « Tous les deux ans » / « Tous les mardis » de la maquette passent par « Personnalisée… » ; aide « Indépendante de la date » non reprise ; décocher « Semaines » perd les jours cochés sans avertissement (décision : à voir en cas pratique).
+  - Heure d'échéance : « en retard » reste au jour près (pas à l'heure).
+  - Mes tâches (Aujourd'hui) : listes montrées en lecture seule et sous-tâches exclues ; plafond 100 par section ; rappel du jour = répétées du jour (les répétées sans échéance aujourd'hui ne sont pas couvertes).
+  - Le toast « Tâche ajoutée. » recouvre le bas de la liste sur mobile ; le menu ⋯ se ferme à tout défilement.

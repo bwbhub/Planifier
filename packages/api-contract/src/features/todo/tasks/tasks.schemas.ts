@@ -20,22 +20,34 @@ const titleSchema = z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH);
 const descriptionSchema = z.string().trim().min(1).max(TASK_DESCRIPTION_MAX_LENGTH);
 /** Jour d'échéance `AAAA-MM-JJ`, sans heure ni fuseau. */
 const dueDateSchema = z.iso.date();
+/** Heure d'échéance `HH:MM` (00:00 à 23:59), heure murale de l'utilisateur : sans fuseau, comme le jour. */
+const dueTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 export const listTasksInputSchema = listTargetSchema;
 
-export const createTaskInputSchema = z.strictObject({
-  listId: listIdSchema,
-  /** Tâche de la même liste dont celle-ci devient une sous-tâche ; absente : tâche de la liste. */
-  parentId: taskIdSchema.optional(),
-  title: titleSchema,
-  description: descriptionSchema.optional(),
-  dueDate: dueDateSchema.optional(),
-  recurrence: recurrenceSchema.optional(),
-  /** Membre de l'Espace de la liste ; absent : personne, jamais imposé. */
-  assigneeId: userIdSchema.optional(),
-});
+export const createTaskInputSchema = z
+  .strictObject({
+    listId: listIdSchema,
+    /** Tâche de la même liste dont celle-ci devient une sous-tâche ; absente : tâche de la liste. */
+    parentId: taskIdSchema.optional(),
+    title: titleSchema,
+    description: descriptionSchema.optional(),
+    dueDate: dueDateSchema.optional(),
+    /** Heure de l'échéance ; exige `dueDate`. Absente : sans heure. */
+    dueTime: dueTimeSchema.optional(),
+    recurrence: recurrenceSchema.optional(),
+    /** Membre de l'Espace de la liste ; absent : personne, jamais imposé. */
+    assigneeId: userIdSchema.optional(),
+  })
+  .refine(({ dueDate, dueTime }) => dueTime === undefined || dueDate !== undefined, {
+    message: "Une heure demande un jour d'échéance.",
+    path: ["dueTime"],
+  });
 
-/** Champs modifiés : au moins un ; `null` efface. `version` lue avec la tâche (concurrence optimiste). */
+/**
+ * Champs modifiés : au moins un ; `null` efface. `version` lue avec la tâche (concurrence optimiste). Effacer le jour
+ * efface l'heure avec lui ; poser une heure sans jour (ni dans la demande, ni sur la tâche) est refusé.
+ */
 export const updateTaskInputSchema = z
   .strictObject({
     taskId: taskIdSchema,
@@ -43,14 +55,21 @@ export const updateTaskInputSchema = z
     title: titleSchema.optional(),
     description: descriptionSchema.nullable().optional(),
     dueDate: dueDateSchema.nullable().optional(),
+    dueTime: dueTimeSchema.nullable().optional(),
     recurrence: recurrenceSchema.nullable().optional(),
     assigneeId: userIdSchema.nullable().optional(),
   })
   .refine(
-    ({ title, description, dueDate, recurrence, assigneeId }) =>
-      [title, description, dueDate, recurrence, assigneeId].some((field) => field !== undefined),
+    ({ title, description, dueDate, dueTime, recurrence, assigneeId }) =>
+      [title, description, dueDate, dueTime, recurrence, assigneeId].some(
+        (field) => field !== undefined,
+      ),
     "Aucun champ à modifier.",
-  );
+  )
+  .refine(({ dueDate, dueTime }) => dueDate !== null || dueTime == null, {
+    message: "Une heure demande un jour d'échéance.",
+    path: ["dueTime"],
+  });
 
 /** Cocher ou décocher : un état demandé, pas une bascule, donc rejouable sans effet de bord. */
 export const setTaskDoneInputSchema = taskTargetSchema.extend({ done: z.boolean() });
@@ -88,6 +107,8 @@ export const taskSchema = z.strictObject({
   title: z.string(),
   description: z.string().nullable(),
   dueDate: dueDateSchema.nullable(),
+  /** `HH:MM` ; null : sans heure (toujours null sans `dueDate`). */
+  dueTime: dueTimeSchema.nullable(),
   /** null : à faire. Une tâche répétée reste à faire : la cocher avance son échéance. */
   completedAt: z.date().nullable(),
   /** Qui l'a cochée (« Cochée par ») ; null : à faire, ou compte supprimé depuis. */

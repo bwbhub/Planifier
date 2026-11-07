@@ -26,6 +26,7 @@ const TASK_SELECT = {
   title: true,
   description: true,
   dueDate: true,
+  dueTime: true,
   completedAt: true,
   completedBy: { select: { id: true, name: true } },
   assignee: { select: { id: true, name: true } },
@@ -81,10 +82,38 @@ function assertAssignable(assigneeId: string, spaceMembers: ReadonlySet<string>)
   if (!canBeAssigned(assigneeId, spaceMembers)) throw todoConflict("ASSIGNEE_NOT_MEMBER");
 }
 
+/** Jour et heure d'une tâche créée : absents, ils valent « sans ». */
+function newDue(dueDate: string | undefined, dueTime: string | undefined) {
+  return {
+    dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
+    dueTime: dueTime ?? null,
+  };
+}
+
+/** Jour et heure d'une modification : champ absent, inchangé ; `null` efface ; plus de jour, plus d'heure non plus. */
+function dueChanges(
+  dueDate: string | null | undefined,
+  dueTime: string | null | undefined,
+): Prisma.TaskUpdateManyMutationInput {
+  const day =
+    dueDate === undefined ? {} : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) };
+  if (dueDate === null) return { ...day, dueTime: null };
+  return dueTime === undefined ? day : { ...day, dueTime };
+}
+
 /** Sous le verrou de la ligne de la liste : deux créations simultanées ne dépassent pas la borne. */
 export async function createTask(
   db: Db,
-  { listId, parentId, title, description, dueDate, recurrence, assigneeId }: CreateTaskInput,
+  {
+    listId,
+    parentId,
+    title,
+    description,
+    dueDate,
+    dueTime,
+    recurrence,
+    assigneeId,
+  }: CreateTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<
@@ -103,7 +132,7 @@ export async function createTask(
         parentId: parentId ?? null,
         title,
         description: description ?? null,
-        dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
+        ...newDue(dueDate, dueTime),
         assigneeId: assigneeId ?? null,
         ...(recurrence === undefined ? {} : { recurrence: toStoredRecurrence(recurrence) }),
       },
@@ -148,19 +177,40 @@ async function assertAssigneeOfTask(
   assertAssignable(assigneeId, await spaceMemberIds(db, task.listId));
 }
 
+/** Une heure posée sans nouveau jour demande que la tâche en ait un (la base le refuserait aussi, sans dire pourquoi). */
+async function assertTimeHasDate(
+  db: DbTransaction,
+  taskId: string,
+  dueDate: string | null | undefined,
+  dueTime: string | null | undefined,
+) {
+  if (dueTime === undefined || dueTime === null || dueDate !== undefined) return;
+  const task = await db.task.findUnique({ where: { id: taskId }, select: { dueDate: true } });
+  if (task === null) throw new ORPCError("NOT_FOUND");
+  if (task.dueDate === null) throw todoConflict("TIME_WITHOUT_DATE");
+}
+
 export async function updateTask(
   db: Db,
-  { taskId, version, title, description, dueDate, recurrence, assigneeId }: UpdateTaskInput,
+  {
+    taskId,
+    version,
+    title,
+    description,
+    dueDate,
+    dueTime,
+    recurrence,
+    assigneeId,
+  }: UpdateTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
     await assertAssigneeOfTask(tx, taskId, assigneeId);
+    await assertTimeHasDate(tx, taskId, dueDate, dueTime);
     // Champ absent : inchangé ; `null` efface.
     return writeVersioned(tx, taskId, version, {
       ...(title === undefined ? {} : { title }),
       ...(description === undefined ? {} : { description }),
-      ...(dueDate === undefined
-        ? {}
-        : { dueDate: dueDate === null ? null : dayToUtcDate(dueDate) }),
+      ...dueChanges(dueDate, dueTime),
       ...(assigneeId === undefined ? {} : { assigneeId }),
       ...(recurrence === undefined
         ? {}

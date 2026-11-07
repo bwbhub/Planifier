@@ -3,16 +3,22 @@
 import { TitledSection } from "@planifier/ui/components/titled-section";
 import type { TodoListOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
+import { EmptyState } from "@planifier/ui/components/empty-state";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
 import { cn } from "@planifier/ui/lib/cn";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { LoadError } from "../atoms/load-error";
+import { COMMON_LABELS } from "@/lib/labels";
+
 import { ListForm } from "../forms/list-form";
 import { listHref } from "../utils/list-href";
 import { useSelectedList } from "../utils/use-selected-list";
 import { ListPanel } from "./list-panel";
+import { TODO_LABELS } from "../labels";
+import { todoErrorMessage } from "../utils/todo-error-message";
 
 interface TodoViewProps {
   /** Liste choisie dans l'URL (`?liste=`) ; absente ou inconnue : la première. */
@@ -82,14 +88,16 @@ export function TodoView({ selectedListId }: TodoViewProps) {
   }
 
   if (lists.isPending || searching) {
-    return (
-      <p role="status" className="text-muted">
-        Chargement de tes listes…
-      </p>
-    );
+    return <ListSkeleton label={TODO_LABELS.loadingLists} />;
   }
   if (lists.isError) {
-    return <LoadError error={lists.error} onRetry={() => void lists.refetch()} />;
+    return (
+      <LoadError
+        message={todoErrorMessage(lists.error)}
+        retryLabel={COMMON_LABELS.retry}
+        onRetry={() => void lists.refetch()}
+      />
+    );
   }
 
   const selected = items.find(({ id }) => id === selectedListId) ?? items[0];
@@ -108,18 +116,19 @@ export function TodoView({ selectedListId }: TodoViewProps) {
     return creating ? (
       listForm
     ) : (
-      <div className="flex flex-col items-start gap-4 rounded-card bg-surface p-6">
-        <p>
-          Tu n&apos;as encore aucune liste. Une liste réunit des tâches : courses, maison, vacances…
-        </p>
-        <Button
-          onClick={() => {
-            setCreating(true);
-          }}
-        >
-          Créer ma première liste
-        </Button>
-      </div>
+      <EmptyState
+        title={TODO_LABELS.noListTitle}
+        description={TODO_LABELS.noListHint}
+        action={
+          <Button
+            onClick={() => {
+              setCreating(true);
+            }}
+          >
+            {TODO_LABELS.createFirstList}
+          </Button>
+        }
+      />
     );
   }
 

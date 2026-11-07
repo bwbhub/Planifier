@@ -6,6 +6,7 @@ import { axeViolations } from "../testing/axe";
 import { Avatar } from "./avatar";
 import { AvatarStack } from "./avatar-stack";
 import { Card } from "./card";
+import { EmptyState } from "./empty-state";
 import { ListSkeleton } from "./list-skeleton";
 import { LoadError } from "./load-error";
 import { MessageCard } from "./message-card";
@@ -69,6 +70,7 @@ describe("blocs d'écran", () => {
         <Card as="section" aria-label="Résumé">
           <p>Contenu</p>
         </Card>
+        <EmptyState title="Aucune tâche" description="Ajoute la première ci-dessus." />
         <TitledSection title="Réglages">
           <p>Contenu</p>
         </TitledSection>

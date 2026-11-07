@@ -15,17 +15,21 @@ import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
 import { type SubmitEvent, useState } from "react";
 
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
-import { LoadError } from "../atoms/load-error";
+import { COMMON_LABELS } from "@/lib/labels";
+
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
-import { ASSIGNEE_LABEL } from "../labels";
+import { ASSIGNEE_LABEL, TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
 import { recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
+import { todoErrorMessage } from "../utils/todo-error-message";
 
 const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
 type Field = (typeof FIELDS)[number];
@@ -105,11 +109,13 @@ function AssigneeField({ listId, task }: AssigneeProps) {
   const members = useListMembers(listId);
   if (members.data === undefined) {
     return members.isError ? (
-      <LoadError error={members.error} onRetry={() => void members.refetch()} />
+      <LoadError
+        message={todoErrorMessage(members.error)}
+        retryLabel={COMMON_LABELS.retry}
+        onRetry={() => void members.refetch()}
+      />
     ) : (
-      <p role="status" className="text-sm text-muted">
-        Chargement des personnes…
-      </p>
+      <ListSkeleton label={TODO_LABELS.loadingPeople} rows={1} />
     );
   }
   return (

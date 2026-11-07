@@ -18,6 +18,27 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Skeleton et état vide (branche `feat/ui-skeleton-etat-vide`)
+
+**Fait** : plan 1/4, PR 3 (ticket `869fp54cr`). `packages/ui` : `Skeleton` (formes `line`, `circle`, `block`, `card`, décoratif),
+`EmptyState` (titre, phrase utile, action), `ListSkeleton` réécrit dessus. Le Todo passe aux états complets : squelettes
+au lieu de « Chargement… » en texte nu, `LoadError` de `ui` (dette de `SUITE.md` : `todo/atoms/load-error.tsx`
+supprimé, message via `todoErrorMessage`, reprise « Réessayer »), états vides en `EmptyState` (aucune liste, aucune
+tâche). Section « Chargement, vide, erreur » sur `/composants`.
+**Décisions** : `EmptyState` reste sur `MessageCard` (pas de 2e carte). Libellés du module dans `TODO_LABELS`.
+Vide de la liste d'événement / de la vue Aujourd'hui : avec leurs écrans.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm format:check` OK ; **60 E2E passent** en
+local (le test du vide cherche maintenant « Aucune tâche dans cette liste » sans le point). Rien vu au navigateur.
+**Revue (code-review, 2026-11-07)** : titre de l'état vide « aucune tâche » en `h3` (`MessageCard` / `EmptyState`
+acceptent `level` 1 à 3, 2 par défaut), chargement des personnes en `ListSkeleton`, libellés dans `TODO_LABELS`
+(titres sans point final), `aria-busy` retiré de `ListSkeleton`, dette `load-error` retirée de `SUITE.md`. 60 E2E passent
+après les corrections.
+**Ouvert** : revue visuelle des squelettes (le chargement du Todo change d'aspect) ; formes `block` et `card` du
+`Skeleton` seulement dans la démo en attendant la ligne de tâche et le bloc de créneau.
+**Attendu ensuite** : plan 1, PR 4 (menu).
+
+---
+
 ## 2026-11-07 — Toast (branche `feat/ui-toast`)
 
 **Fait** : plan 1/4, PR 2 (ticket `869fp54cr`). `packages/ui` `ToastProvider` + `useToast().notify(texte, { tone, action })` :

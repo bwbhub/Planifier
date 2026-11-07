@@ -150,9 +150,7 @@ describe("TaskForm, assignation", () => {
     expect(screen.getByRole("status", { hidden: true }).textContent).toBe(
       "Chargement des personnes…",
     );
-    expect(
-      await screen.findByRole("button", { name: "Réessayer maintenant", hidden: true }),
-    ).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Réessayer", hidden: true })).toBeTruthy();
   });
 
   it("garde la version d'ouverture : un changement venu d'ailleurs n'est pas écrasé", async () => {

@@ -180,3 +180,13 @@ tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail 
     `account.me.setModules`.
   - Test serveur `server.test.ts` : « session lue » prouvée par une erreur interne faute de base (fragile) ; à refaire
     quand une procédure du plan utilisateur n'aura pas besoin de la base.
+
+- **Toast (revue de `feat/ui-toast`), à trancher** :
+  - Aucun toast n'est branché sur une mutation : « toute action réussie annonce son résultat » (règle écrite dans
+    `frontend-data-state`) reste à appliquer module par module (Todo, Agenda, Espaces). Ticket à créer ?
+  - Un toast déclenché pendant qu'un dialogue modal est ouvert est invisible (le `<dialog>` est dans la couche
+    supérieure du navigateur) : déclencher le toast après la fermeture (`onSuccess`).
+  - Agenda mobile : le toast peut chevaucher la barre de déplacement ou le bouton flottant (même zone, z-40 contre z-30).
+  - `3.5rem` (barre basse) écrit à trois endroits de l'AppShell (`min-h-14`, `pb-14`, `--nav-height`) : une seule source
+    serait mieux.
+  - Contraste AA des boutons `ghost` sur `bg-ink` (survol compris) à voir à l'œil sur `/composants`.

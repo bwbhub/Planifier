@@ -75,7 +75,7 @@ export function Toolbar({ params, today, onCreate }: ToolbarProps) {
       </nav>
       {/* Sur mobile, le bouton flotte au-dessus de la grille (maquette). */}
       <Button
-        className="max-sm:fixed max-sm:right-4 max-sm:bottom-20 max-sm:z-30"
+        className="max-sm:fixed max-sm:right-4 max-sm:bottom-above-nav max-sm:z-30"
         onClick={onCreate}
       >
         + {AGENDA_LABELS.newEntry}

@@ -2,6 +2,7 @@
 
 import type { AppModule } from "@planifier/constants/spaces";
 import { buttonClassName } from "@planifier/ui/components/button";
+import { ToastProvider } from "@planifier/ui/components/toast";
 import { cn } from "@planifier/ui/lib/cn";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -62,48 +63,56 @@ export function AppShell({ modules, children }: AppShellProps) {
   const shown = MODULE_PAGES.filter(({ module }) => modules.includes(module));
 
   return (
-    <div className="flex min-h-screen flex-col sm:flex-row">
-      <header
+    <ToastProvider dismissLabel={COMMON_LABELS.close}>
+      <div
         className={cn(
-          "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3",
-          "sm:sticky sm:top-0 sm:h-screen sm:w-60 sm:shrink-0 sm:flex-col sm:flex-nowrap sm:items-stretch",
-          "sm:justify-start sm:gap-6 sm:px-4 sm:py-6",
+          "flex min-h-screen flex-col sm:flex-row",
+          // Hauteur de la barre basse mobile : ce qui flotte au-dessus d'elle (messages, bouton « + ») s'y cale.
+          shown.length > 0 && "[--nav-height:3.5rem] sm:[--nav-height:0px]",
         )}
       >
-        <Link
-          href={ROUTES.home}
-          className="inline-flex min-h-11 items-center font-display text-lg font-bold text-accent-text"
+        <header
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3",
+            "sm:sticky sm:top-0 sm:h-screen sm:w-60 sm:shrink-0 sm:flex-col sm:flex-nowrap sm:items-stretch",
+            "sm:justify-start sm:gap-6 sm:px-4 sm:py-6",
+          )}
         >
-          {COMMON_LABELS.appName}
-        </Link>
-        {shown.length === 0 ? null : (
-          <nav
-            aria-label={NAV_LABELS.modules}
-            className={cn(
-              "fixed inset-x-0 bottom-0 z-30 flex bg-nav",
-              "sm:static sm:z-auto sm:flex-col sm:gap-1 sm:bg-transparent",
-            )}
+          <Link
+            href={ROUTES.home}
+            className="inline-flex min-h-11 items-center font-display text-lg font-bold text-accent-text"
           >
-            {shown.map(({ module, href }) => (
-              <Link
-                key={module}
-                href={href}
-                aria-current={isOn(pathname, href) ? "page" : undefined}
-                className={MODULE_LINK}
-              >
-                {MODULE_LABELS[module]}
-              </Link>
-            ))}
+            {COMMON_LABELS.appName}
+          </Link>
+          {shown.length === 0 ? null : (
+            <nav
+              aria-label={NAV_LABELS.modules}
+              className={cn(
+                "fixed inset-x-0 bottom-0 z-30 flex bg-nav",
+                "sm:static sm:z-auto sm:flex-col sm:gap-1 sm:bg-transparent",
+              )}
+            >
+              {shown.map(({ module, href }) => (
+                <Link
+                  key={module}
+                  href={href}
+                  aria-current={isOn(pathname, href) ? "page" : undefined}
+                  className={MODULE_LINK}
+                >
+                  {MODULE_LABELS[module]}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <nav aria-label={NAV_LABELS.account} className="flex gap-2 sm:mt-auto sm:flex-col">
+            <AccountLink href={ROUTES.spaces} label={NAV_LABELS.spaces} pathname={pathname} />
+            <AccountLink href={ROUTES.profile} label={NAV_LABELS.profile} pathname={pathname} />
           </nav>
-        )}
-        <nav aria-label={NAV_LABELS.account} className="flex gap-2 sm:mt-auto sm:flex-col">
-          <AccountLink href={ROUTES.spaces} label={NAV_LABELS.spaces} pathname={pathname} />
-          <AccountLink href={ROUTES.profile} label={NAV_LABELS.profile} pathname={pathname} />
-        </nav>
-      </header>
-      <div className={cn("flex min-w-0 flex-1 flex-col", shown.length > 0 && "pb-14 sm:pb-0")}>
-        {children}
+        </header>
+        <div className={cn("flex min-w-0 flex-1 flex-col", shown.length > 0 && "pb-14 sm:pb-0")}>
+          {children}
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

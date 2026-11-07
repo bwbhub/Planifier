@@ -269,6 +269,12 @@ async function checkTodayVariants(page: Page, session: Cookie[]) {
   await expect(todo).toBeVisible();
 }
 
+/** Navigation puis accueil selon les modules activés. */
+async function checkModules(page: Page, session: Cookie[]) {
+  await toggleAgendaModule(page, session);
+  await checkTodayVariants(page, session);
+}
+
 /**
  * Page des composants : ce que jsdom ne joue pas (`<dialog>` modal, API Popover). Échap ferme et le focus revient à
  * l'élément d'origine ; la confirmation renforcée reste inactive tant que la case n'est pas cochée ; le menu se
@@ -412,8 +418,7 @@ test.describe.serial("parcours d'un compte", () => {
   });
 
   test("retire un module de la navigation et adapte l'accueil", async ({ page }) => {
-    await toggleAgendaModule(page, session);
-    await checkTodayVariants(page, session);
+    await checkModules(page, session);
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {

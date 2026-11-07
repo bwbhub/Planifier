@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Écran Aujourd'hui (branche `feat/ecran-aujourdhui`)
+
+**Fait** : `TaskLine`, `SlotBlock`, `recurrenceLabel` remontés dans `_shared` ; module web `today` (agenda du jour, Du jour, Rappel du jour, En cours, À reprendre avec « Voir plus » sur place, coche, report avec horaire facultatif et « Annuler ») ; accueil = `TodayView`. « Se déconnecter » passe de l'ancien accueil au profil (section Session).
+**Décisions** : jour = celui de l'appareil, lu après hydratation ; coche et report au clic seulement ; annulation du report = `todo.tasks.update` par tâche ; Notifications : aucun accès, le module n'existe pas.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 285+), `pnpm build`, `pnpm test:e2e` (62) verts. `/code-review` Standards + Spec faite, points corrigés. Rien vu à l'œil.
+**Ouvert** : pas d'action « Nouvelle tâche / entrée » dans les vides ; `name` complet affiché (pas de prénom séparé) ; entrée de navigation « Aujourd'hui », variantes et E2E des 4 variantes = PR 4.
+**Attendu ensuite** : PR 4.
+
+---
+
 ## 2026-11-07 — Fin de session (branche `docs/suite-fin-session`)
 
 **Fait** : session Sonnet, PR #42 à #52 fusionnées : récurrence par jours, `TaskLine`, menu d'actions de la ligne, `SlotBlock`, `DateTimeField`, `RecurrenceField`, heure d'échéance (modèle, formulaire), feuille « Nouvelle tâche » + « + », `todo.tasks.today`, `todo.tasks.postpone`. Plans 1 à 3 terminés ; plan 4 : PR 1 et 2 sur 4. `docs/SUITE.md` réécrit (état, ordre du reste, pièges, questions).

@@ -30,12 +30,14 @@ export const TODAY_LABELS = {
   undo: "Annuler",
   undone: "Report annulé.",
   undonePartial: (failed: number) =>
-    `Report annulé, sauf pour ${String(failed)} tâche${failed === 1 ? "" : "s"} modifiée${failed === 1 ? "" : "s"} entre-temps.`,
+    `Report annulé, sauf pour ${String(failed)} tâche${failed === 1 ? "" : "s"} qui n'${failed === 1 ? "a" : "ont"} pas pu être remise${failed === 1 ? "" : "s"} comme avant.`,
+  truncated: (shown: number, total: number) =>
+    `${String(shown)} tâches affichées sur ${String(total)}.`,
   checked: (title: string) => `« ${title} » : c'est fait.`,
   retry: "Réessayer",
   loadFailed: "Impossible de lire ta journée pour le moment.",
   actionFailed: "L'action n'a pas abouti. Réessaie dans un instant.",
   allDay: "Toute la journée",
   dueOn: (day: string) => `Prévue le ${day}`,
-  list: (name: string) => `Liste ${name}`,
+  list: "Liste",
 } as const;

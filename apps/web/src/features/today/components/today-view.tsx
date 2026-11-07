@@ -4,9 +4,6 @@ import type { AppModule } from "@planifier/constants/spaces";
 import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
 import { LoadError } from "@planifier/ui/components/load-error";
 import { PageHeader } from "@planifier/ui/components/page-header";
-import { useSyncExternalStore } from "react";
-
-import { today } from "@/lib/format-date";
 
 import { TODAY_LABELS } from "../labels";
 import {
@@ -16,6 +13,7 @@ import {
   useTodayTasks,
 } from "../queries/today.queries";
 import { longDayLabel } from "../utils/today-day";
+import { useDeviceDay } from "../utils/use-device-day";
 import { PostponeBar } from "./postpone-bar";
 import { RemindersSection } from "./reminders-section";
 import { SlotsSection, SlotsSkeleton } from "./slots-section";
@@ -27,19 +25,8 @@ interface TodayViewProps {
   modules: readonly AppModule[];
 }
 
-const noSubscription = () => () => undefined;
-
-/** Jour de l'appareil, connu après l'hydratation seulement : le serveur ne connaît pas son fuseau. */
-function useDeviceDay(): string | null {
-  return useSyncExternalStore(
-    noSubscription,
-    () => today(),
-    () => null,
-  );
-}
-
 function AgendaBlock({ day }: { day: string }) {
-  const slots = useTodaySlots(day, true);
+  const slots = useTodaySlots(day);
   if (slots.isError) {
     return (
       <LoadError
@@ -54,7 +41,7 @@ function AgendaBlock({ day }: { day: string }) {
 }
 
 function TasksBlock({ day }: { day: string }) {
-  const tasks = useTodayTasks(day, true);
+  const tasks = useTodayTasks(day);
   const checkTask = useCheckTask(day);
   const postpone = usePostponeTasks();
   if (tasks.isError) {
@@ -80,6 +67,7 @@ function TasksBlock({ day }: { day: string }) {
         title={TODAY_LABELS.dueTitle}
         empty={{ title: TODAY_LABELS.dueEmptyTitle, hint: TODAY_LABELS.dueEmptyHint }}
         tasks={dueToday.items}
+        total={dueToday.total}
         day={day}
         onCheck={checkTask.check}
       />
@@ -88,6 +76,7 @@ function TasksBlock({ day }: { day: string }) {
         title={TODAY_LABELS.ongoingTitle}
         empty={{ title: TODAY_LABELS.ongoingEmptyTitle, hint: TODAY_LABELS.ongoingEmptyHint }}
         tasks={ongoing.items}
+        total={ongoing.total}
         day={day}
         onCheck={checkTask.check}
       />
@@ -95,6 +84,7 @@ function TasksBlock({ day }: { day: string }) {
         title={TODAY_LABELS.overdueTitle}
         empty={{ title: TODAY_LABELS.overdueEmptyTitle, hint: TODAY_LABELS.overdueEmptyHint }}
         tasks={overdue.items}
+        total={overdue.total}
         day={day}
         onCheck={checkTask.check}
         footer={

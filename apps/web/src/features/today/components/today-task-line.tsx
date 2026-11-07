@@ -26,7 +26,10 @@ export function TodayTaskLine({ task, day, onCheck }: TodayTaskLineProps) {
       }}
       details={
         <span className="flex flex-wrap items-center gap-2 text-sm text-muted">
-          <Badge>{list.name}</Badge>
+          <Badge>
+            <span className="sr-only">{TODAY_LABELS.list} </span>
+            {list.name}
+          </Badge>
           {when === null ? null : <span>{when}</span>}
         </span>
       }

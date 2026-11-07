@@ -1,12 +1,6 @@
 import type { TodayTaskOutput } from "@planifier/api-contract";
 import { useToast } from "@planifier/ui/components/toast";
-import {
-  skipToken,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { orpc } from "@/lib/orpc";
@@ -14,18 +8,16 @@ import { orpc } from "@/lib/orpc";
 import { TODAY_LABELS } from "../labels";
 import { dayWindow } from "../utils/today-day";
 
-/** Tâches du jour de l'appareil. `enabled` faux (module Todo désactivé) : aucun appel. */
-export function useTodayTasks(day: string, enabled: boolean) {
-  return useQuery(
-    orpc.todo.tasks.today.queryOptions({ input: enabled ? { date: day } : skipToken }),
-  );
+/** Tâches du jour de l'appareil. */
+export function useTodayTasks(day: string) {
+  return useQuery(orpc.todo.tasks.today.queryOptions({ input: { date: day } }));
 }
 
-/** Mes entrées d'agenda du jour, toutes les pages. `enabled` faux (module Agenda désactivé) : aucun appel. */
-export function useTodaySlots(day: string, enabled: boolean) {
+/** Mes entrées d'agenda du jour, toutes les pages. */
+export function useTodaySlots(day: string) {
   const query = useInfiniteQuery(
     orpc.agenda.entries.list.infiniteOptions({
-      input: enabled ? (cursor: string | undefined) => ({ ...dayWindow(day), cursor }) : skipToken,
+      input: (cursor: string | undefined) => ({ ...dayWindow(day), cursor }),
       initialPageParam: undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     }),

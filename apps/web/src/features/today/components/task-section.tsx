@@ -16,6 +16,8 @@ interface TaskSectionProps {
   title: string;
   empty: { title: string; hint: string };
   tasks: readonly TodayTaskOutput[];
+  /** Nombre réel de tâches de la section : l'API en borne la liste. */
+  total: number;
   day: string;
   onCheck: (task: TodayTaskOutput) => void;
   /** Sous la liste (report des tâches en retard). */
@@ -23,7 +25,15 @@ interface TaskSectionProps {
 }
 
 /** Section de tâches : les premières, puis « Voir les N autres » qui déroule sur place. Vide : une phrase utile. */
-export function TaskSection({ title, empty, tasks, day, onCheck, footer }: TaskSectionProps) {
+export function TaskSection({
+  title,
+  empty,
+  tasks,
+  total,
+  day,
+  onCheck,
+  footer,
+}: TaskSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? tasks : tasks.slice(0, SECTION_PREVIEW);
   const hidden = tasks.length - SECTION_PREVIEW;
@@ -40,6 +50,9 @@ export function TaskSection({ title, empty, tasks, day, onCheck, footer }: TaskS
               </li>
             ))}
           </ul>
+          {total > tasks.length ? (
+            <p className="text-sm text-muted">{TODAY_LABELS.truncated(tasks.length, total)}</p>
+          ) : null}
           {hidden <= 0 ? null : (
             <Button
               variant="ghost"

@@ -411,11 +411,8 @@ test.describe.serial("parcours d'un compte", () => {
     await checkOverlays(page);
   });
 
-  test("retire un module de la navigation quand on l'éteint", async ({ page }) => {
+  test("retire un module de la navigation et adapte l'accueil", async ({ page }) => {
     await toggleAgendaModule(page, session);
-  });
-
-  test("adapte l'accueil aux modules activés", async ({ page }) => {
     await checkTodayVariants(page, session);
   });
 

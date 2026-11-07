@@ -237,3 +237,122 @@ describe("TaskForm, assignation", () => {
     expect(calls[0]?.input).not.toHaveProperty("assigneeId");
   });
 });
+
+describe("TaskForm, échéance et heure", () => {
+  async function openDetails() {
+    await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
+  }
+
+  it("crée une tâche avec un jour et une heure", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Dentiste");
+    await openDetails();
+    await userEvent.type(screen.getByLabelText("Échéance"), "2026-11-10");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.type(screen.getByLabelText("Heure"), "0930");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({
+        title: "Dentiste",
+        dueDate: "2026-11-10",
+        dueTime: "09:30",
+      });
+    });
+  });
+
+  it("n'envoie pas d'heure tant que « Sans heure » est cochée", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Dentiste");
+    await openDetails();
+    await userEvent.type(screen.getByLabelText("Échéance"), "2026-11-10");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toEqual({
+        listId: LIST_ID,
+        title: "Dentiste",
+        dueDate: "2026-11-10",
+      });
+    });
+  });
+
+  it("refuse une heure sans jour, sans appeler l'API", async () => {
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Dentiste");
+    await openDetails();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.type(screen.getByLabelText("Heure"), "0930");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Une heure demande un jour : choisis d'abord le jour.")).toBeTruthy();
+  });
+
+  it("préremplit jour et heure d'une tâche à modifier, et n'envoie que ce qui change", async () => {
+    const dated = taskWith({
+      id: "0199f3a2-7c4e-7d10-9a51-0000000000cc",
+      title: "Dentiste",
+      dueDate: "2026-11-10",
+      dueTime: "09:30",
+    });
+    const calls = replyRpc(fetchMock, { "todo/tasks/update": { data: dated } });
+    renderForm({ task: dated, onDone: vi.fn() });
+    expect(screen.getByLabelText("Échéance")).toHaveProperty("value", "2026-11-10");
+    expect(screen.getByLabelText("Heure")).toHaveProperty("value", "09:30");
+    await userEvent.clear(screen.getByLabelText("Titre"));
+    await userEvent.type(screen.getByLabelText("Titre"), "Dentiste Martin");
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({ taskId: dated.id, title: "Dentiste Martin" });
+    });
+    expect(calls[0]?.input).not.toHaveProperty("dueDate");
+    expect(calls[0]?.input).not.toHaveProperty("dueTime");
+  });
+});
+
+describe("TaskForm, modifier jour et heure", () => {
+  const timed = taskWith({
+    id: "0199f3a2-7c4e-7d10-9a51-0000000000dd",
+    title: "Dentiste",
+    dueDate: "2026-11-10",
+    dueTime: "09:30",
+  });
+
+  it("efface l'heure en recochant « Sans heure », explicitement", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/update": { data: timed } });
+    renderForm({ task: timed, onDone: vi.fn() });
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({ dueTime: null });
+    });
+    expect(calls[0]?.input).not.toHaveProperty("dueDate");
+  });
+
+  it("refuse en ligne un jour effacé dont l'heure reste, sans appeler l'API", async () => {
+    renderForm({ task: timed, onDone: vi.fn() });
+    await userEvent.clear(screen.getByLabelText("Échéance"));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Une heure demande un jour : choisis d'abord le jour.")).toBeTruthy();
+  });
+
+  it("refuse en ligne une heure posée sur une tâche sans jour", async () => {
+    renderForm({
+      task: taskWith({ id: "0199f3a2-7c4e-7d10-9a51-0000000000ee", title: "Sans jour" }),
+      onDone: vi.fn(),
+    });
+    await userEvent.click(screen.getByRole("checkbox", { name: "Sans heure" }));
+    await userEvent.type(screen.getByLabelText("Heure"), "0930");
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Une heure demande un jour : choisis d'abord le jour.")).toBeTruthy();
+  });
+});

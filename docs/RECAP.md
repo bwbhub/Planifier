@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Heure dans le formulaire de tâche (branche `feat/nouvelle-tache-feuille`)
+
+**Fait** : plan 3/4 (ticket `869fhwtr3`), PR 2 : le formulaire de tâche (création, sous-tâche, modification : un seul formulaire) remplace le champ « Échéance » par `DateTimeField` (jour + « Sans heure » cochée par défaut, heure sinon). `forms/due-fields.tsx` ; `forms/use-reset-key.ts` (le champ repart de sa valeur de départ quand le formulaire se vide, partagé avec la répétition) ; `forms/task-form-values.ts` (lecture du formulaire et entrées de création/modification extraites de `TaskForm`, pour tenir la limite de taille). Heure sans jour refusée avant envoi (« Une heure demande un jour »). En modification, jour et heure ne partent que s'ils changent (ancre de série gardée). 4 tests de formulaire (jour+heure, sans heure, heure sans jour, préremplissage sans envoi inutile).
+**Décisions** : le découpage du plan change : l'heure dans le formulaire existant d'abord ; la feuille « Nouvelle tâche » (liste, assigné, `Sheet size="form"`) et le bouton « + » viennent ensuite (la feuille n'a pas d'accès sans le « + »).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 268), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. E2E mobile : `chooseTaskAction` centre le bouton ⋯ avant de cliquer (le défilement de Playwright refermait le menu quand un message ou la barre basse le recouvrait). Rien vu à l'œil.
+**Revue** : `/code-review` passée ; corrigé : en modification, une heure sans jour (jour effacé, ou tâche sans jour) est refusée en ligne comme à la création (sinon le serveur effaçait l'heure en silence ou la refusait sans désigner le champ), un seul texte d'erreur (`TODO_LABELS.timeNeedsDay`), `dueError` extraite, 3 tests (recocher « Sans heure » envoie `dueTime: null`, les deux refus). Gardé : focus sur le champ heure en cas d'erreur.
+**Ouvert** : Produit : le menu se ferme à tout défilement de la page (voulu), le toast recouvre le bas de la liste sur mobile (déjà noté).
+**Attendu ensuite** : fusion de la PR ; puis feuille « Nouvelle tâche » + bouton « + ».
+
+---
+
 ## 2026-11-07 — Heure d'échéance, modèle (branche `feat/heure-echeance`)
 
 **Fait** : plan 3/4 (ticket `869fhwtr3`), PR 1. Base : `tasks.due_time` `VARCHAR(5)` (`HH:MM`), migration `20261107140000_heure_echeance` avec deux contraintes (format ; heure ⇒ jour). Contrat additif : `dueTime` en création, modification et sortie ; `TIME_WITHOUT_DATE` (nouvelle raison de `CONFLICT`). API : effacer le jour efface l'heure, déplacer le jour la garde, une heure sur une tâche sans jour est refusée. Web : `DueDate` écrit « 5 novembre à 09:30 » (`dueLabel`), message d'erreur ; le formulaire n'a pas encore le champ (PR suivante). ADR `0018-heure-d-echeance.md`. 7 tests d'intégration + 1 test web.

@@ -3,6 +3,8 @@ import { TODO_LIST_MAX_TASKS, TODO_MAX_LISTS } from "@planifier/constants/todo";
 
 import { actionErrorMessage } from "@/features/_shared/utils/action-error-message";
 
+import { TODO_LABELS } from "../labels";
+
 const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   STALE_VERSION:
     "Cet élément a changé entre-temps. Recharge la page pour voir sa dernière version.",
@@ -14,7 +16,7 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
     "Todo n'est pas activé dans cet Espace. Un propriétaire peut l'activer dans ses réglages.",
   ASSIGNEE_NOT_MEMBER:
     "Cette personne n'est plus dans l'Espace. Recharge la page et choisis quelqu'un d'autre.",
-  TIME_WITHOUT_DATE: "Une heure demande un jour. Choisis d'abord un jour d'échéance.",
+  TIME_WITHOUT_DATE: TODO_LABELS.timeNeedsDay,
 };
 
 /** Message à montrer après un refus d'une action Todo. */

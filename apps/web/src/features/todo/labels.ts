@@ -14,6 +14,7 @@ export const TODO_LABELS = {
   edit: "Modifier",
   delete: "Supprimer",
   actionsOf: (title: string) => `Actions de « ${title} »`,
+  timeNeedsDay: "Une heure demande un jour : choisis d'abord le jour.",
   taskAdded: "Tâche ajoutée.",
   subtaskAdded: "Sous-tâche ajoutée.",
   taskUpdated: "Tâche modifiée.",

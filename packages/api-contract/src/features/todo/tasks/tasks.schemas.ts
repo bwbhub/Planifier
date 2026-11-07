@@ -150,12 +150,33 @@ export const todayTasksOutputSchema = z.strictObject({
   overdue: todaySectionSchema,
 });
 
+/**
+ * Reporter des tâches à un jour (« Les reporter à aujourd'hui »), au geste de l'utilisateur seulement. Chaque tâche
+ * porte sa `version` lue : une seule périmée et rien n'est écrit.
+ */
+export const postponeTasksInputSchema = z.strictObject({
+  date: dueDateSchema,
+  tasks: z
+    .array(z.strictObject({ taskId: taskIdSchema, version: z.int().min(1) }))
+    .min(1)
+    .max(TODAY_SECTION_MAX)
+    .refine((tasks) => new Set(tasks.map(({ taskId }) => taskId)).size === tasks.length, {
+      message: "Une tâche n'est reportée qu'une fois.",
+    }),
+});
+
 /** Toutes les tâches de la liste (bornées), sous-tâches comprises, par ordre de création. */
 export const listTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });
 
+/** Les tâches reportées, à jour (échéance au jour demandé, sans heure). */
+export const postponeTasksOutputSchema = z.strictObject({
+  items: z.array(taskSchema).max(TODAY_SECTION_MAX),
+});
+
 export type TaskOutput = z.infer<typeof taskSchema>;
+export type PostponeTasksInput = z.output<typeof postponeTasksInputSchema>;
 export type TodayTasksOutput = z.infer<typeof todayTasksOutputSchema>;
 export type TodayTaskOutput = z.infer<typeof todayTaskSchema>;
 export type ListTasksOutput = z.infer<typeof listTasksOutputSchema>;

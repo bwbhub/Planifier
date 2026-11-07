@@ -25,7 +25,8 @@ export const taskTargetSchema = z.strictObject({ taskId: taskIdSchema });
  * `NESTED_SUBTASK` (une sous-tâche n'a pas de sous-tâches : un seul niveau), `NOT_RECURRING` (la tâche n'est pas
  * répétée : la cocher avec `setDone`), `TODO_DISABLED` (le module Todo n'est pas activé dans l'Espace visé),
  * `ASSIGNEE_NOT_MEMBER` (la personne n'est pas membre de l'Espace de la liste ; liste perso : personne ne l'est),
- * `TIME_WITHOUT_DATE` (une heure d'échéance sur une tâche sans jour).
+ * `TIME_WITHOUT_DATE` (une heure d'échéance sur une tâche sans jour), `RECURRING_TASK` (une tâche répétée ne se
+ * reporte pas : la cocher avance son échéance).
  */
 export const TODO_CONFLICT_REASONS = [
   "STALE_VERSION",
@@ -36,6 +37,7 @@ export const TODO_CONFLICT_REASONS = [
   "TODO_DISABLED",
   "ASSIGNEE_NOT_MEMBER",
   "TIME_WITHOUT_DATE",
+  "RECURRING_TASK",
 ] as const;
 export type TodoConflictReason = (typeof TODO_CONFLICT_REASONS)[number];
 

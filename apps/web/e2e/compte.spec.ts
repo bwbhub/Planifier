@@ -56,6 +56,7 @@ async function createListAndCheckTask(page: Page) {
 
 /** Le « + » ajoute une tâche en deux gestes (titre, Entrée), de n'importe quelle page, sans déborder en largeur. */
 async function addTaskWithPlusButton(page: Page) {
+  await page.goto("/profil");
   await page.getByRole("button", { name: "Nouvelle tâche", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await expect(sheet).toBeVisible();
@@ -343,13 +344,11 @@ test.describe.serial("parcours d'un compte", () => {
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   });
 
-  test("crée une liste, ajoute une tâche et la coche quand on ouvre le Todo", async ({ page }) => {
+  test("crée une liste, ajoute une tâche et la coche, puis en ajoute une par le « + » quand on ouvre le Todo", async ({
+    page,
+  }) => {
     await openHomeSignedIn(page, session);
     await createListAndCheckTask(page);
-  });
-
-  test("ajoute une tâche par le « + » depuis le profil", async ({ page }) => {
-    await openSignedIn(page, session, "/profil");
     await addTaskWithPlusButton(page);
   });
 

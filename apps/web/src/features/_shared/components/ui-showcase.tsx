@@ -3,6 +3,11 @@
 import { Badge } from "@planifier/ui/components/badge";
 import { Button } from "@planifier/ui/components/button";
 import { Checkbox } from "@planifier/ui/components/checkbox";
+import {
+  DateTimeField,
+  type DateTimeFieldProps,
+  type DateTimeValue,
+} from "@planifier/ui/components/date-time-field";
 import { SegmentedControl } from "@planifier/ui/components/segmented-control";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { Switch } from "@planifier/ui/components/switch";
@@ -30,6 +35,23 @@ type ListId = (typeof LISTS)[number]["value"];
 
 function Row({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap items-center gap-3">{children}</div>;
+}
+
+function DateTimeDemo({
+  initial,
+  ...props
+}: { initial: DateTimeValue } & Pick<DateTimeFieldProps, "error" | "hint" | "disabled">) {
+  const [value, setValue] = useState(initial);
+  return (
+    <DateTimeField
+      label="Échéance"
+      timeLabel="Heure"
+      noTimeLabel="Sans heure"
+      value={value}
+      onChange={setValue}
+      {...props}
+    />
+  );
 }
 
 /** Les composants de base de `packages/ui`, chacun dans tous ses états (clair et nuit : le thème du profil). */
@@ -71,6 +93,13 @@ export function UiShowcase() {
           ]}
           error="Choisis une liste."
         />
+      </Section>
+
+      <Section title="Date et heure">
+        <DateTimeDemo initial={{ date: "2026-11-10", time: null }} hint="Heure facultative." />
+        <DateTimeDemo initial={{ date: "2026-11-10", time: "09:30" }} />
+        <DateTimeDemo initial={{ date: null, time: null }} error="Choisis un jour valide." />
+        <DateTimeDemo initial={{ date: "2026-11-10", time: "09:30" }} disabled />
       </Section>
 
       <Section title="Cases et interrupteurs">

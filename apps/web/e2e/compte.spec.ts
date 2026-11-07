@@ -6,7 +6,7 @@ import { waitForLink } from "./mailpit";
 import { ATTEMPT_TIMEOUT, submitPastRateLimit } from "./rate-limit";
 
 const DISPLAY_NAME = "Eve";
-const GREETING = `Bonjour ${DISPLAY_NAME}`;
+const GREETING = `Bonjour, ${DISPLAY_NAME}`;
 /** `--bg` de nuit dans packages/tokens/src/tokens.css (#101216), tel que le navigateur le calcule. */
 const DARK_BACKGROUND = "rgb(16, 18, 22)";
 /** `--bg` clair (#f8f6f9). */
@@ -34,7 +34,10 @@ function bodyBackground(page: Page) {
 
 /** Depuis l'accueil connecté : première liste « Courses », une tâche, cochée puis relue après rechargement. */
 async function createListAndCheckTask(page: Page) {
-  await page.getByRole("link", { name: "Ouvrir mes listes" }).click();
+  await page
+    .getByRole("navigation", { name: "Modules" })
+    .getByRole("link", { name: "Todo" })
+    .click();
   await page.getByRole("button", { name: "Créer ma première liste" }).click();
   await page.getByLabel("Nom de la liste").fill("Courses");
   await page.getByRole("button", { name: "Créer la liste" }).click();
@@ -300,7 +303,7 @@ async function checkOverlays(page: Page) {
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 
-const greeting = (page: Page) => page.getByRole("heading", { name: GREETING });
+const greeting = (page: Page) => page.getByText(GREETING);
 
 async function openSignedIn(page: Page, session: Cookie[], path: string) {
   await page.context().addCookies(session);
@@ -378,7 +381,7 @@ test.describe.serial("parcours d'un compte", () => {
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {
-    await openHomeSignedIn(page, session);
+    await openSignedIn(page, session, "/profil");
     await page.getByRole("button", { name: "Se déconnecter" }).click();
     await expect(page).toHaveURL("/connexion");
   });

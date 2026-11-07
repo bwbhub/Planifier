@@ -3,7 +3,13 @@ import { PageHeader } from "@planifier/ui/components/page-header";
 import { TitledSection } from "@planifier/ui/components/titled-section";
 import { redirect } from "next/navigation";
 
-import { getCurrentUser, ModulesForm, PasswordForm, ProfileForm } from "@/features/account";
+import {
+  getCurrentUser,
+  ModulesForm,
+  PasswordForm,
+  ProfileForm,
+  SignOutButton,
+} from "@/features/account";
 import { ROUTES } from "@/lib/routes";
 import { pageTitle } from "@/lib/labels";
 
@@ -24,6 +30,9 @@ export default async function ProfilePage() {
       </TitledSection>
       <TitledSection title="Mot de passe" padding="lg">
         <PasswordForm />
+      </TitledSection>
+      <TitledSection title="Session" padding="lg">
+        <SignOutButton />
       </TitledSection>
     </main>
   );

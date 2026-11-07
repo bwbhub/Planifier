@@ -41,7 +41,7 @@ async function register(
     });
   });
   await page.goto(await waitForLink(request, account.email, 1));
-  await expect(page.getByRole("heading", { name: `Bonjour ${account.name}` })).toBeVisible();
+  await expect(page.getByText(`Bonjour, ${account.name}`)).toBeVisible();
   account.session = await context.cookies();
   await context.close();
 }

@@ -1,0 +1,41 @@
+/** Mots de l'écran Aujourd'hui. */
+export const TODAY_LABELS = {
+  pageTitle: "Aujourd'hui",
+  greeting: (firstName: string) => `Bonjour, ${firstName}`,
+  slotsTitle: "Au fil de la journée",
+  slotsEmptyTitle: "Rien à l'agenda aujourd'hui",
+  slotsEmptyHint: "Les rendez-vous du jour apparaîtront ici.",
+  loadingSlots: "Chargement de l'agenda…",
+  dueTitle: "Du jour",
+  dueEmptyTitle: "Aucune tâche pour aujourd'hui",
+  dueEmptyHint: "Ce qui a pour échéance aujourd'hui apparaîtra ici.",
+  ongoingTitle: "En cours",
+  ongoingEmptyTitle: "Aucune tâche en cours",
+  ongoingEmptyHint: "Les tâches sans date, à faire quand tu peux, apparaîtront ici.",
+  overdueTitle: "Quelques tâches à reprendre",
+  overdueEmptyTitle: "Rien à reprendre",
+  overdueEmptyHint: "Aucune tâche n'a dépassé sa date.",
+  loadingTasks: "Chargement des tâches…",
+  showMore: (hidden: number) => `Voir les ${String(hidden)} autres`,
+  showLess: "Voir moins",
+  reminderTitle: "Rappel du jour",
+  reminder: (title: string, rule: string) => `${title}, ${rule}.`,
+  postpone: "Les reporter à aujourd'hui",
+  proposeNewTime: "Proposer un nouvel horaire",
+  newTime: "Nouvel horaire",
+  postponed: (count: number) =>
+    count === 1
+      ? "Une tâche reportée à aujourd'hui."
+      : `${String(count)} tâches reportées à aujourd'hui.`,
+  undo: "Annuler",
+  undone: "Report annulé.",
+  undonePartial: (failed: number) =>
+    `Report annulé, sauf pour ${String(failed)} tâche${failed === 1 ? "" : "s"} modifiée${failed === 1 ? "" : "s"} entre-temps.`,
+  checked: (title: string) => `« ${title} » : c'est fait.`,
+  retry: "Réessayer",
+  loadFailed: "Impossible de lire ta journée pour le moment.",
+  actionFailed: "L'action n'a pas abouti. Réessaie dans un instant.",
+  allDay: "Toute la journée",
+  dueOn: (day: string) => `Prévue le ${day}`,
+  list: (name: string) => `Liste ${name}`,
+} as const;

@@ -175,6 +175,87 @@ describe("todo.tasks (base réelle)", () => {
   });
 });
 
+describe("todo.tasks : heure d'échéance (base réelle)", () => {
+  const createDated = async (dueTime?: string) => {
+    const list = await createAliceList();
+    return call(
+      tasks.create,
+      { listId: list.id, title: "Rendez-vous", dueDate: "2026-11-05", dueTime },
+      asUser(alice),
+    );
+  };
+
+  it("crée une tâche avec jour et heure, sans heure par défaut", async () => {
+    await expect(createDated("09:30")).resolves.toMatchObject({
+      dueDate: "2026-11-05",
+      dueTime: "09:30",
+    });
+    await expect(createDated()).resolves.toMatchObject({ dueTime: null });
+  });
+
+  it("refuse une heure sans jour ou mal écrite, rien n'est créé", async () => {
+    const list = await createAliceList();
+    for (const input of [
+      { dueTime: "09:30" },
+      { dueDate: "2026-11-05", dueTime: "24:00" },
+      { dueDate: "2026-11-05", dueTime: "9:30" },
+    ]) {
+      await expect(
+        call(tasks.create, { listId: list.id, title: "Non", ...input }, asUser(alice)),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    }
+    await expect(call(tasks.list, { listId: list.id }, asUser(alice))).resolves.toEqual({
+      items: [],
+    });
+  });
+
+  it("pose, change et retire l'heure sans toucher au jour", async () => {
+    const task = await createDated();
+    const timed = await call(
+      tasks.update,
+      { taskId: task.id, version: 1, dueTime: "18:00" },
+      asUser(alice),
+    );
+    expect(timed).toMatchObject({ dueDate: "2026-11-05", dueTime: "18:00" });
+    const moved = await call(
+      tasks.update,
+      { taskId: task.id, version: 2, dueDate: "2026-11-06" },
+      asUser(alice),
+    );
+    expect(moved).toMatchObject({ dueDate: "2026-11-06", dueTime: "18:00" });
+    const untimed = await call(
+      tasks.update,
+      { taskId: task.id, version: 3, dueTime: null },
+      asUser(alice),
+    );
+    expect(untimed).toMatchObject({ dueDate: "2026-11-06", dueTime: null });
+  });
+
+  it("efface l'heure avec le jour", async () => {
+    const task = await createDated("09:30");
+    const cleared = await call(
+      tasks.update,
+      { taskId: task.id, version: 1, dueDate: null },
+      asUser(alice),
+    );
+    expect(cleared).toMatchObject({ dueDate: null, dueTime: null });
+  });
+
+  it("refuse une heure sur une tâche sans jour : CONFLICT TIME_WITHOUT_DATE", async () => {
+    const { task } = await createAliceTask();
+    await expect(
+      call(tasks.update, { taskId: task.id, version: 1, dueTime: "09:30" }, asUser(alice)),
+    ).rejects.toMatchObject({ code: "CONFLICT", data: { reason: "TIME_WITHOUT_DATE" } });
+    await expect(
+      call(
+        tasks.update,
+        { taskId: task.id, version: 1, dueDate: null, dueTime: "09:30" },
+        asUser(alice),
+      ),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
 describe("todo.tasks : sous-tâches (base réelle)", () => {
   it("crée une sous-tâche, cochée indépendamment de son parent", async () => {
     const { list, task } = await createAliceTask();

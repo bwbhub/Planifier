@@ -11,6 +11,7 @@ export function taskWith(
     parentId: null,
     description: null,
     dueDate: null,
+    dueTime: null,
     completedAt: null,
     completedBy: null,
     assignee: null,

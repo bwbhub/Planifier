@@ -22,3 +22,9 @@ export function formatDueDate(day: string, todayDay: string): string {
 export function isPastDue(day: string, todayDay: string): boolean {
   return day < todayDay;
 }
+
+/** Échéance telle qu'on la lit : « 5 novembre », ou « 5 novembre à 09:30 » avec une heure. */
+export function dueLabel(day: string, time: string | null, todayDay: string): string {
+  const label = formatDueDate(day, todayDay);
+  return time === null ? label : `${label} à ${time}`;
+}

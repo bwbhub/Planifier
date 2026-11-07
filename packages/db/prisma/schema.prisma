@@ -312,6 +312,9 @@ model Task {
   description      String?
   /// Jour d'échéance, sans heure.
   dueDate          DateTime? @map("due_date") @db.Date
+  /// Heure d'échéance `HH:MM`, heure murale de l'utilisateur (sans fuseau, comme le jour). null : sans heure ; jamais
+  /// posée sans `dueDate` (contrainte en base).
+  dueTime          String?   @map("due_time") @db.VarChar(5)
   /// null : à faire.
   completedAt      DateTime? @map("completed_at")
   /// Qui a coché (« Cochée par »). null : à faire, ou compte supprimé depuis.

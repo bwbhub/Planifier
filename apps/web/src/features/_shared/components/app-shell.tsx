@@ -90,13 +90,8 @@ export function AppShell({ modules, create, children }: AppShellProps) {
           >
             {COMMON_LABELS.appName}
           </Link>
-          {create === null || create === undefined || isOn(pathname, ROUTES.agenda) ? null : (
-            <div
-              className={cn(
-                "fixed right-4 bottom-[calc(var(--nav-height)+1rem)] z-30",
-                "sm:static sm:z-auto",
-              )}
-            >
+          {create === undefined || isOn(pathname, ROUTES.agenda) ? null : (
+            <div className={cn("fixed right-4 bottom-above-nav z-30", "sm:static sm:z-auto")}>
               {create}
             </div>
           )}

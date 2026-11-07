@@ -15,10 +15,10 @@ import { ROUTES } from "@/lib/routes";
 
 import { TaskForm } from "../forms/task-form";
 import { TODO_LABELS } from "../labels";
-import { defaultTaskList, writableLists } from "../utils/new-task-list";
 import { ListViewProvider } from "../utils/list-view";
-import { useSelectedList } from "../utils/use-selected-list";
+import { defaultTaskList, writableLists } from "../utils/new-task-list";
 import { todoErrorMessage } from "../utils/todo-error-message";
+import { useSelectedList } from "../utils/use-selected-list";
 
 interface NewTaskSheetProps {
   open: boolean;
@@ -68,7 +68,7 @@ function ListAndForm({ lists, openListId, onClose }: PickerProps) {
 }
 
 function SheetBody({ openListId, onClose }: Omit<NewTaskSheetProps, "open">) {
-  const { lists, items } = useSelectedList(openListId);
+  const { lists, items, searching } = useSelectedList(openListId);
   if (lists.isError) {
     return (
       <LoadError
@@ -78,7 +78,9 @@ function SheetBody({ openListId, onClose }: Omit<NewTaskSheetProps, "open">) {
       />
     );
   }
-  if (!lists.isSuccess) return <ListSkeleton label={TODO_LABELS.loadingLists} rows={2} />;
+  // Tant qu'on cherche la liste de l'adresse dans les pages suivantes, on n'affiche pas une autre liste à sa place.
+  if (!lists.isSuccess || searching)
+    return <ListSkeleton label={TODO_LABELS.loadingLists} rows={2} />;
   const writable = writableLists(items);
   if (writable.length === 0) {
     return (

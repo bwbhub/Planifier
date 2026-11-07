@@ -97,6 +97,30 @@ describe("NewTaskSheet", () => {
     expect(await screen.findByText("Tâche ajoutée à « Vacances ».")).toBeTruthy();
   });
 
+  it("lit les pages suivantes pour proposer la liste de l'adresse, sans en montrer une autre d'abord", async () => {
+    const pages = [
+      { items: [MAISON], nextCursor: MAISON.id },
+      { items: [VACANCES], nextCursor: null },
+    ];
+    let page = 0;
+    replyRpc(fetchMock, {
+      get "todo/lists/list"() {
+        return { data: pages[page++] };
+      },
+    });
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <ToastProvider dismissLabel="Fermer">
+          <NewTaskSheet open onClose={vi.fn()} openListId={VACANCES.id} />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+    const field = await screen.findByRole("combobox", { name: "Liste", hidden: true });
+    expect(field).toHaveProperty("value", VACANCES.id);
+  });
+
   it("dit où aller quand aucune liste n'accepte de tâche", async () => {
     renderSheet([LECTURE]);
     expect(await screen.findByText("Aucune liste où ajouter")).toBeTruthy();

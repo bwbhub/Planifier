@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { getCurrentUser } from "@/features/account";
 import { AppShell } from "@/features/_shared/components/app-shell";
@@ -13,7 +13,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
       modules={user.modules}
-      create={user.modules.includes("TODO") ? <NewTaskLauncher /> : null}
+      create={
+        user.modules.includes("TODO") ? (
+          <Suspense>
+            <NewTaskLauncher />
+          </Suspense>
+        ) : undefined
+      }
     >
       {children}
     </AppShell>

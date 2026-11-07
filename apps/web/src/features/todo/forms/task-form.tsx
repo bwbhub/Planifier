@@ -21,10 +21,10 @@ import { type SubmitEvent, useState } from "react";
 
 import { useFormValidation } from "@/features/_shared/forms/use-form-validation";
 
-import { COMMON_LABELS } from "@/lib/labels";
+import { COMMON_LABELS, TASK_LABELS } from "@/lib/labels";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
-import { ASSIGNEE_LABEL, TODO_LABELS } from "../labels";
+import { TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
@@ -120,7 +120,7 @@ function AssigneeField({ listId, task }: AssigneeProps) {
   }
   return (
     <SelectField
-      label={ASSIGNEE_LABEL}
+      label={TASK_LABELS.assignedTo}
       name="assigneeId"
       options={assigneeOptions(members.data.items, task?.assignee ?? null)}
       defaultValue={task?.assignee?.userId ?? ""}

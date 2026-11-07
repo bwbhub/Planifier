@@ -24,6 +24,16 @@ export function subtaskCountLabel(subtasks: readonly Pick<TaskOutput, "completed
   return `${String(done)} sur ${String(total)} sous-tâche${total > 1 ? "s" : ""} cochée${done > 1 ? "s" : ""}`;
 }
 
+/** Pastille « 2/4 » d'une tâche : sous-tâches cochées, total, et la phrase pour les lecteurs d'écran. */
+export function subtaskProgress(subtasks: readonly Pick<TaskOutput, "completedAt">[]): {
+  done: number;
+  total: number;
+  label: string;
+} {
+  const done = subtasks.filter(({ completedAt }) => completedAt !== null).length;
+  return { done, total: subtasks.length, label: subtaskCountLabel(subtasks) };
+}
+
 /** Question de suppression : elle nomme les sous-tâches qui partent avec la tâche. */
 export function deleteQuestion(title: string, subtaskCount: number): string {
   if (subtaskCount === 0) return `Supprimer « ${title} » ?`;

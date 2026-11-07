@@ -52,3 +52,9 @@ export const WEEKDAY_LABELS = {
   SATURDAY: { one: "samedi", many: "samedis" },
   SUNDAY: { one: "dimanche", many: "dimanches" },
 } as const satisfies Record<Weekday, { one: string; many: string }>;
+
+/** Mots d'une ligne de tâche, partagés par le Todo et l'écran Aujourd'hui. */
+export const TASK_LABELS = {
+  assignedTo: "Assignée à",
+  checkedBy: "Cochée par",
+} as const;

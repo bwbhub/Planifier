@@ -1,6 +1,3 @@
-/** Libellés du module repris à plusieurs endroits. */
-export const ASSIGNEE_LABEL = "Assignée à";
-
 /** Chargement et états vides du module. */
 export const TODO_LABELS = {
   loadingLists: "Chargement de tes listes…",

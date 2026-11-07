@@ -4,12 +4,18 @@
 
 ## 1. À faire par l'utilisateur
 
-- **Appliquer la migration** `20261105230000_modules_utilisateur` sur la base locale (`pnpm --filter @planifier/db migrate:deploy`),
-  puis `pnpm seed` si besoin. Sans elle, les comptes existants n'ont aucun module (navigation vide).
-- **Voir à l'œil** (`pnpm dev`) : navigation (panneau latéral PC, barre basse mobile 375 px), `/profil` (section
-  Modules), `/composants` ; clair et nuit. Rien de ceci n'a été vu dans un navigateur.
-- **Tester le Todo** : `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Listes perso et partagées,
-  tâches, sous-tâches, récurrence, « Cochée par » ; clair et nuit ; mobile et PC.
+- **Fusionner #43** (ligne de tâche, `feat/ligne-de-tache`), puis `git pull` sur `master` avant la session suivante.
+- **Voir à l'œil** (`pnpm dev`, clair et nuit, PC et 375 px) : navigation, `/profil`, et surtout **`/composants`** (tout y
+  est : dialogues, confirmation renforcée, messages, menu, squelettes, états vides, ligne de tâche). Contrastes AA,
+  anneau de focus du menu, position des messages au-dessus de la barre basse. Rien de ceci n'a été vu par un humain.
+  Après ça : clore `869fhwtg1`, et `869fp54cr` (4 PR fusionnées) si OK.
+- **Appliquer la migration** `20261105230000_modules_utilisateur` sur la base locale
+  (`pnpm --filter @planifier/db migrate:deploy`), puis `pnpm seed` si besoin. Sans elle, navigation vide.
+- **Tester le Todo** : `alice@example.test` / `planifier-demo` → « Ouvrir mes listes ». Le chargement affiche maintenant
+  des squelettes et les états vides ont un titre ; la pastille « 1/2 » remplace le compteur en texte.
+- **Trancher** (voir §4) : « titre seul » dans la ligne de tâche ; faut-il un ticket « brancher les toasts sur les
+  mutations existantes » ; corriger `CONTEXT.md` et les tickets `869fhwtg9` / `869fhwtqx` sur le clone orphelin (aucun
+  état visuel, au plus une petite notification « liaison coupée »).
 - Revue humaine : droits des listes et de l'agenda (voir §4) ; migration des modules et `account.me.setModules`.
 - **Domaine** Resend : à discuter en session dédiée (`docs/A-DISCUTER-domaine-resend.md`) ; sans lui, aucun e-mail réel.
 - **Git** : supprimer les branches distantes fusionnées (refusé par l'auto mode, à faire à la main ou à autoriser).
@@ -20,17 +26,43 @@
 
 ## 2. Prochain ticket
 
-État au 2026-11-05 : `master` contient l'Agenda complet (entrées, participants, déplacement), les composants de base
-(`869fhwtg1`) et la navigation par modules (`869fhwtg4`, PR #34). Les deux tickets restent ouverts dans ClickUp
-(commentés) : revue visuelle d'abord. Piège vu 3 fois : une PR empilée fusionnée dans sa branche de base **après**
-la fusion de la base dans `master` laisse ses commits hors de `master`. Fusionner de bas en haut en changeant la base
-de la suivante vers `master`, ou viser `master` directement.
+**État au 2026-11-07.** `master` contient, en plus de l'Agenda et de la navigation : `Card`, `PageHeader`, `TitledSection`
+(#35, #37), `ConfirmDialog` et `Sheet size="form"` (#38), toast (#39), `Skeleton` / `EmptyState` / états complets du Todo
+(#40), `Menu` (#41), récurrence par jours de la semaine (#42). Ticket `869fp54cr` : ses 4 PR sont fusionnées. Ouverte :
+**#43** (`TaskLine`). Le test E2E de `/composants` prouve en vrai navigateur l'Échap, le focus rendu, le focus qui
+n'atteint jamais la page derrière un dialogue, la confirmation renforcée et le menu.
 
-Priorités ClickUp (urgent d'abord) : `869fhwtg4` (reste : bouton « + », pastille de non-lus, carte, entrées sans
-écran), `869fhwtg1` (clore après revue visuelle), `869fhwtce` (db : reste la migration sur une vraie branche Neon,
-avec `869fhwtv0`). Puis, en high : Aujourd'hui (`869fhwtu9`, la navigation est prête), composants de retour
-(`869fp54cr`), composants de domaine partagés (`869fhwtg9`), Nouvelle tâche (`869fhwtr3`, donne le « + »), Détail de
-tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail (`869fmk5dw`) : rapide, à glisser.
+**Plans écrits par Opus, à exécuter en Sonnet** (mémoire, un fichier chacun ; décisions de l'utilisateur dedans) :
+
+1. `plan-869fp54cr-retour-superposition` : **fait** (4 PR).
+2. `plan-869fhwtg9-composants-domaine` : PR 1 récurrence par jours **fusionnée** (#42), PR 2 `TaskLine` **#43**. Reste :
+   **menu d'actions de la ligne** (remplace les 4 boutons de `TaskActions`, avec mise à jour de `task-row.test.tsx` et de
+   l'E2E de `compte.spec.ts` qui les cliquent, un toast par action réussie), puis `SlotBlock`, `DateTimeField`
+   (`ui`, date + « sans heure »), `RecurrenceField` (`ui`, présets + « Personnalisée… » + jours de la semaine ; il ferme la
+   limite « tous les mardis ne se crée pas encore à l'écran »).
+3. `plan-869fhwtr3-nouvelle-tache` : à faire après le plan 2. Heure d'échéance (migration), feuille « Nouvelle tâche »
+   (`Sheet size="form"`, pas une page), bouton « + » (donne le « + » de `869fhwtg4`). Rappel masqué.
+4. `plan-869fhwtu9-aujourdhui` : après. Module `today`, `today.get`, report sur clic. **Remonter `TaskLine` dans
+   `_shared`** à ce moment-là.
+
+Autres urgents : `869fhwtg4` reste ouvert, bloqué par les plans 3 et 4 (« + », pastille de non-lus, entrées Aujourd'hui /
+Événements / Notifications). `869fhwtce` (db) mis de côté à la demande de l'utilisateur.
+
+**Pièges de cette session** :
+
+- Push SSH impossible depuis ma session ; HTTPS marche :
+  `git -c credential.helper='!gh auth git-credential' push -u https://github.com/bwbhub/Planifier.git <branche>`.
+- PR empilée fusionnée dans sa base **après** la fusion de la base : ses commits restent hors de `master` (arrivé avec
+  #36 → refaite en #37). Viser `master` directement.
+- Fusionner `master` dans une branche peut laisser un fichier mal formaté (la CI `format:check` l'a attrapé sur #39).
+- Les zones d'annonce permanentes `role="status"` / `role="alert"` piègent les tests (`getByRole`) : `aria-live` sans `role`.
+- E2E : `docker compose up -d` (Postgres 5433, Mailpit), puis
+  `DATABASE_URL=postgresql://planifier:planifier@localhost:5433/planifier_test MAILPIT_URL=http://localhost:8025 pnpm test:e2e`.
+- Règle de l'utilisateur : `/code-review` (Standards + Spec) avant chaque push de PR et avant d'en attaquer une nouvelle.
+
+Priorités ClickUp ensuite (high) : composants de domaine (`869fhwtg9`, en cours), Nouvelle tâche (`869fhwtr3`), Aujourd'hui
+(`869fhwtu9`), Détail de tâche (`869fp54d9`, donne le « tap = détail »), puis iCal (`869fjgrcc`, `869fhwtup`).
+Changement d'e-mail (`869fmk5dw`) : rapide, à glisser.
 
 ## 3. Ensuite
 

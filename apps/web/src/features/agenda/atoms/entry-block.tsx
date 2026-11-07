@@ -6,6 +6,7 @@ import type { AgendaItem } from "../utils/agenda-items";
 import { itemLabel, whenLabel } from "../utils/agenda-items";
 import { participantsLabel } from "../utils/agenda-participants";
 import type { MovingKind } from "../utils/use-entry-move";
+import { SlotBlock } from "./slot-block";
 
 /** Détail montré au survol ou au focus (le lieu, toujours : maquette). */
 const ON_HOVER = "hidden text-muted group-hover:inline group-focus:inline";
@@ -29,8 +30,6 @@ function preventTouchMenu(event: MouseEvent) {
   if ("pointerType" in nativeEvent && nativeEvent.pointerType !== "mouse") event.preventDefault();
 }
 
-const BLOCK =
-  "flex flex-col gap-0.5 overflow-hidden rounded-control border-2 border-surface px-2 py-1 text-left text-xs text-ink";
 /** Placé dans sa colonne ; serré parmi d'autres, il s'étale au survol ou au focus (maquette). */
 const PLACED =
   "absolute transition-[left,width] hover:left-0! hover:z-20 hover:h-auto! hover:w-full! focus:left-0! focus:z-20 focus:h-auto! focus:w-full! motion-reduce:transition-none";
@@ -42,29 +41,33 @@ const MOVING: Record<MovingKind, string> = {
   lifted: "z-20 ring-2 ring-accent",
 };
 
-function BlockContent({ item, compact }: { item: AgendaItem; compact: boolean }) {
-  const { title, location, participants, when, owner } = item;
+/** Lieu et personnes sous l'horaire ; l'entrée d'une autre personne en montre l'avatar au pied du bloc. */
+function Details({ item, compact }: { item: AgendaItem; compact: boolean }) {
+  const { location, participants } = item;
   const withPeople = participantsLabel(participants);
-  const details = compact ? ON_HOVER : "text-muted";
   return (
     <>
-      <span className="font-semibold">{title}</span>
-      <span className={details}>{whenLabel(when)}</span>
       {location === null ? null : <span className={ON_HOVER}>{location}</span>}
       {/* Participants toujours montrés quand la place le permet (maquette). */}
-      {withPeople === null ? null : <span className={details}>{withPeople}</span>}
-      {owner === null ? null : (
-        <span className={cn(compact && "hidden group-hover:block group-focus:block")}>
-          <Avatar id={owner.userId} name={owner.name} size="sm" />
-        </span>
+      {withPeople === null ? null : (
+        <span className={compact ? ON_HOVER : "text-muted"}>{withPeople}</span>
       )}
     </>
   );
 }
 
+function OwnerAvatar({ owner, compact }: { owner: AgendaItem["owner"]; compact: boolean }) {
+  if (owner === null) return null;
+  return (
+    <span className={cn(compact && "hidden group-hover:block group-focus:block")}>
+      <Avatar id={owner.userId} name={owner.name} size="sm" />
+    </span>
+  );
+}
+
 /**
- * Créneau d'une grille. Une entrée d'une autre personne se lit seulement : elle prend le focus sans être un bouton.
- * La mienne s'ouvre au clic et se déplace (`useEntryMove`).
+ * Créneau d'une grille, composé sur `SlotBlock`. Une entrée d'une autre personne se lit seulement : elle prend le
+ * focus sans être un bouton. La mienne s'ouvre au clic et se déplace (`useEntryMove`).
  */
 export function EntryBlock({
   item,
@@ -74,32 +77,27 @@ export function EntryBlock({
   onPress,
   moving = null,
 }: EntryBlockProps) {
-  const className = cn(BLOCK, "group", item.background, style !== undefined && PLACED);
-  const content = <BlockContent item={item} compact={compact} />;
-  if (item.entry === null) {
-    return (
-      <div
-        role="group"
-        tabIndex={0}
-        aria-label={itemLabel(item)}
-        style={style}
-        className={className}
-      >
-        {content}
-      </div>
-    );
-  }
+  const common = {
+    title: item.title,
+    time: whenLabel(item.when),
+    timeClassName: compact ? ON_HOVER : "text-muted",
+    background: item.background,
+    "aria-label": itemLabel(item),
+    style,
+    children: <Details item={item} compact={compact} />,
+    footer: <OwnerAvatar owner={item.owner} compact={compact} />,
+  };
+  const placed = style !== undefined && PLACED;
+  if (item.entry === null) return <SlotBlock as="group" className={cn(placed)} {...common} />;
   return (
-    <button
-      type="button"
+    <SlotBlock
+      as="button"
       data-entry-id={item.id}
-      aria-label={itemLabel(item)}
       aria-busy={moving === "saving" || undefined}
-      style={style}
+      hidden={item.entry.hidden}
       className={cn(
-        className,
+        placed,
         onPress !== undefined && "touch-manipulation select-none [-webkit-touch-callout:none]",
-        item.entry.hidden && "border-dashed border-muted",
         moving === null ? null : MOVING[moving],
       )}
       onPointerDown={(event) => {
@@ -109,8 +107,7 @@ export function EntryBlock({
       onClick={() => {
         onOpen(item);
       }}
-    >
-      {content}
-    </button>
+      {...common}
+    />
   );
 }

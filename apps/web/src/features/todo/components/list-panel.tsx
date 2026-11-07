@@ -4,10 +4,14 @@ import type { TaskOutput, TodoListOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { Checkbox } from "@planifier/ui/components/checkbox";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
+import { EmptyState } from "@planifier/ui/components/empty-state";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
 import { cn } from "@planifier/ui/lib/cn";
 
+import { COMMON_LABELS } from "@/lib/labels";
+
 import { ListPeople } from "../atoms/list-people";
-import { LoadError } from "../atoms/load-error";
 import { type TaskCompletion, TaskRow } from "../atoms/task-row";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { ListForm } from "../forms/list-form";
@@ -19,6 +23,8 @@ import { ListViewProvider, useListView } from "../utils/list-view";
 import { useDimUnassigned } from "../utils/use-dim-unassigned";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { useTaskCompletion } from "../utils/use-task-completion";
+import { TODO_LABELS } from "../labels";
+import { todoErrorMessage } from "../utils/todo-error-message";
 
 function openCountLabel(count: number): string {
   if (count === 0) return "Rien à faire pour l'instant";
@@ -83,22 +89,23 @@ function TaskList({ listId }: { listId: string }) {
   const { readOnly } = useListView();
   const { completion, notice, error } = useTaskCompletion(listId);
   if (tasks.isPending) {
-    return (
-      <p role="status" className="text-muted">
-        Chargement des tâches…
-      </p>
-    );
+    return <ListSkeleton label={TODO_LABELS.loadingTasks} rows={3} />;
   }
   if (tasks.isError) {
-    return <LoadError error={tasks.error} onRetry={() => void tasks.refetch()} />;
+    return (
+      <LoadError
+        message={todoErrorMessage(tasks.error)}
+        retryLabel={COMMON_LABELS.retry}
+        onRetry={() => void tasks.refetch()}
+      />
+    );
   }
   if (tasks.data.items.length === 0) {
     return (
-      <p className="text-muted">
-        {readOnly
-          ? "Aucune tâche dans cette liste."
-          : "Aucune tâche dans cette liste. Ajoute la première ci-dessus."}
-      </p>
+      <EmptyState
+        title={TODO_LABELS.noTaskTitle}
+        description={readOnly ? TODO_LABELS.noTaskReadOnly : TODO_LABELS.noTaskHint}
+      />
     );
   }
   return (

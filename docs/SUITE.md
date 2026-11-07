@@ -12,25 +12,11 @@
 
 ## 2. Prochain ticket
 
-**État au 2026-11-07.** `master` (`d9b62073`) contient tout le plan 1, le plan 2, le plan 3 et **2 PR sur 4 du plan 4**.
+**État au 2026-11-08.** Plans 1 à 4 **faits** (PR 3 fusionnée #53 ; PR 4 : navigation « Aujourd'hui » et variantes, en revue).
 
-**Plans écrits par Opus, exécutés en Sonnet** (mémoire, un fichier chacun) :
+**À faire ensuite** : Détail de tâche (`869fp54d9`, donne le « tap = détail » et peut accueillir « mettre en récurrente »), iCal (`869fjgrcc`, `869fhwtup`), changement d'e-mail (`869fmk5dw`). Aujourd'hui : états vides sans action « Nouvelle tâche / entrée » ; salutation avec le nom entier.
 
-1. `plan-869fp54cr-retour-superposition` : **fait**.
-2. `plan-869fhwtg9-composants-domaine` : **fait** (#42 à #47 : récurrence par jours, `TaskLine`, menu d'actions, `SlotBlock`, `DateTimeField`, `RecurrenceField`).
-3. `plan-869fhwtr3-nouvelle-tache` : **fait** (#48 heure d'échéance, #49 heure dans le formulaire, #50 feuille « Nouvelle tâche » + « + »). Rappel masqué (pas de cron).
-4. `plan-869fhwtu9-aujourdhui` : **PR 1 et 2 faites** : #51 `todo.tasks.today`, #52 `todo.tasks.postpone`. **Reste** : l'écran (PR 3) et les variantes + navigation (PR 4).
-
-**À faire, dans l'ordre (plan 4, PR 3 et 4)** :
-
-- **Remonter `TaskLine` et `SlotBlock` dans `features/_shared/components/`** (avec leurs tests ; démos `TaskLinesDemo` et `SlotBlocksDemo`, exportées par `todo` et `agenda` pour `/composants`, à rediriger) : `today` s'en sert, donc ≥ 2 modules.
-- **Module web `features/today`** (l'ajouter à `FEATURES` dans `packages/eslint-config/next.js`) ; `app/(app)/page.tsx` mince. Il compose, dans `today/queries`, `orpc.todo.tasks.today` (date de l'appareil) et `orpc.agenda.entries.list` (le jour de l'appareil : from/to + fromDay/toDay ; jamais d'import d'un autre module). Si Agenda est désactivé : pas d'appel ; Todo désactivé : idem.
-- **Écran** : `PageHeader` (date longue, « Bonjour, <prénom> »), sections en `TitledSection` : 1) Agenda « Au fil de la journée » (`SlotBlock`), 2) Du jour (heure d'abord), 3) En cours, 4) En retard = « Quelques tâches à reprendre » (5 d'abord, **« Voir plus » déroule sur place**, l'API en rend 100 + `total`). « Rappel du jour » : tâches du jour **répétées**, en texte. Coche : mutation propre à `today/queries` (appel oRPC), invalidations des clés `today`, `todo` et `agenda`. États : skeleton, vide utile par section, erreur `LoadError`.
-- **Report** : bouton « Les reporter à aujourd'hui » (`todo.tasks.postpone`, `{ date, time?, tasks }`), case « Proposer un nouvel horaire » (heure → `time`), toast avec **« Annuler »** : remet jour et heure d'avant par `todo.tasks.update` tâche par tâche (version + 1 lue dans la réponse), dit celles qui n'ont pas pu l'être. Tout ou rien côté serveur ; répétées et cochées reportables.
-- **Variantes (PR 4)** : Todo seul (pas de timeline) ; Agenda seul (pas de « Sans horaire » ni « à reprendre ») ; Événements seuls : état vide honnête « Le module Événements arrive bientôt » ; aucun module : renvoi vers le profil. Entrée « Aujourd'hui » dans `MODULE_PAGES` (toujours présente, ce n'est pas un module). E2E des 4 variantes (modules activés/désactivés par le profil).
-- Accès Notifications : **absent** tant que Notifications n'existe pas (le dire dans la PR).
-
-**`869fhwtg4` (navigation, urgent)** reste ouvert : reste la pastille de non-lus et les entrées Aujourd'hui / Événements / Notifications ; le « + » est fait (absent de l'Agenda, qui a son bouton, tant qu'il n'y a pas de choix tâche / entrée). `869fhwtce` (db) mis de côté.
+**`869fhwtg4` (navigation, urgent)** : reste la pastille de non-lus et les entrées Événements / Notifications (attendent leurs modules) ; « Aujourd'hui » et le « + » sont faits.
 
 **Pièges de cette session** :
 

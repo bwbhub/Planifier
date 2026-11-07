@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/routes";
  * Pages de la barre, dans l'ordre. Aujourd'hui (`module: null`) est toujours là : ce n'est pas un module. Événements
  * n'y est pas encore : son entrée arrive avec son écran (pas de lien vers une page qui n'existe pas).
  */
-const MODULE_PAGES: readonly { module: AppModule | null; href: string; label: string }[] = [
+const NAV_PAGES: readonly { module: AppModule | null; href: string; label: string }[] = [
   { module: null, href: ROUTES.home, label: NAV_LABELS.today },
   { module: "TODO", href: ROUTES.todo, label: MODULE_LABELS.TODO },
   { module: "AGENDA", href: ROUTES.agenda, label: MODULE_LABELS.AGENDA },
@@ -68,16 +68,13 @@ interface AppShellProps {
  */
 export function AppShell({ modules, create, children }: AppShellProps) {
   const pathname = usePathname();
-  const shown = MODULE_PAGES.filter(({ module }) => module === null || modules.includes(module));
+  const shown = NAV_PAGES.filter(({ module }) => module === null || modules.includes(module));
 
   return (
     <ToastProvider dismissLabel={COMMON_LABELS.close}>
       <div
-        className={cn(
-          "flex min-h-screen flex-col sm:flex-row",
-          // Hauteur de la barre basse mobile : ce qui flotte au-dessus d'elle (messages, bouton « + ») s'y cale.
-          "[--nav-height:3.5rem] sm:[--nav-height:0px]",
-        )}
+        // `--nav-height` : hauteur de la barre basse mobile ; ce qui flotte au-dessus d'elle (messages, « + ») s'y cale.
+        className="flex min-h-screen flex-col sm:flex-row [--nav-height:3.5rem] sm:[--nav-height:0px]"
       >
         <header
           className={cn(
@@ -120,7 +117,7 @@ export function AppShell({ modules, create, children }: AppShellProps) {
             <AccountLink href={ROUTES.profile} label={NAV_LABELS.profile} pathname={pathname} />
           </nav>
         </header>
-        <div className={"flex min-w-0 flex-1 flex-col pb-14 sm:pb-0"}>{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col pb-14 sm:pb-0">{children}</div>
       </div>
     </ToastProvider>
   );

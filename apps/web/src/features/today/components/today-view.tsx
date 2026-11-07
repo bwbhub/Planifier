@@ -106,15 +106,24 @@ export function TodayView({ name, modules }: TodayViewProps) {
   const day = useDeviceDay();
   const agendaOn = modules.includes("AGENDA");
   const todoOn = modules.includes("TODO");
+  const header = (
+    <PageHeader
+      title={day === null ? TODAY_LABELS.pageTitle : longDayLabel(day)}
+      subtitle={TODAY_LABELS.greeting(name)}
+    />
+  );
+  if (!agendaOn && !todoOn) {
+    return (
+      <>
+        {header}
+        <NoModule eventsOn={modules.includes("EVENTS")} />
+      </>
+    );
+  }
   return (
     <>
-      <PageHeader
-        title={day === null ? TODAY_LABELS.pageTitle : longDayLabel(day)}
-        subtitle={TODAY_LABELS.greeting(name)}
-      />
-      {!agendaOn && !todoOn ? (
-        <NoModule eventsOn={modules.includes("EVENTS")} />
-      ) : day === null ? (
+      {header}
+      {day === null ? (
         <ListSkeleton label={TODAY_LABELS.loadingTasks} rows={3} />
       ) : (
         <>

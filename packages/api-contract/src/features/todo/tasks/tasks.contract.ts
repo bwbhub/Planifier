@@ -9,6 +9,8 @@ import {
   finishTaskInputSchema,
   listTasksInputSchema,
   listTasksOutputSchema,
+  postponeTasksInputSchema,
+  postponeTasksOutputSchema,
   setTaskDoneInputSchema,
   taskSchema,
   todayTasksInputSchema,
@@ -19,6 +21,15 @@ import {
 
 // Une tâche se voit et se modifie selon les droits sur sa liste ; sans lecture : NOT_FOUND.
 export const tasksContract = {
+  postpone: oc
+    .route({
+      summary: "Reporter des tâches",
+      description:
+        "Met l'échéance des tâches au jour `date`, à l'heure `time` si elle est donnée, sinon sans heure ; une tâche répétée est reportée aussi (sa série repart de la nouvelle échéance) ; au geste de l'utilisateur seulement. Rend les tâches par ordre de création, pas dans l'ordre de la demande. Droit d'écriture sur chaque liste, sinon NOT_FOUND ou FORBIDDEN. Une `version` périmée : CONFLICT `STALE_VERSION`, rien n'est écrit.",
+    })
+    .errors(TODO_ERRORS)
+    .input(postponeTasksInputSchema)
+    .output(postponeTasksOutputSchema),
   today: oc
     .route({
       summary: "Mes tâches du jour",

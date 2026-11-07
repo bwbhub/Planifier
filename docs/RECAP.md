@@ -18,6 +18,18 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Report de tâches, API (branche `feat/report-taches`)
+
+**Fait** : plan 4/4 (ticket `869fhwtu9`), PR 2. Procédure `todo.tasks.postpone` : `{ date, tasks: [{ taskId, version }] (1 à 100, sans doublon) }` ⇒ `{ items: tâches à jour }` ; échéance au jour demandé, **heure retirée** ; tout ou rien (une version périmée ⇒ `STALE_VERSION`, une tâche répétée ⇒ nouvelle raison `RECURRING_TASK`, rien n'est écrit). Droits par une garde de lot `tasksGuard("write")` (même chaîne que `taskGuard`) : une tâche illisible ⇒ `NOT_FOUND` pour tout le lot, liste en lecture seule ⇒ `FORBIDDEN`. 6 tests d'intégration. Message d'erreur web pour `RECURRING_TASK`.
+**Décisions** : l'annulation du report (toast « Annuler ») passera par `todo.tasks.update` tâche par tâche côté web, avec l'échéance et l'heure d'avant (pas de procédure dédiée : chaque tâche a un jour d'avant différent). Heure retirée au report : une tâche reportée à aujourd'hui n'a plus d'horaire (à confirmer).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test:integration` (api 184, base `_test`) exécutés, verts ; `pnpm test`, `pnpm build`, `pnpm test:e2e` (62) aussi verts.
+**Décisions de l'utilisateur (2026-11-07)** : tout ou rien ; **les répétées se reportent aussi** (échéance changée, série repartie de ce jour : `RECURRING_TASK` retirée, ADR 0017 complété) ; annulation par `update` tâche par tâche côté web ; cochées reportables ; horaire : champ facultatif `time` (nouvel horaire du lot, absent ⇒ sans heure), l'écran le proposera par une case.
+**Revue** : `/code-review` passée ; droits relus (aucune fuite d'existence) ; corrigé : imports, ordre de sortie dit dans le contrat. **Reste** : « Mettre en récurrente » une tâche cochée (à préciser, hors report).
+**Ouvert** : **revue humaine (droits)** : `tasksGuard` et `postpone.service.ts`.
+**Attendu ensuite** : fusion de la PR ; puis l'écran Aujourd'hui (`TaskLine` et `SlotBlock` remontés dans `_shared`).
+
+---
+
 ## 2026-11-07 — Mes tâches du jour, API (branche `feat/today-api`)
 
 **Fait** : plan 4/4 (ticket `869fhwtu9`), PR 1. Procédure `todo.tasks.today` (`{ date }` : jour de l'appareil) ⇒ `{ dueToday, ongoing, overdue }`, chaque section `{ items (100 au plus), total }`, tâche + pastille de liste `{ id, name, tint }`. Mes tâches = listes perso + assignées à moi dans une liste partagée de mon Espace (listes montrées en lecture seule exclues) ; cochées et sous-tâches exclues. Ordre : du jour par heure puis création ; en retard, la plus ancienne d'abord. `TODAY_SECTION_MAX` dans `constants`. Glossaire `CONTEXT.md` (Mes tâches, Du jour / En cours / En retard). 6 tests d'intégration (sections, cochées/sous-tâches, bornes, droits : autre perso, lecture seule, assignées, hors Espace).

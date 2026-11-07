@@ -45,3 +45,23 @@ export function taskGuard(action: ResourceAction) {
       return next();
     });
 }
+
+/**
+ * Garde de plusieurs tâches, après la validation d'entrée : droit `action` de l'appelant sur la liste de chacune.
+ * Une tâche introuvable ou d'une liste illisible : NOT_FOUND pour tout le lot (rien ne dit laquelle).
+ */
+export function tasksGuard(action: ResourceAction) {
+  return os
+    .$context<UserContext>()
+    .middleware(async ({ context, next }, input: { tasks: { taskId: string }[] }) => {
+      const userId = context.user.id;
+      const ids = input.tasks.map(({ taskId }) => taskId);
+      const found = await context.getDb().task.findMany({
+        where: { id: { in: ids } },
+        select: { list: { select: listAccessSelect(userId) } },
+      });
+      if (found.length !== ids.length) throw new ORPCError("NOT_FOUND");
+      for (const { list } of found) assertListAccess(toListAccess(userId, list), action);
+      return next();
+    });
+}

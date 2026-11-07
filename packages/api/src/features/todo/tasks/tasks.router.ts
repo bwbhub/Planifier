@@ -1,5 +1,6 @@
 import { userProcedure } from "../../../procedures";
-import { listGuard, taskGuard } from "../todo-guard";
+import { listGuard, taskGuard, tasksGuard } from "../todo-guard";
+import { postponeTasks } from "./postpone.service";
 import {
   completeOccurrence,
   createTask,
@@ -14,6 +15,9 @@ import { todayTasks } from "./today.service";
 
 // Supprimer une tâche est une écriture dans sa liste : même droit que la modifier.
 export const tasksRouter = {
+  postpone: userProcedure.todo.tasks.postpone
+    .use(tasksGuard("write"))
+    .handler(({ context, input }) => postponeTasks(context.getDb(), input)),
   // Filtré par l'appelant : ses seules tâches (listes perso, assignées dans une liste partagée).
   today: userProcedure.todo.tasks.today.handler(({ context, input }) =>
     todayTasks(context.getDb(), context.user.id, input.date),

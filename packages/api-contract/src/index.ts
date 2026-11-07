@@ -79,6 +79,7 @@ export type {
   CreateTaskInput,
   FinishTaskInput,
   ListTasksOutput,
+  PostponeTasksInput,
   SetTaskDoneInput,
   TaskOutput,
   TodayTaskOutput,

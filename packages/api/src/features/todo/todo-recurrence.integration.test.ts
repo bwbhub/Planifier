@@ -102,6 +102,49 @@ describe("todo.tasks : tâche répétée à jours de la semaine (base réelle)",
   });
 });
 
+describe("todo.tasks : tâche répétée et heure d'échéance (base réelle)", () => {
+  it("garde l'heure quand l'occurrence est faite, puis la rend à l'annulation", async () => {
+    const task = await createWeekly("2026-11-02");
+    const timed = await call(
+      tasks.update,
+      { taskId: task.id, version: task.version, dueTime: "18:00" },
+      asUser(alice),
+    );
+    const next = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: timed.version, today: "2026-11-02" },
+      asUser(alice),
+    );
+    expect(next).toMatchObject({ dueDate: "2026-11-09", dueTime: "18:00" });
+    const undone = await call(
+      tasks.undoCompletion,
+      { taskId: task.id, version: next.version, dueDate: "2026-11-02", recurrence: weekly },
+      asUser(alice),
+    );
+    expect(undone).toMatchObject({ dueDate: "2026-11-02", dueTime: "18:00" });
+  });
+
+  it("annuler jusqu'à « sans jour » emporte l'heure posée depuis, sans erreur", async () => {
+    const task = await createEveryOtherMonday();
+    const first = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    const timed = await call(
+      tasks.update,
+      { taskId: task.id, version: first.version, dueTime: "09:00" },
+      asUser(alice),
+    );
+    const undone = await call(
+      tasks.undoCompletion,
+      { taskId: task.id, version: timed.version, dueDate: null, recurrence: everyOtherMonday },
+      asUser(alice),
+    );
+    expect(undone).toMatchObject({ dueDate: null, dueTime: null });
+  });
+});
+
 describe("todo.tasks : modifier, annuler et terminer une tâche à jours de la semaine (base réelle)", () => {
   it("modifier le titre ne touche ni les jours ni l'ancre de la série", async () => {
     const task = await createEveryOtherMonday();

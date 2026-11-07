@@ -82,12 +82,14 @@ function assertAssignable(assigneeId: string, spaceMembers: ReadonlySet<string>)
   if (!canBeAssigned(assigneeId, spaceMembers)) throw todoConflict("ASSIGNEE_NOT_MEMBER");
 }
 
+/** Jour `AAAA-MM-JJ` ⇒ colonne `DATE` ; `null` : pas de jour. */
+function toDbDay(day: string | null): Date | null {
+  return day === null ? null : dayToUtcDate(day);
+}
+
 /** Jour et heure d'une tâche créée : absents, ils valent « sans ». */
 function newDue(dueDate: string | undefined, dueTime: string | undefined) {
-  return {
-    dueDate: dueDate === undefined ? null : dayToUtcDate(dueDate),
-    dueTime: dueTime ?? null,
-  };
+  return { dueDate: toDbDay(dueDate ?? null), dueTime: dueTime ?? null };
 }
 
 /** Jour et heure d'une modification : champ absent, inchangé ; `null` efface ; plus de jour, plus d'heure non plus. */
@@ -299,7 +301,8 @@ export function undoCompletion(
   { taskId, version, dueDate, recurrence }: UndoCompletionInput,
 ): Promise<TaskOutput> {
   return writeVersioned(db, taskId, version, {
-    dueDate: dueDate === null ? null : dayToUtcDate(dueDate),
+    // Retour à « sans jour » : l'heure posée depuis part avec lui.
+    ...dueChanges(dueDate, undefined),
     recurrence: toStoredRecurrence(recurrence),
     ...NOT_DONE,
   });

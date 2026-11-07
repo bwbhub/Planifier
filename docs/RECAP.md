@@ -20,11 +20,12 @@ Modèle d'entrée :
 
 ## 2026-11-07 — Heure d'échéance, modèle (branche `feat/heure-echeance`)
 
-**Fait** : plan 3/4 (ticket `869fhwtr3`), PR 1. Base : `tasks.due_time` `VARCHAR(5)` (`HH:MM`), migration `20261107140000_heure_echeance` avec deux contraintes (format ; heure ⇒ jour). Contrat additif : `dueTime` en création, modification et sortie ; `TIME_WITHOUT_DATE` (nouvelle raison de `CONFLICT`). API : effacer le jour efface l'heure, déplacer le jour la garde, une heure sur une tâche sans jour est refusée. Web : `DueDate` écrit « 5 novembre à 09:30 » (`dueLabel`), message d'erreur ; le formulaire n'a pas encore le champ (PR suivante). ADR `0018-heure-d-echeance.md`. 5 tests d'intégration + 1 test web.
+**Fait** : plan 3/4 (ticket `869fhwtr3`), PR 1. Base : `tasks.due_time` `VARCHAR(5)` (`HH:MM`), migration `20261107140000_heure_echeance` avec deux contraintes (format ; heure ⇒ jour). Contrat additif : `dueTime` en création, modification et sortie ; `TIME_WITHOUT_DATE` (nouvelle raison de `CONFLICT`). API : effacer le jour efface l'heure, déplacer le jour la garde, une heure sur une tâche sans jour est refusée. Web : `DueDate` écrit « 5 novembre à 09:30 » (`dueLabel`), message d'erreur ; le formulaire n'a pas encore le champ (PR suivante). ADR `0018-heure-d-echeance.md`. 7 tests d'intégration + 1 test web.
 **Décisions** : texte `HH:MM` sans fuseau (voir ADR) ; « en retard » reste au jour près.
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 261), `pnpm build`, `pnpm test:integration` (api 170, base `_test` migrée), `pnpm test:e2e` (62) exécutés, verts. Pas d'essai à l'œil (rien de nouveau à l'écran sauf l'heure affichée).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 261), `pnpm build`, `pnpm test:integration` (api 172, base `_test` migrée), `pnpm test:e2e` (62) exécutés, verts. Pas d'essai à l'œil (rien de nouveau à l'écran sauf l'heure affichée).
+**Revue** : `/code-review` passée ; corrigé : `undoCompletion` revenant à « sans jour » emporte l'heure posée depuis (sinon la contrainte de base aurait donné une 500), tests « la récurrence garde l'heure » et « annuler jusqu'à sans jour », `== null` écrit en clair, message partagé, `toDbDay`. Gardé : « en retard » au jour près.
 **Ouvert** : **revue humaine** : migration (colonne + 2 contraintes) et ADR 0018. Pas de champ « Heure » à l'écran avant la PR « feuille Nouvelle tâche ». Seed sans heure.
-**Attendu ensuite** : revue, PR ; puis la feuille « Nouvelle tâche » (`DateTimeField`, `RecurrenceField`, liste, assigné) et le bouton « + ».
+**Attendu ensuite** : fusion de la PR ; puis la feuille « Nouvelle tâche » (`DateTimeField`, `RecurrenceField`, liste, assigné) et le bouton « + ».
 
 ---
 

@@ -22,6 +22,7 @@ const descriptionSchema = z.string().trim().min(1).max(TASK_DESCRIPTION_MAX_LENG
 const dueDateSchema = z.iso.date();
 /** Heure d'échéance `HH:MM` (00:00 à 23:59), heure murale de l'utilisateur : sans fuseau, comme le jour. */
 const dueTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const TIME_NEEDS_DATE = "Une heure demande un jour d'échéance.";
 
 export const listTasksInputSchema = listTargetSchema;
 
@@ -40,7 +41,7 @@ export const createTaskInputSchema = z
     assigneeId: userIdSchema.optional(),
   })
   .refine(({ dueDate, dueTime }) => dueTime === undefined || dueDate !== undefined, {
-    message: "Une heure demande un jour d'échéance.",
+    message: TIME_NEEDS_DATE,
     path: ["dueTime"],
   });
 
@@ -66,8 +67,8 @@ export const updateTaskInputSchema = z
       ),
     "Aucun champ à modifier.",
   )
-  .refine(({ dueDate, dueTime }) => dueDate !== null || dueTime == null, {
-    message: "Une heure demande un jour d'échéance.",
+  .refine(({ dueDate, dueTime }) => dueDate !== null || dueTime === undefined || dueTime === null, {
+    message: TIME_NEEDS_DATE,
     path: ["dueTime"],
   });
 

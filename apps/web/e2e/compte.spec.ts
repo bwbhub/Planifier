@@ -153,7 +153,7 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("radio", { name: "Chaque semaine" })).toBeChecked();
   await page.getByRole("button", { name: "Ajouter" }).click();
   await expect(page.getByText("Toutes les semaines")).toBeVisible();
-  // Sur mobile, le message d'ajout recouvre la ligne du bas : on le ferme, comme on le ferait à la main.
+  // Le message d'ajout recouvre la ligne du bas (surtout sur mobile, où le défilement refermerait le menu) : on le ferme.
   await page.getByRole("button", { name: "Fermer" }).click();
   await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();

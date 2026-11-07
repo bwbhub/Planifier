@@ -37,12 +37,6 @@ describe("Menu", () => {
     expect(screen.getAllByRole("menuitem")).toHaveLength(3);
   });
 
-  it("est hors du flux dès son rendu : la page ne change pas de hauteur à l'ouverture", async () => {
-    const { trigger } = renderMenu();
-    await userEvent.click(trigger);
-    expect(screen.getByRole("menu").classList.contains("fixed")).toBe(true);
-  });
-
   it("met le focus sur la première action ouverte", async () => {
     const { trigger } = renderMenu();
     await userEvent.click(trigger);

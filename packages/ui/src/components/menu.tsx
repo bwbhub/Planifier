@@ -161,8 +161,7 @@ function useOpenMenu({ opening, align, menu, trigger, setOpening }: OpenMenu) {
  * Menu d'actions : un bouton qui ouvre une liste (`aria-haspopup="menu"`). Clavier : Entrée, Espace ou flèche bas
  * ouvrent sur la première action, flèche haut sur la dernière ; flèches, Début et Fin circulent ; Échap ferme et rend
  * le focus au bouton ; Tab ferme et laisse le focus suivre son cours depuis le bouton. Un appui ailleurs ferme. Affiché
- * dans la couche supérieure du navigateur (API Popover) : aucun parent, même rognant, ne le coupe. `fixed` dès le rendu :
- * le menu n'entre jamais dans le flux, même avant d'être placé. Sans métier : les
+ * dans la couche supérieure du navigateur (API Popover) : aucun parent, même rognant, ne le coupe. Sans métier : les
  * actions et les mots viennent de l'appelant.
  */
 export function Menu({ label, trigger, items: specs, align = "end" }: MenuProps) {
@@ -216,7 +215,7 @@ export function Menu({ label, trigger, items: specs, align = "end" }: MenuProps)
           role="menu"
           aria-label={label}
           onKeyDown={onMenuKeyDown}
-          className="fixed m-0 flex min-w-48 flex-col rounded-control border border-line bg-surface p-1.5 text-ink"
+          className="m-0 flex min-w-48 flex-col rounded-control border border-line bg-surface p-1.5 text-ink"
         >
           <MenuItems specs={specs} onChosen={close} />
         </div>

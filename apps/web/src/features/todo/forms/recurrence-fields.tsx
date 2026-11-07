@@ -9,6 +9,7 @@ import { SelectField } from "@planifier/ui/components/select-field";
 import { TextField } from "@planifier/ui/components/text-field";
 import { useEffect, useRef, useState } from "react";
 
+import { capitalized } from "@/lib/capitalize";
 import { WEEKDAY_LABELS } from "@/lib/labels";
 
 import {
@@ -31,10 +32,6 @@ const LABELS = {
 } as const;
 
 type Recurrence = NonNullable<TaskOutput["recurrence"]>;
-
-function capitalized(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1);
-}
 
 function WeekdayChoices({ rule }: { rule: Recurrence | null }) {
   return (

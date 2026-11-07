@@ -1,6 +1,7 @@
 import type { TaskOutput } from "@planifier/api-contract";
-import type { RecurrenceFrequency } from "@planifier/constants/todo";
+import { RECURRENCE_FREQUENCIES, type RecurrenceFrequency } from "@planifier/constants/todo";
 
+import { capitalized } from "@/lib/capitalize";
 import { WEEKDAY_LABELS } from "@/lib/labels";
 
 type Recurrence = NonNullable<TaskOutput["recurrence"]>;
@@ -14,20 +15,18 @@ export const REPEAT_PRESETS = [
   { value: "YEARLY", label: "Chaque année" },
 ] as const satisfies readonly { value: RecurrenceFrequency | "NONE"; label: string }[];
 
-/** Rythmes du choix personnalisé : « Toutes les [2] [semaines] ». */
-export const CUSTOM_FREQUENCY_OPTIONS = [
-  { value: "DAILY", label: "Jours" },
-  { value: "WEEKLY", label: "Semaines" },
-  { value: "MONTHLY", label: "Mois" },
-  { value: "YEARLY", label: "Ans" },
-] as const satisfies readonly { value: RecurrenceFrequency; label: string }[];
-
 const UNITS: Record<RecurrenceFrequency, { one: string; many: string; feminine: boolean }> = {
   DAILY: { one: "jour", many: "jours", feminine: false },
   WEEKLY: { one: "semaine", many: "semaines", feminine: true },
   MONTHLY: { one: "mois", many: "mois", feminine: false },
   YEARLY: { one: "an", many: "ans", feminine: false },
 };
+
+/** Rythmes du choix personnalisé : « Toutes les [2] [Semaines] », dans l'ordre de `RECURRENCE_FREQUENCIES`. */
+export const CUSTOM_FREQUENCY_OPTIONS = RECURRENCE_FREQUENCIES.map((value) => ({
+  value,
+  label: capitalized(UNITS[value].many),
+}));
 
 /** « lundis », « lundis et jeudis », « lundis, mercredis et vendredis ». */
 function listOf(words: readonly string[]): string {
@@ -62,8 +61,11 @@ export interface RecurrenceDraft {
 /** Valeur du choix « Personnalisée… » dans le champ « Répéter ». */
 export const CUSTOM_REPEAT = "custom";
 
+/** Choix du champ « Répéter » : « Jamais » (`NONE`), un rythme tous les 1, ou la règle personnalisée. */
+export type RepeatChoice = RecurrenceFrequency | "NONE" | typeof CUSTOM_REPEAT;
+
 /** Choix du champ « Répéter » pour une règle : un préréglage (rythme, tous les 1, sans jours) ou la personnalisée. */
-export function repeatChoiceOf(rule: Recurrence | null): string {
+export function repeatChoiceOf(rule: Recurrence | null): RepeatChoice {
   if (rule === null) return "NONE";
   const plain = rule.interval === 1 && (rule.weekdays === undefined || rule.weekdays.length === 0);
   return plain ? rule.frequency : CUSTOM_REPEAT;

@@ -1,5 +1,6 @@
 import { userProcedure } from "../../../procedures";
 import { listGuard, taskGuard, tasksGuard } from "../todo-guard";
+import { postponeTasks } from "./postpone.service";
 import {
   completeOccurrence,
   createTask,
@@ -10,7 +11,6 @@ import {
   undoCompletion,
   updateTask,
 } from "./tasks.service";
-import { postponeTasks } from "./postpone.service";
 import { todayTasks } from "./today.service";
 
 // Supprimer une tâche est une écriture dans sa liste : même droit que la modifier.

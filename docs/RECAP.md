@@ -23,8 +23,9 @@ Modèle d'entrée :
 **Fait** : plan 4/4 (ticket `869fhwtu9`), PR 2. Procédure `todo.tasks.postpone` : `{ date, tasks: [{ taskId, version }] (1 à 100, sans doublon) }` ⇒ `{ items: tâches à jour }` ; échéance au jour demandé, **heure retirée** ; tout ou rien (une version périmée ⇒ `STALE_VERSION`, une tâche répétée ⇒ nouvelle raison `RECURRING_TASK`, rien n'est écrit). Droits par une garde de lot `tasksGuard("write")` (même chaîne que `taskGuard`) : une tâche illisible ⇒ `NOT_FOUND` pour tout le lot, liste en lecture seule ⇒ `FORBIDDEN`. 6 tests d'intégration. Message d'erreur web pour `RECURRING_TASK`.
 **Décisions** : l'annulation du report (toast « Annuler ») passera par `todo.tasks.update` tâche par tâche côté web, avec l'échéance et l'heure d'avant (pas de procédure dédiée : chaque tâche a un jour d'avant différent). Heure retirée au report : une tâche reportée à aujourd'hui n'a plus d'horaire (à confirmer).
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test:integration` (api 184, base `_test`) exécutés, verts ; `pnpm test`, `pnpm build`, `pnpm test:e2e` (62) aussi verts.
+**Revue** : `/code-review` passée ; droits relus (aucune fuite d'existence) ; corrigé : imports, ordre de sortie dit dans le contrat. **À trancher** : heure retirée au report ou gardée ; tout-ou-rien ou erreur par tâche ; répétées refusées par le serveur ou ignorées ; annulation `update` par tâche (non atomique) ou procédure dédiée ; tâches cochées reportables (rien ne l'interdit).
 **Ouvert** : **revue humaine (droits)** : `tasksGuard` et `postpone.service.ts`.
-**Attendu ensuite** : revue, PR ; puis l'écran Aujourd'hui (`TaskLine` et `SlotBlock` remontés dans `_shared`).
+**Attendu ensuite** : fusion de la PR ; puis l'écran Aujourd'hui (`TaskLine` et `SlotBlock` remontés dans `_shared`).
 
 ---
 

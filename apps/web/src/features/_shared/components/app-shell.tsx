@@ -51,6 +51,12 @@ function AccountLink({ href, label, pathname }: { href: string; label: string; p
 interface AppShellProps {
   /** Modules activés par l'utilisateur : la navigation n'en montre pas d'autres. */
   modules: readonly AppModule[];
+  /**
+   * Le « + » (donné par la couche `app` : le cadre ne connaît aucun module). PC : en haut du panneau latéral ; mobile :
+   * flottant au-dessus de la barre basse. Absent sur l'Agenda, qui a son propre bouton, tant que le « + » ne propose
+   * pas aussi une entrée d'agenda.
+   */
+  create?: ReactNode;
   children: ReactNode;
 }
 
@@ -58,7 +64,7 @@ interface AppShellProps {
  * Cadre des pages connectées. PC : panneau latéral (logo, modules, Espaces, Profil). Mobile : en-tête (logo, Espaces,
  * Profil) et barre basse des modules. Un seul jeu de liens, mis en page par les classes responsives.
  */
-export function AppShell({ modules, children }: AppShellProps) {
+export function AppShell({ modules, create, children }: AppShellProps) {
   const pathname = usePathname();
   const shown = MODULE_PAGES.filter(({ module }) => modules.includes(module));
 
@@ -84,6 +90,11 @@ export function AppShell({ modules, children }: AppShellProps) {
           >
             {COMMON_LABELS.appName}
           </Link>
+          {create === undefined || isOn(pathname, ROUTES.agenda) ? null : (
+            <div className={cn("fixed right-4 bottom-above-nav z-30", "sm:static sm:z-auto")}>
+              {create}
+            </div>
+          )}
           {shown.length === 0 ? null : (
             <nav
               aria-label={NAV_LABELS.modules}

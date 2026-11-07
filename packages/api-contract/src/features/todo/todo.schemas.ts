@@ -37,7 +37,6 @@ export const TODO_CONFLICT_REASONS = [
   "TODO_DISABLED",
   "ASSIGNEE_NOT_MEMBER",
   "TIME_WITHOUT_DATE",
-  "RECURRING_TASK",
 ] as const;
 export type TodoConflictReason = (typeof TODO_CONFLICT_REASONS)[number];
 

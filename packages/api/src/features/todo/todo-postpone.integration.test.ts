@@ -97,30 +97,48 @@ describe("todo.tasks.postpone (base réelle)", () => {
     const after = await call(tasks.list, { listId: list.id }, asUser(alice));
     expect(after.items.map(({ dueDate }) => dueDate)).toEqual(["2026-11-01", "2026-11-01"]);
   });
+});
 
-  it("refuse une tâche répétée, rien n'est écrit", async () => {
+describe("todo.tasks.postpone : répétées et horaire (base réelle)", () => {
+  it("reporte aussi une tâche répétée : l'échéance change, la série repart de ce jour", async () => {
     const list = await createList(db, alice);
-    const plain = await overdue(alice, list.id, "Simple");
     const repeated = await call(
       tasks.create,
-      { listId: list.id, title: "Répétée", dueDate: "2026-11-01", recurrence: weekly },
+      { listId: list.id, title: "Poubelles", dueDate: "2026-11-01", recurrence: weekly },
       asUser(alice),
     );
-    await expect(
-      call(
-        tasks.postpone,
-        {
-          date: TODAY,
-          tasks: [
-            { taskId: plain.id, version: plain.version },
-            { taskId: repeated.id, version: repeated.version },
-          ],
-        },
-        asUser(alice),
-      ),
-    ).rejects.toMatchObject(conflict("RECURRING_TASK"));
-    const after = await call(tasks.list, { listId: list.id }, asUser(alice));
-    expect(after.items.every(({ dueDate }) => dueDate === "2026-11-01")).toBe(true);
+    const result = await call(
+      tasks.postpone,
+      { date: TODAY, tasks: [{ taskId: repeated.id, version: repeated.version }] },
+      asUser(alice),
+    );
+    expect(result.items[0]).toMatchObject({ dueDate: TODAY, recurrence: weekly });
+    // La prochaine occurrence se compte depuis le jour de report (ancre remise à zéro).
+    const next = await call(
+      tasks.completeOccurrence,
+      { taskId: repeated.id, version: result.items[0]?.version ?? 0, today: TODAY },
+      asUser(alice),
+    );
+    expect(next.dueDate).toBe("2026-11-17");
+  });
+
+  it("donne un nouvel horaire à tout le lot quand `time` est demandé", async () => {
+    const list = await createList(db, alice);
+    const one = await overdue(alice, list.id, "Une", "09:00");
+    const two = await overdue(alice, list.id, "Deux");
+    const result = await call(
+      tasks.postpone,
+      {
+        date: TODAY,
+        time: "17:30",
+        tasks: [
+          { taskId: one.id, version: one.version },
+          { taskId: two.id, version: two.version },
+        ],
+      },
+      asUser(alice),
+    );
+    expect(result.items.map(({ dueTime }) => dueTime)).toEqual(["17:30", "17:30"]);
   });
 });
 

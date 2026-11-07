@@ -152,10 +152,13 @@ export const todayTasksOutputSchema = z.strictObject({
 
 /**
  * Reporter des tâches à un jour (« Les reporter à aujourd'hui »), au geste de l'utilisateur seulement. Chaque tâche
- * porte sa `version` lue : une seule périmée et rien n'est écrit.
+ * porte sa `version` lue : une seule périmée et rien n'est écrit. Une tâche répétée se reporte aussi : son échéance
+ * change, sa série repart de là (comme une modification de l'échéance).
  */
 export const postponeTasksInputSchema = z.strictObject({
   date: dueDateSchema,
+  /** Nouvel horaire du jour de report, pour toutes les tâches du lot ; absent : sans heure. */
+  time: dueTimeSchema.optional(),
   tasks: z
     .array(z.strictObject({ taskId: taskIdSchema, version: z.int().min(1) }))
     .min(1)
@@ -170,7 +173,7 @@ export const listTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });
 
-/** Les tâches reportées, à jour (échéance au jour demandé, sans heure). */
+/** Les tâches reportées, à jour (échéance au jour demandé, à l'heure demandée ou sans heure). */
 export const postponeTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODAY_SECTION_MAX),
 });

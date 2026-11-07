@@ -25,7 +25,7 @@ export const tasksContract = {
     .route({
       summary: "Reporter des tâches",
       description:
-        "Met l'échéance des tâches au jour `date` et retire leur heure ; au geste de l'utilisateur seulement. Rend les tâches par ordre de création, pas dans l'ordre de la demande. Droit d'écriture sur chaque liste, sinon NOT_FOUND ou FORBIDDEN. Une `version` périmée : CONFLICT `STALE_VERSION`, rien n'est écrit. Une tâche répétée : CONFLICT `RECURRING_TASK`, rien n'est écrit.",
+        "Met l'échéance des tâches au jour `date`, à l'heure `time` si elle est donnée, sinon sans heure ; une tâche répétée est reportée aussi (sa série repart de la nouvelle échéance) ; au geste de l'utilisateur seulement. Rend les tâches par ordre de création, pas dans l'ordre de la demande. Droit d'écriture sur chaque liste, sinon NOT_FOUND ou FORBIDDEN. Une `version` périmée : CONFLICT `STALE_VERSION`, rien n'est écrit.",
     })
     .errors(TODO_ERRORS)
     .input(postponeTasksInputSchema)

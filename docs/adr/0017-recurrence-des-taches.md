@@ -23,6 +23,8 @@ Décision :
 - Garde-fou (choix de l'utilisateur) : une occurrence faite ou un « Terminer » s'annule depuis l'annonce
   (`todo.tasks.undoCompletion` : échéance et règle d'avant, tâche à faire, ancre gardée, sur la version rendue par la
   coche).
+- Reporter une tâche répétée (`todo.tasks.postpone`, choix de l'utilisateur, 2026-11-07) : son échéance change, et la
+  série repart de ce jour (l'ancre est remise à vide), comme à une modification de l'échéance.
 - Sous-tâches d'une tâche répétée : elles gardent leur état d'une occurrence à l'autre (choix de l'utilisateur).
 - `today` vient de l'appareil, sans borne côté serveur : un appareil mal réglé est un problème du client (choix de
   l'utilisateur).

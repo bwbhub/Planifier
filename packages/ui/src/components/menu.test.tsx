@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -68,6 +68,56 @@ describe("Menu", () => {
     trigger.focus();
     await userEvent.keyboard("{ArrowUp}");
     expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Supprimer" }));
+  });
+
+  it("flèche bas sur le bouton ouvre sur la première action", async () => {
+    const { trigger } = renderMenu();
+    trigger.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Modifier" }));
+    expect(trigger.getAttribute("aria-controls")).toBe(screen.getByRole("menu").id);
+  });
+});
+
+describe("Menu : fermeture", () => {
+  it("Tab ferme et rend le focus au bouton, d'où il repart", async () => {
+    const { trigger } = renderMenu();
+    await userEvent.click(trigger);
+    await userEvent.tab();
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Ailleurs" }));
+  });
+
+  it("ne déclenche pas une action indisponible", async () => {
+    const { trigger } = renderMenu();
+    await userEvent.click(trigger);
+    const locked = screen.getByRole("menuitem", { name: "Indisponible" });
+    expect(locked).toHaveProperty("disabled", true);
+    await userEvent.click(locked);
+    expect(screen.getByRole("menu")).toBeTruthy();
+  });
+
+  it("se ferme quand la page défile ou change de taille (il ne suit pas son bouton)", async () => {
+    const { trigger } = renderMenu();
+    await userEvent.click(trigger);
+    act(() => {
+      window.dispatchEvent(new Event("scroll"));
+    });
+    expect(screen.queryByRole("menu")).toBeNull();
+    await userEvent.click(trigger);
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("démonté ouvert, ne laisse pas d'écouteur derrière lui", async () => {
+    const remove = vi.spyOn(document, "removeEventListener");
+    const { trigger } = renderMenu();
+    await userEvent.click(trigger);
+    cleanup();
+    expect(remove).toHaveBeenCalledWith("pointerdown", expect.any(Function));
+    remove.mockRestore();
   });
 
   it("Échap ferme et rend le focus au bouton", async () => {

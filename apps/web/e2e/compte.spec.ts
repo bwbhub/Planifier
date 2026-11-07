@@ -194,44 +194,67 @@ async function toggleAgendaModule(page: Page, session: Cookie[]) {
  * l'élément d'origine ; la confirmation renforcée reste inactive tant que la case n'est pas cochée ; le menu se
  * parcourt aux flèches et se ferme d'un clic ailleurs.
  */
-async function checkOverlays(page: Page) {
+async function checkDialog(page: Page) {
   const opener = page.getByRole("button", { name: "Confirmation", exact: true });
   await opener.click();
   const dialog = page.getByRole("alertdialog", { name: "Supprimer la tâche ?" });
   await expect(dialog).toBeVisible();
-  // Le focus arrive sur « renoncer » (jamais sur l'action destructive) et reste dans la feuille.
+  // Le focus arrive sur « renoncer » (jamais sur l'action destructive).
   await expect(dialog.getByRole("button", { name: "Garder la tâche" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
-  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  // Modal : plus de Tab que le dialogue n'a de contrôles, dans les deux sens. Le focus peut sortir vers l'interface du
+  // navigateur (`body`), jamais atteindre la page derrière (inerte).
+  for (const key of ["Tab", "Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab", "Shift+Tab"]) {
+    await page.keyboard.press(key);
+    const behindPage = await dialog.evaluate(
+      (element) =>
+        document.activeElement !== document.body && !element.contains(document.activeElement),
+    );
+    expect(behindPage).toBe(false);
+  }
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(opener).toBeFocused();
+}
 
+async function checkStrongConfirmation(page: Page) {
   await page.getByRole("button", { name: "Confirmation renforcée" }).click();
-  const confirm = page.getByRole("button", { name: "Supprimer définitivement" });
+  const dialog = page.getByRole("alertdialog", { name: "Supprimer la tâche ?" });
+  const confirm = dialog.getByRole("button", { name: "Supprimer définitivement" });
   await expect(confirm).toBeDisabled();
-  await page.getByRole("checkbox", { name: "Je comprends que c'est définitif" }).check();
+  await dialog.getByRole("checkbox", { name: "Je comprends que c'est définitif" }).check();
   await expect(confirm).toBeEnabled();
   await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+}
 
+async function checkMenu(page: Page) {
   const trigger = page.getByRole("button", { name: "Actions de la tâche d'exemple" });
-  await trigger.click();
   const menu = page.getByRole("menu", { name: "Actions de la tâche d'exemple" });
+  await trigger.click();
   await expect(menu.getByRole("menuitem", { name: "Modifier" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(menu.getByRole("menuitem", { name: "Reporter à demain" })).toBeFocused();
+  // Indisponible : sautée par les flèches, sans effet au clic.
+  await expect(menu.getByRole("menuitem", { name: /indisponible/ })).toBeDisabled();
+  await page.keyboard.press("ArrowDown");
+  await expect(menu.getByRole("menuitem", { name: "Modifier" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
+  // Un appui ailleurs ferme.
   await trigger.click();
-  await page.getByRole("heading", { name: "Menu" }).click();
+  await page.getByRole("heading", { name: "Menu", exact: true }).click();
   await expect(menu).toBeHidden();
-
   await trigger.click();
   await page.getByRole("menuitem", { name: "Reporter à demain" }).click();
   await expect(page.getByText("Tâche reportée à demain.")).toBeVisible();
+  await expect(trigger).toBeFocused();
+}
+
+async function checkOverlays(page: Page) {
+  await checkDialog(page);
+  await checkStrongConfirmation(page);
+  await checkMenu(page);
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
 }
 

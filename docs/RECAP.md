@@ -32,7 +32,15 @@ cochée, menu aux flèches, Échap, clic ailleurs. Ça solde le « non prouvé �
 c'est le ticket des composants de domaine (`869fhwtg9`, plan 2), où la ligne de tâche est refaite.
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (9 tests du menu + axe), `pnpm build`, `pnpm format:check`
 OK ; **62 E2E passent** en local. Rien vu au navigateur par un humain (placement, contraste AA clair/nuit).
-**Ouvert** : pas de recherche à la frappe (typeahead) ; menu en bordure d'écran (retournement vers le haut) non géré.
+**Revue (code-review, 2026-11-07)** : anneau de focus d'accent sur les actions (le focus ne se confond plus avec le survol),
+le menu se ferme au défilement et au redimensionnement (il ne suit pas son bouton) et se retourne vers le haut s'il
+manque la place en bas, Tab rend le focus au bouton avant de partir, un seul état d'ouverture (`first` / `last` /
+`null`), 14 tests (flèche bas, Tab, action indisponible, défilement, écouteurs au démontage). E2E découpé en trois
+helpers. **Constat** : un `<dialog>` modal ne piège pas le focus au sens strict (Tab sort vers l'interface du navigateur) ;
+la garantie testée est qu'il n'atteint jamais la page derrière, qui est inerte.
+**Ouvert** : pas de recherche à la frappe (typeahead) ; l'action indisponible est `disabled` (pas `aria-disabled`, donc
+non focalisable) ; le test des composants vit dans la suite « parcours d'un compte » parce que la page est derrière la
+connexion (il dépend de la session et de l'ordre).
 **Attendu ensuite** : ticket `869fp54cr` complet (4 PR) à clore après revue visuelle ; plan 2 (`869fhwtg9`).
 
 ---

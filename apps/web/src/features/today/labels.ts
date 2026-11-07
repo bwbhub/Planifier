@@ -35,6 +35,12 @@ export const TODAY_LABELS = {
     `${String(shown)} tâches affichées sur ${String(total)}.`,
   checked: (title: string) => `« ${title} » : c'est fait.`,
   retry: "Réessayer",
+  eventsSoonTitle: "Le module Événements arrive bientôt",
+  eventsSoonHint:
+    "Ta journée apparaîtra ici dès qu'il sera disponible. En attendant, tu peux activer Todo ou Agenda dans ton profil.",
+  noModuleTitle: "Aucun module activé",
+  noModuleHint: "Choisis ce que tu veux voir ici : Todo, Agenda ou Événements.",
+  openProfile: "Ouvrir mon profil",
   loadFailed: "Impossible de lire ta journée pour le moment.",
   actionFailed: "L'action n'a pas abouti. Réessaie dans un instant.",
   allDay: "Toute la journée",

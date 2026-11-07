@@ -18,6 +18,15 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Aujourd'hui : navigation et variantes (branche `feat/aujourdhui-variantes`)
+
+**Fait** : entrée « Aujourd'hui » toujours présente dans la barre (ce n'est pas un module) ; accueil sans Todo ni Agenda : « Le module Événements arrive bientôt » (Événements seul) ou renvoi vers le profil (aucun module) ; E2E des 4 variantes (modules activés depuis le profil).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e` (64) : voir la PR.
+**Ouvert** : rien vu à l'œil ; pastille de non-lus et entrées Événements / Notifications (`869fhwtg4`) attendent leurs modules.
+**Attendu ensuite** : fin du plan 4 ; puis Détail de tâche (`869fp54d9`), iCal.
+
+---
+
 ## 2026-11-07 — Écran Aujourd'hui (branche `feat/ecran-aujourdhui`)
 
 **Fait** : `TaskLine`, `SlotBlock`, `recurrenceLabel` remontés dans `_shared` ; module web `today` (agenda du jour, Du jour, Rappel du jour, En cours, À reprendre avec « Voir plus » sur place, coche, report avec horaire facultatif et « Annuler ») ; accueil = `TodayView`. « Se déconnecter » passe de l'ancien accueil au profil (section Session).

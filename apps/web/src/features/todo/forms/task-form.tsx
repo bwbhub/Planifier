@@ -211,6 +211,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       if (input !== null)
         createTask.mutate(input, {
           onSuccess: () => {
+            notify(parentId === undefined ? TODO_LABELS.taskAdded : TODO_LABELS.subtaskAdded);
             resetForNext(form);
           },
         });

@@ -14,6 +14,8 @@ export const TODO_LABELS = {
   edit: "Modifier",
   delete: "Supprimer",
   actionsOf: (title: string) => `Actions de « ${title} »`,
+  taskAdded: "Tâche ajoutée.",
+  subtaskAdded: "Sous-tâche ajoutée.",
   taskUpdated: "Tâche modifiée.",
   taskDeleted: "Tâche supprimée.",
 } as const;

@@ -52,6 +52,14 @@ function renderForm(props: FormProps = {}, shared = false) {
 }
 
 describe("TaskForm, répétition", () => {
+  it("annonce la tâche ajoutée", async () => {
+    replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Pain");
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+    expect(await screen.findByText("Tâche ajoutée.")).toBeTruthy();
+  });
+
   it("crée une tâche répétée toutes les deux semaines", async () => {
     const calls = replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
     renderForm();

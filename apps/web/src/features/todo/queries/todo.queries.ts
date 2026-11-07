@@ -1,4 +1,5 @@
 import { type ListTasksOutput, PAGE_MAX_LIMIT } from "@planifier/api-contract";
+import { useToast } from "@planifier/ui/components/toast";
 import {
   type QueryClient,
   useInfiniteQuery,
@@ -6,8 +7,6 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-
-import { useToast } from "@planifier/ui/components/toast";
 
 import { orpc } from "@/lib/orpc";
 

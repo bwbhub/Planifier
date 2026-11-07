@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Champ de répétition (branche `feat/recurrence-field`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), dernière pièce. `packages/ui` : `RecurrenceField` (sans métier) : préréglages en pastilles + « Personnalisée… » qui ouvre un panneau fourni par l'appelant (4 tests). Todo : `forms/recurrence-fields.tsx` branche préréglages (Jamais, jour, semaine, mois, année) et panneau personnalisé (rythme, intervalle, **jours de la semaine** par semaines) ; `utils/recurrence.ts` : `repeatChoiceOf`, `recurrenceFromForm` (préréglage = tous les 1 ; personnalisée = rythme, intervalle, jours), `recurrenceChange` compare aussi les jours (ordre libre). « Tous les mardis » se crée et se modifie à l'écran : la limite notée dans `SUITE` est levée. Le champ revient à « Jamais » quand le formulaire se vide (saisie à la chaîne). Menu inchangé. Section « Répétition » sur `/composants`, bouton ⋯ aligné à droite sur mobile.
+**Décisions** : les préréglages « Tous les deux ans », « Tous les mardis » de la maquette passent par « Personnalisée… » (pas de préréglage par jour : il faudrait le choisir). L'intervalle n'est plus visible hors du choix personnalisé.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (ui 104, web 260), `pnpm build`, `pnpm test:e2e` (62, dont « tous les mardis » de bout en bout) exécutés, verts. Rien vu à l'œil (panneau, pastilles à 375 px, clair et nuit).
+**Revue** : `/code-review` passée ; corrigé : `fixed` du Menu retiré (essai : ce n'était pas la cause), rythmes dérivés de `UNITS`, `RepeatChoice` typé, `capitalized` partagé (`lib/capitalize.ts`). Écarts de spec à trancher : préréglages de la maquette (« Aucune », « Tous les deux ans », « Tous les mardis ») passent par « Personnalisée… » ; aide de la maquette absente ; décocher « Semaines » perd les jours sans avertissement.
+**Ouvert** : un E2E mobile échouait quand le message « Tâche ajoutée. » recouvrait la dernière ligne : le défilement de Playwright refermait le menu. Test corrigé (fermer le message). Produit : un message qui recouvre le contenu du bas sur mobile (déjà noté dans `SUITE`, Toast) ; à décider.
+**Attendu ensuite** : fusion de la PR ; puis plan 3 (Nouvelle tâche).
+
+---
+
 ## 2026-11-07 — Champ date et heure (branche `feat/date-time-field`)
 
 **Fait** : plan 2/4 (ticket `869fhwtg9`), suite. `packages/ui/src/components/date-time-field.tsx` : `DateTimeField`, contrôlé (`{ date, time }`), jour en `<input type="date">` natif, case « Sans heure » (cochée par défaut) qui révèle `<input type="time">` ; la recocher efface l'heure ; erreur et aide reliées au jour ; noms pour `FormData` (heure envoyée seulement si saisie). Libellés en props (sans métier). 9 tests (bascule, valeurs, `FormData`, erreur, axe) ; section « Date et heure » sur `/composants` (sans heure, avec heure, erreur, désactivé).

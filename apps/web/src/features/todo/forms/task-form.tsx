@@ -5,13 +5,8 @@ import {
   type TaskOutput,
   updateTaskInputSchema,
 } from "@planifier/api-contract";
-import {
-  RECURRENCE_MAX_INTERVAL,
-  TASK_DESCRIPTION_MAX_LENGTH,
-  TASK_TITLE_MAX_LENGTH,
-} from "@planifier/constants/todo";
+import { TASK_DESCRIPTION_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from "@planifier/constants/todo";
 import { Button } from "@planifier/ui/components/button";
-import { ChoiceGroup } from "@planifier/ui/components/choice-group";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextAreaField } from "@planifier/ui/components/text-area-field";
 import { TextField } from "@planifier/ui/components/text-field";
@@ -24,12 +19,13 @@ import { useFormValidation } from "@/features/_shared/forms/use-form-validation"
 
 import { COMMON_LABELS, TASK_LABELS } from "@/lib/labels";
 
+import { RecurrenceFields } from "./recurrence-fields";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
-import { recurrenceChange, recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
+import { recurrenceChange, recurrenceFromForm } from "../utils/recurrence";
 import { todoErrorMessage } from "../utils/todo-error-message";
 
 const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
@@ -38,7 +34,6 @@ type Field = (typeof FIELDS)[number];
 const TITLE_ERROR = `Donne un titre à la tâche, ${String(TASK_TITLE_MAX_LENGTH)} caractères au plus.`;
 const DESCRIPTION_ERROR = `${String(TASK_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
 const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
-const INTERVAL_ERROR = `Un nombre entier de 1 à ${String(RECURRENCE_MAX_INTERVAL)}.`;
 
 const COPY = {
   create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
@@ -77,31 +72,6 @@ function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
   if (task === undefined) return false;
   return [task.description, task.dueDate, task.recurrence, task.assignee].some(
     (value) => value !== null,
-  );
-}
-
-/** Répétition (ADR 0017) : rythme, puis intervalle (« 2 » avec « Chaque semaine » : toutes les deux semaines). */
-function RecurrenceFields({ task, invalid }: TaskDetailsProps) {
-  return (
-    <>
-      <ChoiceGroup
-        legend="Répéter"
-        name="repeat"
-        options={REPEAT_OPTIONS}
-        defaultValue={task?.recurrence?.frequency ?? "NONE"}
-      />
-      <TextField
-        label="Intervalle"
-        name="interval"
-        type="number"
-        inputMode="numeric"
-        min={1}
-        max={RECURRENCE_MAX_INTERVAL}
-        defaultValue={task?.recurrence?.interval ?? 1}
-        hint="2 avec « Chaque semaine » : toutes les deux semaines. Sans effet si la tâche ne se répète pas."
-        error={invalid.has("recurrence") ? INTERVAL_ERROR : undefined}
-      />
-    </>
   );
 }
 
@@ -154,7 +124,7 @@ function TaskDetails({ listId, task, invalid }: TaskDetailsProps & AssigneeProps
           defaultValue={task?.dueDate ?? undefined}
           error={invalid.has("dueDate") ? DUE_DATE_ERROR : undefined}
         />
-        <RecurrenceFields task={task} invalid={invalid} />
+        <RecurrenceFields task={task} intervalInvalid={invalid.has("recurrence")} />
         {shared ? <AssigneeField listId={listId} task={task} /> : null}
       </div>
     </details>

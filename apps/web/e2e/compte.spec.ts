@@ -153,6 +153,8 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("radio", { name: "Chaque semaine" })).toBeChecked();
   await page.getByRole("button", { name: "Ajouter" }).click();
   await expect(page.getByText("Toutes les semaines")).toBeVisible();
+  // Le message d'ajout recouvre la ligne du bas (surtout sur mobile, où le défilement refermerait le menu) : on le ferme.
+  await page.getByRole("button", { name: "Fermer" }).click();
   await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).not.toBeChecked();
@@ -165,6 +167,13 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("status").filter({ hasText: "ne se répète plus" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).toBeChecked();
   await expect(page.getByText("Toutes les semaines")).toBeHidden();
+
+  // Répétition par jours de la semaine : « tous les mardis », sans date d'échéance.
+  await page.getByLabel("Nouvelle tâche").fill("Sport");
+  await page.getByText("Personnalisée…", { exact: true }).click();
+  await page.getByText("Mardi", { exact: true }).click();
+  await page.getByRole("button", { name: "Ajouter" }).click();
+  await expect(page.getByText("Tous les mardis")).toBeVisible();
 
   await page.getByRole("button", { name: "Modifier la liste" }).click();
   await page.getByLabel("Nom de la liste").fill("Marché");

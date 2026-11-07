@@ -109,7 +109,16 @@ async function addMoveEditThenDeleteEntry(page: Page, day: string) {
 
 /** Ouvre le menu d'actions d'une tâche et choisit une action. */
 async function chooseTaskAction(page: Page, title: string, action: string) {
-  await page.getByRole("button", { name: `Actions de « ${title} »` }).click();
+  // Un message d'ajout ou de modification recouvre la ligne du bas (surtout sur mobile) : le défilement de Playwright
+  // pour atteindre le bouton refermerait le menu. On le ferme d'abord, comme on le ferait à la main.
+  const closeMessage = page.getByRole("button", { name: "Fermer", exact: true });
+  if (await closeMessage.isVisible()) await closeMessage.click();
+  const trigger = page.getByRole("button", { name: `Actions de « ${title} »` });
+  // Au milieu de l'écran, loin de la barre basse : plus aucun défilement ne suit l'ouverture (il refermerait le menu).
+  await trigger.evaluate((element) => {
+    element.scrollIntoView({ block: "center" });
+  });
+  await trigger.click();
   await page.getByRole("menuitem", { name: action }).click();
 }
 
@@ -153,8 +162,6 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("radio", { name: "Chaque semaine" })).toBeChecked();
   await page.getByRole("button", { name: "Ajouter" }).click();
   await expect(page.getByText("Toutes les semaines")).toBeVisible();
-  // Le message d'ajout recouvre la ligne du bas (surtout sur mobile, où le défilement refermerait le menu) : on le ferme.
-  await page.getByRole("button", { name: "Fermer" }).click();
   await page.getByRole("checkbox", { name: "Arroser les plantes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Prochaine fois le" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Arroser les plantes" })).not.toBeChecked();

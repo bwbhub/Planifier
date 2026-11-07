@@ -19,32 +19,29 @@ import { useFormValidation } from "@/features/_shared/forms/use-form-validation"
 
 import { COMMON_LABELS, TASK_LABELS } from "@/lib/labels";
 
+import { DueFields } from "./due-fields";
+import { createValues, readTaskForm, updateValues } from "./task-form-values";
 import { RecurrenceFields } from "./recurrence-fields";
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
-import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
+import { assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
-import { recurrenceChange, recurrenceFromForm } from "../utils/recurrence";
 import { todoErrorMessage } from "../utils/todo-error-message";
 
-const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
+const FIELDS = ["title", "description", "dueDate", "dueTime", "recurrence"] as const;
 type Field = (typeof FIELDS)[number];
 
 const TITLE_ERROR = `Donne un titre à la tâche, ${String(TASK_TITLE_MAX_LENGTH)} caractères au plus.`;
 const DESCRIPTION_ERROR = `${String(TASK_DESCRIPTION_MAX_LENGTH)} caractères au plus.`;
 const DUE_DATE_ERROR = "Choisis un jour valide, ou laisse vide.";
+const DUE_TIME_ERROR = "Une heure demande un jour : choisis d'abord le jour.";
 
 const COPY = {
   create: { title: "Nouvelle tâche", placeholder: "Ex. : acheter du pain", submit: "Ajouter" },
   subtask: { title: "Nouvelle sous-tâche", placeholder: "Ex. : du pain", submit: "Ajouter" },
   edit: { title: "Titre", placeholder: undefined, submit: "Enregistrer" },
 } as const;
-
-/** Champ facultatif laissé vide : `null`. */
-function optionalText(value: FormDataEntryValue | null): string | null {
-  return typeof value === "string" && value.trim() !== "" ? value : null;
-}
 
 /** Saisie à la chaîne : le formulaire se vide et le titre reprend le focus. */
 function resetForNext(form: HTMLFormElement) {
@@ -64,7 +61,7 @@ interface AssigneeProps {
 }
 
 /** Champs rangés dans les détails repliables (le titre reste toujours visible). */
-const DETAIL_FIELDS: readonly Field[] = ["description", "dueDate", "recurrence"];
+const DETAIL_FIELDS: readonly Field[] = ["description", "dueDate", "dueTime", "recurrence"];
 
 /** Repliés tant que les détails sont vides et sans erreur. */
 function detailsOpen({ task, invalid }: TaskDetailsProps): boolean {
@@ -117,12 +114,15 @@ function TaskDetails({ listId, task, invalid }: TaskDetailsProps & AssigneeProps
           maxLength={TASK_DESCRIPTION_MAX_LENGTH}
           error={invalid.has("description") ? DESCRIPTION_ERROR : undefined}
         />
-        <TextField
-          label="Échéance"
-          name="dueDate"
-          type="date"
-          defaultValue={task?.dueDate ?? undefined}
-          error={invalid.has("dueDate") ? DUE_DATE_ERROR : undefined}
+        <DueFields
+          task={task}
+          error={
+            invalid.has("dueDate")
+              ? DUE_DATE_ERROR
+              : invalid.has("dueTime")
+                ? DUE_TIME_ERROR
+                : undefined
+          }
         />
         <RecurrenceFields task={task} intervalInvalid={invalid.has("recurrence")} />
         {shared ? <AssigneeField listId={listId} task={task} /> : null}
@@ -161,23 +161,9 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const data = new FormData(form);
-    const title = data.get("title");
-    const description = optionalText(data.get("description"));
-    const dueDate = optionalText(data.get("dueDate"));
-    const recurrence = recurrenceFromForm(data);
-    const assigneeId = assigneeFromForm(data.get("assigneeId"));
+    const values = readTaskForm(new FormData(form));
     if (task === undefined) {
-      // Création : un champ vide est absent.
-      const input = validate(form, createTaskInputSchema, {
-        listId,
-        parentId,
-        title,
-        description: description ?? undefined,
-        dueDate: dueDate ?? undefined,
-        recurrence: recurrence ?? undefined,
-        assigneeId: assigneeId ?? undefined,
-      });
+      const input = validate(form, createTaskInputSchema, createValues(listId, parentId, values));
       if (input !== null)
         createTask.mutate(input, {
           onSuccess: () => {
@@ -187,18 +173,7 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
         });
       return;
     }
-    // Modification : un champ vidé vaut `null`, il est effacé.
-    const input = validate(form, updateTaskInputSchema, {
-      taskId: task.id,
-      version: openedVersion,
-      title,
-      description,
-      // Envoyés seulement s'ils changent : les renvoyer remet à zéro l'ancre de la série (et, pour la répétition,
-      // efface les jours de la semaine que ce formulaire ne montre pas).
-      dueDate: dueDate === task.dueDate ? undefined : dueDate,
-      recurrence: recurrenceChange(task.recurrence, recurrence),
-      assigneeId,
-    });
+    const input = validate(form, updateTaskInputSchema, updateValues(task, openedVersion, values));
     if (input !== null)
       updateTask.mutate(input, {
         onSuccess: () => {

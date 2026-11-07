@@ -7,7 +7,7 @@ import { Checkbox } from "@planifier/ui/components/checkbox";
 import { RecurrenceField } from "@planifier/ui/components/recurrence-field";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { TextField } from "@planifier/ui/components/text-field";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { capitalized } from "@/lib/capitalize";
 import { WEEKDAY_LABELS } from "@/lib/labels";
@@ -18,6 +18,7 @@ import {
   REPEAT_PRESETS,
   repeatChoiceOf,
 } from "../utils/recurrence";
+import { useResetKey } from "./use-reset-key";
 
 const INTERVAL_ERROR = `Un nombre entier de 1 à ${String(RECURRENCE_MAX_INTERVAL)}.`;
 
@@ -101,22 +102,11 @@ interface RecurrenceFieldsProps {
  */
 export function RecurrenceFields({ task, intervalInvalid }: RecurrenceFieldsProps) {
   const rule = task?.recurrence ?? null;
-  const anchor = useRef<HTMLDivElement>(null);
-  const [resets, setResets] = useState(0);
-  useEffect(() => {
-    const form = anchor.current?.closest("form");
-    const onReset = () => {
-      setResets((count) => count + 1);
-    };
-    form?.addEventListener("reset", onReset);
-    return () => {
-      form?.removeEventListener("reset", onReset);
-    };
-  }, []);
+  const { ref, key } = useResetKey<HTMLDivElement>();
   return (
-    <div ref={anchor}>
+    <div ref={ref}>
       <RecurrenceField
-        key={resets}
+        key={key}
         legend={LABELS.legend}
         name="repeat"
         presets={REPEAT_PRESETS}

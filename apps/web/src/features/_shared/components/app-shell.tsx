@@ -12,12 +12,13 @@ import { COMMON_LABELS, MODULE_LABELS, NAV_LABELS } from "@/lib/labels";
 import { ROUTES } from "@/lib/routes";
 
 /**
- * Modules qui ont un écran, dans l'ordre de la navigation. Événements n'y est pas encore : son entrée arrive avec
- * son écran (pas de lien vers une page qui n'existe pas).
+ * Pages de la barre, dans l'ordre. Aujourd'hui (`module: null`) est toujours là : ce n'est pas un module. Événements
+ * n'y est pas encore : son entrée arrive avec son écran (pas de lien vers une page qui n'existe pas).
  */
-const MODULE_PAGES: readonly { module: AppModule; href: string }[] = [
-  { module: "TODO", href: ROUTES.todo },
-  { module: "AGENDA", href: ROUTES.agenda },
+const NAV_PAGES: readonly { module: AppModule | null; href: string; label: string }[] = [
+  { module: null, href: ROUTES.home, label: NAV_LABELS.today },
+  { module: "TODO", href: ROUTES.todo, label: MODULE_LABELS.TODO },
+  { module: "AGENDA", href: ROUTES.agenda, label: MODULE_LABELS.AGENDA },
 ];
 
 const MODULE_LINK = cn(
@@ -29,6 +30,7 @@ const MODULE_LINK = cn(
 );
 
 function isOn(pathname: string, href: string): boolean {
+  if (href === ROUTES.home) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -66,16 +68,13 @@ interface AppShellProps {
  */
 export function AppShell({ modules, create, children }: AppShellProps) {
   const pathname = usePathname();
-  const shown = MODULE_PAGES.filter(({ module }) => modules.includes(module));
+  const shown = NAV_PAGES.filter(({ module }) => module === null || modules.includes(module));
 
   return (
     <ToastProvider dismissLabel={COMMON_LABELS.close}>
       <div
-        className={cn(
-          "flex min-h-screen flex-col sm:flex-row",
-          // Hauteur de la barre basse mobile : ce qui flotte au-dessus d'elle (messages, bouton « + ») s'y cale.
-          shown.length > 0 && "[--nav-height:3.5rem] sm:[--nav-height:0px]",
-        )}
+        // `--nav-height` : hauteur de la barre basse mobile ; ce qui flotte au-dessus d'elle (messages, « + ») s'y cale.
+        className="flex min-h-screen flex-col sm:flex-row [--nav-height:3.5rem] sm:[--nav-height:0px]"
       >
         <header
           className={cn(
@@ -95,34 +94,30 @@ export function AppShell({ modules, create, children }: AppShellProps) {
               {create}
             </div>
           )}
-          {shown.length === 0 ? null : (
-            <nav
-              aria-label={NAV_LABELS.modules}
-              className={cn(
-                "fixed inset-x-0 bottom-0 z-30 flex bg-nav",
-                "sm:static sm:z-auto sm:flex-col sm:gap-1 sm:bg-transparent",
-              )}
-            >
-              {shown.map(({ module, href }) => (
-                <Link
-                  key={module}
-                  href={href}
-                  aria-current={isOn(pathname, href) ? "page" : undefined}
-                  className={MODULE_LINK}
-                >
-                  {MODULE_LABELS[module]}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav
+            aria-label={NAV_LABELS.modules}
+            className={cn(
+              "fixed inset-x-0 bottom-0 z-30 flex bg-nav",
+              "sm:static sm:z-auto sm:flex-col sm:gap-1 sm:bg-transparent",
+            )}
+          >
+            {shown.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={isOn(pathname, href) ? "page" : undefined}
+                className={MODULE_LINK}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
           <nav aria-label={NAV_LABELS.account} className="flex gap-2 sm:mt-auto sm:flex-col">
             <AccountLink href={ROUTES.spaces} label={NAV_LABELS.spaces} pathname={pathname} />
             <AccountLink href={ROUTES.profile} label={NAV_LABELS.profile} pathname={pathname} />
           </nav>
         </header>
-        <div className={cn("flex min-w-0 flex-1 flex-col", shown.length > 0 && "pb-14 sm:pb-0")}>
-          {children}
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col pb-14 sm:pb-0">{children}</div>
       </div>
     </ToastProvider>
   );

@@ -234,6 +234,47 @@ async function toggleAgendaModule(page: Page, session: Cookie[]) {
   await expect(modules.getByRole("link", { name: "Agenda" })).toBeVisible();
 }
 
+type ModulesChoice = { todo: boolean; agenda: boolean; events: boolean };
+
+/** Allume ou éteint les modules dans le profil, puis ouvre l'accueil. */
+async function chooseModules(page: Page, choice: ModulesChoice) {
+  await page.goto("/profil");
+  await page.getByRole("switch", { name: "Todo" }).setChecked(choice.todo);
+  await page.getByRole("switch", { name: "Agenda" }).setChecked(choice.agenda);
+  await page.getByRole("switch", { name: "Événements" }).setChecked(choice.events);
+  await page.getByRole("button", { name: "Enregistrer" }).last().click();
+  await expect(page.getByRole("status").filter({ hasText: /enregistr/i })).toBeVisible();
+  await page.goto("/");
+}
+
+/** Accueil selon les modules : Todo seul, Agenda seul, Événements seul (pas encore d'écran), aucun. */
+async function checkTodayVariants(page: Page, session: Cookie[]) {
+  await page.context().addCookies(session);
+  const agenda = page.getByRole("heading", { name: "Au fil de la journée" });
+  const todo = page.getByRole("heading", { name: "Du jour" });
+  await chooseModules(page, { todo: true, agenda: false, events: false });
+  await expect(todo).toBeVisible();
+  await expect(agenda).toBeHidden();
+  await chooseModules(page, { todo: false, agenda: true, events: false });
+  await expect(agenda).toBeVisible();
+  await expect(todo).toBeHidden();
+  await chooseModules(page, { todo: false, agenda: false, events: true });
+  await expect(page.getByText("Le module Événements arrive bientôt")).toBeVisible();
+  await chooseModules(page, { todo: false, agenda: false, events: false });
+  await expect(page.getByText("Aucun module activé")).toBeVisible();
+  await page.getByRole("link", { name: "Ouvrir mon profil" }).click();
+  await expect(page).toHaveURL("/profil");
+  await chooseModules(page, { todo: true, agenda: true, events: false });
+  await expect(agenda).toBeVisible();
+  await expect(todo).toBeVisible();
+}
+
+/** Navigation puis accueil selon les modules activés. */
+async function checkModules(page: Page, session: Cookie[]) {
+  await toggleAgendaModule(page, session);
+  await checkTodayVariants(page, session);
+}
+
 /**
  * Page des composants : ce que jsdom ne joue pas (`<dialog>` modal, API Popover). Échap ferme et le focus revient à
  * l'élément d'origine ; la confirmation renforcée reste inactive tant que la case n'est pas cochée ; le menu se
@@ -376,8 +417,8 @@ test.describe.serial("parcours d'un compte", () => {
     await checkOverlays(page);
   });
 
-  test("retire un module de la navigation quand on l'éteint", async ({ page }) => {
-    await toggleAgendaModule(page, session);
+  test("retire un module de la navigation et adapte l'accueil", async ({ page }) => {
+    await checkModules(page, session);
   });
 
   test("revient à la connexion quand on se déconnecte", async ({ page }) => {

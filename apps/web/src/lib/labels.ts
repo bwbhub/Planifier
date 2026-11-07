@@ -32,6 +32,7 @@ export const MODULE_HINTS = {
 /** Libellés de la navigation des pages connectées. */
 export const NAV_LABELS = {
   modules: "Modules",
+  today: "Aujourd'hui",
   account: "Espaces et profil",
   spaces: "Espaces",
   profile: "Profil",

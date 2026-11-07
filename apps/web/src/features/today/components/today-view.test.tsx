@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { TodayTasksOutput } from "@planifier/api-contract";
+import type { AppModule } from "@planifier/constants/spaces";
 import { ToastProvider } from "@planifier/ui/components/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
@@ -38,7 +39,7 @@ const TASKS: TodayTasksOutput = {
   overdue: EMPTY_SECTION,
 };
 
-function show(modules: ("TODO" | "AGENDA")[], tasks: TodayTasksOutput = TASKS) {
+function show(modules: AppModule[], tasks: TodayTasksOutput = TASKS) {
   const calls = replyRpc(fetchMock, {
     "todo/tasks/today": { data: tasks },
     "agenda/entries/list": {
@@ -131,5 +132,22 @@ describe("TodayView, tâches", () => {
       time: "09:30",
       tasks: [{ taskId: overdue.id, version: 3 }],
     });
+  });
+});
+
+describe("TodayView, sans Todo ni Agenda", () => {
+  it("dit franchement que Événements arrive bientôt, sans rien lire", () => {
+    const calls = show(["EVENTS"]);
+    expect(screen.getByText("Le module Événements arrive bientôt")).toBeTruthy();
+    expect(calls).toEqual([]);
+  });
+
+  it("renvoie vers le profil quand aucun module n'est activé", () => {
+    const calls = show([]);
+    expect(screen.getByText("Aucun module activé")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Ouvrir mon profil" }).getAttribute("href")).toBe(
+      "/profil",
+    );
+    expect(calls).toEqual([]);
   });
 });

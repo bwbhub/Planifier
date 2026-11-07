@@ -17,17 +17,18 @@ describe("AppShell", () => {
     pathname.current = "/";
     render(<AppShell modules={["EVENTS", "AGENDA", "TODO"]}>contenu</AppShell>);
     const links = within(modulesNav() ?? document.body).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Todo", "Agenda"]);
+    expect(links.map((link) => link.textContent)).toEqual(["Aujourd'hui", "Todo", "Agenda"]);
   });
 
-  it("retire un module désactivé, et la barre avec lui quand il n'en reste aucun", () => {
+  it("retire un module désactivé ; Aujourd'hui reste, ce n'est pas un module", () => {
     pathname.current = "/";
     const { rerender } = render(<AppShell modules={["AGENDA"]}>contenu</AppShell>);
     expect(screen.queryByRole("link", { name: "Todo" })).toBeNull();
     expect(screen.getByRole("link", { name: "Agenda" })).not.toBeNull();
 
     rerender(<AppShell modules={[]}>contenu</AppShell>);
-    expect(modulesNav()).toBeNull();
+    const links = within(modulesNav() ?? document.body).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Aujourd'hui"]);
   });
 
   it("montre le « + » donné par la couche app, sauf sur l'Agenda qui a son propre bouton", () => {

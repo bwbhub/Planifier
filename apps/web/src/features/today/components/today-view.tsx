@@ -14,6 +14,7 @@ import {
 } from "../queries/today.queries";
 import { longDayLabel } from "../utils/today-day";
 import { useDeviceDay } from "../utils/use-device-day";
+import { NoModule } from "./no-module";
 import { PostponeBar } from "./postpone-bar";
 import { RemindersSection } from "./reminders-section";
 import { SlotsSection, SlotsSkeleton } from "./slots-section";
@@ -103,18 +104,31 @@ function TasksBlock({ day }: { day: string }) {
 /** Écran Aujourd'hui : l'agenda du jour puis les tâches (du jour, en cours, à reprendre), selon les modules activés. */
 export function TodayView({ name, modules }: TodayViewProps) {
   const day = useDeviceDay();
+  const agendaOn = modules.includes("AGENDA");
+  const todoOn = modules.includes("TODO");
+  const header = (
+    <PageHeader
+      title={day === null ? TODAY_LABELS.pageTitle : longDayLabel(day)}
+      subtitle={TODAY_LABELS.greeting(name)}
+    />
+  );
+  if (!agendaOn && !todoOn) {
+    return (
+      <>
+        {header}
+        <NoModule eventsOn={modules.includes("EVENTS")} />
+      </>
+    );
+  }
   return (
     <>
-      <PageHeader
-        title={day === null ? TODAY_LABELS.pageTitle : longDayLabel(day)}
-        subtitle={TODAY_LABELS.greeting(name)}
-      />
+      {header}
       {day === null ? (
         <ListSkeleton label={TODAY_LABELS.loadingTasks} rows={3} />
       ) : (
         <>
-          {modules.includes("AGENDA") ? <AgendaBlock day={day} /> : null}
-          {modules.includes("TODO") ? <TasksBlock day={day} /> : null}
+          {agendaOn ? <AgendaBlock day={day} /> : null}
+          {todoOn ? <TasksBlock day={day} /> : null}
         </>
       )}
     </>

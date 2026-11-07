@@ -12,7 +12,7 @@
 
 ## 2. Prochain ticket
 
-**État au 2026-11-08.** Plans 1 à 4 **faits** (PR 3 fusionnée #53 ; PR 4 : navigation « Aujourd'hui » et variantes, en revue).
+**État au 2026-11-08.** Plans 1 à 4 **faits** (#53, #54 fusionnées). **Priorité 1** : polices dans le dépôt (`fix/polices-locales`). Plans de la série 2 écrits (mémoire : Détail de tâche, changement d'e-mail, iCal).
 
 **À faire ensuite** : Détail de tâche (`869fp54d9`, donne le « tap = détail » et peut accueillir « mettre en récurrente »), iCal (`869fjgrcc`, `869fhwtup`), changement d'e-mail (`869fmk5dw`). Aujourd'hui : états vides sans action « Nouvelle tâche / entrée » ; salutation avec le nom entier.
 
@@ -146,8 +146,9 @@ Priorités ClickUp ensuite (high) : Aujourd'hui (`869fhwtu9`, écran), Détail d
 - Push SSH impossible depuis ma session ; `git fetch` marche en HTTPS via `gh` (`credential.helper='!gh auth git-credential'`).
 - Merge de PR refusé en mode auto : l'utilisateur fusionne.
 - PR empilées : avant de fusionner, vérifier que la base n'est pas déjà fusionnée (#23 a manqué `master` ainsi).
-- CI : `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` au build = téléchargement Google Fonts raté,
-  pas le code (vu une fois sur #25, job `e2e` du même commit vert) ; le build dépend de ce réseau.
+- Polices dans le dépôt (`apps/web/src/app/fonts/`, `next/font/local`) depuis `fix/polices-locales` : le build ne
+  télécharge plus rien. Ne pas revenir à `next/font/google` (échecs CI #25, #54 : `Can't resolve
+'@vercel/turbopack-next/internal/font/google/font'` = Google Fonts injoignable).
 - Après un changement de branche qui touche `schema.prisma` : `pnpm --filter @planifier/db generate`.
 - TypeScript 6 n'inclut plus `@types/*` par défaut : `"types": ["node"]` dans le tsconfig d'un package Node.
 - Navigateur : Brave seulement, pas de Chrome ⇒ pas d'extension Claude in Chrome ; vérif visuelle par l'utilisateur.

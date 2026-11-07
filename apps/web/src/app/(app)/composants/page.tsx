@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@planifier/ui/components/page-header";
 import { TitledSection } from "@planifier/ui/components/titled-section";
 import { UiShowcase } from "@/features/_shared/components/ui-showcase";
+import { SlotBlocksDemo } from "@/features/agenda";
 import { TaskLinesDemo } from "@/features/todo";
 import { pageTitle } from "@/lib/labels";
 
@@ -16,6 +17,9 @@ export default function ComponentsPage() {
       <UiShowcase />
       <TitledSection title="Ligne de tâche" className="p-6">
         <TaskLinesDemo />
+      </TitledSection>
+      <TitledSection title="Créneau" className="p-6">
+        <SlotBlocksDemo />
       </TitledSection>
     </main>
   );

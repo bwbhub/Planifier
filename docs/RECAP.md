@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-07 — Bloc de créneau (branche `feat/slot-block`)
+
+**Fait** : plan 2/4 (ticket `869fhwtg9`), suite. `agenda/atoms/slot-block.tsx` : `SlotBlock`, présentation pure (titre, horaire, `maybe` = bordure pointillée d'accent + « Peut-être », `greyed` = estompé + « Tâche faite », `hidden` = pointillés discrets, lignes et pied en enfants). `EntryBlock` le compose et garde déplacement, survol et avatar. 5 tests, section « Créneau » sur `/composants`. Comme `TaskLine`, il reste dans `agenda` (règle `_shared` = au moins 2 modules) et montera avec Aujourd'hui.
+**Décisions** : « grisé » et « peut-être » ne sont pas alimentés (la donnée vient du ticket 869fp54da et du module Événements) ; rendu seulement. Le nom accessible d'une entrée (`aria-label`) ne dit pas encore ces états : à ajouter avec la donnée.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web 254), `pnpm build`, `pnpm test:e2e` (62) exécutés, verts. Rien vu à l'œil (grille Jour/Semaine, déplacement, `/composants` clair et nuit).
+**Revue** : `/code-review` passée ; corrigé : prop `as` → `interactive`, constante `detailClass`, tests des bordures/opacité/rôle, démo avec bouton et états combinés, commentaire sur l'`aria-label`. Gardé : `background` en classe brute, ordre des exports.
+**Ouvert** :
+**Attendu ensuite** : fusion de la PR ; puis `DateTimeField`, `RecurrenceField`.
+
+---
+
 ## 2026-11-07 — Menu d'actions de la ligne de tâche (branche `feat/menu-actions-tache`)
 
 **Fait** : plan 2/4 (ticket `869fhwtg9`), suite. Les 4 boutons de `TaskActions` (`task-row.tsx`) deviennent un `Menu` « Actions de « <titre> » » (⋯) : Ajouter une sous-tâche (tâche seulement), Terminer pour de bon (tâche répétée à faire), Modifier, Supprimer. Un toast par action réussie qui n'en avait pas : « Tâche modifiée. » (formulaire) et « Tâche supprimée. » (posé dans `useDeleteTask`, car la ligne disparaît avec la tâche). Terminer garde son annonce dans la liste (avec Annuler). Mots dans `TODO_LABELS`. Tests `task-row`, `list-panel` et E2E `compte.spec.ts` suivent les nouveaux noms ; `ToastProvider` ajouté aux tests qui rendent le formulaire ou la suppression.

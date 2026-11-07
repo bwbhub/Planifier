@@ -25,11 +25,15 @@ export function subtaskCountLabel(subtasks: readonly Pick<TaskOutput, "completed
 }
 
 /** Pastille « 2/4 » d'une tâche : sous-tâches cochées, total, et la phrase pour les lecteurs d'écran. */
-export function subtaskProgress(subtasks: readonly Pick<TaskOutput, "completedAt">[]): {
+export interface SubtaskProgress {
   done: number;
   total: number;
   label: string;
-} {
+}
+
+export function subtaskProgress(
+  subtasks: readonly Pick<TaskOutput, "completedAt">[],
+): SubtaskProgress {
   const done = subtasks.filter(({ completedAt }) => completedAt !== null).length;
   return { done, total: subtasks.length, label: subtaskCountLabel(subtasks) };
 }

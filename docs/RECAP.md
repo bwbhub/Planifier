@@ -20,13 +20,14 @@ Modèle d'entrée :
 
 ## 2026-11-07 — Ligne de tâche partagée (branche `feat/ligne-de-tache`)
 
-**Fait** : plan 2/4 (ticket `869fhwtg9`), PR 2. `features/_shared/components/task-line.tsx` : `TaskLine`, ligne de tâche pure
+**Fait** : plan 2/4 (ticket `869fhwtg9`), PR 2. `features/todo/atoms/task-line.tsx` : `TaskLine`, ligne de tâche pure
 (aucune requête) : case à gauche, titre, détails, pastille de sous-tâches « 2/4 » (dite en toutes lettres aux lecteurs
 d'écran), avatar de l'assigné, « Cochée par … », état atténué, actions. Le Todo la compose (`TodoTaskLine` dans
-`task-row.tsx`) : l'ancien `TaskMain` disparaît, le compteur de sous-tâches en texte devient la pastille. Mots partagés
+`task-row.tsx`) ; elle reste dans `todo` (règle `_shared` = au moins 2 modules, revue) et montera dans `_shared` avec l'écran Aujourd'hui : l'ancien `TaskMain` disparaît, le compteur de sous-tâches en texte devient la pastille. Mots partagés
 dans `lib/labels.ts` (`TASK_LABELS`). 7 tests de la ligne ; section « Ligne de tâche » sur `/composants` (états :
 normale, sous-tâches, assignée et cochée par quelqu'un, atténuée, lecture seule). Page de référence regroupée
-(`showcase-section.tsx`, `ui-showcase-feedback.tsx`).
+(`showcase-section.tsx`, `ui-showcase-feedback.tsx`) ; la démo de la ligne est exportée par `features/todo` et posée par la page
+`/composants`.
 **Décisions** : pas d'état « clone orphelin » ni de rouge (décision 2026-11-06). Pas de `onOpen` (« tap = détail ») avant
 l'écran Détail de tâche (`869fp54d9`). Les quatre boutons d'action de `TaskActions` ne passent pas au `Menu` dans cette
 PR (un sujet par PR) : PR suivante, avec la mise à jour des tests et de l'E2E qui cliquent ces boutons.

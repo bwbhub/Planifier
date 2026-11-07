@@ -190,3 +190,10 @@ tâche (`869fp54d9`), puis iCal (`869fjgrcc`, `869fhwtup`). Changement d'e-mail 
   - `3.5rem` (barre basse) écrit à trois endroits de l'AppShell (`min-h-14`, `pb-14`, `--nav-height`) : une seule source
     serait mieux.
   - Contraste AA des boutons `ghost` sur `bg-ink` (survol compris) à voir à l'œil sur `/composants`.
+
+- **Ligne de tâche (revue de `feat/ligne-de-tache`), à trancher** :
+  - Le ticket dit « titre seul » dans la ligne ; le Todo montre encore échéance, répétition et description sous le titre
+    (comportement gardé). Garder, ou ne montrer que le titre et la pastille, le reste au détail de tâche (`869fp54d9`) ?
+  - Compteur de sous-tâches : « 1/2 » (pastille de la maquette) remplace « 1 sur 2 sous-tâches cochée » (gardé pour les
+    lecteurs d'écran). D'accord ?
+  - `TaskLine` est dans `todo/atoms` tant qu'un seul module s'en sert ; elle monte dans `_shared` avec l'écran Aujourd'hui.

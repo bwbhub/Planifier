@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 
 import { TASK_LABELS } from "@/lib/labels";
 
+import type { SubtaskProgress } from "../utils/subtasks";
+
 export interface TaskLineProps {
   title: string;
   done: boolean;
@@ -12,7 +14,7 @@ export interface TaskLineProps {
   /** Atténuée : pas pour moi (« Atténuer les tâches qui ne me sont pas assignées »). */
   dimmed?: boolean | undefined;
   /** Sous-tâches : pastille « 2/4 ». `label` la dit en toutes lettres aux lecteurs d'écran. */
-  subtasks?: { done: number; total: number; label: string } | undefined;
+  subtasks?: SubtaskProgress | undefined;
   assignee?: { userId: string; name: string } | null | undefined;
   /** Nom de la personne qui a coché, liste partagée : « Cochée par … ». */
   completedByName?: string | undefined;
@@ -23,8 +25,9 @@ export interface TaskLineProps {
 }
 
 /**
- * Ligne de tâche, partagée par le Todo et l'écran Aujourd'hui : case à gauche, titre, puis ce qui la précise. Pure
- * présentation : aucune requête, la coche et les actions viennent de l'appelant. Rien ne se coche seul.
+ * Ligne de tâche : case à gauche, titre, puis ce qui la précise. Pure présentation : aucune requête, la coche et les
+ * actions viennent de l'appelant. Rien ne se coche seul. Dans `todo` tant que ce module est le seul à s'en servir ;
+ * l'écran Aujourd'hui la fera monter dans `features/_shared`.
  */
 export function TaskLine({
   title,

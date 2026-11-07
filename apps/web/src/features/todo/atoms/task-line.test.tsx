@@ -64,6 +64,11 @@ describe("TaskLine", () => {
     expect(screen.getByRole("button", { name: "Modifier" })).toBeTruthy();
   });
 
+  it("ne présente aucune violation d'accessibilité en lecture seule (case désactivée)", async () => {
+    const { container } = renderLine({ done: true });
+    await expect(axeViolations(container)).resolves.toEqual([]);
+  });
+
   it("ne présente aucune violation d'accessibilité", async () => {
     const { container } = renderLine({
       onToggle: () => undefined,

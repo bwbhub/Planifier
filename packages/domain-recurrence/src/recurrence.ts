@@ -3,10 +3,11 @@ import {
   daysBetween,
   dayToUtcDate,
   utcDateToDay,
+  type Weekday,
   weekdayIndex,
   weekdayOf,
 } from "@planifier/constants/days";
-import type { RecurrenceFrequency, Weekday } from "@planifier/constants/todo";
+import type { RecurrenceFrequency } from "@planifier/constants/todo";
 
 /**
  * Règle de répétition d'une tâche : tous les `interval` jours, semaines, mois ou ans (ADR 0017). `weekdays` (rythme

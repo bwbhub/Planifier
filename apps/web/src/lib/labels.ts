@@ -1,3 +1,5 @@
+import type { Weekday } from "@planifier/constants/days";
+
 /**
  * Libellés communs à toute l'app (actions, états). Un seul catalogue par portée : les traductions viendront le
  * remplacer langue par langue, sans toucher aux composants.
@@ -49,4 +51,4 @@ export const WEEKDAY_LABELS = {
   FRIDAY: { one: "vendredi", many: "vendredis" },
   SATURDAY: { one: "samedi", many: "samedis" },
   SUNDAY: { one: "dimanche", many: "dimanches" },
-} as const;
+} as const satisfies Record<Weekday, { one: string; many: string }>;

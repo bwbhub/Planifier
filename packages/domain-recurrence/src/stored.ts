@@ -1,35 +1,38 @@
+import { type Weekday, WEEKDAYS } from "@planifier/constants/days";
 import {
+  isValidWeekdayRule,
   RECURRENCE_FREQUENCIES,
   RECURRENCE_MAX_INTERVAL,
-  WEEKDAYS,
 } from "@planifier/constants/todo";
 import { z } from "zod";
 
 import type { Recurrence } from "./recurrence";
 
-/**
- * Forme stockée d'une règle (colonne JSON `tasks.recurrence`), versionnée pour pouvoir évoluer. Version 1 : rythme et
- * intervalle. Version 2 : s'y ajoutent les jours de la semaine (« tous les mardis »). Les deux se lisent ; on écrit
- * toujours la plus récente.
- */
 const baseFields = {
   frequency: z.enum(RECURRENCE_FREQUENCIES),
   interval: z.int().min(1).max(RECURRENCE_MAX_INTERVAL),
 };
 
+/**
+ * Forme stockée d'une règle (colonne JSON `tasks.recurrence`), versionnée pour pouvoir évoluer. Version 1 : rythme et
+ * intervalle. Version 2 : s'y ajoutent les jours de la semaine (« tous les mardis »), avec la même règle que le contrat
+ * d'API (`isValidWeekdayRule`). Les deux se lisent ; on écrit toujours la plus récente.
+ */
 const storedRecurrenceSchema = z.discriminatedUnion("schemaVersion", [
   z.strictObject({ schemaVersion: z.literal(1), ...baseFields }),
-  z.strictObject({
-    schemaVersion: z.literal(2),
-    ...baseFields,
-    weekdays: z.array(z.enum(WEEKDAYS)).min(1).max(WEEKDAYS.length).optional(),
-  }),
+  z
+    .strictObject({
+      schemaVersion: z.literal(2),
+      ...baseFields,
+      weekdays: z.array(z.enum(WEEKDAYS)).min(1).max(WEEKDAYS.length).optional(),
+    })
+    .refine(({ frequency, weekdays }) => isValidWeekdayRule(frequency, weekdays)),
 ]);
 
 export type StoredRecurrence = z.infer<typeof storedRecurrenceSchema>;
 
 /** Jours rangés dans l'ordre de la semaine, sans doublon : une seule écriture pour une même règle. */
-function orderedWeekdays(weekdays: readonly (typeof WEEKDAYS)[number][]) {
+function orderedWeekdays(weekdays: readonly Weekday[]): Weekday[] {
   return WEEKDAYS.filter((weekday) => weekdays.includes(weekday));
 }
 

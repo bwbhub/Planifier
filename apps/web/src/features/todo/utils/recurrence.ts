@@ -55,3 +55,20 @@ export function recurrenceFromForm(
   if (frequency === null || frequency === "NONE") return null;
   return { frequency, interval: Number(data.get("interval")) };
 }
+
+/**
+ * Ce que la modification envoie pour la répétition : `undefined` (rien) tant que le rythme et l'intervalle du formulaire
+ * sont ceux de la tâche. Renvoyer la règle remettrait l'ancre de la série à zéro et effacerait les jours de la semaine,
+ * que ce formulaire ne montre pas : rien ne doit changer à l'insu de l'utilisateur. `null` : il a choisi « Jamais ».
+ */
+export function recurrenceChange(
+  current: Recurrence | null,
+  fromForm: { frequency: unknown; interval: number } | null,
+): { frequency: unknown; interval: number } | null | undefined {
+  if (fromForm === null) return current === null ? undefined : null;
+  const same =
+    current !== null &&
+    current.frequency === fromForm.frequency &&
+    current.interval === fromForm.interval;
+  return same ? undefined : fromForm;
+}

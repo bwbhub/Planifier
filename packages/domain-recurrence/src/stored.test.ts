@@ -36,6 +36,25 @@ describe("forme stockée", () => {
     });
   });
 
+  it("refuse des jours avec un autre rythme que hebdomadaire, ou en double (même règle que le contrat)", () => {
+    expect(() =>
+      fromStoredRecurrence({
+        schemaVersion: 2,
+        frequency: "DAILY",
+        interval: 1,
+        weekdays: ["MONDAY"],
+      }),
+    ).toThrow();
+    expect(() =>
+      fromStoredRecurrence({
+        schemaVersion: 2,
+        frequency: "WEEKLY",
+        interval: 1,
+        weekdays: ["MONDAY", "MONDAY"],
+      }),
+    ).toThrow();
+  });
+
   it("refuse une version ou une valeur inconnue", () => {
     expect(() =>
       fromStoredRecurrence({ schemaVersion: 3, frequency: "DAILY", interval: 1 }),

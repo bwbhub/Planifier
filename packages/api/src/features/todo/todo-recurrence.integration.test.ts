@@ -53,6 +53,15 @@ const everyOtherMonday: NonNullable<CreateTaskInput["recurrence"]> = {
   weekdays: ["MONDAY"],
 };
 
+async function createEveryOtherMonday() {
+  const list = await createAliceList();
+  return call(
+    tasks.create,
+    { listId: list.id, title: "Poubelles", recurrence: everyOtherMonday },
+    asUser(alice),
+  );
+}
+
 describe("todo.tasks : tâche répétée à jours de la semaine (base réelle)", () => {
   it("garde les jours (rangés dans l'ordre de la semaine) après un aller-retour en base", async () => {
     const list = await createAliceList();
@@ -75,12 +84,7 @@ describe("todo.tasks : tâche répétée à jours de la semaine (base réelle)",
   });
 
   it("sans échéance, cocher pose la première occurrence et garde la parité des semaines", async () => {
-    const list = await createAliceList();
-    const task = await call(
-      tasks.create,
-      { listId: list.id, title: "Poubelles", recurrence: everyOtherMonday },
-      asUser(alice),
-    );
+    const task = await createEveryOtherMonday();
     expect(task.dueDate).toBeNull();
     // Mercredi 28 octobre 2026 : première occurrence le lundi 2 novembre, puis tous les quinze jours.
     const first = await call(
@@ -95,6 +99,65 @@ describe("todo.tasks : tâche répétée à jours de la semaine (base réelle)",
       asUser(alice),
     );
     expect(second.dueDate).toBe("2026-11-16");
+  });
+});
+
+describe("todo.tasks : modifier, annuler et terminer une tâche à jours de la semaine (base réelle)", () => {
+  it("modifier le titre ne touche ni les jours ni l'ancre de la série", async () => {
+    const task = await createEveryOtherMonday();
+    const first = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    // Seul le titre est envoyé (c'est ce que fait le formulaire quand rien d'autre n'a changé).
+    const renamed = await call(
+      tasks.update,
+      { taskId: task.id, version: first.version, title: "Sortir les poubelles" },
+      asUser(alice),
+    );
+    expect(renamed.recurrence).toEqual(first.recurrence);
+    const second = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: renamed.version, today: "2026-11-02" },
+      asUser(alice),
+    );
+    expect(second.dueDate).toBe("2026-11-16");
+  });
+
+  it("remplacer la règle par d'autres jours repart de la nouvelle échéance", async () => {
+    const task = await createEveryOtherMonday();
+    const updated = await call(
+      tasks.update,
+      {
+        taskId: task.id,
+        version: task.version,
+        recurrence: { frequency: "WEEKLY", interval: 1, weekdays: ["FRIDAY"] },
+      },
+      asUser(alice),
+    );
+    expect(updated.recurrence).toEqual({ frequency: "WEEKLY", interval: 1, weekdays: ["FRIDAY"] });
+  });
+
+  it("annuler une coche rend la règle à jours d'avant, terminer l'arrête", async () => {
+    const task = await createEveryOtherMonday();
+    const done = await call(
+      tasks.completeOccurrence,
+      { taskId: task.id, version: task.version, today: "2026-10-28" },
+      asUser(alice),
+    );
+    const undone = await call(
+      tasks.undoCompletion,
+      { taskId: task.id, version: done.version, dueDate: null, recurrence: everyOtherMonday },
+      asUser(alice),
+    );
+    expect(undone).toMatchObject({ dueDate: null, recurrence: everyOtherMonday });
+    const finished = await call(
+      tasks.finish,
+      { taskId: task.id, version: undone.version },
+      asUser(alice),
+    );
+    expect(finished.recurrence).toBeNull();
   });
 
   it("refuse des jours avec un autre rythme que hebdomadaire, ou en double", async () => {

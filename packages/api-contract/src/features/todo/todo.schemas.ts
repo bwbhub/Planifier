@@ -1,7 +1,8 @@
+import { WEEKDAYS } from "@planifier/constants/days";
 import {
+  isValidWeekdayRule,
   RECURRENCE_FREQUENCIES,
   RECURRENCE_MAX_INTERVAL,
-  WEEKDAYS,
 } from "@planifier/constants/todo";
 import { z } from "zod";
 
@@ -52,12 +53,7 @@ export const recurrenceSchema = z
     interval: z.int().min(1).max(RECURRENCE_MAX_INTERVAL),
     weekdays: z.array(z.enum(WEEKDAYS)).min(1).max(WEEKDAYS.length).optional(),
   })
-  .refine(
-    ({ frequency, weekdays }) =>
-      weekdays === undefined ||
-      (frequency === "WEEKLY" && new Set(weekdays).size === weekdays.length),
-    {
-      message: "Des jours de la semaine ne vont qu'avec un rythme hebdomadaire, sans doublon.",
-      path: ["weekdays"],
-    },
-  );
+  .refine(({ frequency, weekdays }) => isValidWeekdayRule(frequency, weekdays), {
+    message: "Des jours de la semaine ne vont qu'avec un rythme hebdomadaire, sans doublon.",
+    path: ["weekdays"],
+  });

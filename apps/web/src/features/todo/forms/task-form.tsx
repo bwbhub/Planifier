@@ -28,7 +28,7 @@ import { ASSIGNEE_LABEL, TODO_LABELS } from "../labels";
 import { useCreateTask, useListMembers, useUpdateTask } from "../queries/todo.queries";
 import { assigneeFromForm, assigneeOptions } from "../utils/assignees";
 import { useListView } from "../utils/list-view";
-import { recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
+import { recurrenceChange, recurrenceFromForm, REPEAT_OPTIONS } from "../utils/recurrence";
 import { todoErrorMessage } from "../utils/todo-error-message";
 
 const FIELDS = ["title", "description", "dueDate", "recurrence"] as const;
@@ -220,8 +220,10 @@ export function TaskForm({ listId, task, parentId, onDone }: TaskFormProps) {
       version: openedVersion,
       title,
       description,
-      dueDate,
-      recurrence,
+      // Envoyés seulement s'ils changent : les renvoyer remet à zéro l'ancre de la série (et, pour la répétition,
+      // efface les jours de la semaine que ce formulaire ne montre pas).
+      dueDate: dueDate === task.dueDate ? undefined : dueDate,
+      recurrence: recurrenceChange(task.recurrence, recurrence),
       assigneeId,
     });
     if (input !== null) updateTask.mutate(input, { onSuccess: () => onDone?.() });

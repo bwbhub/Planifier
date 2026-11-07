@@ -30,10 +30,17 @@ le jeudi ». ADR 0017 amendée.
 **Décisions** : aucune échéance posée d'office (rien ne s'ajoute à l'insu) ; écran Aujourd'hui : « la règle tombe ce
 jour » se calculera avec la règle (plan 4).
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (22 tests du domaine, propriétés comprises), `pnpm build`,
-`pnpm format:check` OK ; **162 tests d'intégration de l'API** passent (3 nouveaux : aller-retour en base, première
-occurrence et parité, refus). E2E non relancés (pas de changement d'écran).
-**Ouvert** : le formulaire de tâche n'expose pas encore les jours : modifier par le formulaire une tâche qui en a
-(créée par l'API) les efface. À fermer avec `RecurrenceField` (PR suivante). Pas de migration (champ JSON versionné).
+`pnpm format:check` OK ; **165 tests d'intégration de l'API** passent (6 nouveaux).
+**Revue (code-review, 2026-11-07)** : (1) le formulaire de tâche **effaçait à l'insu** les jours et remettait l'ancre de la
+série à zéro à chaque modification (il renvoyait toujours `recurrence` et `dueDate`, défaut déjà présent pour toute
+tâche répétée) : il n'envoie plus que ce qui change (`recurrenceChange`, test d'intégration « modifier le titre ne
+touche ni les jours ni l'ancre ») ; (2) la règle « jours ⇒ hebdomadaire, sans doublon » est une seule fonction
+(`isValidWeekdayRule`) pour le contrat et la forme stockée ; (3) `WEEKDAYS` / `Weekday` passent dans `constants/days`
+(plus de dépendance days → todo) ; (4) tests : dimanche-lundi, deux jours une semaine sur deux, intervalle 99, ancre dans
+le futur, `update`, `undoCompletion`, `finish`. E2E : 62 passent.
+**Ouvert** : le critère « tous les mardis sans heure est accepté » (ticket Nouvelle tâche) n'est pas atteignable à
+l'écran avant `RecurrenceField` (PR suivante du plan 2) ; l'écran Aujourd'hui devra calculer qu'une règle à jours
+tombe un jour donné (une tâche sans échéance n'a pas de date). Pas de migration (champ JSON versionné).
 **Attendu ensuite** : plan 2, PR 2 : `TaskLine` (`_shared`), PR 3 : `SlotBlock`, PR 4 : `DateTimeField`,
 PR 5 : `RecurrenceField`.
 

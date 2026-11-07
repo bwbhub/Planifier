@@ -1,4 +1,4 @@
-import { TINTS } from "@/features/_shared/utils/tints";
+import { TINTS } from "../utils/tints";
 
 import { SlotBlock } from "./slot-block";
 

@@ -6,7 +6,7 @@ import type { AgendaItem } from "../utils/agenda-items";
 import { itemLabel, whenLabel } from "../utils/agenda-items";
 import { participantsLabel } from "../utils/agenda-participants";
 import type { MovingKind } from "../utils/use-entry-move";
-import { SlotBlock } from "./slot-block";
+import { SlotBlock } from "@/features/_shared/components/slot-block";
 
 /** Détail montré au survol ou au focus (le lieu, toujours : maquette). */
 const ON_HOVER = "hidden text-muted group-hover:inline group-focus:inline";

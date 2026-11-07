@@ -9,11 +9,11 @@ import { TaskForm } from "../forms/task-form";
 import { TODO_LABELS } from "../labels";
 import { useDeleteTask } from "../queries/todo.queries";
 import { useListView } from "../utils/list-view";
-import { recurrenceLabel } from "../utils/recurrence";
 import { deleteQuestion, isSubtask, subtaskProgress } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { DueDate } from "./due-date";
-import { TaskLine } from "./task-line";
+import { TaskLine } from "@/features/_shared/components/task-line";
+import { recurrenceLabel } from "@/features/_shared/utils/recurrence-label";
 import { TodoErrorAlert } from "./todo-error-alert";
 
 /**

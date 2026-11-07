@@ -40,8 +40,7 @@ function borderOf({ maybe, hidden }: Pick<SlotBlockProps, "maybe" | "hidden">) {
 /**
  * Créneau horaire : titre, horaire, états (peut-être, grisé, masqué). Pure présentation, sans requête ni règle d'agenda :
  * l'appelant donne les mots, la teinte et les gestes (props de l'élément). Un `aria-label` passé par l'appelant remplace le
- * contenu comme nom accessible : il doit dire lui-même les états (peut-être, tâche faite, masqué). Reste dans `agenda` tant qu'un seul module
- * s'en sert ; l'écran Aujourd'hui le fera monter dans `features/_shared`.
+ * contenu comme nom accessible : il doit dire lui-même les états (peut-être, tâche faite, masqué). Partagé par `agenda` et `today`.
  */
 export function SlotBlock({
   interactive,

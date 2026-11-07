@@ -65,7 +65,7 @@ describe("TaskForm, répétition", () => {
     renderForm();
     await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Sortir les poubelles");
     await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
-    await userEvent.click(screen.getByRole("radio", { name: "Chaque semaine" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Personnalisée…" }));
     const interval = screen.getByLabelText("Intervalle");
     await userEvent.clear(interval);
     await userEvent.type(interval, "2");
@@ -84,12 +84,64 @@ describe("TaskForm, répétition", () => {
       ]);
     });
   });
+});
+
+describe("TaskForm, répétition personnalisée", () => {
+  it("crée une tâche « tous les mardis et jeudis »", async () => {
+    const calls = replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Sport");
+    await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
+    await userEvent.click(screen.getByRole("radio", { name: "Personnalisée…" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Mardi" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Jeudi" }));
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(calls[0]?.input).toMatchObject({
+        recurrence: { frequency: "WEEKLY", interval: 1, weekdays: ["TUESDAY", "THURSDAY"] },
+      });
+    });
+  });
+
+  it("referme le panneau après un ajout : la répétition revient à « Jamais »", async () => {
+    replyRpc(fetchMock, { "todo/tasks/create": { data: WEEKLY_TASK } });
+    renderForm();
+    await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Sport");
+    await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
+    await userEvent.click(screen.getByRole("radio", { name: "Personnalisée…" }));
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+    await screen.findByText("Tâche ajoutée.");
+    expect(screen.getByRole("radio", { name: "Jamais" })).toHaveProperty("checked", true);
+    expect(screen.queryByLabelText("Intervalle")).toBeNull();
+  });
+
+  it("ne propose les jours qu'au rythme hebdomadaire", async () => {
+    renderForm();
+    await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
+    await userEvent.click(screen.getByRole("radio", { name: "Personnalisée…" }));
+    expect(screen.getByRole("checkbox", { name: "Mardi" })).toBeTruthy();
+    await userEvent.selectOptions(screen.getByLabelText("Rythme"), "Mois");
+    expect(screen.queryByRole("checkbox", { name: "Mardi" })).toBeNull();
+  });
+
+  it("préremplit les jours d'une tâche « tous les mardis »", () => {
+    const tuesdays = taskWith({
+      id: "0199f3a2-7c4e-7d10-9a51-0000000000bb",
+      title: "Sport",
+      recurrence: { frequency: "WEEKLY", interval: 1, weekdays: ["TUESDAY"] },
+    });
+    renderForm({ task: tuesdays, onDone: vi.fn() });
+    expect(screen.getByRole("radio", { name: "Personnalisée…" })).toHaveProperty("checked", true);
+    expect(screen.getByRole("checkbox", { name: "Mardi" })).toHaveProperty("checked", true);
+    expect(screen.getByRole("checkbox", { name: "Lundi" })).toHaveProperty("checked", false);
+  });
 
   it("refuse un intervalle nul sans appeler l'API, détails ouverts et erreur affichée", async () => {
     renderForm();
     await userEvent.type(screen.getByLabelText("Nouvelle tâche"), "Arroser");
     await userEvent.click(screen.getByText("Description, échéance, répétition (facultatives)"));
-    await userEvent.click(screen.getByRole("radio", { name: "Chaque jour" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Personnalisée…" }));
     const interval = screen.getByLabelText("Intervalle");
     await userEvent.clear(interval);
     await userEvent.type(interval, "0");
@@ -102,7 +154,7 @@ describe("TaskForm, répétition", () => {
 
   it("préremplit la répétition d'une tâche à modifier, détails ouverts", () => {
     renderForm({ task: WEEKLY_TASK, onDone: vi.fn() });
-    expect(screen.getByRole("radio", { name: "Chaque semaine" })).toHaveProperty("checked", true);
+    expect(screen.getByRole("radio", { name: "Personnalisée…" })).toHaveProperty("checked", true);
     expect(screen.getByLabelText("Intervalle")).toHaveProperty("value", "2");
     expect(screen.getByLabelText("Intervalle").closest("details")).toHaveProperty("open", true);
   });

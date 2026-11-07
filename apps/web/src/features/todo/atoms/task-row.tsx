@@ -101,11 +101,13 @@ function TaskActions({ task, done, onAddSubtask, onFinish, onEdit, onDelete }: T
     { key: "delete", label: TODO_LABELS.delete, onSelect: onDelete },
   ];
   return (
-    <Menu
-      label={TODO_LABELS.actionsOf(task.title)}
-      trigger={<span aria-hidden="true">⋯</span>}
-      items={items}
-    />
+    <div className="flex justify-end sm:shrink-0">
+      <Menu
+        label={TODO_LABELS.actionsOf(task.title)}
+        trigger={<span aria-hidden="true">⋯</span>}
+        items={items}
+      />
+    </div>
   );
 }
 

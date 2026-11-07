@@ -8,6 +8,7 @@ import {
   type DateTimeFieldProps,
   type DateTimeValue,
 } from "@planifier/ui/components/date-time-field";
+import { RecurrenceField } from "@planifier/ui/components/recurrence-field";
 import { SegmentedControl } from "@planifier/ui/components/segmented-control";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { Switch } from "@planifier/ui/components/switch";
@@ -51,6 +52,26 @@ function DateTimeDemo({
       onChange={setValue}
       {...props}
     />
+  );
+}
+
+function RecurrenceDemo() {
+  return (
+    <Section title="Répétition">
+      <RecurrenceField
+        legend="Répéter"
+        name="demo-repeat"
+        presets={[
+          { value: "NONE", label: "Jamais" },
+          { value: "WEEKLY", label: "Chaque semaine" },
+          { value: "YEARLY", label: "Chaque année" },
+        ]}
+        custom={{ value: "custom", label: "Personnalisée…" }}
+        defaultValue="NONE"
+      >
+        <TextField label="Intervalle" type="number" defaultValue={2} hint="Choix personnalisé." />
+      </RecurrenceField>
+    </Section>
   );
 }
 
@@ -101,6 +122,8 @@ export function UiShowcase() {
         <DateTimeDemo initial={{ date: null, time: null }} error="Choisis un jour valide." />
         <DateTimeDemo initial={{ date: "2026-11-10", time: "09:30" }} disabled />
       </Section>
+
+      <RecurrenceDemo />
 
       <Section title="Cases et interrupteurs">
         <Checkbox label="Se souvenir de moi" hint="Sur cet appareil seulement." />

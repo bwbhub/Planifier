@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — iCal 5/5 : écran « Agendas importés » (branche `feat/ical-ecran-import`, ticket `869fjgrcc`)
+
+**Fait** : page `/agenda/importer` (lien discret « Agendas importés » sous les choix d'Espace de l'Agenda) : formulaire (nom + lien privé, lu tout de suite), liste (nom, hôte, « Actualisé il y a … », raison du dernier échec), « Actualiser », « Retirer » avec confirmation, aide « Où trouver le lien privé ? » (Google, Outlook, iCloud). Messages pour chaque raison (`IMPORT_FAILURE_REASONS`) et conflit (`TOO_MANY_IMPORTS`, `REFRESH_TOO_SOON`, `IMPORTED_ENTRY`). Entrée importée ouverte dans la grille : feuille en lecture seule (quand, lieu, description, rappel « se modifie à la source »). Actualisation à l'ouverture de l'Agenda : agendas lus il y a plus de 6 h (`AGENDA_IMPORT_STALE_HOURS`), une fois par ouverture.
+**Décisions** : pas de cron ⇒ l'actualisation automatique se fait à l'ouverture, jamais pour un agenda en échec (« Actualiser » reste un geste de l'utilisateur). Le lien de l'écran n'apparaît que sur « Mon agenda », pas dans la vue d'un Espace. Formulaire toujours visible (le plafond de 5 se dit par le message du serveur).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web : 324 + 14 nouveaux), `pnpm build` exécutés. Axe sur l'état vide. **Non fait** : E2E Playwright de l'écran (flux servi par un serveur local, ticket plan §3), test avec un vrai lien Google.
+**Ouvert** : la lecture automatique à l'ouverture envoie une requête sortante sans geste explicite (bornée : 6 h, 1/min par agenda) ; à valider côté produit. Pas de revue humaine obligatoire propre à cette PR (pas de droits, secrets ni route publique nouvelle).
+**Attendu ensuite** : E2E de l'import si voulu, puis export `.ics` ponctuel et flux d'abonnement à jeton haché (`869fhwtup`, revue humaine obligatoire).
+
+---
+
 ## 2026-11-08 — iCal 4/5 : abonnements et procédures d'import (branche `feat/ical-import-abonnements`, ticket `869fjgrcc`)
 
 **Fait** : table `calendar_subscriptions` (migration `20261108130000_abonnements_agenda_ical`, additive) ; variable obligatoire `ICAL_ENCRYPTION_KEY` (`env.ts` de l'API, `.env.example`, config E2E) ; procédures `agenda.imports.{list, create, refresh, delete}` ; `ApiContext.imports` (lecteur de flux, boîte à secrets, horloge) branché dans `main.ts`. `create` lit le lien d'abord (échec ⇒ rien d'enregistré), chiffre le lien (contexte = id de l'abonnement), importe. `refresh` : un appel par minute et par agenda (réservation atomique), upsert par `uid` (créées / mises à jour au même identifiant / retirées), échec noté dans `lastError`. `delete` retire l'abonnement et ses entrées. Entrées importées : `imported: true` en sortie, `update` et `delete` refusés (`CONFLICT IMPORTED_ENTRY`).

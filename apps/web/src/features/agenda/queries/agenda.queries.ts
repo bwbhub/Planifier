@@ -72,7 +72,7 @@ export function useSpacePeople(spaceId: string | null) {
 }
 
 /** Invalidation centralisée : toute écriture du module relit ses entrées. */
-function useInvalidateAgenda() {
+export function useInvalidateAgenda() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: orpc.agenda.key() });
 }

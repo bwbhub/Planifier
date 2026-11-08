@@ -23,7 +23,9 @@ import {
   windowOf,
 } from "../utils/agenda-items";
 import { agendaHref, type AgendaParams } from "../utils/agenda-params";
-import { PeopleFilter, ReadError, SpaceChoice, Toolbar } from "./agenda-toolbar";
+import { useAutoRefreshImports } from "../utils/use-auto-refresh-imports";
+import { ImportsLink, PeopleFilter, ReadError, SpaceChoice, Toolbar } from "./agenda-toolbar";
+import { ImportedEntry } from "./imported-entry";
 import { MonthGrid } from "./month-grid";
 import { TimeGrid } from "./time-grid";
 
@@ -117,13 +119,13 @@ interface EntrySheetProps {
 
 function EntrySheet({ sheet, day, onClose }: EntrySheetProps) {
   const entry = sheet.kind === "edit" ? (sheet.item.entry ?? undefined) : undefined;
+  const readOnly = entry?.imported === true;
+  const title = entry === undefined ? AGENDA_LABELS.newEntry : AGENDA_LABELS.editEntry;
   return (
-    <Sheet
-      open={sheet.kind !== "closed"}
-      onClose={onClose}
-      title={entry === undefined ? AGENDA_LABELS.newEntry : AGENDA_LABELS.editEntry}
-    >
-      {sheet.kind === "closed" ? null : (
+    <Sheet open={sheet.kind !== "closed"} onClose={onClose} title={readOnly ? entry.title : title}>
+      {sheet.kind === "closed" ? null : readOnly ? (
+        <ImportedEntry entry={entry} onClose={onClose} />
+      ) : (
         <EntryForm key={entry?.id ?? "create"} entry={entry} day={day} onDone={onClose} />
       )}
     </Sheet>
@@ -198,6 +200,7 @@ function titleOf({ view, days, day }: ShownPeriod, items: readonly AgendaItem[])
 /** Écran Agenda : période et vue dans l'adresse, mon agenda ou la vue fusionnée d'un Espace. */
 export function AgendaView({ view, day, spaceId }: AgendaParams) {
   const period = useShownPeriod({ view, day });
+  useAutoRefreshImports();
   const { items, isPending, error, refetch } = useAgendaItems(period?.days ?? null, spaceId);
   const { hiddenPeople, toggle } = useHiddenPeople();
   const [sheet, setSheet] = useState<SheetState>({ kind: "closed" });
@@ -228,6 +231,7 @@ export function AgendaView({ view, day, spaceId }: AgendaParams) {
         }}
       />
       <SpaceChoice params={params} />
+      {spaceId === null ? <ImportsLink /> : null}
       <PeopleSection spaceId={spaceId} hiddenPeople={hiddenPeople} onToggle={toggle} />
       {error === null ? null : (
         <LoadError

@@ -7,8 +7,8 @@ export interface Rule {
   frequency: Frequency;
   interval: number;
   count: number | null;
-  /** Dernier jour inclus (`AAAA-MM-JJ`, en UTC). */
-  until: string | null;
+  /** Fin de la série : jour `AAAA-MM-JJ` (UTC) et, si `UNTIL` donnait une heure, l'instant exact. */
+  until: { day: string; at: Date | null } | null;
   /** Jours de la semaine (lundi = 0), triés ; vide si non précisé. */
   byDay: number[];
   /** Jours du mois, triés ; vide si non précisé. */
@@ -25,10 +25,14 @@ function positiveInt(value: string | undefined, max: number): number | null {
   return Number.isInteger(parsed) && parsed >= 1 && parsed <= max ? parsed : null;
 }
 
-/** `20261231` ou `20261231T235959Z` ⇒ `2026-12-31`. */
-function untilDay(value: string): string | null {
-  const match = /^(\d{4})(\d{2})(\d{2})(?:T\d{6}Z?)?$/.exec(value);
-  return match ? `${match[1] ?? ""}-${match[2] ?? ""}-${match[3] ?? ""}` : null;
+/** `20261231` ⇒ jour ; `20261231T235959Z` ⇒ jour et instant (UTC). */
+function parseUntil(value: string): { day: string; at: Date | null } | null {
+  const match = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/.exec(value);
+  if (!match) return null;
+  const day = `${match[1] ?? ""}-${match[2] ?? ""}-${match[3] ?? ""}`;
+  if (match[4] === undefined) return Number.isNaN(Date.parse(day)) ? null : { day, at: null };
+  const at = new Date(`${day}T${match[4]}:${match[5] ?? ""}:${match[6] ?? ""}Z`);
+  return Number.isNaN(at.getTime()) ? null : { day, at };
 }
 
 /** `MO,WE` ⇒ `[0, 2]` ; `null` si un jour est inconnu ou porte un rang (`2MO`, non pris en charge). */
@@ -60,6 +64,8 @@ function parts(rule: string): Map<string, string> | null {
 }
 
 /** Clés comprises ; toute autre (`BYSETPOS`, `BYMONTH`…) rend la règle non prise en charge plutôt que mal développée. */
+/** Seule la semaine qui commence le lundi (valeur par défaut) est prise en charge. */
+const SUPPORTED_WEEK_START = "MO";
 const SUPPORTED_KEYS = new Set([
   "FREQ",
   "INTERVAL",
@@ -91,12 +97,23 @@ type Fields = Omit<Rule, "frequency">;
 function readFields(map: Map<string, string>): Fields | null {
   const interval = optional(map, "INTERVAL", (v) => positiveInt(v, MAX_INTERVAL), 1);
   const count = optional(map, "COUNT", (v) => positiveInt(v, MAX_COUNT), null);
-  const until = optional(map, "UNTIL", untilDay, null);
+  const until = optional(map, "UNTIL", parseUntil, null);
   const byDay = optional(map, "BYDAY", parseByDay, []);
   const byMonthDay = optional(map, "BYMONTHDAY", parseByMonthDay, []);
   const unreadable = (map.has("COUNT") && count === null) || (map.has("UNTIL") && until === null);
   if (interval === null || byDay === null || byMonthDay === null || unreadable) return null;
   return { interval, count, until, byDay, byMonthDay };
+}
+
+/** Combinaisons qu'on sait développer : `BYDAY` avec `WEEKLY`, `BYMONTHDAY` avec `MONTHLY`, semaine du lundi. */
+function isSupported(
+  frequency: Frequency,
+  fields: Fields,
+  weekStart = SUPPORTED_WEEK_START,
+): boolean {
+  const dayRuleMisplaced = fields.byDay.length > 0 && frequency !== "WEEKLY";
+  const monthDayMisplaced = fields.byMonthDay.length > 0 && frequency !== "MONTHLY";
+  return weekStart === SUPPORTED_WEEK_START && !dayRuleMisplaced && !monthDayMisplaced;
 }
 
 /**
@@ -108,5 +125,6 @@ export function parseRule(rule: string): Rule | null {
   if (map === null || ![...map.keys()].every((key) => SUPPORTED_KEYS.has(key))) return null;
   const frequency = map.get("FREQ") ?? "";
   const fields = readFields(map);
-  return isFrequency(frequency) && fields !== null ? { frequency, ...fields } : null;
+  if (!isFrequency(frequency) || fields === null) return null;
+  return isSupported(frequency, fields, map.get("WKST")) ? { frequency, ...fields } : null;
 }

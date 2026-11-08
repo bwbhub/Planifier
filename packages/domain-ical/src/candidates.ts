@@ -2,6 +2,9 @@ import { addDays, weekdayIndex } from "@planifier/constants/days";
 
 import type { Rule } from "./recurrence-rule";
 
+/** Pas examinés au plus par générateur : une règle qui ne produit rien ne tourne pas sans fin. */
+const MAX_STEPS = 25_000;
+
 const pad = (value: number, width = 2) => String(value).padStart(width, "0");
 const toDay = (year: number, month: number, day: number) =>
   `${pad(year, 4)}-${pad(month)}-${pad(day)}`;
@@ -16,13 +19,13 @@ function daysInMonth(year: number, month: number): number {
 }
 
 function* daily(start: string, interval: number): Generator<string> {
-  for (let step = 0; ; step += 1) yield addDays(start, step * interval);
+  for (let step = 0; step < MAX_STEPS; step += 1) yield addDays(start, step * interval);
 }
 
 function* weekly(start: string, { interval, byDay }: Rule): Generator<string> {
   const weekdays = byDay.length > 0 ? byDay : [weekdayIndex(start)];
   const firstMonday = addDays(start, -weekdayIndex(start));
-  for (let step = 0; ; step += 1) {
+  for (let step = 0; step < MAX_STEPS; step += 1) {
     const monday = addDays(firstMonday, step * interval * 7);
     for (const weekday of weekdays) {
       const day = addDays(monday, weekday);
@@ -34,7 +37,7 @@ function* weekly(start: string, { interval, byDay }: Rule): Generator<string> {
 function* monthly(start: string, { interval, byMonthDay }: Rule): Generator<string> {
   const { year, month, dom } = parseDay(start);
   const monthDays = byMonthDay.length > 0 ? byMonthDay : [dom];
-  for (let step = 0; ; step += 1) {
+  for (let step = 0; step < MAX_STEPS; step += 1) {
     const index = month - 1 + step * interval;
     const y = year + Math.floor(index / 12);
     const m = (index % 12) + 1;
@@ -49,7 +52,7 @@ function* monthly(start: string, { interval, byMonthDay }: Rule): Generator<stri
 
 function* yearly(start: string, { interval }: Rule): Generator<string> {
   const { year, month, dom } = parseDay(start);
-  for (let step = 0; ; step += 1) {
+  for (let step = 0; step < MAX_STEPS; step += 1) {
     const y = year + step * interval;
     if (dom <= daysInMonth(y, month)) yield toDay(y, month, dom);
   }
@@ -57,7 +60,7 @@ function* yearly(start: string, { interval }: Rule): Generator<string> {
 
 /**
  * Jours candidats d'une règle, dans l'ordre, à partir de `start` (le premier jour de la série, toujours un
- * candidat). Flux sans fin : l'appelant l'arrête (`COUNT`, `UNTIL`, fenêtre, plafond).
+ * candidat). Flux borné à `MAX_STEPS` pas ; l'appelant l'arrête avant (`COUNT`, `UNTIL`, fenêtre).
  */
 export function candidateDays(start: string, rule: Rule): Generator<string> {
   switch (rule.frequency) {

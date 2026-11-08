@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — iCal 2/5 : récurrences (branche `feat/ical-recurrences`, tickets `869fjgrcc` / `869fhwtup`)
+
+**Fait** : `expandFeed(événements, fenêtre)` dans `@planifier/domain-ical` : développe les séries (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` sans rang, `BYMONTHDAY`) en occurrences `uid#jour-ou-instant`, retire les `EXDATE`, remplace les occurrences modifiées (`RECURRENCE-ID`), garde l'heure murale d'un changement d'heure à l'autre (`TZID`). `parseFeed` garde maintenant le fuseau de la série.
+**Décisions** : recommandations prises faute de réponse : occurrences sur une fenêtre (à fixer à l'appel : −30 j / +365 j) ; un événement simple n'est jamais filtré par la fenêtre. Règle non prise en charge (`BYSETPOS`, `2MO`, `BYMONTH`, `WKST` autre que lundi, `BYDAY` hors `WEEKLY`, `BYMONTHDAY` hors `MONTHLY`) ou série qui n'atteint pas la fenêtre en 20 000 jours : première occurrence seule, comptée dans `unsupported` (jamais mal développée en silence).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` verts (61 tests du package). `/code-review` : `BYDAY` / `BYMONTHDAY` mal placés, `WKST`, `UNTIL` horodaté, plafond silencieux, fin de série en fuseau, chevauchement des exceptions corrigés. `pnpm build` vert.
+**Ouvert** : durée constante en ms (en fuseau, à travers un changement d'heure, la fin diffère de la durée nominale) ; règle non prise en charge + `RECURRENCE-ID` : un doublon possible ; fuseaux Windows ; `RANGE=THISANDFUTURE`. Aucune revue humaine requise.
+**Attendu ensuite** : iCal 3/5 : lecture sûre du lien (SSRF, liste blanche d'hôtes, chiffrement du lien, table `CalendarSubscription`, procédures) : **revue humaine**.
+
+---
+
 ## 2026-11-08 — iCal 1/5 : domaine pur (branche `feat/ical-domaine`, tickets `869fjgrcc` / `869fhwtup`)
 
 **Fait** : package `@planifier/domain-ical`, fonctions pures, sans dépendance : `parseFeed` (VEVENT, jours entiers, UTC, fuseaux IANA via `Intl`, durées, répétition lue sans être développée, annulés et illisibles écartés et comptés), `planUpsert` (create / update / unchanged / removed par `uid`), `renderFeed` (export marqué `PRODID` + `X-PLANIFIER-ORIGIN` + `UID…@planifier`, pliage à 75 octets), anti-boucle à la lecture.

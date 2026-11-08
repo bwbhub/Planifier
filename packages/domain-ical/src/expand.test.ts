@@ -172,6 +172,25 @@ describe("expandFeed : exceptions, remplacements et cas limites", () => {
     expect(result.unsupported).toBe(2);
     expect(result.entries.map((e) => e.uid)).toEqual(["u", "v"]);
   });
+});
+
+describe("expandFeed : bornes", () => {
+  it("coupe à l'instant exact d'un UNTIL horodaté", () => {
+    const events = [
+      ["UID:u", "DTSTART:20261102T090000Z", "RRULE:FREQ=DAILY;UNTIL=20261104T080000Z", "SUMMARY:u"],
+    ];
+
+    expect(days(events)).toEqual(["2026-11-02T09:00:00.000Z", "2026-11-03T09:00:00.000Z"]);
+  });
+
+  it("ne développe pas, et le dit, une série qui n'atteint pas la fenêtre dans le plafond", () => {
+    const result = expand([
+      ["UID:o", "DTSTART;VALUE=DATE:19600101", "RRULE:FREQ=DAILY", "SUMMARY:o"],
+    ]);
+
+    expect(result.unsupported).toBe(1);
+    expect(result.entries.map((e) => e.uid)).toEqual(["o"]);
+  });
 
   it("ne boucle pas sur une règle démesurée", () => {
     const far = { from: "2026-11-01", to: "9999-12-31" };

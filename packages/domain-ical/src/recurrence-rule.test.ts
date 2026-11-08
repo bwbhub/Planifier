@@ -8,7 +8,7 @@ describe("parseRule", () => {
       frequency: "WEEKLY",
       interval: 2,
       count: null,
-      until: "2026-12-31",
+      until: { day: "2026-12-31", at: new Date("2026-12-31T23:59:59Z") },
       byDay: [0, 2],
       byMonthDay: [],
     });
@@ -25,6 +25,11 @@ describe("parseRule", () => {
     "FREQ=DAILY;FREQ=WEEKLY",
     "FREQ=MONTHLY;BYMONTHDAY=-1",
     "FREQ=DAILY;UNTIL=demain",
+    "FREQ=YEARLY;BYMONTHDAY=31",
+    "FREQ=MONTHLY;BYDAY=MO",
+    "FREQ=DAILY;BYDAY=MO",
+    "FREQ=WEEKLY;BYMONTHDAY=1",
+    "FREQ=WEEKLY;WKST=SU",
   ])("refuse %j", (rule) => {
     expect(parseRule(rule)).toBeNull();
   });

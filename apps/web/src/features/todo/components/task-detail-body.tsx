@@ -81,7 +81,7 @@ function Subtasks({ detail }: { detail: GetTaskOutput }) {
 /** Suppression avec confirmation ; les sous-tâches partent avec la tâche. */
 function DeleteTask({ detail, onClose }: BodyProps) {
   const [confirming, setConfirming] = useState(false);
-  const deleteTask = useDeleteTask();
+  const deleteTask = useDeleteTask({ onDeleted: onClose });
   const { task, subtasks } = detail;
   if (!confirming) {
     return (
@@ -103,7 +103,7 @@ function DeleteTask({ detail, onClose }: BodyProps) {
         keepLabel="Garder la tâche"
         pending={deleteTask.isPending}
         onConfirm={() => {
-          deleteTask.mutate({ taskId: task.id }, { onSuccess: onClose });
+          deleteTask.mutate({ taskId: task.id });
         }}
         onKeep={() => {
           setConfirming(false);

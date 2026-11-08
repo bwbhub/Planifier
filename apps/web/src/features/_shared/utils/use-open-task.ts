@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { TASK_PARAM } from "@/lib/routes";
+import { hrefWithTask, markTaskOpenedInApp } from "./task-param";
 
 /**
  * Ouvre le détail d'une tâche de n'importe quel écran : ajoute `?tache=<id>` à l'adresse courante (les autres
@@ -13,8 +13,7 @@ export function useOpenTask(): (taskId: string) => void {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   return (taskId) => {
-    const params = new URLSearchParams(searchParams);
-    params.set(TASK_PARAM, taskId);
-    router.push(`${pathname}?${params.toString()}`);
+    markTaskOpenedInApp();
+    router.push(hrefWithTask(pathname, searchParams, taskId));
   };
 }

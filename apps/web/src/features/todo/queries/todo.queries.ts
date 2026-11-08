@@ -117,14 +117,19 @@ export function useUndoCompletion() {
   return useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
 }
 
-/** Le message est posé ici et non à l'appel : la ligne disparaît avec la tâche, un rappel de `mutate` ne tiendrait pas. */
-export function useDeleteTask() {
+/**
+ * Le message est posé ici et non à l'appel : la ligne disparaît avec la tâche, un rappel de `mutate` ne tiendrait pas.
+ * Pour la même raison, `onDeleted` (fermer le détail) passe par le hook : le détail se démonte dès que la tâche
+ * n'existe plus.
+ */
+export function useDeleteTask({ onDeleted }: { onDeleted?: () => void } = {}) {
   const onSettled = useInvalidateTodo();
   const { notify } = useToast();
   return useMutation(
     orpc.todo.tasks.delete.mutationOptions({
       onSuccess: () => {
         notify(TODO_LABELS.taskDeleted);
+        onDeleted?.();
       },
       onSettled,
     }),

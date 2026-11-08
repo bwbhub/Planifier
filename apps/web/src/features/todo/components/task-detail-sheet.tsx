@@ -5,6 +5,7 @@ import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
 import { LoadError } from "@planifier/ui/components/load-error";
 import { Sheet } from "@planifier/ui/components/sheet";
 
+import { isNotFound } from "@/features/_shared/utils/action-error-message";
 import { COMMON_LABELS } from "@/lib/labels";
 
 import { TODO_LABELS } from "../labels";
@@ -17,17 +18,11 @@ interface TaskDetailSheetProps {
   onClose: () => void;
 }
 
-function isGone(error: unknown): boolean {
-  return (
-    typeof error === "object" && error !== null && "code" in error && error.code === "NOT_FOUND"
-  );
-}
-
 function Content({ taskId, onClose }: TaskDetailSheetProps) {
   const task = useTask(taskId);
   if (task.isError) {
     // Supprimée ou jamais visible : même réponse, on le dit sans détour.
-    if (isGone(task.error))
+    if (isNotFound(task.error))
       return (
         <EmptyState level={3} title={TODO_LABELS.taskGone} description={TODO_LABELS.taskGoneHint} />
       );

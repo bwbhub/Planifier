@@ -92,7 +92,7 @@ export function ImportsLink() {
       href={ROUTES.agendaImports}
       className="min-h-11 self-start py-2.5 text-sm text-muted underline"
     >
-      {AGENDA_LABELS.importsLink}
+      {AGENDA_LABELS.importsTitle}
     </Link>
   );
 }

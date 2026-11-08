@@ -10,7 +10,6 @@ export const AGENDA_LABELS = {
   createSlot: "Créer un créneau dans l'agenda",
   loadingSlots: "Chargement des créneaux…",
   onlyMine: "Cet Espace restreint sa visibilité : tu n'y vois que tes entrées.",
-  importsLink: "Agendas importés",
   importedNote:
     "Cette entrée vient d'un agenda importé : elle se modifie à la source. Retire l'agenda importé pour la faire disparaître d'ici.",
   importsTitle: "Agendas importés",
@@ -21,6 +20,5 @@ export const AGENDA_LABELS = {
   importsLoadFailed: "Les agendas importés n'ont pas pu être chargés.",
   importsEmptyTitle: "Aucun agenda importé",
   importsEmptyHint: "Colle le lien privé d'un agenda pour le voir à côté du tien.",
-  importsListLabel: "Agendas importés",
   importsFull: "Tu as atteint le maximum d'agendas importés. Retires-en un pour en ajouter.",
 } as const;

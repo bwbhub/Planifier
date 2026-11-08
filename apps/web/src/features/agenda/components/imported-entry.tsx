@@ -39,7 +39,7 @@ export function ImportedEntry({ entry, onClose }: ImportedEntryProps) {
       <p className="text-sm text-muted">{AGENDA_LABELS.importedNote}</p>
       <div className="flex flex-wrap gap-2">
         <Link href={ROUTES.agendaImports} className={buttonClassName({ variant: "secondary" })}>
-          {AGENDA_LABELS.importsLink}
+          {AGENDA_LABELS.importsTitle}
         </Link>
         <Button variant="ghost" onClick={onClose}>
           {COMMON_LABELS.close}

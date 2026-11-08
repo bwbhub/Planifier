@@ -41,6 +41,7 @@ export function ImportRow({ item }: { item: ImportSubscriptionOutput }) {
         <Button
           variant="outline"
           size="sm"
+          aria-label={`Actualiser ${item.label}`}
           loading={refresh.isPending}
           onClick={() => {
             refresh.mutate({ subscriptionId: item.id });
@@ -51,6 +52,7 @@ export function ImportRow({ item }: { item: ImportSubscriptionOutput }) {
         <Button
           variant="ghost"
           size="sm"
+          aria-label={`Retirer ${item.label}`}
           onClick={() => {
             setConfirming(true);
           }}
@@ -77,6 +79,7 @@ export function ImportRow({ item }: { item: ImportSubscriptionOutput }) {
             remove.mutate({ subscriptionId: item.id });
           }}
           onClose={() => {
+            remove.reset();
             setConfirming(false);
           }}
         />

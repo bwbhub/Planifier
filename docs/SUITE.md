@@ -137,6 +137,12 @@ Priorités ClickUp ensuite (high) : Aujourd'hui (`869fhwtu9`, écran), Détail d
   - Limites : 5 000 entrées par personne, 366 jours par entrée, 62 jours lus à la fois.
   - Revue humaine (droits) : `domain-access/agenda.ts`, `agenda-guard.ts`, `listSpaceEntries`, `assertReadableTask`.
 
+- **iCal, écran d'import (869fjgrcc)** : (1) l'actualisation à l'ouverture de l'Agenda (agendas lus il y a plus de 6 h) est
+  une lecture sortante sans geste explicite : garder, ou la remplacer par le seul bouton « Actualiser » ? (règle 14)
+  (2) un agenda en échec n'est jamais relancé tout seul, même après 6 h : voulu ? (3) échec d'une actualisation
+  automatique : visible seulement sur l'écran des agendas importés. (4) Aide Outlook et iCloud en plus de Google.
+  (5) Le lien collé reste dans le cache de mutation de l'écran jusqu'à son démontage (mémoire du navigateur seulement).
+
 - **Fusion Espaces → Todo** : `Button` taille `sm` unifiée (texte `sm`, padding réduit) : les petits boutons des
   Espaces rapetissent ; à valider à l'œil. (`todo/atoms/load-error.tsx` remplacé par le
   `LoadError` de `packages/ui`, PR skeleton / état vide.)

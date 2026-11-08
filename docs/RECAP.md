@@ -24,6 +24,7 @@ Modèle d'entrée :
 **Décisions** : pas de cron ⇒ l'actualisation automatique se fait à l'ouverture, jamais pour un agenda en échec (« Actualiser » reste un geste de l'utilisateur). Le lien de l'écran n'apparaît que sur « Mon agenda », pas dans la vue d'un Espace. Formulaire toujours visible (le plafond de 5 se dit par le message du serveur).
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (web : 324 + 14 nouveaux), `pnpm build` exécutés. Axe sur l'état vide. **Non fait** : E2E Playwright de l'écran (flux servi par un serveur local, ticket plan §3), test avec un vrai lien Google.
 **Ouvert** : la lecture automatique à l'ouverture envoie une requête sortante sans geste explicite (bornée : 6 h, 1/min par agenda) ; à valider côté produit. Pas de revue humaine obligatoire propre à cette PR (pas de droits, secrets ni route publique nouvelle).
+**Revue** : `/code-review` (standards + spec) : noms accessibles distincts des boutons par ligne, raison du serveur prioritaire sur le refus d'une tentative, erreur de retrait remise à zéro à la fermeture, libellés dédoublonnés ; points à trancher notés dans `docs/SUITE.md` §4.
 **Attendu ensuite** : E2E de l'import si voulu, puis export `.ics` ponctuel et flux d'abonnement à jeton haché (`869fhwtup`, revue humaine obligatoire).
 
 ---

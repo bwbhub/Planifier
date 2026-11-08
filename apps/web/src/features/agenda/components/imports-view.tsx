@@ -66,7 +66,7 @@ function ImportsList() {
   }
   return (
     <>
-      <SettingCard label={AGENDA_LABELS.importsListLabel}>
+      <SettingCard label={AGENDA_LABELS.importsTitle}>
         {data.items.map((item) => (
           <ImportRow key={item.id} item={item} />
         ))}

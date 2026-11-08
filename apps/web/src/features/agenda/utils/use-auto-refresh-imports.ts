@@ -13,11 +13,11 @@ const STALE_MS = AGENDA_IMPORT_STALE_HOURS * 3_600_000;
 export function useAutoRefreshImports() {
   const { data } = useImports();
   const { mutate } = useRefreshImport();
-  const done = useRef(false);
+  const hasRefreshed = useRef(false);
 
   useEffect(() => {
-    if (data === undefined || done.current) return;
-    done.current = true;
+    if (data === undefined || hasRefreshed.current) return;
+    hasRefreshed.current = true;
     const now = Date.now();
     for (const { id, lastFetchedAt, lastError } of data.items) {
       const stale = lastFetchedAt === null || now - lastFetchedAt.getTime() > STALE_MS;

@@ -128,7 +128,7 @@ describe("ImportsView, actions sur un agenda", () => {
       "agenda/imports/refresh": { data: GOOGLE },
     });
     renderView();
-    await userEvent.click(await screen.findByRole("button", { name: "Actualiser" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Actualiser Google perso" }));
     await waitFor(() => {
       expect(calls.some(({ path }) => path === "agenda/imports/refresh")).toBe(true);
     });
@@ -143,7 +143,7 @@ describe("ImportsView, actions sur un agenda", () => {
       "agenda/imports/delete": { data: {} },
     });
     renderView();
-    await userEvent.click(await screen.findByRole("button", { name: "Retirer" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Retirer Google perso" }));
     expect(calls.some(({ path }) => path === "agenda/imports/delete")).toBe(false);
     await userEvent.click(screen.getByRole("button", { name: "Retirer l'agenda" }));
     await waitFor(() => {

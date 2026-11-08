@@ -78,6 +78,7 @@ export type {
   CompleteOccurrenceInput,
   CreateTaskInput,
   FinishTaskInput,
+  GetTaskOutput,
   ListTasksOutput,
   PostponeTasksInput,
   SetTaskDoneInput,

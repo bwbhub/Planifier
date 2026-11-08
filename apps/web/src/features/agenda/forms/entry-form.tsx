@@ -25,7 +25,7 @@ import { TINT_OPTIONS } from "@/features/_shared/utils/tints";
 import { COMMON_LABELS } from "@/lib/labels";
 
 import { useCreateEntry, useDeleteEntry, useUpdateEntry } from "../queries/agenda.queries";
-import { toLocalInput } from "../utils/agenda-dates";
+import { hourAfter, toLocalInput } from "../utils/agenda-dates";
 import { agendaErrorMessage } from "../utils/agenda-error-message";
 import { participantsFromText } from "../utils/agenda-participants";
 
@@ -61,11 +61,16 @@ function whenFromForm(data: FormData, allDay: boolean) {
 }
 
 /** Bornes affichées d'une entrée, ou celles proposées pour `day` à la création. */
-function initialBounds(entry: AgendaEntryOutput | undefined, day: string, allDay: boolean) {
+function initialBounds(
+  entry: AgendaEntryOutput | undefined,
+  day: string,
+  allDay: boolean,
+  startTime: string,
+) {
   if (entry === undefined) {
     return allDay
       ? { start: day, end: day }
-      : { start: `${day}T${DEFAULT_START}`, end: `${day}T${DEFAULT_END}` };
+      : { start: `${day}T${startTime}`, end: `${day}T${hourAfter(startTime)}` };
   }
   const { when } = entry;
   if (when.allDay) {
@@ -78,11 +83,29 @@ function initialBounds(entry: AgendaEntryOutput | undefined, day: string, allDay
   return allDay ? { start: start.slice(0, 10), end: end.slice(0, 10) } : { start, end };
 }
 
+/** Heure de début proposée : celle d'échéance de la tâche dont on part, sinon l'heure par défaut. */
+function startTimeOf(fromTask: EntryFormProps["fromTask"]): string {
+  return fromTask?.time ?? DEFAULT_START;
+}
+
+/** Titre proposé : celui de l'entrée modifiée, sinon celui de la tâche dont on part. */
+function initialTitle(
+  entry: AgendaEntryOutput | undefined,
+  fromTask: EntryFormProps["fromTask"],
+): string | undefined {
+  return entry?.title ?? fromTask?.title;
+}
+
 interface EntryFormProps {
   /** Entrée à modifier ; absente : création. */
   entry?: AgendaEntryOutput | undefined;
   /** Jour proposé à la création. */
   day: string;
+  /**
+   * Création depuis une tâche : son titre (et son heure, si elle en a une) sont proposés et l'entrée lui est liée
+   * (sens unique, rien ne se coche).
+   */
+  fromTask?: { id: string; title: string; time?: string | null | undefined } | undefined;
   onDone: () => void;
 }
 
@@ -183,13 +206,15 @@ function EntryDisplay({ entry }: { entry: AgendaEntryOutput | undefined }) {
 
 interface EntryWhenProps extends EntryFieldsProps {
   day: string;
+  /** Heure de début proposée à la création. */
+  startTime: string;
   allDay: boolean;
   onAllDayChange: (allDay: boolean) => void;
 }
 
-function EntryWhen({ entry, invalid, day, allDay, onAllDayChange }: EntryWhenProps) {
+function EntryWhen({ entry, invalid, day, startTime, allDay, onAllDayChange }: EntryWhenProps) {
   const inputType = allDay ? "date" : "datetime-local";
-  const bounds = initialBounds(entry, day, allDay);
+  const bounds = initialBounds(entry, day, allDay, startTime);
   return (
     <>
       <Checkbox
@@ -222,7 +247,12 @@ function EntryWhen({ entry, invalid, day, allDay, onAllDayChange }: EntryWhenPro
 }
 
 /** Envoi du formulaire : création, ou modification de `entry`. */
-function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, onDone: () => void) {
+function useEntrySubmit(
+  entry: AgendaEntryOutput | undefined,
+  allDay: boolean,
+  taskId: string | undefined,
+  onDone: () => void,
+) {
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
   const { invalid, validate } = useFormValidation(FIELDS);
@@ -246,6 +276,7 @@ function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, o
         ...common,
         location: location ?? undefined,
         description: description ?? undefined,
+        taskId,
       });
       if (input !== null) createEntry.mutate(input, { onSuccess: onDone });
       return;
@@ -265,9 +296,9 @@ function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, o
 }
 
 /** Un seul formulaire pour créer une entrée et la modifier : titre et horaire obligatoires, le reste facultatif. */
-export function EntryForm({ entry, day, onDone }: EntryFormProps) {
+export function EntryForm({ entry, day, fromTask, onDone }: EntryFormProps) {
   const [allDay, setAllDay] = useState(entry?.when.allDay ?? false);
-  const { submit, invalid, mutation } = useEntrySubmit(entry, allDay, onDone);
+  const { submit, invalid, mutation } = useEntrySubmit(entry, allDay, fromTask?.id, onDone);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -280,7 +311,7 @@ export function EntryForm({ entry, day, onDone }: EntryFormProps) {
         label="Titre"
         name="title"
         placeholder="Ex. : dentiste"
-        defaultValue={entry?.title}
+        defaultValue={initialTitle(entry, fromTask)}
         maxLength={AGENDA_TITLE_MAX_LENGTH}
         required
         autoFocus
@@ -290,6 +321,7 @@ export function EntryForm({ entry, day, onDone }: EntryFormProps) {
         entry={entry}
         invalid={invalid}
         day={day}
+        startTime={startTimeOf(fromTask)}
         allDay={allDay}
         onAllDayChange={setAllDay}
       />

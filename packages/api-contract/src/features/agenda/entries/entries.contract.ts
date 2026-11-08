@@ -9,6 +9,8 @@ import {
   listEntriesInputSchema,
   listEntriesOutputSchema,
   listSpaceEntriesInputSchema,
+  listTaskEntriesInputSchema,
+  listTaskEntriesOutputSchema,
   listSpaceEntriesOutputSchema,
   updateEntryInputSchema,
 } from "./entries.schemas";
@@ -22,6 +24,14 @@ export const entriesContract = {
     })
     .input(listEntriesInputSchema)
     .output(listEntriesOutputSchema),
+  listForTask: oc
+    .route({
+      summary: "Mes créneaux d'une tâche",
+      description:
+        "Entrées de l'appelant liées à la tâche (`taskId`), dans l'ordre de création. Celles des autres ne sont jamais rendues : tâche inconnue ou invisible, liste vide.",
+    })
+    .input(listTaskEntriesInputSchema)
+    .output(listTaskEntriesOutputSchema),
   listInSpace: oc
     .route({
       summary: "Vue fusionnée d'un Espace",

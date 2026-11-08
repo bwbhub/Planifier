@@ -8,9 +8,11 @@ import type {
   ListEntriesOutput,
   ListSpaceEntriesInput,
   ListSpaceEntriesOutput,
+  ListTaskEntriesOutput,
   SpaceEntryOutput,
   UpdateEntryInput,
 } from "@planifier/api-contract";
+import { PAGE_MAX_LIMIT } from "@planifier/api-contract";
 import { AGENDA_MAX_ENTRIES } from "@planifier/constants/agenda";
 import { dayToUtcDate, utcDateToDay } from "@planifier/constants/days";
 import { isListTint } from "@planifier/constants/todo";
@@ -230,4 +232,19 @@ export async function updateEntry(
 
 export async function deleteEntry(db: Db, entryId: string): Promise<void> {
   await db.agendaEntry.deleteMany({ where: { id: entryId } });
+}
+
+/** Entrées de l'appelant liées à `taskId` : le filtre sur le propriétaire suffit, celles des autres n'en font pas partie. */
+export async function listTaskEntries(
+  db: Db,
+  userId: string,
+  taskId: string,
+): Promise<ListTaskEntriesOutput> {
+  const rows = await db.agendaEntry.findMany({
+    where: { ownerId: userId, taskId },
+    orderBy: { id: "asc" },
+    take: PAGE_MAX_LIMIT,
+    select: entrySelect,
+  });
+  return { items: rows.map(toEntryOutput) };
 }

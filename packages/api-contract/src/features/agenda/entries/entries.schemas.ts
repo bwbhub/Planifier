@@ -158,6 +158,13 @@ export const spaceEntrySchema = z.strictObject({
   owner: personSchema,
 });
 
+export const listTaskEntriesInputSchema = z.strictObject({ taskId: taskIdSchema });
+
+/** Mes entrées liées à une tâche, dans l'ordre de création (bornées). */
+export const listTaskEntriesOutputSchema = z.strictObject({
+  items: z.array(agendaEntrySchema).max(PAGE_MAX_LIMIT),
+});
+
 const nextCursorSchema = entryIdSchema.nullable();
 
 /** Entrées de la période, dans l'ordre de création : l'écran les place lui-même. */
@@ -178,6 +185,7 @@ export type AgendaEntryOutput = z.infer<typeof agendaEntrySchema>;
 export type SpaceEntryOutput = z.infer<typeof spaceEntrySchema>;
 export type ListEntriesOutput = z.infer<typeof listEntriesOutputSchema>;
 export type ListSpaceEntriesOutput = z.infer<typeof listSpaceEntriesOutputSchema>;
+export type ListTaskEntriesOutput = z.infer<typeof listTaskEntriesOutputSchema>;
 export type ListEntriesInput = z.output<typeof listEntriesInputSchema>;
 export type ListSpaceEntriesInput = z.output<typeof listSpaceEntriesInputSchema>;
 export type CreateEntryInput = z.output<typeof createEntryInputSchema>;

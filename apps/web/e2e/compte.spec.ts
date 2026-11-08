@@ -181,8 +181,14 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(detail).toBeHidden();
   await expect(page).not.toHaveURL(/tache=/);
 
-  // Depuis le détail : ajouter une sous-tâche, puis supprimer la tâche (confirmation comprise).
+  // Depuis le détail : lier un créneau d'agenda, ajouter une sous-tâche, puis supprimer la tâche (confirmation comprise).
   await page.getByRole("button", { name: "Ouvrir : Acheter du pain complet" }).click();
+  await detail.getByRole("button", { name: "Créer un créneau dans l'agenda" }).click();
+  const slotForm = detail.locator("form", { has: page.getByLabel("Début") });
+  await expect(slotForm.getByLabel("Titre")).toHaveValue("Acheter du pain complet");
+  await slotForm.getByRole("button", { name: "Ajouter" }).click();
+  await expect(detail.getByRole("heading", { name: "Dans l'agenda" })).toBeVisible();
+  await expect(detail.getByRole("link", { name: /^Acheter du pain complet/ })).toBeVisible();
   await detail.getByLabel("Nouvelle sous-tâche").fill("Croissant");
   await detail.getByRole("button", { name: "Ajouter" }).click();
   await expect(detail.getByRole("checkbox", { name: "Croissant" })).toBeVisible();

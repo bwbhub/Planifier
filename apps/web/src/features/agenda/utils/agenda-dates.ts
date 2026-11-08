@@ -15,6 +15,14 @@ const DAY_NUMBER = utc({ day: "numeric" });
 
 const capitalized = (text: string) => text.charAt(0).toLocaleUpperCase("fr") + text.slice(1);
 
+/** Une heure après `time` (`HH:MM`), sans passer minuit : « 14:30 » ⇒ « 15:30 », « 23:30 » ⇒ « 23:59 ». */
+export function hourAfter(time: string): string {
+  const [hours = 0, minutes = 0] = time.split(":").map(Number);
+  return hours >= 23
+    ? "23:59"
+    : `${String(hours + 1).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 /** « Lun » : sans le point de l'abréviation. */
 export function weekdayLabel(day: string): string {
   return capitalized(WEEKDAY_SHORT.format(dayToUtcDate(day)).replace(".", ""));

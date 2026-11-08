@@ -1,11 +1,12 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { type ComponentType, useEffect } from "react";
 
 import { consumeTaskOpenedInApp, hrefWithTask } from "@/features/_shared/utils/task-param";
 import { TASK_PARAM } from "@/lib/routes";
 
+import type { TaskExtrasProps } from "./task-detail-body";
 import { TaskDetailSheet } from "./task-detail-sheet";
 
 /**
@@ -13,7 +14,11 @@ import { TaskDetailSheet } from "./task-detail-sheet";
  * Fermer revient en arrière si le détail s'est ouvert depuis l'application (« retour » et Échap font alors la même
  * chose), sinon retire le paramètre (lien profond) sans ajouter d'entrée à l'historique.
  */
-export function TaskDetailHost() {
+export function TaskDetailHost({
+  Extras,
+}: {
+  Extras?: ComponentType<TaskExtrasProps> | undefined;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,6 +31,7 @@ export function TaskDetailHost() {
   return (
     <TaskDetailSheet
       taskId={taskId}
+      Extras={Extras}
       onClose={() => {
         if (consumeTaskOpenedInApp()) router.back();
         else router.replace(hrefWithTask(pathname, searchParams, null));

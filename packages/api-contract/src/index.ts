@@ -40,6 +40,7 @@ export type {
   EntriesWindow,
   ListEntriesInput,
   ListEntriesOutput,
+  ListTaskEntriesOutput,
   ListSpaceEntriesInput,
   ListSpaceEntriesOutput,
   SpaceEntryOutput,

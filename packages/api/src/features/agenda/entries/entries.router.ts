@@ -5,6 +5,7 @@ import {
   createEntry,
   deleteEntry,
   listEntries,
+  listTaskEntries,
   listSpaceEntries,
   updateEntry,
 } from "./entries.service";
@@ -13,6 +14,10 @@ export const entriesRouter = {
   // Filtré par l'appelant : ses seules entrées.
   list: userProcedure.agenda.entries.list.handler(({ context, input }) =>
     listEntries(context.getDb(), context.user.id, input),
+  ),
+  // Filtré par l'appelant : ses seules entrées, quelle que soit la tâche.
+  listForTask: userProcedure.agenda.entries.listForTask.handler(({ context, input }) =>
+    listTaskEntries(context.getDb(), context.user.id, input.taskId),
   ),
   listInSpace: userProcedure.agenda.entries.listInSpace
     .use(spaceGuard("view"))

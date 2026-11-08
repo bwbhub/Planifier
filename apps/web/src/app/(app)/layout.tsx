@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { type ReactNode, Suspense } from "react";
 
 import { getCurrentUser } from "@/features/account";
+import { TaskSlots } from "@/features/agenda";
 import { AppShell } from "@/features/_shared/components/app-shell";
 import { NewTaskLauncher, TaskDetailHost } from "@/features/todo";
 import { ROUTES } from "@/lib/routes";
@@ -24,7 +25,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       {children}
       {user.modules.includes("TODO") ? (
         <Suspense>
-          <TaskDetailHost />
+          <TaskDetailHost Extras={user.modules.includes("AGENDA") ? TaskSlots : undefined} />
         </Suspense>
       ) : null}
     </AppShell>

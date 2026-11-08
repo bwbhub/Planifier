@@ -36,6 +36,11 @@ export function useMyEntries(period: EntriesWindow | null) {
   return query;
 }
 
+/** Mes créneaux liés à une tâche. */
+export function useTaskEntries(taskId: string) {
+  return useQuery(orpc.agenda.entries.listForTask.queryOptions({ input: { taskId } }));
+}
+
 /** Vue fusionnée d'un Espace sur la période. */
 export function useSpaceEntries(period: EntriesWindow | null, spaceId: string | null) {
   const query = useInfiniteQuery(

@@ -78,11 +78,21 @@ function initialBounds(entry: AgendaEntryOutput | undefined, day: string, allDay
   return allDay ? { start: start.slice(0, 10), end: end.slice(0, 10) } : { start, end };
 }
 
+/** Titre proposé : celui de l'entrée modifiée, sinon celui de la tâche dont on part. */
+function initialTitle(
+  entry: AgendaEntryOutput | undefined,
+  fromTask: EntryFormProps["fromTask"],
+): string | undefined {
+  return entry?.title ?? fromTask?.title;
+}
+
 interface EntryFormProps {
   /** Entrée à modifier ; absente : création. */
   entry?: AgendaEntryOutput | undefined;
   /** Jour proposé à la création. */
   day: string;
+  /** Création depuis une tâche : son titre est proposé et l'entrée lui est liée (sens unique, rien ne se coche). */
+  fromTask?: { id: string; title: string } | undefined;
   onDone: () => void;
 }
 
@@ -222,7 +232,12 @@ function EntryWhen({ entry, invalid, day, allDay, onAllDayChange }: EntryWhenPro
 }
 
 /** Envoi du formulaire : création, ou modification de `entry`. */
-function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, onDone: () => void) {
+function useEntrySubmit(
+  entry: AgendaEntryOutput | undefined,
+  allDay: boolean,
+  taskId: string | undefined,
+  onDone: () => void,
+) {
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
   const { invalid, validate } = useFormValidation(FIELDS);
@@ -246,6 +261,7 @@ function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, o
         ...common,
         location: location ?? undefined,
         description: description ?? undefined,
+        taskId,
       });
       if (input !== null) createEntry.mutate(input, { onSuccess: onDone });
       return;
@@ -265,9 +281,9 @@ function useEntrySubmit(entry: AgendaEntryOutput | undefined, allDay: boolean, o
 }
 
 /** Un seul formulaire pour créer une entrée et la modifier : titre et horaire obligatoires, le reste facultatif. */
-export function EntryForm({ entry, day, onDone }: EntryFormProps) {
+export function EntryForm({ entry, day, fromTask, onDone }: EntryFormProps) {
   const [allDay, setAllDay] = useState(entry?.when.allDay ?? false);
-  const { submit, invalid, mutation } = useEntrySubmit(entry, allDay, onDone);
+  const { submit, invalid, mutation } = useEntrySubmit(entry, allDay, fromTask?.id, onDone);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -280,7 +296,7 @@ export function EntryForm({ entry, day, onDone }: EntryFormProps) {
         label="Titre"
         name="title"
         placeholder="Ex. : dentiste"
-        defaultValue={entry?.title}
+        defaultValue={initialTitle(entry, fromTask)}
         maxLength={AGENDA_TITLE_MAX_LENGTH}
         required
         autoFocus

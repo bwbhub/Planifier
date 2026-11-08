@@ -6,5 +6,8 @@ export const AGENDA_LABELS = {
   newEntry: "Nouvelle entrée",
   editEntry: "Modifier l'entrée",
   nothingPlanned: "Rien de prévu sur cette période.",
+  linkedSlots: "Dans l'agenda",
+  createSlot: "Créer un créneau dans l'agenda",
+  loadingSlots: "Chargement des créneaux…",
   onlyMine: "Cet Espace restreint sa visibilité : tu n'y vois que tes entrées.",
 } as const;

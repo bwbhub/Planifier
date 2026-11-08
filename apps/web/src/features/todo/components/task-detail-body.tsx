@@ -3,7 +3,7 @@
 import type { GetTaskOutput, TaskOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { ConfirmPanel } from "@planifier/ui/components/confirm-panel";
-import { useState } from "react";
+import { type ComponentType, useState } from "react";
 
 import { TaskLine } from "@/features/_shared/components/task-line";
 import { recurrenceLabel } from "@/features/_shared/utils/recurrence-label";
@@ -17,9 +17,18 @@ import { ListViewProvider } from "../utils/list-view";
 import { deleteQuestion } from "../utils/subtasks";
 import { useTaskCompletion } from "../utils/use-task-completion";
 
+/**
+ * Ce que le détail offre à un autre module (l'agenda) pour se montrer sous la tâche. `todo` n'importe pas ce module :
+ * la couche `app` lui passe le composant.
+ */
+export interface TaskExtrasProps {
+  task: { id: string; title: string; dueDate: string | null };
+}
+
 interface BodyProps {
   detail: GetTaskOutput;
   onClose: () => void;
+  Extras?: ComponentType<TaskExtrasProps> | undefined;
 }
 
 /** Lecture seule (liste montrée par un autre) : ce que la tâche dit, sans geste possible. */
@@ -115,7 +124,7 @@ function DeleteTask({ detail, onClose }: BodyProps) {
 }
 
 /** Le détail : le formulaire de la tâche (le même que partout), ses sous-tâches, sa suppression. */
-export function TaskDetailBody({ detail, onClose }: BodyProps) {
+export function TaskDetailBody({ detail, onClose, Extras }: BodyProps) {
   const { task, list } = detail;
   return (
     <ListViewProvider
@@ -128,6 +137,9 @@ export function TaskDetailBody({ detail, onClose }: BodyProps) {
           <ReadOnlyTask task={task} />
         )}
         <Subtasks detail={detail} />
+        {Extras === undefined ? null : (
+          <Extras task={{ id: task.id, title: task.title, dueDate: task.dueDate }} />
+        )}
         {list.canWrite ? <DeleteTask detail={detail} onClose={onClose} /> : null}
       </div>
     </ListViewProvider>

@@ -3,6 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createAuthMails } from "./auth-mails";
 
+const CHANGE_TOKEN = `x.${Buffer.from(
+  JSON.stringify({
+    email: "old@example.test",
+    updateTo: "eve@example.test",
+    requestType: "change-email-verification",
+  }),
+).toString("base64url")}.y`;
+
 const LINKS = {
   secret: "secret-de-test-0123456789abcdef-0123456789",
   webOrigin: "https://planifier.test",
@@ -28,12 +36,35 @@ afterEach(() => {
 describe("createAuthMails", () => {
   it("envoie l'e-mail de vérification à l'adresse du compte, lien compris, sans le nom", async () => {
     const { mails, lastMail, sent } = capture();
-    await mails.sendVerificationEmail({ user: { ...USER, name: "Nom piégé" }, url: URL });
+    await mails.sendVerificationEmail({
+      user: { ...USER, name: "Nom piégé" },
+      url: URL,
+      token: "x.e30.y",
+    });
     await sent();
 
     expect(lastMail()?.to).toBe(USER.email);
     expect(lastMail()?.text).toContain(URL);
     expect(lastMail()?.html).not.toContain("Nom piégé");
+  });
+
+  it("envoie le lien de changement d'adresse à la nouvelle adresse quand le jeton le dit", async () => {
+    const { mails, lastMail, sent } = capture();
+    await mails.sendVerificationEmail({ user: USER, url: URL, token: CHANGE_TOKEN });
+    await sent();
+
+    expect(lastMail()?.to).toBe(USER.email);
+    expect(lastMail()?.subject).toContain("nouvelle adresse");
+    expect(lastMail()?.text).toContain(URL);
+  });
+
+  it("envoie un avis sans lien à l'ancienne adresse", async () => {
+    const { mails, lastMail, sent } = capture();
+    await mails.sendEmailChangedNotice("old@example.test");
+    await sent();
+
+    expect(lastMail()?.to).toBe("old@example.test");
+    expect(lastMail()?.text).not.toContain("http");
   });
 
   it("renvoie un compte déjà vérifié vers la connexion", async () => {

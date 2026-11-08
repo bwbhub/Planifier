@@ -3,6 +3,7 @@ import {
   type AuthRequestBodies,
   type AuthRoute,
   authErrorBodySchema,
+  type ChangeEmailInput,
   type ChangePasswordInput,
   type RequestPasswordResetInput,
   type ResetPasswordInput,
@@ -16,6 +17,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { orpc } from "@/lib/orpc";
+import { ROUTES } from "@/lib/routes";
 
 import { AuthRequestError } from "../utils/auth-request-error";
 
@@ -107,6 +109,17 @@ export function useUpdateProfile() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (input: ChangePasswordInput) => postAuth(AUTH_ROUTES.changePassword, input),
+  });
+}
+
+/**
+ * Changement d'adresse : un lien part à la nouvelle, l'adresse change au clic seulement. Même réponse si la nouvelle
+ * adresse a déjà un compte. Session et cache inchangés. Le lien ramène sur le profil.
+ */
+export function useChangeEmail() {
+  return useMutation({
+    mutationFn: (input: ChangeEmailInput) =>
+      postAuth(AUTH_ROUTES.changeEmail, { ...input, callbackURL: ROUTES.profile }),
   });
 }
 

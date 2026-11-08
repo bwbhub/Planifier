@@ -14,6 +14,7 @@ import { z } from "zod";
 
 import { createAuthMails } from "./auth-mails";
 import { parseDisplayName } from "./display-name";
+import { noticeOnEmailChange, requireCurrentPassword } from "./change-email";
 import type { AuthEnv } from "./env";
 
 /** Préfixe des cookies (`planifier.session_token`…). */
@@ -73,6 +74,8 @@ export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
     },
     user: {
       fields: { image: "avatarUrl" },
+      // Lien à la nouvelle adresse seule ; mot de passe exigé et avis à l'ancienne : voir `change-email.ts`.
+      changeEmail: { enabled: true },
       // Modifiable par l'utilisateur (`/update-user`) ; toute autre valeur est refusée avant écriture.
       additionalFields: {
         preferredTheme: {
@@ -98,16 +101,17 @@ export function createAuth(db: Db, env: AuthEnv, sendMail: SendMail) {
                 ? undefined
                 : { data: { ...user, name: requireDisplayName(user.name) } },
             ),
+          after: noticeOnEmailChange(mails.sendEmailChangedNotice),
         },
       },
     },
     // Avatar pas encore géré : `/update-user` écrirait n'importe quelle URL dans `avatarUrl`.
     hooks: {
-      before: createAuthMiddleware((ctx) => {
+      before: createAuthMiddleware(async (ctx) => {
         if (ctx.path === "/update-user" && hasField(ctx.body, "image")) {
           throw new APIError("BAD_REQUEST", { message: "Avatar non modifiable." });
         }
-        return Promise.resolve();
+        if (ctx.path === "/change-email") await requireCurrentPassword(ctx);
       }),
     },
     // Toujours active, y compris en local, pour que les tests l'exercent. Mémoire : une seule instance d'API

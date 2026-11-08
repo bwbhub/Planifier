@@ -7,6 +7,32 @@ import { getE2eEnv } from "./env";
 const searchSchema = z.object({ messages: z.array(z.object({ ID: z.string() })) });
 const messageSchema = z.object({ Text: z.string() });
 
+/** Textes de tous les e-mails reçus par `email`. */
+async function textsSentTo(request: APIRequestContext, email: string): Promise<string[]> {
+  const base = getE2eEnv().MAILPIT_URL;
+  const search = await request.get(new URL("/api/v1/search", base).toString(), {
+    params: { query: `to:"${email}"` },
+  });
+  const { messages } = searchSchema.parse(await search.json());
+  const texts = [];
+  for (const { ID } of messages) {
+    const message = await request.get(new URL(`/api/v1/message/${ID}`, base).toString());
+    texts.push(messageSchema.parse(await message.json()).Text);
+  }
+  return texts;
+}
+
+/** Attend un e-mail reçu par `email` dont le texte contient `fragment` (un avis sans lien, par exemple). */
+export async function waitForMailText(
+  request: APIRequestContext,
+  email: string,
+  fragment: string,
+): Promise<void> {
+  await expect
+    .poll(async () => (await textsSentTo(request, email)).some((text) => text.includes(fragment)))
+    .toBe(true);
+}
+
 /** Liens reçus par `email`, du plus récent au plus ancien. */
 async function linksSentTo(request: APIRequestContext, email: string): Promise<string[]> {
   const base = getE2eEnv().MAILPIT_URL;

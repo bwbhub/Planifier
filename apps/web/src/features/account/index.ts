@@ -3,6 +3,7 @@ export { LinkErrorNotice } from "./atoms/link-error-notice";
 export { ReturnNotice } from "./atoms/return-notice";
 export { AuthShell } from "./components/auth-shell";
 export { SignOutButton } from "./components/sign-out-button";
+export { ChangeEmailForm } from "./forms/change-email-form";
 export { ForgotPasswordForm } from "./forms/forgot-password-form";
 export { ModulesForm } from "./forms/modules-form";
 export { PasswordForm } from "./forms/password-form";

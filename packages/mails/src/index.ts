@@ -3,6 +3,8 @@ import type { SendMail } from "./mail";
 import { createSendMail } from "./transports";
 
 export type { Mail, MailContent, SendMail } from "./mail";
+export { changeEmailMail } from "./templates/change-email";
+export { emailChangedNoticeMail } from "./templates/email-changed-notice";
 export { existingAccountMail } from "./templates/existing-account";
 export { resetPasswordMail } from "./templates/reset-password";
 export { verifyEmailMail } from "./templates/verify-email";

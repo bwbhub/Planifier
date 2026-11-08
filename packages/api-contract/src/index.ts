@@ -104,6 +104,8 @@ export {
   type AuthRequestBodies,
   type AuthRoute,
   authErrorBodySchema,
+  type ChangeEmailInput,
+  changeEmailInputSchema,
   type ChangePasswordInput,
   changePasswordInputSchema,
   type RequestPasswordResetInput,

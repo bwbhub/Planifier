@@ -20,6 +20,7 @@ export function entryWith(
     tint: "general",
     hidden: false,
     taskId: null,
+    imported: false,
     version: 1,
     ...fields,
   };

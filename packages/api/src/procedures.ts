@@ -4,6 +4,8 @@ import { contract } from "@planifier/api-contract";
 import type { SessionUser } from "@planifier/auth";
 import type { Db } from "@planifier/db";
 
+import type { ImportsDeps } from "./features/agenda/imports/imports-deps";
+
 /** Contexte fourni par le serveur HTTP à chaque requête. */
 export interface ApiContext {
   /** Identifiant de requête, pour relier les journaux. */
@@ -16,6 +18,8 @@ export interface ApiContext {
   getSessionUser: () => Promise<SessionUser | null>;
   /** Client de la base, lu à la demande : les tests sans base passent une fonction qui échoue. */
   getDb: () => Db;
+  /** Lecture des agendas importés (réseau, chiffrement, horloge) : injectée pour tester sans eux. */
+  imports: ImportsDeps;
 }
 
 /** Contexte après la garde du plan utilisateur. */

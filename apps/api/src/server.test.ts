@@ -1,8 +1,10 @@
+import { randomBytes } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { connect } from "node:net";
 
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
+import { createSecretBox } from "@planifier/api";
 import type { ApiClient } from "@planifier/api-contract";
 import type { SessionUser } from "@planifier/auth";
 import { CLIENT_IP_HEADER } from "@planifier/constants/http";
@@ -32,6 +34,11 @@ const server = createApiServer({
   getSessionUser: (headers) => Promise.resolve(headers.cookie === SESSION_COOKIE ? ALICE : null),
   getDb: () => {
     throw new Error("Pas de base dans les tests unitaires : voir server.integration.test.ts.");
+  },
+  imports: {
+    fetchFeed: () => Promise.reject(new Error("Pas de lecture de flux dans ce test.")),
+    secretBox: createSecretBox(randomBytes(32)),
+    now: () => new Date(),
   },
 });
 /** En-tête que pose le proxy du web devant chaque requête. */

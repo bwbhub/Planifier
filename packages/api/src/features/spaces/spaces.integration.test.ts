@@ -1,3 +1,4 @@
+import { testImportsDeps } from "../agenda/imports/imports.testing";
 import { call } from "@orpc/server";
 import type { SessionUser } from "@planifier/auth";
 import { SPACE_MAX_ACTIVE_INVITES, SPACE_MAX_MEMBERS } from "@planifier/constants/spaces";
@@ -24,6 +25,7 @@ function asUser(user: SessionUser | null): { context: ApiContext } {
       consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
       getSessionUser: () => Promise.resolve(user),
       getDb: () => db,
+      imports: testImportsDeps(),
     },
   };
 }

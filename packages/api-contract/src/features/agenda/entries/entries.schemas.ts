@@ -149,6 +149,8 @@ export const agendaEntrySchema = z.strictObject({
   tint: tintSchema,
   hidden: z.boolean(),
   taskId: taskIdSchema.nullable(),
+  /** Importée d'un agenda externe : lecture seule ici, modifiable à la source. */
+  imported: z.boolean(),
   version: z.int(),
 });
 

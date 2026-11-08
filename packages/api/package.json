@@ -21,6 +21,7 @@
     "@planifier/constants": "workspace:*",
     "@planifier/db": "workspace:*",
     "@planifier/domain-access": "workspace:*",
+    "@planifier/domain-ical": "workspace:*",
     "@planifier/domain-recurrence": "workspace:*"
   },
   "devDependencies": {

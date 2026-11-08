@@ -23,3 +23,16 @@ export const AGENDA_MAX_ENTRY_DAYS = 366;
 
 /** Fenêtre lue en une fois au plus, en jours : un mois affiché tient en six semaines. */
 export const AGENDA_MAX_WINDOW_DAYS = 62;
+
+/** Agendas externes importés par lien privé, par utilisateur au plus. */
+export const AGENDA_MAX_IMPORTS = 5;
+
+/** Délai minimal entre deux lectures d'un même agenda importé, en secondes (le lien appartient à un tiers). */
+export const AGENDA_IMPORT_COOLDOWN_SECONDS = 60;
+
+/** Séries d'un agenda importé développées de 30 jours avant aujourd'hui à 365 jours après. */
+export const AGENDA_IMPORT_PAST_DAYS = 30;
+export const AGENDA_IMPORT_FUTURE_DAYS = 365;
+
+/** `source` des entrées importées : `ical:<id de l'abonnement>`. */
+export const AGENDA_IMPORT_SOURCE_PREFIX = "ical:";

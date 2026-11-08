@@ -5,7 +5,7 @@ import { isIP } from "node:net";
 
 import { onError, ORPCError } from "@orpc/server";
 import { BodyLimitPlugin, RPCHandler } from "@orpc/server/node";
-import type { ApiContext } from "@planifier/api";
+import type { ApiContext, ImportsDeps } from "@planifier/api";
 import { createRateLimiter, PLAN_RATE_LIMIT, router } from "@planifier/api";
 import type { SessionUser } from "@planifier/auth";
 import { AUTH_BASE_PATH, CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@planifier/constants/http";
@@ -54,6 +54,8 @@ export interface ApiServerDeps {
   authHandler: (request: IncomingMessage, response: ServerResponse) => Promise<void>;
   getSessionUser: (headers: IncomingHttpHeaders) => Promise<SessionUser | null>;
   getDb: () => Db;
+  /** Lecture, chiffrement et horloge des agendas importés. */
+  imports: ImportsDeps;
 }
 
 type Route = "auth" | "rpc" | null;
@@ -73,6 +75,7 @@ export function createApiServer({
   authHandler,
   getSessionUser,
   getDb,
+  imports,
 }: ApiServerDeps): Server {
   // Un limiteur par serveur : aucun état partagé entre deux instances (tests compris).
   const consumeRateLimit = createRateLimiter({
@@ -147,6 +150,7 @@ export function createApiServer({
       consumeRateLimit,
       getSessionUser: () => getSessionUser(request.headers),
       getDb,
+      imports,
     };
     handler
       .handle(request, response, { prefix: RPC_PREFIX, context })

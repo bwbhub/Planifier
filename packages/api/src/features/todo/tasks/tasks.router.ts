@@ -1,5 +1,6 @@
 import { userProcedure } from "../../../procedures";
 import { listGuard, taskGuard, tasksGuard } from "../todo-guard";
+import { getTask } from "./detail.service";
 import { postponeTasks } from "./postpone.service";
 import {
   completeOccurrence,
@@ -22,6 +23,9 @@ export const tasksRouter = {
   today: userProcedure.todo.tasks.today.handler(({ context, input }) =>
     todayTasks(context.getDb(), context.user.id, input.date),
   ),
+  get: userProcedure.todo.tasks.get
+    .use(taskGuard("read"))
+    .handler(({ context, input }) => getTask(context.getDb(), context.user.id, input.taskId)),
   list: userProcedure.todo.tasks.list
     .use(listGuard("read"))
     .handler(({ context, input }) => listTasks(context.getDb(), input.listId)),

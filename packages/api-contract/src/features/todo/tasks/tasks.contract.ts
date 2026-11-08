@@ -7,6 +7,8 @@ import {
   createTaskInputSchema,
   deleteTaskInputSchema,
   finishTaskInputSchema,
+  getTaskInputSchema,
+  getTaskOutputSchema,
   listTasksInputSchema,
   listTasksOutputSchema,
   postponeTasksInputSchema,
@@ -38,6 +40,14 @@ export const tasksContract = {
     })
     .input(todayTasksInputSchema)
     .output(todayTasksOutputSchema),
+  get: oc
+    .route({
+      summary: "Détail d'une tâche",
+      description:
+        "La tâche, sa liste (`canWrite` : droit de l'appelant) et ses sous-tâches. Sans droit de lecture sur sa liste : NOT_FOUND.",
+    })
+    .input(getTaskInputSchema)
+    .output(getTaskOutputSchema),
   list: oc
     .route({ summary: "Tâches d'une liste", description: "Par ordre de création." })
     .input(listTasksInputSchema)

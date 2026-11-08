@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Détail de tâche : lecture `todo.tasks.get` (branche `feat/todo-task-get`)
+
+**Fait** : procédure `todo.tasks.get` `{ taskId }` ⇒ tâche, liste (`id`, `name`, `tint`, `canWrite`) et sous-tâches ; garde `taskGuard("read")`. Tests d'intégration : contenu, sous-tâche seule, liste perso d'un autre, liste partagée, liste en lecture seule.
+**Décisions** : les créneaux liés ne sont pas dans `get` (l'API Todo ne lit pas l'Agenda) : le web les composera avec le module Agenda à la PR « Créer un créneau ».
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, tests d'intégration de l'API (191) verts ; `/code-review` Standards + Spec faite, points corrigés (borne `take`, schéma de liste partagé, tests assigné et « cochée par »). E2E non lancé (aucun écran touché).
+**Ouvert** : revue humaine (droits) : `taskGuard("read")` + `canWrite` dans `detail.service.ts`.
+**Attendu ensuite** : feuille Détail (`?tache=`), puis créneau, puis envoi vers une autre liste.
+
+---
+
 ## 2026-11-08 — Polices dans le dépôt (branche `fix/polices-locales`)
 
 **Fait** : `next/font/google` remplacé par `next/font/local` ; Bricolage Grotesque (500–700) et DM Sans (400–600) en woff2 variables, sous-ensemble `latin` (le même qu'avant), licences OFL et `README.md` d'origine dans `apps/web/src/app/fonts/`. Variables CSS et tokens inchangés. Piège de SUITE §5 mis à jour. Plans de la série 2 écrits (Détail de tâche, changement d'e-mail, iCal).

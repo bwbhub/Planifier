@@ -123,12 +123,34 @@ export const taskSchema = z.strictObject({
   version: z.int(),
 });
 
+/** Liste vue depuis une tâche : de quoi la nommer et la teinter. */
+const listRefSchema = z.strictObject({
+  id: listIdSchema,
+  name: z.string(),
+  tint: z.enum(LIST_TINTS),
+});
+
+export const getTaskInputSchema = taskTargetSchema;
+
+/**
+ * Une tâche pour son détail : la tâche, sa liste (nom, teinte, droit d'écriture de l'appelant) et ses sous-tâches par
+ * ordre de création. Une sous-tâche n'a pas de sous-tâches (un seul niveau).
+ */
+export const getTaskOutputSchema = z.strictObject({
+  task: taskSchema,
+  list: listRefSchema.extend({
+    /** Modifier la tâche : faux pour une liste montrée en lecture seule. */
+    canWrite: z.boolean(),
+  }),
+  subtasks: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
+});
+
 /** Jour de l'appareil (`AAAA-MM-JJ`) : le serveur ne connaît pas le fuseau de l'utilisateur. */
 export const todayTasksInputSchema = z.strictObject({ date: dueDateSchema });
 
 /** Tâche de l'écran Aujourd'hui, avec la liste où elle est (pastille). */
 const todayTaskSchema = taskSchema.extend({
-  list: z.strictObject({ id: listIdSchema, name: z.string(), tint: z.enum(LIST_TINTS) }),
+  list: listRefSchema,
 });
 
 /** Une section : les premières tâches (bornées) et leur nombre total. */
@@ -179,6 +201,7 @@ export const postponeTasksOutputSchema = z.strictObject({
 });
 
 export type TaskOutput = z.infer<typeof taskSchema>;
+export type GetTaskOutput = z.infer<typeof getTaskOutputSchema>;
 export type PostponeTasksInput = z.output<typeof postponeTasksInputSchema>;
 export type TodayTasksOutput = z.infer<typeof todayTasksOutputSchema>;
 export type TodayTaskOutput = z.infer<typeof todayTaskSchema>;

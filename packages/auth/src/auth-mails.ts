@@ -1,6 +1,8 @@
 import { AUTH_PAGES, EMAIL_LINK_TTL_SECONDS } from "@planifier/constants/account";
 import { AUTH_BASE_PATH } from "@planifier/constants/http";
 import {
+  changeEmailMail,
+  emailChangedNoticeMail,
   existingAccountMail,
   type MailContent,
   resetPasswordMail,
@@ -8,6 +10,8 @@ import {
   verifyEmailMail,
 } from "@planifier/mails";
 import { createEmailVerificationToken } from "better-auth/api";
+
+import { isChangeEmailToken } from "./email-token";
 
 /** Ce que Better Auth sait du compte quand il demande un envoi. */
 interface MailUser {
@@ -23,7 +27,8 @@ export interface AuthLinks {
   webOrigin: string;
 }
 
-type MailKind = "verification" | "reset-password" | "existing-account";
+type MailKind =
+  "verification" | "change-email" | "email-changed" | "reset-password" | "existing-account";
 
 /**
  * Rendu et envoi sans attente : la réponse de Better Auth ne doit pas durer plus longtemps quand le compte existe
@@ -63,8 +68,22 @@ async function verificationUrl(links: AuthLinks, email: string): Promise<string>
 /** Fonctions d'envoi branchées dans la configuration de Better Auth. */
 export function createAuthMails(sendMail: SendMail, links: AuthLinks) {
   return {
-    sendVerificationEmail: ({ user, url }: { user: MailUser; url: string }) =>
-      sendInBackground(sendMail, "verification", user.email, () => verifyEmailMail({ url })),
+    // Même rappel pour l'inscription et le changement d'adresse : le jeton dit lequel (`user.email` est déjà la nouvelle).
+    sendVerificationEmail: ({
+      user,
+      url,
+      token,
+    }: {
+      user: MailUser;
+      url: string;
+      token: string;
+    }) =>
+      isChangeEmailToken(token)
+        ? sendInBackground(sendMail, "change-email", user.email, () => changeEmailMail({ url }))
+        : sendInBackground(sendMail, "verification", user.email, () => verifyEmailMail({ url })),
+    /** Avis sans lien à l'adresse qu'on vient de remplacer. */
+    sendEmailChangedNotice: (oldEmail: string) =>
+      sendInBackground(sendMail, "email-changed", oldEmail, () => emailChangedNoticeMail()),
     sendResetPassword: ({ user, url }: { user: MailUser; url: string }) =>
       sendInBackground(sendMail, "reset-password", user.email, () =>
         resetPasswordMail({ name: user.name, url }),

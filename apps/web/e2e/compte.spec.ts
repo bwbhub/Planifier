@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { type Cookie, expect, type Locator, type Page, test } from "@playwright/test";
 
-import { waitForLink } from "./mailpit";
+import { waitForLink, waitForMailText } from "./mailpit";
 import { ATTEMPT_TIMEOUT, submitPastRateLimit } from "./rate-limit";
 
 const DISPLAY_NAME = "Eve";
@@ -514,6 +514,50 @@ test.describe.serial("parcours d'un compte", () => {
     await submitPastRateLimit(page, "Se connecter", async () => {
       await expect(greeting(page)).toBeVisible({ timeout: ATTEMPT_TIMEOUT });
     });
+  });
+});
+
+/** Compte à part : l'adresse change, ce que le parcours ci-dessus ne doit pas subir. */
+test.describe.serial("changement d'adresse", () => {
+  const { email: oldEmail, password } = newAccount();
+  const changedEmail = newAccount().email;
+  let session: Cookie[] = [];
+
+  test("ouvre un compte confirmé", async ({ page, request }) => {
+    await page.goto("/inscription");
+    await page.getByLabel("Ton nom", { exact: true }).fill(DISPLAY_NAME);
+    await fillCredentials(page, oldEmail, password);
+    await submitPastRateLimit(page, "Créer mon compte", async () => {
+      await expect(page.getByRole("status")).toContainText(oldEmail, { timeout: ATTEMPT_TIMEOUT });
+    });
+    await page.goto(await waitForLink(request, oldEmail, 1));
+    await expect(greeting(page)).toBeVisible();
+    session = await page.context().cookies();
+  });
+
+  test("annonce un lien à la nouvelle adresse quand on en change, sans toucher l'ancienne", async ({
+    page,
+  }) => {
+    await openSignedIn(page, session, "/profil");
+    await page.getByLabel("Nouvelle adresse e-mail").fill(changedEmail);
+    // Le profil a deux champs « Mot de passe actuel » (adresse, mot de passe) : celui du formulaire d'adresse.
+    const form = page.locator("form").filter({ has: page.getByLabel("Nouvelle adresse e-mail") });
+    await form.getByLabel("Mot de passe actuel").fill(password);
+    await form.getByRole("button", { name: "Changer l'adresse" }).click();
+    const notice = page.getByRole("status");
+    await expect(notice).toContainText(`Un lien vient de partir à ${changedEmail}`);
+    // L'ancienne adresse reste celle du compte jusqu'au clic.
+    await expect(notice).toContainText(`tu te connectes avec ${oldEmail}`);
+  });
+
+  test("change l'adresse au clic sur le lien, et l'ancienne en est avertie", async ({
+    page,
+    request,
+  }) => {
+    await page.goto(await waitForLink(request, changedEmail, 1));
+    await expect(page).toHaveURL(/\/profil/);
+    await expect(page.getByText(changedEmail).first()).toBeVisible();
+    await waitForMailText(request, oldEmail, "vient d'être remplacée");
   });
 });
 

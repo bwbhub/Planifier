@@ -7,7 +7,8 @@ export default defineConfig({
   test: {
     projects: [
       { test: { name: "unit", include: ["src/**/*.test.ts"], exclude: [INTEGRATION_TESTS] } },
-      { test: { name: "integration", include: [INTEGRATION_TESTS] } },
+      // Fichiers l'un après l'autre : ils vident et remplissent la même base.
+      { test: { name: "integration", include: [INTEGRATION_TESTS], fileParallelism: false } },
     ],
   },
 });

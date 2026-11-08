@@ -17,6 +17,7 @@ export const AUTH_ROUTES = {
   signOut: "/sign-out",
   updateUser: "/update-user",
   changePassword: "/change-password",
+  changeEmail: "/change-email",
   requestPasswordReset: "/request-password-reset",
   resetPassword: "/reset-password",
 } as const;
@@ -61,6 +62,15 @@ export const changePasswordInputSchema = z.strictObject({
   revokeOtherSessions: z.boolean(),
 });
 
+/**
+ * Changement d'adresse : la nouvelle, et le mot de passe actuel (vérifié par le serveur avant tout envoi). L'adresse ne
+ * change qu'au clic sur le lien reçu à la nouvelle.
+ */
+export const changeEmailInputSchema = z.strictObject({
+  newEmail: emailSchema,
+  currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+});
+
 /** Mot de passe oublié : l'e-mail seul. La réponse est la même, qu'un compte existe ou non. */
 export const requestPasswordResetInputSchema = z.strictObject({
   email: emailSchema,
@@ -81,6 +91,7 @@ export type SignUpInput = z.infer<typeof signUpInputSchema>;
 export type SignInInput = z.infer<typeof signInInputSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;
+export type ChangeEmailInput = z.infer<typeof changeEmailInputSchema>;
 export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetInputSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
 
@@ -94,6 +105,7 @@ export interface AuthRequestBodies {
   [AUTH_ROUTES.signOut]: Record<string, never>;
   [AUTH_ROUTES.updateUser]: UpdateProfileInput;
   [AUTH_ROUTES.changePassword]: ChangePasswordInput;
+  [AUTH_ROUTES.changeEmail]: ChangeEmailInput & { callbackURL: string };
   [AUTH_ROUTES.requestPasswordReset]: RequestPasswordResetInput & { redirectTo: string };
   [AUTH_ROUTES.resetPassword]: ResetPasswordInput;
 }

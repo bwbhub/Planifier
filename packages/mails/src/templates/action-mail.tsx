@@ -15,13 +15,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { MailContent } from "../mail";
 import { SENDER_NAME } from "../sender";
 
-/** E-mail à une seule action : un titre (le sujet), quelques paragraphes, un bouton, une note de bas de page. */
+/** E-mail à une seule action : un titre (le sujet), quelques paragraphes, un bouton, une note de bas de page. Sans `action` : un avis, rien à cliquer. */
 export interface ActionMailContent {
   subject: string;
   /** Aperçu affiché par la boîte de réception à côté du sujet. */
   preview: string;
   paragraphs: readonly string[];
-  action: { label: string; url: string };
+  action?: { label: string; url: string };
   footer: string;
 }
 
@@ -66,19 +66,21 @@ function ActionMail({ subject, preview, paragraphs, action, footer }: ActionMail
               {paragraph}
             </Text>
           ))}
-          <Button
-            href={action.url}
-            style={{
-              backgroundColor: EMAIL_COLORS.accent,
-              borderRadius: EMAIL_RADII.pill,
-              color: EMAIL_COLORS.onAccent,
-              fontSize: SIZE.body,
-              fontWeight: 700,
-              padding: "14px 24px",
-            }}
-          >
-            {action.label}
-          </Button>
+          {action && (
+            <Button
+              href={action.url}
+              style={{
+                backgroundColor: EMAIL_COLORS.accent,
+                borderRadius: EMAIL_RADII.pill,
+                color: EMAIL_COLORS.onAccent,
+                fontSize: SIZE.body,
+                fontWeight: 700,
+                padding: "14px 24px",
+              }}
+            >
+              {action.label}
+            </Button>
+          )}
           <Hr style={{ borderColor: EMAIL_COLORS.line, margin: "28px 0 16px" }} />
           <Text
             style={{ color: EMAIL_COLORS.muted, fontSize: SIZE.footer, lineHeight: 1.5, margin: 0 }}
@@ -96,7 +98,11 @@ function ActionMail({ subject, preview, paragraphs, action, footer }: ActionMail
  * et version texte tirée du même contenu.
  */
 export function actionMail(content: ActionMailContent): MailContent {
-  const text = [...content.paragraphs, content.action.url, content.footer].join("\n\n");
+  const text = [
+    ...content.paragraphs,
+    ...(content.action ? [content.action.url] : []),
+    content.footer,
+  ].join("\n\n");
   return {
     subject: content.subject,
     html: DOCTYPE + renderToStaticMarkup(<ActionMail {...content} />),

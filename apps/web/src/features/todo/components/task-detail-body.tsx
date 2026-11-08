@@ -22,7 +22,7 @@ import { useTaskCompletion } from "../utils/use-task-completion";
  * la couche `app` lui passe le composant.
  */
 export interface TaskExtrasProps {
-  task: { id: string; title: string; dueDate: string | null };
+  task: { id: string; title: string; dueDate: string | null; dueTime: string | null };
 }
 
 interface BodyProps {
@@ -138,7 +138,14 @@ export function TaskDetailBody({ detail, onClose, Extras }: BodyProps) {
         )}
         <Subtasks detail={detail} />
         {Extras === undefined ? null : (
-          <Extras task={{ id: task.id, title: task.title, dueDate: task.dueDate }} />
+          <Extras
+            task={{
+              id: task.id,
+              title: task.title,
+              dueDate: task.dueDate,
+              dueTime: task.dueTime,
+            }}
+          />
         )}
         {list.canWrite ? <DeleteTask detail={detail} onClose={onClose} /> : null}
       </div>

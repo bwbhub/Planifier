@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fullDayLabel, periodLabel, toLocalInput, weekdayLabel } from "./agenda-dates";
+import { fullDayLabel, hourAfter, periodLabel, toLocalInput, weekdayLabel } from "./agenda-dates";
 
 describe("périodes de l'agenda", () => {
   it("écrit le jour en toutes lettres", () => {
@@ -23,5 +23,13 @@ describe("périodes de l'agenda", () => {
 
   it("écrit une date pour un champ datetime-local", () => {
     expect(toLocalInput(new Date("2026-11-05T09:05"))).toBe("2026-11-05T09:05");
+  });
+});
+
+describe("hourAfter", () => {
+  it("ajoute une heure, sans passer minuit", () => {
+    expect(hourAfter("09:00")).toBe("10:00");
+    expect(hourAfter("14:30")).toBe("15:30");
+    expect(hourAfter("23:30")).toBe("23:59");
   });
 });

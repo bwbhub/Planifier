@@ -1,8 +1,10 @@
 "use client";
 
+import type { AgendaWhen } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
 import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
 import { LoadError } from "@planifier/ui/components/load-error";
+import Link from "next/link";
 import { useState } from "react";
 
 import { COMMON_LABELS } from "@/lib/labels";
@@ -12,6 +14,7 @@ import { EntryForm } from "../forms/entry-form";
 import { AGENDA_LABELS } from "../labels";
 import { useTaskEntries } from "../queries/agenda.queries";
 import { dayMonthLabel } from "../utils/agenda-dates";
+import { agendaHref } from "../utils/agenda-params";
 import { agendaErrorMessage } from "../utils/agenda-error-message";
 import { whenLabel } from "../utils/agenda-items";
 
@@ -21,12 +24,13 @@ export interface TaskSlotsTask {
   title: string;
   /** Jour d'échéance (`AAAA-MM-JJ`) : le jour proposé pour le créneau ; absent : aujourd'hui. */
   dueDate: string | null;
+  /** Heure d'échéance (`HH:MM`) : l'heure de début proposée ; absente : l'heure par défaut. */
+  dueTime: string | null;
 }
 
-/** Jour de l'entrée, pour la dire : « 5 nov., 09:00 – 10:00 ». */
-function slotLabel(when: Parameters<typeof whenLabel>[0]): string {
-  const day = when.allDay ? when.startDay : today(when.startsAt);
-  return `${dayMonthLabel(day)}, ${whenLabel(when)}`;
+/** Jour où commence l'entrée. */
+function dayOf(when: AgendaWhen): string {
+  return when.allDay ? when.startDay : today(when.startsAt);
 }
 
 /**
@@ -54,8 +58,17 @@ export function TaskSlots({ task }: { task: TaskSlotsTask }) {
         <ul className="flex flex-col gap-1 text-sm">
           {entries.data.items.map(({ id, title, when }) => (
             <li key={id}>
-              <span className="font-semibold">{title}</span>
-              <span className="text-muted"> · {slotLabel(when)}</span>
+              {/* Ouvre l'Agenda au bon jour : l'adresse change, `?tache=` part et le détail se ferme. */}
+              <Link
+                href={agendaHref({ view: null, day: dayOf(when), spaceId: null })}
+                className="underline-offset-2 hover:underline"
+              >
+                <span className="font-semibold">{title}</span>
+                <span className="text-muted">
+                  {" "}
+                  · {dayMonthLabel(dayOf(when))}, {whenLabel(when)}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
@@ -63,7 +76,7 @@ export function TaskSlots({ task }: { task: TaskSlotsTask }) {
       {creating ? (
         <EntryForm
           day={task.dueDate ?? today()}
-          fromTask={task}
+          fromTask={{ id: task.id, title: task.title, time: task.dueTime }}
           onDone={() => {
             setCreating(false);
           }}

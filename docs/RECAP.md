@@ -20,9 +20,9 @@ Modèle d'entrée :
 
 ## 2026-11-08 — Détail de tâche : créneau lié (branche `feat/todo-linked-slot`)
 
-**Fait** : procédure `agenda.entries.listForTask { taskId }` (mes entrées liées à la tâche, jamais celles des autres) ; dans le détail, section « Dans l'agenda » : créneaux liés et « Créer un créneau dans l'agenda » (le formulaire d'entrée habituel, proposé avec le titre et l'échéance de la tâche, lié à elle). Visible si le module Agenda est actif. Lien à sens unique : rien ne se coche.
+**Fait** : procédure `agenda.entries.listForTask { taskId }` (mes entrées liées à la tâche, jamais celles des autres) ; dans le détail, section « Dans l'agenda » : créneaux liés et « Créer un créneau dans l'agenda » (le formulaire d'entrée habituel, proposé avec le titre et l'échéance de la tâche, lié à elle). Visible si le module Agenda est actif. Lien à sens unique : rien ne se coche. Chaque créneau lié est un lien vers l'Agenda au bon jour ; l'heure d'échéance de la tâche, si elle en a une, est l'heure de début proposée (fin = +1 h, au plus 23:59).
 **Décisions** : `todo` n'importe pas `agenda` (règle 5) : la couche `app` passe le composant `TaskSlots` à `TaskDetailHost` (`Extras`). Le formulaire s'ouvre dans la feuille, pas dans une seconde feuille. Créer un créneau reste possible sur une liste en lecture seule (l'entrée est à moi, le lien demande seulement de lire la tâche).
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, intégration API (194), `pnpm test:e2e` (62, dont la création du créneau depuis le détail) verts. Rien vu à l'œil.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, intégration API (195), `pnpm test:e2e` (62, dont la création du créneau depuis le détail) verts. `/code-review` Standards + Spec faite, points corrigés (lien vers l'Agenda, heure d'échéance, création sur liste en lecture seule testée). Rien vu à l'œil.
 **Ouvert** : revue humaine (droits) : `listTaskEntries` (filtre sur le propriétaire, pas de contrôle de la tâche, voulu) ; créneau non modifiable ni supprimable depuis le détail (par l'Agenda) ; à l'œil, la section sur 375 px.
 **Attendu ensuite** : envoi vers une autre liste (PR 4).
 

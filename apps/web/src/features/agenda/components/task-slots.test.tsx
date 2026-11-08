@@ -24,6 +24,7 @@ const TASK = {
   id: "0199f3a2-7c4e-7d10-9a51-000000000010",
   title: "Dentiste",
   dueDate: "2026-11-12",
+  dueTime: null,
 };
 
 const ENTRY: AgendaEntryOutput = {
@@ -57,6 +58,9 @@ describe("TaskSlots", () => {
     renderSlots();
     expect(await screen.findByText("RDV Dentiste")).toBeTruthy();
     expect(screen.getByText(/Toute la journée/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: /RDV Dentiste/ }).getAttribute("href")).toBe(
+      "/agenda?jour=2026-11-12",
+    );
     expect(calls).toContainEqual({
       path: "agenda/entries/listForTask",
       input: { taskId: TASK.id },
@@ -80,6 +84,22 @@ describe("TaskSlots", () => {
     });
     const create = calls.find(({ path }) => path === "agenda/entries/create");
     expect(create?.input).toMatchObject({ title: "Dentiste", taskId: TASK.id });
+  });
+
+  it("propose l'heure d'échéance de la tâche comme début, pour une heure", async () => {
+    replyRpc(fetchMock, { "agenda/entries/listForTask": { data: { items: [] } } });
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <TaskSlots task={{ ...TASK, dueTime: "14:30" }} />
+      </QueryClientProvider>,
+    );
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Créer un créneau dans l'agenda" }),
+    );
+    expect(screen.getByLabelText("Début")).toHaveProperty("value", "2026-11-12T14:30");
+    expect(screen.getByLabelText("Fin")).toHaveProperty("value", "2026-11-12T15:30");
   });
 
   it("ne présente aucune violation d'accessibilité", async () => {

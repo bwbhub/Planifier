@@ -90,3 +90,23 @@ describe("agenda.entries.listForTask (base réelle)", () => {
     expect((await linked(carol, crypto.randomUUID())).items).toEqual([]);
   });
 });
+
+describe("agenda.entries.create depuis une liste en lecture seule (base réelle)", () => {
+  it("lie un créneau à une tâche qu'on ne fait que lire, et le retrouve", async () => {
+    const shown = await call(
+      lists.create,
+      { name: "Cadeaux", tint: "general", readOnlySpaceId: spaceId },
+      asUser(alice),
+    );
+    const task = await call(tasks.create, { listId: shown.id, title: "Livre" }, asUser(alice));
+
+    const entry = await call(
+      entries.create,
+      { title: "Passer à la librairie", tint: "general", when: TIMED, taskId: task.id },
+      asUser(bob),
+    );
+
+    expect(entry.taskId).toBe(task.id);
+    expect((await linked(bob, task.id)).items.map(({ id }) => id)).toEqual([entry.id]);
+  });
+});

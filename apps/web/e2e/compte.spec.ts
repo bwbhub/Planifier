@@ -188,7 +188,7 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(slotForm.getByLabel("Titre")).toHaveValue("Acheter du pain complet");
   await slotForm.getByRole("button", { name: "Ajouter" }).click();
   await expect(detail.getByRole("heading", { name: "Dans l'agenda" })).toBeVisible();
-  await expect(detail.getByText("Acheter du pain complet ·")).toBeVisible();
+  await expect(detail.getByRole("link", { name: /^Acheter du pain complet/ })).toBeVisible();
   await detail.getByLabel("Nouvelle sous-tâche").fill("Croissant");
   await detail.getByRole("button", { name: "Ajouter" }).click();
   await expect(detail.getByRole("checkbox", { name: "Croissant" })).toBeVisible();

@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — iCal 3/5 : lecture sûre du lien et chiffrement (branche `feat/ical-lecture-sure`, ticket `869fjgrcc`)
+
+**Fait** : dans `packages/api/src/features/agenda/imports/` : `parseFeedUrl` (https ou webcal seulement, ni identifiants ni port, liste blanche Google / Outlook / iCloud `pN-caldav`), `isPublicAddress` (IPv4 : plages privées et réservées refusées ; IPv6 : seul `2000::/3` hors plages réservées admis), `createFeedFetcher` (chaque lien et chaque redirection : hôte contrôlé, toutes les adresses résolues publiques, 3 redirections, 10 s, 5 Mo, types de contenu, délai global) avec un transport Node qui se connecte à l'adresse contrôlée (anti « DNS rebinding »), `createSecretBox` (AES-256-GCM, IV de 12 octets, étiquette de 16, contexte authentifié par ressource, clé de 32 octets en base64 strict). Rien n'est encore branché : ni table, ni procédure, ni variable d'environnement.
+**Décisions** : IPv6 par liste blanche (fail-closed) plutôt que par liste noire. `extraHosts` (hôtes de test) est un paramètre, jamais lu de l'entrée utilisateur ; sa source (env de test) viendra avec le branchement. Une version de clé (`v1`), pas de rotation : changer la clé fait recoller les liens. Erreurs typées (`LINK_INVALID`, `FEED_UNREACHABLE`, `FEED_TOO_LARGE`) sans le lien.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` ; 100 tests du dossier `imports` (dont un vrai serveur local : connexion à l'adresse donnée sous un autre nom d'hôte, corps trop grand, serveur lent). `/code-review` sécurité : étiquette GCM tronquée acceptée (corrigé : 16 octets exigés), contexte ajouté, plages IPv6 trop permissives (corrigé), délai global, `agent: false`. Pas testé : une vraie lecture TLS d'un hôte public (aucun accès réseau voulu depuis les tests).
+**Ouvert** : **revue humaine obligatoire** (cryptographie, intégration externe, secrets) : `secret-box.ts`, `ip-policy.ts`, `feed-fetcher.ts`, `feed-transport.ts` (`secure: false` n'existe que pour les tests : à ne jamais passer en production). Journalisation : les appelants ne devront jamais écrire le lien ni la cause d'une erreur. Fuseaux Windows, redirection vers un hôte hors liste (refusée : un lien Google qui passe par un autre domaine ne marchera pas).
+**Attendu ensuite** : iCal 4/5 : modèle `CalendarSubscription` (migration), variable `ICAL_ENCRYPTION_KEY` (`env.ts`, `.env.example`, CI), procédures `agenda.imports.{list, create, refresh, delete}` (revue humaine : droits, migration).
+
+---
+
 ## 2026-11-08 — iCal 2/5 : récurrences (branche `feat/ical-recurrences`, tickets `869fjgrcc` / `869fhwtup`)
 
 **Fait** : `expandFeed(événements, fenêtre)` dans `@planifier/domain-ical` : développe les séries (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` sans rang, `BYMONTHDAY`) en occurrences `uid#jour-ou-instant`, retire les `EXDATE`, remplace les occurrences modifiées (`RECURRENCE-ID`), garde l'heure murale d'un changement d'heure à l'autre (`TZID`). `parseFeed` garde maintenant le fuseau de la série.

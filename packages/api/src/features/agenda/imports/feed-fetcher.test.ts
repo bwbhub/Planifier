@@ -138,6 +138,15 @@ describe("createFeedFetcher : refus", () => {
     );
   });
 
+  it("coupe une résolution DNS qui ne répond jamais", async () => {
+    const transport = vi.fn<Transport>();
+    const hanging: Resolve = () => new Promise(() => undefined);
+    const fetch = createFeedFetcher({ transport, resolve: hanging, timeoutMs: 20 });
+
+    expect(await codeOf(fetch(GOOGLE))).toMatch(/^FEED_UNREACHABLE/);
+    expect(transport).not.toHaveBeenCalled();
+  });
+
   it("ne met jamais le lien dans l'erreur", async () => {
     for (const result of [
       await codeOf(

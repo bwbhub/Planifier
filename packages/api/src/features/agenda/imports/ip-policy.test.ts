@@ -40,6 +40,16 @@ describe("isPublicAddress", () => {
     "::ffff:127.0.0.1",
     "::ffff:10.0.0.1",
     "::ffff:169.254.169.254",
+    "::127.0.0.1",
+    "::7f00:1",
+    "::2",
+    "::ffff:7f00:1",
+    "::ffff:0:127.0.0.1",
+    "64:ff9b:1::1",
+    "2001::1",
+    "3fff::1",
+    "fe80::1%eth0",
+    "192.31.196.1",
   ])("refuse l'adresse non publique %s", (address) => {
     expect(isPublicAddress(address)).toBe(false);
   });

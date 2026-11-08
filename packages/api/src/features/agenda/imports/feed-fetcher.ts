@@ -46,6 +46,21 @@ function isFeedContentType(contentType: string | null): boolean {
   return FEED_CONTENT_TYPES.includes(type);
 }
 
+/** Échoue en `FEED_UNREACHABLE` si `promise` dépasse `ms`. */
+async function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new FeedFetchError("FEED_UNREACHABLE"));
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, expired]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Cible d'une redirection (relative ou absolue) ; refuse une valeur illisible. */
 function nextLink(location: string, from: URL): string {
   try {
@@ -96,5 +111,6 @@ export function createFeedFetcher({
     return response.body;
   }
 
-  return (link) => read(link, 0);
+  // Plafond global (résolution DNS et redirections comprises) : chaque étape a le sien, mais pas leur somme.
+  return (link) => withDeadline(read(link, 0), timeoutMs * 2);
 }

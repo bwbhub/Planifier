@@ -1,7 +1,7 @@
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 
-import { FeedFetchError } from "./feed-errors";
+import { FeedFetchError, type FeedFetchErrorCode } from "./feed-errors";
 
 /** Une requête vers une adresse IP déjà contrôlée ; l'hôte de l'URL ne sert qu'au certificat et à l'en-tête `Host`. */
 export interface TransportRequest {
@@ -40,7 +40,7 @@ export function createNodeTransport({ secure = true }: Options = {}): Transport 
   const send = secure ? httpsRequest : httpRequest;
   return ({ url, address, family, timeoutMs, maxBytes }) =>
     new Promise<TransportResponse>((resolve, reject) => {
-      const fail = (code: ConstructorParameters<typeof FeedFetchError>[0]) => {
+      const fail = (code: FeedFetchErrorCode) => {
         request.destroy();
         reject(new FeedFetchError(code));
       };
@@ -51,6 +51,8 @@ export function createNodeTransport({ secure = true }: Options = {}): Transport 
           servername: url.hostname,
           path: `${url.pathname}${url.search}`,
           method: "GET",
+          // Pas de pool partagé : une connexion par lecture, jamais réutilisée vers un autre lien.
+          agent: false,
           headers: {
             accept: "text/calendar, text/plain;q=0.5",
             "accept-encoding": "identity",
@@ -62,7 +64,7 @@ export function createNodeTransport({ secure = true }: Options = {}): Transport 
           },
         },
         (response) => {
-          const declared = Number(header(response.headers["content-length"]));
+          const declared = Number(header(response.headers["content-length"]) ?? 0);
           if (declared > maxBytes) {
             fail("FEED_TOO_LARGE");
             return;

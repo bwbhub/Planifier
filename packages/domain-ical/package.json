@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "sideEffects": false,
   "exports": {
+    "./expand": "./src/expand.ts",
     "./parse": "./src/parse.ts",
     "./plan": "./src/plan.ts",
     "./render": "./src/render.ts",

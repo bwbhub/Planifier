@@ -195,6 +195,7 @@ describe("parseFeed : contenu et exclusions", () => {
 
     expect(events[0]?.recurrence).toEqual({
       rule: "FREQ=WEEKLY;BYDAY=TU",
+      timeZone: null,
       exceptions: ["2026-11-17T09:00:00.000Z", "2026-11-24T09:00:00.000Z"],
     });
     expect(events[1]?.replaces).toBe("2026-12-01T09:00:00.000Z");

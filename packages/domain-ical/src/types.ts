@@ -20,6 +20,8 @@ export interface ImportedEntry {
 export interface FeedRecurrence {
   /** Valeur brute de `RRULE`, sans le nom. */
   rule: string;
+  /** Fuseau (nom IANA) de `DTSTART` : les occurrences gardent leur heure murale d'un changement d'heure à l'autre. */
+  timeZone: string | null;
   /** Occurrences retirées (`EXDATE`) : jours `AAAA-MM-JJ` ou instants ISO. */
   exceptions: string[];
 }

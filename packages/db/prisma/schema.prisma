@@ -404,7 +404,7 @@ model CalendarSubscription {
   /// Lien privé chiffré (AES-256-GCM, contexte = id) : c'est un secret, jamais en clair, en journal ni en sortie d'API.
   /// @pii secret jusqu'à-suppression
   urlEncrypted  String    @map("url_encrypted")
-  /// Fin du lien pour le reconnaître à l'écran (`…/ab12.ics`) : jamais assez pour le reconstituer.
+  /// Hôte du lien pour le reconnaître à l'écran : le chemin et la requête sont le secret, aucune partie n'en sort.
   urlHint       String    @map("url_hint")
   lastFetchedAt DateTime? @map("last_fetched_at")
   /// Code de la dernière erreur de lecture (`FEED_UNREACHABLE`…), null si la dernière lecture a réussi.

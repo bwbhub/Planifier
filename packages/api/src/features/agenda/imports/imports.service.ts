@@ -19,6 +19,7 @@ import type { ImportedEntry } from "@planifier/domain-ical/types";
 import { agendaConflict } from "../agenda-errors";
 import { whenColumns } from "../entries/entries.service";
 import { entriesOfFeed } from "./feed-import";
+import { withHttps } from "./feed-url";
 import type { ImportsDeps } from "./imports-deps";
 import { failureReasonOf, importFailure } from "./imports.errors";
 
@@ -50,10 +51,12 @@ function toOutput(row: SubscriptionRow): ImportSubscriptionOutput {
   return { ...row, lastError: toFailureReason(row.lastError, row.id) };
 }
 
-/** Fin du lien (`…/ab12.ics`) : de quoi le reconnaître, pas de quoi le reconstituer. */
+/**
+ * De quoi reconnaître le lien à l'écran : son hôte seulement. Le chemin et la requête portent le secret (le jeton est
+ * souvent le dernier segment) : aucune partie n'en sort.
+ */
 function hintOf(link: string): string {
-  const tail = new URL(link).pathname.split("/").filter(Boolean).at(-1) ?? "";
-  return `…/${tail.slice(-8)}`;
+  return new URL(link).hostname;
 }
 
 export async function listImports(db: Db, userId: string): Promise<ListImportsOutput> {
@@ -187,7 +190,7 @@ export async function createImport(
   const read = await readEntries(deps, url);
   if ("reason" in read) throw importFailure(read.reason);
   const { entries } = read;
-  const link = new URL(url.replace(/^webcals?:\/\//i, "https://")).toString();
+  const link = new URL(withHttps(url.trim())).toString();
   return db.$transaction(
     async (tx) => {
       await lockUser(tx, userId);
@@ -268,9 +271,14 @@ export async function refreshImport(
     async (tx) => {
       await lockUser(tx, userId);
       await applyEntries(tx, userId, subscriptionId, entries);
-      const row = await tx.calendarSubscription.update({
-        where: { id: subscriptionId },
+      // Retiré pendant la lecture : tout est annulé (aucune entrée orpheline), l'appelant apprend qu'il n'existe plus.
+      const { count } = await tx.calendarSubscription.updateMany({
+        where: { id: subscriptionId, ownerId: userId },
         data: { lastError: null },
+      });
+      if (count === 0) throw new ORPCError("NOT_FOUND");
+      const row = await tx.calendarSubscription.findUniqueOrThrow({
+        where: { id: subscriptionId },
         select: subscriptionSelect,
       });
       return toOutput(row);

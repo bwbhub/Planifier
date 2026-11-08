@@ -32,7 +32,7 @@ export const listImportsInputSchema = z.strictObject({});
 export const importSubscriptionSchema = z.strictObject({
   id: subscriptionIdSchema,
   label: z.string(),
-  /** Fin du lien (`…/ab12.ics`), pour reconnaître lequel c'est. */
+  /** Hôte du lien (`calendar.google.com`), pour reconnaître lequel c'est : le reste du lien est un secret. */
   urlHint: z.string(),
   lastFetchedAt: z.date().nullable(),
   /** Raison de l'échec de la dernière lecture, null si elle a réussi. */

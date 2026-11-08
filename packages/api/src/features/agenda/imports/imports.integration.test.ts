@@ -65,7 +65,7 @@ describe("agenda.imports : création", () => {
 
     expect(created).toMatchObject({ label: "Google", lastError: null, lastFetchedAt: NOW });
     expect(JSON.stringify(created)).not.toContain("secret123");
-    expect(created.urlHint).toBe("…/asic.ics");
+    expect(created.urlHint).toBe("calendar.google.com");
     expect(await importedTitles(alice.id)).toEqual(["Dentiste", "Réunion"]);
     const rows = await db.agendaEntry.findMany({ where: { ownerId: alice.id } });
     expect(rows.every((row) => row.hidden && row.source === `ical:${created.id}`)).toBe(true);
@@ -77,7 +77,7 @@ describe("agenda.imports : création", () => {
     const stored = await db.calendarSubscription.findFirstOrThrow();
     expect(stored.urlEncrypted).not.toContain("google");
     expect(stored.urlEncrypted).not.toContain("secret123");
-    expect(stored.urlHint).not.toContain("secret123");
+    expect(stored.urlHint).toBe("calendar.google.com");
   });
 
   it("n'enregistre rien quand le lien échoue, et dit pourquoi", async () => {

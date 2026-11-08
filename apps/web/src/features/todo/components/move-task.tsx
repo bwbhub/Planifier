@@ -2,12 +2,17 @@
 
 import type { GetTaskOutput } from "@planifier/api-contract";
 import { Button } from "@planifier/ui/components/button";
+import { ListSkeleton } from "@planifier/ui/components/list-skeleton";
+import { LoadError } from "@planifier/ui/components/load-error";
 import { SelectField } from "@planifier/ui/components/select-field";
 import { type SubmitEvent, useState } from "react";
+
+import { COMMON_LABELS } from "@/lib/labels";
 
 import { TodoErrorAlert } from "../atoms/todo-error-alert";
 import { TODO_LABELS } from "../labels";
 import { useMoveTask } from "../queries/todo.queries";
+import { todoErrorMessage } from "../utils/todo-error-message";
 import { writableLists } from "../utils/new-task-list";
 import { useAllLists } from "../utils/use-all-lists";
 
@@ -22,12 +27,24 @@ interface MoveTaskProps {
  */
 export function MoveTask({ detail, onMoved }: MoveTaskProps) {
   const { task, list } = detail;
-  const { items, loading } = useAllLists();
+  const { lists, items, loading } = useAllLists();
   const targets = writableLists(items).filter(({ id }) => id !== list.id);
   const [chosenId, setChosenId] = useState<string | null>(null);
   const move = useMoveTask();
   const target = targets.find(({ id }) => id === chosenId) ?? targets[0];
-  if (target === undefined || task.parentId !== null) return null;
+  if (task.parentId !== null) return null;
+  if (lists.isError) {
+    return (
+      <LoadError
+        message={todoErrorMessage(lists.error)}
+        retryLabel={COMMON_LABELS.retry}
+        onRetry={() => void lists.refetch()}
+      />
+    );
+  }
+  if (lists.isPending) return <ListSkeleton label={TODO_LABELS.loadingLists} rows={1} />;
+  // Aucune autre liste où écrire : rien à proposer.
+  if (target === undefined) return null;
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

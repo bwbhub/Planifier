@@ -139,6 +139,21 @@ describe("TaskDetailSheet", () => {
   });
 });
 
+const MOVE_REPLIES = {
+  "todo/tasks/get": { data: detailWith() },
+  "todo/lists/list": {
+    data: { items: [listWith(LIST_ID, "Courses"), OTHER_LIST], nextCursor: null },
+  },
+  "todo/tasks/move": {
+    data: taskWith({
+      id: TASK_ID,
+      title: "Acheter du pain",
+      listId: OTHER_LIST.id,
+      version: 2,
+    }),
+  },
+};
+
 describe("TaskDetailSheet, envoi vers une autre liste", () => {
   it("envoie la tâche dans une autre liste, au clic, puis se ferme", async () => {
     const onClose = vi.fn();
@@ -178,6 +193,83 @@ describe("TaskDetailSheet, envoi vers une autre liste", () => {
     });
     const sent = calls.find(({ path }) => path === "todo/tasks/move");
     expect(sent?.input).toEqual({ taskId: TASK_ID, version: 1, listId: OTHER_LIST.id });
+  });
+});
+
+describe("TaskDetailSheet, annulation de l'envoi", () => {
+  it("« Annuler » remet la tâche dans sa liste, avec la version rendue par l'envoi", async () => {
+    const calls = replyRpc(fetchMock, MOVE_REPLIES);
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    await screen.findByText("Tâche envoyée dans « Vacances ».");
+    const undo = screen
+      .getAllByRole("button", { name: "Annuler" })
+      .find((button) => button.closest("form") === null);
+    expect(undo).toBeDefined();
+    if (undo !== undefined) await userEvent.click(undo);
+    await screen.findByText("Tâche remise dans sa liste.");
+    const back = calls.filter(({ path }) => path === "todo/tasks/move")[1];
+    expect(back?.input).toEqual({ taskId: TASK_ID, version: 2, listId: LIST_ID });
+  });
+
+  it("dit pourquoi l'annulation échoue, sans rien forcer", async () => {
+    let moves = 0;
+    replyRpc(fetchMock, {
+      ...MOVE_REPLIES,
+      get "todo/tasks/move"() {
+        moves += 1;
+        return moves === 1
+          ? {
+              data: taskWith({
+                id: TASK_ID,
+                title: "Acheter du pain",
+                listId: OTHER_LIST.id,
+                version: 2,
+              }),
+            }
+          : { error: new ORPCError("CONFLICT", { data: { reason: "STALE_VERSION" } }) };
+      },
+    });
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    await screen.findByText("Tâche envoyée dans « Vacances ».");
+    const undo = screen
+      .getAllByRole("button", { name: "Annuler" })
+      .find((button) => button.closest("form") === null);
+    if (undo !== undefined) await userEvent.click(undo);
+    expect(await screen.findByText(/a changé entre-temps/)).toBeTruthy();
+  });
+});
+
+describe("TaskDetailSheet, cas limites de l'envoi", () => {
+  it("dit que l'assignation est retirée, sans proposer d'annuler", async () => {
+    const person = { userId: "0199f3a2-7c4e-7d10-9a51-0000000000b1", name: "Bob" };
+    replyRpc(fetchMock, {
+      ...MOVE_REPLIES,
+      "todo/tasks/get": {
+        data: {
+          ...detailWith(),
+          task: taskWith({ id: TASK_ID, title: "Acheter du pain", assignee: person }),
+        },
+      },
+    });
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    expect(await screen.findByText(/Son assignation a été retirée/)).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole("button", { name: "Annuler" })
+        .every((button) => button.closest("form") !== null),
+    ).toBe(true);
+  });
+
+  it("dit quand les listes ne se chargent pas", async () => {
+    replyRpc(fetchMock, {
+      "todo/tasks/get": { data: detailWith() },
+      "todo/lists/list": { error: new ORPCError("INTERNAL_SERVER_ERROR") },
+    });
+    renderSheet();
+    expect(await screen.findByRole("button", { name: "Réessayer" })).toBeTruthy();
   });
 
   it("ne propose pas l'envoi d'une sous-tâche seule", async () => {

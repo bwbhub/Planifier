@@ -5,7 +5,7 @@ import { createTestDatabase } from "@planifier/db/testing";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { router } from "../../router";
-import { createList, createSpace, createTestUser, requestAs } from "./todo.testing";
+import { createList, createSpace, createTestUser, requestAs, WEEKLY } from "./todo.testing";
 
 // Envoyer une tâche dans une autre liste : droits des deux listes, sous-tâches, assigné, bornes, versions. Base réelle.
 const { db, reset } = createTestDatabase();
@@ -63,7 +63,7 @@ describe("todo.tasks.move (base réelle)", () => {
     const to = await createOtherList(alice);
     const task = await call(
       tasks.create,
-      { listId: from.id, title: "Poubelles", dueDate: "2026-12-01" },
+      { listId: from.id, title: "Poubelles", dueDate: "2026-12-01", recurrence: WEEKLY },
       asUser(alice),
     );
     await call(tasks.setDone, { taskId: task.id, done: true }, asUser(alice));
@@ -72,6 +72,7 @@ describe("todo.tasks.move (base réelle)", () => {
     const moved = await move(alice, task.id, done?.version ?? 0, to.id);
 
     expect(moved.dueDate).toBe("2026-12-01");
+    expect(moved.recurrence).toMatchObject(WEEKLY);
     expect(moved.completedAt).not.toBeNull();
     expect(moved.completedBy).toEqual({ userId: alice.id, name: "alice" });
   });

@@ -13,6 +13,7 @@ import { orpc } from "@/lib/orpc";
 import { TODO_LABELS } from "../labels";
 import { type ListPages, withOpenTaskDelta } from "../utils/list-pages";
 import { withOccurrenceDone, withTaskDone } from "../utils/task-done";
+import { todoErrorMessage } from "../utils/todo-error-message";
 
 /** Invalidation centralisée : toute écriture du module relit ses listes et ses tâches (compteurs compris). */
 function invalidateTodo(queryClient: QueryClient) {
@@ -144,18 +145,33 @@ interface ListRef {
 
 /**
  * Envoie une tâche (sous-tâches comprises) dans `to`. Le message vit ici : le détail se ferme dès l'envoi, un rappel
- * de `mutate` ne tiendrait pas. « Annuler » remet la tâche dans sa liste ; sans lui quand l'assignation a été retirée
- * (la remettre ne la rendrait pas).
+ * de `mutate` ne tiendrait pas. « Annuler » remet la tâche dans sa liste (et dit pourquoi si elle ne peut pas y
+ * revenir) ; sans lui quand l'assignation a été retirée : la remettre ne la rendrait pas.
  */
 export function useMoveTask() {
   const invalidate = useInvalidateTodo();
   const { notify } = useToast();
   const move = useMutation(orpc.todo.tasks.move.mutationOptions({ onSettled: invalidate }));
+  const moveBack = useMutation(orpc.todo.tasks.move.mutationOptions({ onSettled: invalidate }));
 
   async function undo(moved: TaskOutput, from: ListRef) {
-    await orpc.todo.tasks.move.call({ taskId: moved.id, version: moved.version, listId: from.id });
-    await invalidate();
-    notify(TODO_LABELS.taskMovedBack);
+    try {
+      await moveBack.mutateAsync({ taskId: moved.id, version: moved.version, listId: from.id });
+      notify(TODO_LABELS.taskMovedBack);
+    } catch (error) {
+      // Modifiée depuis, liste d'origine passée en lecture seule ou pleine : on le dit, rien n'est forcé.
+      notify(todoErrorMessage(error));
+    }
+  }
+
+  function announce(task: TaskOutput, moved: TaskOutput, from: ListRef, to: ListRef) {
+    if (task.assignee !== null && moved.assignee === null) {
+      notify(TODO_LABELS.taskMovedNoAssignee(to.name));
+      return;
+    }
+    notify(TODO_LABELS.taskMovedTo(to.name), {
+      action: { label: TODO_LABELS.undo, onAction: () => void undo(moved, from) },
+    });
   }
 
   async function send(task: TaskOutput, from: ListRef, to: ListRef): Promise<boolean> {
@@ -165,13 +181,7 @@ export function useMoveTask() {
         version: task.version,
         listId: to.id,
       });
-      const lostAssignee = task.assignee !== null && moved.assignee === null;
-      notify(
-        lostAssignee ? TODO_LABELS.taskMovedNoAssignee(to.name) : TODO_LABELS.taskMovedTo(to.name),
-        lostAssignee
-          ? undefined
-          : { action: { label: TODO_LABELS.undo, onAction: () => void undo(moved, from) } },
-      );
+      announce(task, moved, from, to);
       return true;
     } catch {
       // Le refus s'affiche déjà, dans le détail (`move.error`).

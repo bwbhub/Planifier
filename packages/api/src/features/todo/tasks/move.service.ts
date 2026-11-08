@@ -10,19 +10,27 @@ import { readTask } from "./tasks.service";
 
 /**
  * Envoie une tâche et ses sous-tâches dans la liste `listId` (écrivable, vérifié par la garde, comme la liste de la
- * tâche). Sous le verrou de la liste cible : deux envois simultanés ne dépassent pas la borne. Un assigné qui n'est pas
- * membre de l'Espace de la cible est retiré (`canBeAssigned`), la tâche reste à faire ou cochée comme elle était.
+ * tâche). Sous le verrou des deux listes, toujours dans l'ordre de leurs identifiants (pas d'interblocage avec un
+ * autre envoi en sens inverse) : une sous-tâche créée en parallèle dans la liste d'origine (`createTask` la verrouille
+ * aussi) ne reste pas derrière, et deux envois simultanés ne dépassent pas la borne de la cible. Un assigné qui n'est
+ * pas membre de l'Espace de la cible est retiré (`canBeAssigned`) ; la tâche reste à faire ou cochée comme elle était.
  */
 export async function moveTask(
   db: Db,
   { taskId, version, listId }: MoveTaskInput,
 ): Promise<TaskOutput> {
   return db.$transaction(async (tx) => {
-    const locked = await tx.$queryRaw<
-      unknown[]
-    >`SELECT 1 FROM todo_lists WHERE id = ${listId} FOR UPDATE`;
-    // Supprimée entre la garde et le verrou.
-    if (locked.length === 0) throw new ORPCError("NOT_FOUND");
+    const found = await tx.task.findUnique({ where: { id: taskId }, select: { listId: true } });
+    if (found === null) throw new ORPCError("NOT_FOUND");
+    // Dans l'ordre des identifiants, un par un : pas d'interblocage avec un envoi en sens inverse.
+    for (const id of [...new Set([found.listId, listId])].sort()) {
+      const locked = await tx.$queryRaw<
+        unknown[]
+      >`SELECT 1 FROM todo_lists WHERE id = ${id} FOR UPDATE`;
+      // Une liste supprimée entre la garde et le verrou.
+      if (locked.length === 0) throw new ORPCError("NOT_FOUND");
+    }
+    // Relue sous le verrou : un envoi concurrent a pu la changer de liste.
     const task = await tx.task.findUnique({
       where: { id: taskId },
       select: { listId: true, parentId: true },
@@ -32,8 +40,8 @@ export async function moveTask(
     // Déjà dans cette liste : rejouable, rien à écrire.
     if (task.listId === listId) return readTask(tx, taskId);
 
-    const moved = (await tx.task.count({ where: { parentId: taskId } })) + 1;
-    if ((await tx.task.count({ where: { listId } })) + moved > TODO_LIST_MAX_TASKS)
+    const movedCount = (await tx.task.count({ where: { parentId: taskId } })) + 1;
+    if ((await tx.task.count({ where: { listId } })) + movedCount > TODO_LIST_MAX_TASKS)
       throw todoConflict("LIST_FULL");
 
     const { count } = await tx.task.updateMany({

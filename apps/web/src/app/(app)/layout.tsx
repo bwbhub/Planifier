@@ -3,7 +3,7 @@ import { type ReactNode, Suspense } from "react";
 
 import { getCurrentUser } from "@/features/account";
 import { AppShell } from "@/features/_shared/components/app-shell";
-import { NewTaskLauncher } from "@/features/todo";
+import { NewTaskLauncher, TaskDetailHost } from "@/features/todo";
 import { ROUTES } from "@/lib/routes";
 
 /** Pages réservées aux comptes connectés : sans session, retour à la connexion. */
@@ -22,6 +22,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       }
     >
       {children}
+      {user.modules.includes("TODO") ? (
+        <Suspense>
+          <TaskDetailHost />
+        </Suspense>
+      ) : null}
     </AppShell>
   );
 }

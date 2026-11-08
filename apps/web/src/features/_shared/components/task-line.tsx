@@ -16,10 +16,59 @@ export interface TaskLineProps {
   assignee?: { userId: string; name: string } | null | undefined;
   /** Nom de la personne qui a coché, liste partagée : « Cochée par … ». */
   completedByName?: string | undefined;
+  /** Ouvre le détail de la tâche. Présent : le titre devient un bouton, la case reste à part. */
+  onOpen?: (() => void) | undefined;
   /** Lignes sous le titre : échéance, répétition, description… */
   details?: ReactNode;
   /** Actions de la ligne (menu, boutons), à droite sur grand écran. */
   actions?: ReactNode;
+}
+
+interface TitleRowProps {
+  title: string;
+  done: boolean;
+  onToggle: TaskLineProps["onToggle"];
+  onOpen: TaskLineProps["onOpen"];
+}
+
+/** Case et titre. Sans `onOpen`, la case et le titre ne font qu'un (toucher le titre coche) ; avec, le titre ouvre. */
+function TitleRow({ title, done, onToggle, onOpen }: TitleRowProps) {
+  const checkbox = (
+    <input
+      type="checkbox"
+      checked={done}
+      disabled={onToggle === undefined}
+      aria-label={onOpen === undefined ? undefined : title}
+      onChange={(event) => {
+        onToggle?.(event.target.checked);
+      }}
+      className="size-5 shrink-0 accent-accent enabled:cursor-pointer"
+    />
+  );
+  const titleClass = done ? "text-muted line-through" : "font-semibold";
+  if (onOpen === undefined) {
+    return (
+      <label className="flex min-h-11 items-start gap-3 pt-2.5 has-enabled:cursor-pointer">
+        {checkbox}
+        <span className={titleClass}>{title}</span>
+      </label>
+    );
+  }
+  return (
+    <div className="flex min-h-11 items-start gap-3">
+      <label className="flex size-11 shrink-0 items-center justify-center has-enabled:cursor-pointer">
+        {checkbox}
+      </label>
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`${TASK_LABELS.open} : ${title}`}
+        className={`min-h-11 flex-1 cursor-pointer text-left ${titleClass}`}
+      >
+        {title}
+      </button>
+    </div>
+  );
 }
 
 /**
@@ -30,6 +79,7 @@ export function TaskLine({
   title,
   done,
   onToggle,
+  onOpen,
   dimmed = false,
   subtasks,
   assignee,
@@ -43,19 +93,10 @@ export function TaskLine({
       className="flex flex-col data-dimmed:opacity-45 sm:flex-row sm:items-start sm:gap-3"
     >
       <div className="flex flex-1 flex-col gap-0.5">
-        <label className="flex min-h-11 items-start gap-3 pt-2.5 has-enabled:cursor-pointer">
-          <input
-            type="checkbox"
-            checked={done}
-            disabled={onToggle === undefined}
-            onChange={(event) => {
-              onToggle?.(event.target.checked);
-            }}
-            className="mt-0.5 size-5 shrink-0 accent-accent enabled:cursor-pointer"
-          />
-          <span className={done ? "text-muted line-through" : "font-semibold"}>{title}</span>
-        </label>
-        <div className="flex flex-col items-start gap-0.5 pl-8">
+        <TitleRow title={title} done={done} onToggle={onToggle} onOpen={onOpen} />
+        <div
+          className={`flex flex-col items-start gap-0.5 ${onOpen === undefined ? "pl-8" : "pl-14"}`}
+        >
           {details}
           {subtasks === undefined ? null : (
             <Badge>

@@ -145,7 +145,7 @@ async function chooseTaskAction(page: Page, title: string, action: string) {
   await page.getByRole("menuitem", { name: action }).click();
 }
 
-/** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche, renomme puis supprime la liste. */
+/** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche (par le détail), renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
   // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
   const parent = page.getByRole("checkbox", { name: "Acheter du pain", exact: true });
@@ -165,16 +165,35 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
   await expect(parent).not.toBeChecked();
 
+  // « Modifier » ouvre le détail (feuille, adresse `?tache=`) : le même formulaire qu'à la création.
   await chooseTaskAction(page, "Acheter du pain", "Modifier");
-  await page.getByLabel("Titre").fill("Acheter du pain complet");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  const detail = page.getByRole("dialog", { name: "Détail de la tâche" });
+  await expect(page).toHaveURL(/[?&]tache=/);
+  await detail.getByLabel("Titre").fill("Acheter du pain complet");
+  await detail.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(detail).toBeHidden();
   await expect(page.getByRole("checkbox", { name: "Acheter du pain complet" })).toBeVisible();
 
-  await chooseTaskAction(page, "Acheter du pain complet", "Supprimer");
+  // Toucher le titre ouvre le détail avec ses sous-tâches ; Échap le ferme et retire le paramètre.
+  await page.getByRole("button", { name: "Ouvrir : Acheter du pain complet" }).click();
+  await expect(detail.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(detail).toBeHidden();
+  await expect(page).not.toHaveURL(/tache=/);
+
+  // Depuis le détail : ajouter une sous-tâche, puis supprimer la tâche (confirmation comprise).
+  await page.getByRole("button", { name: "Ouvrir : Acheter du pain complet" }).click();
+  await detail.getByLabel("Nouvelle sous-tâche").fill("Croissant");
+  await detail.getByRole("button", { name: "Ajouter" }).click();
+  await expect(detail.getByRole("checkbox", { name: "Croissant" })).toBeVisible();
+  await detail.getByRole("button", { name: "Supprimer", exact: true }).click();
   await expect(
-    page.getByRole("group", { name: "Supprimer « Acheter du pain complet » et sa sous-tâche ?" }),
+    detail.getByRole("group", {
+      name: "Supprimer « Acheter du pain complet » et ses 2 sous-tâches ?",
+    }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Supprimer définitivement" }).click();
+  await detail.getByRole("button", { name: "Supprimer définitivement" }).click();
+  await expect(detail).toBeHidden();
   await expect(page.getByText("Aucune tâche dans cette liste")).toBeVisible();
 
   // Tâche répétée : cochée, elle reste à faire et annonce sa prochaine échéance.
@@ -396,7 +415,7 @@ test.describe.serial("parcours d'un compte", () => {
     await addTaskWithPlusButton(page);
   });
 
-  test("ajoute une sous-tâche, modifie puis supprime la tâche et la liste quand on le demande", async ({
+  test("ajoute une sous-tâche, modifie puis supprime la tâche (par le détail) et la liste quand on le demande", async ({
     page,
   }) => {
     await openSignedIn(page, session, "/todo");

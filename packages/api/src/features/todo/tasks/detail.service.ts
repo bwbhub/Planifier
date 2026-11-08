@@ -34,6 +34,7 @@ export async function getTask(db: Db, userId: string, taskId: string): Promise<G
       name: list.name,
       tint: list.tint,
       canWrite: canAccessTodoList(toListAccess(userId, list), "write"),
+      shared: list.space !== null,
     },
     subtasks: subtasks.map((subtask) => toTaskOutput(subtask, spaceMembers)),
   };

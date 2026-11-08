@@ -15,7 +15,11 @@ const fetchMock = vi.hoisted(() => {
   return mock;
 });
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/todo",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 afterEach(() => {
   vi.clearAllMocks();

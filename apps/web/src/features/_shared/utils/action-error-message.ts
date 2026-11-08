@@ -24,6 +24,11 @@ export interface ActionErrorMessages<TReason extends string> {
   forbidden: string;
 }
 
+/** La ressource n'existe pas ou n'est pas visible : le serveur répond pareil dans les deux cas. */
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ORPCError && error.code === "NOT_FOUND";
+}
+
 /** Message à montrer après le refus d'une action : rassurant, avec quoi faire ensuite. */
 export function actionErrorMessage<TReason extends string>(
   error: unknown,

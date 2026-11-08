@@ -49,6 +49,11 @@ export function useSharingSpaces() {
   return useQuery(orpc.spaces.space.list.queryOptions({ input: { limit: PAGE_MAX_LIMIT } }));
 }
 
+/** Une tâche pour son détail : la tâche, sa liste et ses sous-tâches. */
+export function useTask(taskId: string) {
+  return useQuery(orpc.todo.tasks.get.queryOptions({ input: { taskId } }));
+}
+
 export function useTasks(listId: string) {
   return useQuery(orpc.todo.tasks.list.queryOptions({ input: { listId } }));
 }
@@ -112,14 +117,19 @@ export function useUndoCompletion() {
   return useMutation(orpc.todo.tasks.undoCompletion.mutationOptions({ onSettled }));
 }
 
-/** Le message est posé ici et non à l'appel : la ligne disparaît avec la tâche, un rappel de `mutate` ne tiendrait pas. */
-export function useDeleteTask() {
+/**
+ * Le message est posé ici et non à l'appel : la ligne disparaît avec la tâche, un rappel de `mutate` ne tiendrait pas.
+ * Pour la même raison, `onDeleted` (fermer le détail) passe par le hook : le détail se démonte dès que la tâche
+ * n'existe plus.
+ */
+export function useDeleteTask({ onDeleted }: { onDeleted?: () => void } = {}) {
   const onSettled = useInvalidateTodo();
   const { notify } = useToast();
   return useMutation(
     orpc.todo.tasks.delete.mutationOptions({
       onSuccess: () => {
         notify(TODO_LABELS.taskDeleted);
+        onDeleted?.();
       },
       onSettled,
     }),

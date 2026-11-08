@@ -58,4 +58,5 @@ export const WEEKDAY_LABELS = {
 export const TASK_LABELS = {
   assignedTo: "Assignée à",
   checkedBy: "Cochée par",
+  open: "Ouvrir",
 } as const;

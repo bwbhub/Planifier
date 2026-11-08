@@ -141,6 +141,8 @@ export const getTaskOutputSchema = z.strictObject({
   list: listRefSchema.extend({
     /** Modifier la tâche : faux pour une liste montrée en lecture seule. */
     canWrite: z.boolean(),
+    /** Liste partagée avec un Espace (assignation possible) ; faux : liste perso. */
+    shared: z.boolean(),
   }),
   subtasks: z.array(taskSchema).max(TODO_LIST_MAX_TASKS),
 });

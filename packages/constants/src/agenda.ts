@@ -30,6 +30,9 @@ export const AGENDA_MAX_IMPORTS = 5;
 /** Délai minimal entre deux lectures d'un même agenda importé, en secondes (le lien appartient à un tiers). */
 export const AGENDA_IMPORT_COOLDOWN_SECONDS = 60;
 
+/** Âge à partir duquel un agenda importé est relu à l'ouverture de l'Agenda, en heures (pas de tâche planifiée). */
+export const AGENDA_IMPORT_STALE_HOURS = 6;
+
 /** Séries d'un agenda importé développées de 30 jours avant aujourd'hui à 365 jours après. */
 export const AGENDA_IMPORT_PAST_DAYS = 30;
 export const AGENDA_IMPORT_FUTURE_DAYS = 365;

@@ -10,6 +10,7 @@ import { cn } from "@planifier/ui/lib/cn";
 import Link from "next/link";
 
 import { COMMON_LABELS } from "@/lib/labels";
+import { ROUTES } from "@/lib/routes";
 
 import { AGENDA_LABELS } from "../labels";
 import { useAgendaSpaces } from "../queries/agenda.queries";
@@ -81,6 +82,18 @@ export function Toolbar({ params, today, onCreate }: ToolbarProps) {
         + {AGENDA_LABELS.newEntry}
       </Button>
     </div>
+  );
+}
+
+/** Accès à l'écran des agendas importés, discret : on y va rarement. */
+export function ImportsLink() {
+  return (
+    <Link
+      href={ROUTES.agendaImports}
+      className="min-h-11 self-start py-2.5 text-sm text-muted underline"
+    >
+      {AGENDA_LABELS.importsTitle}
+    </Link>
   );
 }
 

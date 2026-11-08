@@ -10,6 +10,7 @@ export const ROUTES = {
   profile: "/profil",
   todo: "/todo",
   agenda: "/agenda",
+  agendaImports: "/agenda/importer",
   spaces: "/espaces",
   newSpace: "/espaces/nouveau",
   /** Lien d'invitation à un Espace : le jeton suit dans le fragment (`#…`), jamais envoyé au serveur. */

@@ -1,4 +1,4 @@
-import { type ListTasksOutput, PAGE_MAX_LIMIT } from "@planifier/api-contract";
+import { type ListTasksOutput, PAGE_MAX_LIMIT, type TaskOutput } from "@planifier/api-contract";
 import { useToast } from "@planifier/ui/components/toast";
 import {
   type QueryClient,
@@ -134,6 +134,52 @@ export function useDeleteTask({ onDeleted }: { onDeleted?: () => void } = {}) {
       onSettled,
     }),
   );
+}
+
+/** Une liste dans le message d'envoi : de quoi la nommer et y revenir. */
+interface ListRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * Envoie une tâche (sous-tâches comprises) dans `to`. Le message vit ici : le détail se ferme dès l'envoi, un rappel
+ * de `mutate` ne tiendrait pas. « Annuler » remet la tâche dans sa liste ; sans lui quand l'assignation a été retirée
+ * (la remettre ne la rendrait pas).
+ */
+export function useMoveTask() {
+  const invalidate = useInvalidateTodo();
+  const { notify } = useToast();
+  const move = useMutation(orpc.todo.tasks.move.mutationOptions({ onSettled: invalidate }));
+
+  async function undo(moved: TaskOutput, from: ListRef) {
+    await orpc.todo.tasks.move.call({ taskId: moved.id, version: moved.version, listId: from.id });
+    await invalidate();
+    notify(TODO_LABELS.taskMovedBack);
+  }
+
+  async function send(task: TaskOutput, from: ListRef, to: ListRef): Promise<boolean> {
+    try {
+      const moved = await move.mutateAsync({
+        taskId: task.id,
+        version: task.version,
+        listId: to.id,
+      });
+      const lostAssignee = task.assignee !== null && moved.assignee === null;
+      notify(
+        lostAssignee ? TODO_LABELS.taskMovedNoAssignee(to.name) : TODO_LABELS.taskMovedTo(to.name),
+        lostAssignee
+          ? undefined
+          : { action: { label: TODO_LABELS.undo, onAction: () => void undo(moved, from) } },
+      );
+      return true;
+    } catch {
+      // Le refus s'affiche déjà, dans le détail (`move.error`).
+      return false;
+    }
+  }
+
+  return { send, isPending: move.isPending, error: move.isError ? move.error : null };
 }
 
 /**

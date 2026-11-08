@@ -144,7 +144,7 @@ export async function createTask(
   });
 }
 
-async function readTask(db: Db | DbTransaction, taskId: string): Promise<TaskOutput> {
+export async function readTask(db: Db | DbTransaction, taskId: string): Promise<TaskOutput> {
   const task = await db.task.findUnique({ where: { id: taskId }, select: TASK_SELECT });
   // Supprimée entre-temps.
   if (task === null) throw new ORPCError("NOT_FOUND");

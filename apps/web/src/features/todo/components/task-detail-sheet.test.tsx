@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { ORPCError } from "@orpc/client";
-import type { GetTaskOutput } from "@planifier/api-contract";
+import type { GetTaskOutput, TodoListOutput } from "@planifier/api-contract";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { ToastProvider } from "@planifier/ui/components/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -45,6 +45,21 @@ function detailWith(overrides: Partial<GetTaskOutput["list"]> = {}): GetTaskOutp
     ],
   };
 }
+
+function listWith(id: string, name: string, canWrite = true): TodoListOutput {
+  return {
+    id,
+    name,
+    tint: "general",
+    version: 1,
+    openTaskCount: 0,
+    space: null,
+    readOnlySpace: null,
+    can: { write: canWrite, delete: canWrite, share: canWrite },
+  };
+}
+
+const OTHER_LIST = listWith("0199f3a2-7c4e-7d10-9a51-0000000000a2", "Vacances");
 
 function renderSheet(onClose = vi.fn()) {
   render(
@@ -121,5 +136,69 @@ describe("TaskDetailSheet", () => {
     renderSheet();
     await screen.findByDisplayValue("Acheter du pain");
     await expect(axeViolations(document.body)).resolves.toEqual([]);
+  });
+});
+
+describe("TaskDetailSheet, envoi vers une autre liste", () => {
+  it("envoie la tâche dans une autre liste, au clic, puis se ferme", async () => {
+    const onClose = vi.fn();
+    const calls = replyRpc(fetchMock, {
+      "todo/tasks/get": { data: detailWith() },
+      "todo/lists/list": {
+        data: {
+          items: [
+            listWith(LIST_ID, "Courses"),
+            OTHER_LIST,
+            listWith("0199f3a2-7c4e-7d10-9a51-0000000000a3", "Cadeaux", false),
+          ],
+          nextCursor: null,
+        },
+      },
+      "todo/tasks/move": {
+        data: taskWith({
+          id: TASK_ID,
+          title: "Acheter du pain",
+          listId: OTHER_LIST.id,
+          version: 2,
+        }),
+      },
+    });
+    renderSheet(onClose);
+    const target = await screen.findByLabelText("Envoyer vers");
+    // Ni la liste de la tâche, ni une liste en lecture seule.
+    expect(
+      within(target)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Vacances"]);
+    expect(calls.some(({ path }) => path === "todo/tasks/move")).toBe(false);
+    await userEvent.click(screen.getByRole("button", { name: "Envoyer" }));
+    await vi.waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+    const sent = calls.find(({ path }) => path === "todo/tasks/move");
+    expect(sent?.input).toEqual({ taskId: TASK_ID, version: 1, listId: OTHER_LIST.id });
+  });
+
+  it("ne propose pas l'envoi d'une sous-tâche seule", async () => {
+    replyRpc(fetchMock, {
+      "todo/tasks/get": {
+        data: {
+          ...detailWith(),
+          task: taskWith({
+            id: TASK_ID,
+            title: "Baguette",
+            parentId: "0199f3a2-7c4e-7d10-9a51-000000000099",
+          }),
+          subtasks: [],
+        },
+      },
+      "todo/lists/list": {
+        data: { items: [listWith(LIST_ID, "Courses"), OTHER_LIST], nextCursor: null },
+      },
+    });
+    renderSheet();
+    await screen.findByDisplayValue("Baguette");
+    expect(screen.queryByLabelText("Envoyer vers")).toBeNull();
   });
 });

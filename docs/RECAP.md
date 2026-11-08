@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — iCal 1/5 : domaine pur (branche `feat/ical-domaine`, tickets `869fjgrcc` / `869fhwtup`)
+
+**Fait** : package `@planifier/domain-ical`, fonctions pures, sans dépendance : `parseFeed` (VEVENT, jours entiers, UTC, fuseaux IANA via `Intl`, durées, répétition lue sans être développée, annulés et illisibles écartés et comptés), `planUpsert` (create / update / unchanged / removed par `uid`), `renderFeed` (export marqué `PRODID` + `X-PLANIFIER-ORIGIN` + `UID…@planifier`, pliage à 75 octets), anti-boucle à la lecture.
+**Décisions** : écrit à la main (pas d'`ical.js`, MPL-2.0). Fin d'un jour entier : `DTEND` exclusif en iCal, `endDay` inclus ici. Heure flottante lue comme UTC. Heure double d'un retour à l'heure d'hiver : la première. 5000 événements au plus par flux, durée au plus un an. Un `uid` doit être unique par entrée : la PR de développement des occurrences donne `uid#occurrence` aux occurrences et aux exceptions (`RECURRENCE-ID`).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` verts ; 29 tests du package. `/code-review` Standards + Spec : dates hors plage, durée démesurée, heure double, plafond d'événements, cache `Intl`, suffixe d'`UID` pour l'anti-boucle corrigés.
+**Ouvert** : fuseaux Windows d'Outlook (`Romance Standard Time`) écartés, table de correspondance à décider ; `RANGE=THISANDFUTURE` ignoré ; export sans `SEQUENCE` ni `LAST-MODIFIED` (à voir avec le flux d'abonnement) ; plafond de taille du texte à poser au fetch. Aucune revue humaine requise (pas d'auth, de réseau ni de secret ici).
+**Attendu ensuite** : iCal 2/5 : modèle + import (table `CalendarSubscription`, chiffrement du lien, fetch sûr contre la SSRF, liste blanche d'hôtes ; revue humaine). Questions à trancher avant : récurrences développées sur −30 j / +365 j ? entrée disparue de la source supprimée ici aussi ?
+
+---
+
 ## 2026-11-08 — Changement d'adresse e-mail (branche `feat/auth-changement-email`, ticket `869fmk5dw`)
 
 **Fait** : `user.changeEmail` de Better Auth activé. Bloc « Adresse e-mail » dans `/profil` (nouvelle adresse + mot de passe actuel). Lien à la nouvelle adresse (gabarit `changeEmailMail`), adresse changée au clic seulement, avis sans lien à l'ancienne après coup (`emailChangedNoticeMail`). Le mot de passe actuel est vérifié côté serveur (hook `/change-email`, code `INVALID_PASSWORD`). Lien expiré : `?error` sur `/profil`, message dédié.

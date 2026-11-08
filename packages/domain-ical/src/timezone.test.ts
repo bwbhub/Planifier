@@ -31,6 +31,12 @@ describe("wallTimeToInstant", () => {
     );
   });
 
+  it("prend la première des deux heures quand elle est double (retour à l'heure d'hiver)", () => {
+    // 25 octobre 2026, 02:30 à Paris existe deux fois : 00:30Z (été), puis 01:30Z (hiver).
+    const at = wallTimeToInstant({ ...wall(10, 25, 2), minute: 30 }, "Europe/Paris");
+    expect(at?.toISOString()).toBe("2026-10-25T00:30:00.000Z");
+  });
+
   it("rend null pour un fuseau inconnu", () => {
     expect(wallTimeToInstant(wall(1, 15, 9), "Mars/Olympus")).toBeNull();
   });

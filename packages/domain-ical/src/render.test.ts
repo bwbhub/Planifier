@@ -58,7 +58,8 @@ describe("renderFeed", () => {
   it("se relit à l'identique une fois la marque retirée", () => {
     const text = renderFeed([timed, allDay], NOW)
       .replace("PRODID:-//Planifier//Planifier//FR", "PRODID:-//Autre//Outil//EN")
-      .replaceAll("X-PLANIFIER-ORIGIN:export\r\n", "");
+      .replaceAll("X-PLANIFIER-ORIGIN:export\r\n", "")
+      .replaceAll("@planifier", "@autre");
 
     const { events } = parseFeed(text);
 

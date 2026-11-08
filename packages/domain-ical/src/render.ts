@@ -1,6 +1,6 @@
 import { addDays } from "@planifier/constants/days";
 
-import { ORIGIN_PROPERTY, ORIGIN_VALUE, PRODUCT_ID } from "./origin";
+import { ORIGIN_PROPERTY, ORIGIN_VALUE, PRODUCT_ID, UID_SUFFIX } from "./origin";
 import type { EntryTime, ExportEntry } from "./types";
 
 const CRLF = "\r\n";
@@ -70,7 +70,7 @@ function timeLines(time: EntryTime): string[] {
 function eventLines(entry: ExportEntry, now: Date): string[] {
   return [
     "BEGIN:VEVENT",
-    `UID:${entry.id}@planifier`,
+    `UID:${entry.id}${UID_SUFFIX}`,
     `DTSTAMP:${utcStamp(now)}`,
     `${ORIGIN_PROPERTY}:${ORIGIN_VALUE}`,
     `SUMMARY:${escapeText(entry.title)}`,

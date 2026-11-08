@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseFeed } from "./parse";
+import { MAX_EVENTS, parseFeed } from "./parse";
 
 const feed = (...events: string[]) =>
   [
@@ -50,6 +50,52 @@ describe("parseFeed", () => {
     );
 
     expect(events[0]?.title).toBe("Un titretrès long");
+  });
+
+  it("écarte une date hors plage au lieu de la décaler", () => {
+    const { events, ignored } = parseFeed(
+      feed(
+        event("UID:m", "DTSTART:20261310T090000Z", "SUMMARY:mois 13"),
+        event("UID:h", "DTSTART:20261110T250000Z", "SUMMARY:25 h"),
+      ),
+    );
+
+    expect(events).toEqual([]);
+    expect(ignored.invalid).toBe(2);
+  });
+});
+
+describe("parseFeed : dates invalides et démesure", () => {
+  it("écarte un jour qui n'existe pas", () => {
+    const { events, ignored } = parseFeed(
+      feed(event("UID:f", "DTSTART;VALUE=DATE:20260230", "SUMMARY:30 février")),
+    );
+
+    expect(events).toEqual([]);
+    expect(ignored.invalid).toBe(1);
+  });
+
+  it("ne plante pas sur une durée démesurée : fin = début", () => {
+    const { events } = parseFeed(
+      feed(
+        event(
+          "UID:a",
+          "DTSTART;VALUE=DATE:20261110",
+          "DURATION:P99999999999999999999D",
+          "SUMMARY:a",
+        ),
+        event("UID:b", "DTSTART:20261110T090000Z", "DURATION:P99999999999999999999D", "SUMMARY:b"),
+      ),
+    );
+
+    expect(events.map((e) => e.time)).toEqual([
+      { allDay: true, startDay: "2026-11-10", endDay: "2026-11-10" },
+      {
+        allDay: false,
+        startsAt: new Date("2026-11-10T09:00:00Z"),
+        endsAt: new Date("2026-11-10T09:00:00Z"),
+      },
+    ]);
   });
 
   it("convertit une heure avec fuseau, heure d'été comprise", () => {
@@ -153,7 +199,9 @@ describe("parseFeed : contenu et exclusions", () => {
     });
     expect(events[1]?.replaces).toBe("2026-12-01T09:00:00.000Z");
   });
+});
 
+describe("parseFeed : exclusions", () => {
   it("écarte les annulés et les illisibles, et compte chaque raison", () => {
     const { events, ignored } = parseFeed(
       feed(
@@ -185,6 +233,14 @@ describe("parseFeed : contenu et exclusions", () => {
     expect(events[0]?.title).toBe("vrai titre");
   });
 
+  it("borne le nombre d'événements lus", () => {
+    const many = Array.from({ length: MAX_EVENTS + 10 }, (_, index) =>
+      event(`UID:u${String(index)}`, "DTSTART:20261110T090000Z", "SUMMARY:x"),
+    );
+
+    expect(parseFeed(feed(...many)).events).toHaveLength(MAX_EVENTS);
+  });
+
   it("ne produit rien d'un texte qui n'est pas un flux", () => {
     expect(parseFeed("<html>pas un calendrier</html>")).toEqual({
       events: [],
@@ -199,6 +255,10 @@ describe("parseFeed : contenu et exclusions", () => {
       event("UID:1", "DTSTART:20261110T090000Z", "SUMMARY:x"),
       "END:VCALENDAR",
     ].join("\r\n");
+    const suffixed = feed(
+      event("UID:abc@planifier", "DTSTART:20261110T090000Z", "SUMMARY:réécrit par un service"),
+    );
+    expect(parseFeed(suffixed).ignored.ownExport).toBe(1);
     const marked = feed(
       event("UID:2", "DTSTART:20261110T090000Z", "X-PLANIFIER-ORIGIN:export", "SUMMARY:x"),
       event("UID:3", "DTSTART:20261110T090000Z", "SUMMARY:étranger"),

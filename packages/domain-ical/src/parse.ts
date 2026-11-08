@@ -16,6 +16,8 @@ import {
 import { isOwnExportEvent, isOwnExportProductId } from "./origin";
 import type { EntryTime, FeedEvent, FeedRecurrence } from "./types";
 
+/** Événements lus au plus par flux (le reste est ignoré) : un flux hostile ne peut pas gonfler la base. */
+export const MAX_EVENTS = 5000;
 const UNTITLED = "Sans titre";
 
 /** Ce que la lecture d'un flux écarte, par raison. */
@@ -33,8 +35,9 @@ export interface ParsedFeed {
   ignored: IgnoredCounts;
 }
 
+/** Au plus 4 unités UTF-16 par caractère gardé : tronquer d'abord évite de décomposer un texte énorme. */
 function clip(value: string, max: number): string {
-  const characters = Array.from(value.trim());
+  const characters = Array.from(value.trim().slice(0, max * 4));
   return characters.length > max ? characters.slice(0, max).join("") : characters.join("");
 }
 
@@ -161,7 +164,7 @@ export function parseFeed(text: string): ParsedFeed {
   const events: FeedEvent[] = [];
   const ignored: IgnoredCounts = { ownExport: 0, cancelled: 0, invalid: 0 };
   const feedIsOwn = lines.some(isOwnExportProductId);
-  for (const block of eventBlocks(lines)) {
+  for (const block of eventBlocks(lines).slice(0, MAX_EVENTS)) {
     const built = buildEvent(block);
     if ("skipped" in built) ignored[built.skipped] += 1;
     else if (feedIsOwn) ignored.ownExport += 1;

@@ -3,7 +3,11 @@ export type EntryTime =
   | { allDay: true; startDay: string; endDay: string }
   | { allDay: false; startsAt: Date; endsAt: Date };
 
-/** Ce qu'un flux iCal apporte à une entrée d'agenda ; `uid` devient `sourceUid` (ADR 0011). */
+/**
+ * Ce qu'un flux iCal apporte à une entrée d'agenda ; `uid` devient `sourceUid` (ADR 0011). `uid` est unique par entrée :
+ * une série développée en occurrences (et ses occurrences modifiées, `RECURRENCE-ID`) leur donne chacune le sien
+ * (`uid#occurrence`) avant `planUpsert`, sinon elles s'écraseraient.
+ */
 export interface ImportedEntry {
   uid: string;
   title: string;

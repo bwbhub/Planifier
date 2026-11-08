@@ -11,7 +11,14 @@ export function isOwnExportProductId(line: ContentLine): boolean {
   return line.name === "PRODID" && line.value.trim().startsWith("-//Planifier//");
 }
 
-/** Événement marqué comme exporté par Planifier ? */
+/** Suffixe des `UID` que nous exportons : survit quand un service réécrit `PRODID` et retire les propriétés `X-`. */
+export const UID_SUFFIX = "@planifier";
+
+/** Événement exporté par Planifier ? (marque `X-PLANIFIER-ORIGIN` ou `UID` à notre suffixe) */
 export function isOwnExportEvent(lines: ContentLine[]): boolean {
-  return lines.some((line) => line.name === ORIGIN_PROPERTY);
+  return lines.some(
+    (line) =>
+      line.name === ORIGIN_PROPERTY ||
+      (line.name === "UID" && line.value.trim().endsWith(UID_SUFFIX)),
+  );
 }

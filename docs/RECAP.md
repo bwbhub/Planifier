@@ -22,7 +22,7 @@ Modèle d'entrée :
 
 **Fait** : procédure `todo.tasks.get` `{ taskId }` ⇒ tâche, liste (`id`, `name`, `tint`, `canWrite`) et sous-tâches ; garde `taskGuard("read")`. Tests d'intégration : contenu, sous-tâche seule, liste perso d'un autre, liste partagée, liste en lecture seule.
 **Décisions** : les créneaux liés ne sont pas dans `get` (l'API Todo ne lit pas l'Agenda) : le web les composera avec le module Agenda à la PR « Créer un créneau ».
-**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, tests d'intégration de l'API (190) verts. E2E non lancé (aucun écran touché).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, tests d'intégration de l'API (191) verts ; `/code-review` Standards + Spec faite, points corrigés (borne `take`, schéma de liste partagé, tests assigné et « cochée par »). E2E non lancé (aucun écran touché).
 **Ouvert** : revue humaine (droits) : `taskGuard("read")` + `canWrite` dans `detail.service.ts`.
 **Attendu ensuite** : feuille Détail (`?tache=`), puis créneau, puis envoi vers une autre liste.
 

@@ -123,6 +123,13 @@ export const taskSchema = z.strictObject({
   version: z.int(),
 });
 
+/** Liste vue depuis une tâche : de quoi la nommer et la teinter. */
+const listRefSchema = z.strictObject({
+  id: listIdSchema,
+  name: z.string(),
+  tint: z.enum(LIST_TINTS),
+});
+
 export const getTaskInputSchema = taskTargetSchema;
 
 /**
@@ -131,10 +138,7 @@ export const getTaskInputSchema = taskTargetSchema;
  */
 export const getTaskOutputSchema = z.strictObject({
   task: taskSchema,
-  list: z.strictObject({
-    id: listIdSchema,
-    name: z.string(),
-    tint: z.enum(LIST_TINTS),
+  list: listRefSchema.extend({
     /** Modifier la tâche : faux pour une liste montrée en lecture seule. */
     canWrite: z.boolean(),
   }),
@@ -146,7 +150,7 @@ export const todayTasksInputSchema = z.strictObject({ date: dueDateSchema });
 
 /** Tâche de l'écran Aujourd'hui, avec la liste où elle est (pastille). */
 const todayTaskSchema = taskSchema.extend({
-  list: z.strictObject({ id: listIdSchema, name: z.string(), tint: z.enum(LIST_TINTS) }),
+  list: listRefSchema,
 });
 
 /** Une section : les premières tâches (bornées) et leur nombre total. */

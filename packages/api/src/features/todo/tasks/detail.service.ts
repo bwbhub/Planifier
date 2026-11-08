@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import type { GetTaskOutput } from "@planifier/api-contract";
-import { isListTint } from "@planifier/constants/todo";
+import { isListTint, TODO_LIST_MAX_TASKS } from "@planifier/constants/todo";
 import type { Db, Prisma } from "@planifier/db";
 import { canAccessTodoList } from "@planifier/domain-access/todo-list";
 
@@ -11,7 +11,7 @@ function detailSelect(userId: string) {
   return {
     ...TASK_SELECT,
     list: { select: { id: true, name: true, tint: true, ...listAccessSelect(userId) } },
-    subtasks: { orderBy: { id: "asc" }, select: TASK_SELECT },
+    subtasks: { orderBy: { id: "asc" }, take: TODO_LIST_MAX_TASKS, select: TASK_SELECT },
   } as const satisfies Prisma.TaskSelect;
 }
 

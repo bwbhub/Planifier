@@ -84,6 +84,28 @@ describe("todo.tasks.get (base réelle)", () => {
     await expect(get(carol, task.id)).rejects.toMatchObject(notFound);
   });
 
+  it("rend l'assigné et « cochée par » ; un assigné qui a quitté l'Espace n'est plus rendu", async () => {
+    const shared = await call(
+      lists.create,
+      { name: "Courses", tint: "couple", spaceId },
+      asUser(alice),
+    );
+    const task = await call(
+      tasks.create,
+      { listId: shared.id, title: "Pain", assigneeId: bob.id },
+      asUser(alice),
+    );
+    await call(tasks.setDone, { taskId: task.id, done: true }, asUser(alice));
+
+    const before = await get(bob, task.id);
+    expect(before.task.assignee).toEqual({ userId: bob.id, name: "bob" });
+    expect(before.task.completedBy).toEqual({ userId: alice.id, name: "alice" });
+
+    await db.spaceMember.deleteMany({ where: { spaceId, userId: bob.id } });
+    expect((await get(alice, task.id)).task.assignee).toBeNull();
+    await expect(get(bob, task.id)).rejects.toMatchObject(notFound);
+  });
+
   it("liste montrée en lecture seule : lue, canWrite faux", async () => {
     const shown = await call(
       lists.create,

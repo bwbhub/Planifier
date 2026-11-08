@@ -145,6 +145,41 @@ async function chooseTaskAction(page: Page, title: string, action: string) {
   await page.getByRole("menuitem", { name: action }).click();
 }
 
+/** Crée la liste « Boulot », y envoie « Valises » depuis le détail, la retrouve là-bas, puis supprime « Boulot ». */
+async function sendTaskToNewList(page: Page) {
+  await page.getByLabel("Nouvelle tâche").fill("Valises");
+  await page.getByRole("button", { name: "Ajouter" }).click();
+  await page.getByRole("button", { name: "+ Nouvelle liste" }).click();
+  await page.getByLabel("Nom de la liste").fill("Boulot");
+  await page.getByRole("button", { name: "Créer la liste" }).click();
+  await expect(page.getByRole("heading", { name: "Boulot" })).toBeVisible();
+  await page
+    .getByRole("link", { name: /Courses/ })
+    .first()
+    .click();
+
+  await page.getByRole("button", { name: "Ouvrir : Valises" }).click();
+  const detail = page.getByRole("dialog", { name: "Détail de la tâche" });
+  await detail.getByLabel("Envoyer vers", { exact: true }).selectOption({ label: "Boulot" });
+  await detail.getByRole("button", { name: "Envoyer", exact: true }).click();
+  await expect(detail).toBeHidden();
+  await expect(page.getByText("Tâche envoyée dans « Boulot ».")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Valises" })).toHaveCount(0);
+
+  await page
+    .getByRole("link", { name: /Boulot/ })
+    .first()
+    .click();
+  await expect(page.getByRole("checkbox", { name: "Valises" })).toBeVisible();
+  await page.getByRole("button", { name: "Supprimer la liste" }).click();
+  await page.getByRole("button", { name: "Supprimer définitivement" }).click();
+  await page
+    .getByRole("link", { name: /Courses/ })
+    .first()
+    .click();
+  await expect(page.getByRole("heading", { name: "Courses" })).toBeVisible();
+}
+
 /** Sur le Todo : ajoute une sous-tâche, modifie puis supprime la tâche (par le détail), renomme puis supprime la liste. */
 async function editThenDeleteTaskAndList(page: Page) {
   // Tâche décochée d'abord : cocher sa sous-tâche ne doit pas la cocher (rien ne se coche en cascade).
@@ -201,6 +236,9 @@ async function editThenDeleteTaskAndList(page: Page) {
   await detail.getByRole("button", { name: "Supprimer définitivement" }).click();
   await expect(detail).toBeHidden();
   await expect(page.getByText("Aucune tâche dans cette liste")).toBeVisible();
+
+  // Envoyer une tâche dans une autre liste, depuis le détail : elle quitte la liste, le message le dit.
+  await sendTaskToNewList(page);
 
   // Tâche répétée : cochée, elle reste à faire et annonce sa prochaine échéance.
   await page.getByLabel("Nouvelle tâche").fill("Arroser les plantes");

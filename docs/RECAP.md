@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Détail de tâche : envoyer vers une autre liste (branche `feat/todo-move-task`)
+
+**Fait** : procédure `todo.tasks.move { taskId, version, listId }` : la tâche et ses sous-tâches changent de liste (droit d'écriture sur les deux listes, sinon `NOT_FOUND` / `FORBIDDEN`), sous le verrou de la liste cible (borne de 500 tâches : `LIST_FULL`), `version` vérifiée (`STALE_VERSION`), rejouable si déjà dans la liste. Les assignés qui ne sont pas membres de l'Espace de la cible sont retirés. Dans le détail : « Envoyer vers » (listes écrivables autres que la sienne) et « Envoyer » ; toast « Tâche envoyée dans « X » » avec « Annuler » ; le détail se ferme.
+**Décisions** : une sous-tâche ne se déplace pas seule (`CONFLICT SUBTASK_MOVE`, et rien n'est proposé pour elle) : elle suit sa tâche. Quand l'assignation est retirée, le toast le dit et n'offre pas « Annuler » (la remettre ne la rendrait pas). Toutes les listes sont lues (pages suivantes comprises) pour le choix.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, intégration API (205), `pnpm test:e2e` (62, dont l'envoi d'une tâche dans une nouvelle liste depuis le détail) verts. `/code-review` Standards + Spec faite, points corrigés : les deux listes sont verrouillées (une sous-tâche créée en parallèle ne reste pas derrière), l'échec d'« Annuler » est dit, états du bloc (chargement, erreur), tests de l'annulation, de l'assignation retirée et de la récurrence. Rien vu à l'œil.
+**Ouvert** : revue humaine (droits) : `move.service.ts` + enchaînement `taskGuard("write")` puis `listGuard("write")` du routeur ; à l'œil, PC et 375 px : le bloc « Envoyer vers une autre liste » dans le détail. Le plan du Détail de tâche est terminé (tâche clone ou orpheline : module Événements).
+**Attendu ensuite** : iCal ou autre ticket.
+
+---
+
 ## 2026-11-08 — Détail de tâche : créneau lié (branche `feat/todo-linked-slot`)
 
 **Fait** : procédure `agenda.entries.listForTask { taskId }` (mes entrées liées à la tâche, jamais celles des autres) ; dans le détail, section « Dans l'agenda » : créneaux liés et « Créer un créneau dans l'agenda » (le formulaire d'entrée habituel, proposé avec le titre et l'échéance de la tâche, lié à elle). Visible si le module Agenda est actif. Lien à sens unique : rien ne se coche. Chaque créneau lié est un lien vers l'Agenda au bon jour ; l'heure d'échéance de la tâche, si elle en a une, est l'heure de début proposée (fin = +1 h, au plus 23:59).

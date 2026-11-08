@@ -11,6 +11,7 @@ import {
   getTaskOutputSchema,
   listTasksInputSchema,
   listTasksOutputSchema,
+  moveTaskInputSchema,
   postponeTasksInputSchema,
   postponeTasksOutputSchema,
   setTaskDoneInputSchema,
@@ -103,6 +104,15 @@ export const tasksContract = {
     })
     .errors(TODO_ERRORS)
     .input(undoCompletionInputSchema)
+    .output(taskSchema),
+  move: oc
+    .route({
+      summary: "Envoyer une tâche dans une autre liste",
+      description:
+        "La tâche et ses sous-tâches changent de liste ; droit d'écriture sur les deux listes, sinon NOT_FOUND ou FORBIDDEN. Une sous-tâche ne se déplace pas seule : CONFLICT `SUBTASK_MOVE`. Liste cible pleine : CONFLICT `LIST_FULL`. Les assignés qui ne sont pas membres de l'Espace de la cible sont retirés. `version` périmée : CONFLICT `STALE_VERSION`.",
+    })
+    .errors(TODO_ERRORS)
+    .input(moveTaskInputSchema)
     .output(taskSchema),
   delete: oc
     .route({

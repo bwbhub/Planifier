@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { ORPCError } from "@orpc/client";
-import type { GetTaskOutput } from "@planifier/api-contract";
+import type { GetTaskOutput, TodoListOutput } from "@planifier/api-contract";
 import { axeViolations } from "@planifier/ui/testing/axe";
 import { ToastProvider } from "@planifier/ui/components/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -45,6 +45,21 @@ function detailWith(overrides: Partial<GetTaskOutput["list"]> = {}): GetTaskOutp
     ],
   };
 }
+
+function listWith(id: string, name: string, canWrite = true): TodoListOutput {
+  return {
+    id,
+    name,
+    tint: "general",
+    version: 1,
+    openTaskCount: 0,
+    space: null,
+    readOnlySpace: null,
+    can: { write: canWrite, delete: canWrite, share: canWrite },
+  };
+}
+
+const OTHER_LIST = listWith("0199f3a2-7c4e-7d10-9a51-0000000000a2", "Vacances");
 
 function renderSheet(onClose = vi.fn()) {
   render(
@@ -121,5 +136,161 @@ describe("TaskDetailSheet", () => {
     renderSheet();
     await screen.findByDisplayValue("Acheter du pain");
     await expect(axeViolations(document.body)).resolves.toEqual([]);
+  });
+});
+
+const MOVE_REPLIES = {
+  "todo/tasks/get": { data: detailWith() },
+  "todo/lists/list": {
+    data: { items: [listWith(LIST_ID, "Courses"), OTHER_LIST], nextCursor: null },
+  },
+  "todo/tasks/move": {
+    data: taskWith({
+      id: TASK_ID,
+      title: "Acheter du pain",
+      listId: OTHER_LIST.id,
+      version: 2,
+    }),
+  },
+};
+
+describe("TaskDetailSheet, envoi vers une autre liste", () => {
+  it("envoie la tâche dans une autre liste, au clic, puis se ferme", async () => {
+    const onClose = vi.fn();
+    const calls = replyRpc(fetchMock, {
+      "todo/tasks/get": { data: detailWith() },
+      "todo/lists/list": {
+        data: {
+          items: [
+            listWith(LIST_ID, "Courses"),
+            OTHER_LIST,
+            listWith("0199f3a2-7c4e-7d10-9a51-0000000000a3", "Cadeaux", false),
+          ],
+          nextCursor: null,
+        },
+      },
+      "todo/tasks/move": {
+        data: taskWith({
+          id: TASK_ID,
+          title: "Acheter du pain",
+          listId: OTHER_LIST.id,
+          version: 2,
+        }),
+      },
+    });
+    renderSheet(onClose);
+    const target = await screen.findByLabelText("Envoyer vers");
+    // Ni la liste de la tâche, ni une liste en lecture seule.
+    expect(
+      within(target)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Vacances"]);
+    expect(calls.some(({ path }) => path === "todo/tasks/move")).toBe(false);
+    await userEvent.click(screen.getByRole("button", { name: "Envoyer" }));
+    await vi.waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+    const sent = calls.find(({ path }) => path === "todo/tasks/move");
+    expect(sent?.input).toEqual({ taskId: TASK_ID, version: 1, listId: OTHER_LIST.id });
+  });
+});
+
+describe("TaskDetailSheet, annulation de l'envoi", () => {
+  it("« Annuler » remet la tâche dans sa liste, avec la version rendue par l'envoi", async () => {
+    const calls = replyRpc(fetchMock, MOVE_REPLIES);
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    await screen.findByText("Tâche envoyée dans « Vacances ».");
+    const undo = screen
+      .getAllByRole("button", { name: "Annuler" })
+      .find((button) => button.closest("form") === null);
+    expect(undo).toBeDefined();
+    if (undo !== undefined) await userEvent.click(undo);
+    await screen.findByText("Tâche remise dans sa liste.");
+    const back = calls.filter(({ path }) => path === "todo/tasks/move")[1];
+    expect(back?.input).toEqual({ taskId: TASK_ID, version: 2, listId: LIST_ID });
+  });
+
+  it("dit pourquoi l'annulation échoue, sans rien forcer", async () => {
+    let moves = 0;
+    replyRpc(fetchMock, {
+      ...MOVE_REPLIES,
+      get "todo/tasks/move"() {
+        moves += 1;
+        return moves === 1
+          ? {
+              data: taskWith({
+                id: TASK_ID,
+                title: "Acheter du pain",
+                listId: OTHER_LIST.id,
+                version: 2,
+              }),
+            }
+          : { error: new ORPCError("CONFLICT", { data: { reason: "STALE_VERSION" } }) };
+      },
+    });
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    await screen.findByText("Tâche envoyée dans « Vacances ».");
+    const undo = screen
+      .getAllByRole("button", { name: "Annuler" })
+      .find((button) => button.closest("form") === null);
+    if (undo !== undefined) await userEvent.click(undo);
+    expect(await screen.findByText(/a changé entre-temps/)).toBeTruthy();
+  });
+});
+
+describe("TaskDetailSheet, cas limites de l'envoi", () => {
+  it("dit que l'assignation est retirée, sans proposer d'annuler", async () => {
+    const person = { userId: "0199f3a2-7c4e-7d10-9a51-0000000000b1", name: "Bob" };
+    replyRpc(fetchMock, {
+      ...MOVE_REPLIES,
+      "todo/tasks/get": {
+        data: {
+          ...detailWith(),
+          task: taskWith({ id: TASK_ID, title: "Acheter du pain", assignee: person }),
+        },
+      },
+    });
+    renderSheet();
+    await userEvent.click(await screen.findByRole("button", { name: "Envoyer" }));
+    expect(await screen.findByText(/Son assignation a été retirée/)).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole("button", { name: "Annuler" })
+        .every((button) => button.closest("form") !== null),
+    ).toBe(true);
+  });
+
+  it("dit quand les listes ne se chargent pas", async () => {
+    replyRpc(fetchMock, {
+      "todo/tasks/get": { data: detailWith() },
+      "todo/lists/list": { error: new ORPCError("INTERNAL_SERVER_ERROR") },
+    });
+    renderSheet();
+    expect(await screen.findByRole("button", { name: "Réessayer" })).toBeTruthy();
+  });
+
+  it("ne propose pas l'envoi d'une sous-tâche seule", async () => {
+    replyRpc(fetchMock, {
+      "todo/tasks/get": {
+        data: {
+          ...detailWith(),
+          task: taskWith({
+            id: TASK_ID,
+            title: "Baguette",
+            parentId: "0199f3a2-7c4e-7d10-9a51-000000000099",
+          }),
+          subtasks: [],
+        },
+      },
+      "todo/lists/list": {
+        data: { items: [listWith(LIST_ID, "Courses"), OTHER_LIST], nextCursor: null },
+      },
+    });
+    renderSheet();
+    await screen.findByDisplayValue("Baguette");
+    expect(screen.queryByLabelText("Envoyer vers")).toBeNull();
   });
 });

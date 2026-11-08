@@ -17,6 +17,7 @@ const CONFLICT_MESSAGES: Record<TodoConflictReason, string> = {
   ASSIGNEE_NOT_MEMBER:
     "Cette personne n'est plus dans l'Espace. Recharge la page et choisis quelqu'un d'autre.",
   TIME_WITHOUT_DATE: TODO_LABELS.timeNeedsDay,
+  SUBTASK_MOVE: "Une sous-tâche suit sa tâche : envoie la tâche entière dans l'autre liste.",
 };
 
 /** Message à montrer après un refus d'une action Todo. */

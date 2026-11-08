@@ -1,6 +1,7 @@
 import { userProcedure } from "../../../procedures";
 import { listGuard, taskGuard, tasksGuard } from "../todo-guard";
 import { getTask } from "./detail.service";
+import { moveTask } from "./move.service";
 import { postponeTasks } from "./postpone.service";
 import {
   completeOccurrence,
@@ -51,6 +52,11 @@ export const tasksRouter = {
   undoCompletion: userProcedure.todo.tasks.undoCompletion
     .use(taskGuard("write"))
     .handler(({ context, input }) => undoCompletion(context.getDb(), input)),
+  // Écrire dans la liste de la tâche, puis dans la liste cible (`listId` de l'entrée).
+  move: userProcedure.todo.tasks.move
+    .use(taskGuard("write"))
+    .use(listGuard("write"))
+    .handler(({ context, input }) => moveTask(context.getDb(), input)),
   delete: userProcedure.todo.tasks.delete
     .use(taskGuard("write"))
     .handler(async ({ context, input }) => {

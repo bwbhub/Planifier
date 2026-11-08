@@ -16,6 +16,7 @@ import { useDeleteTask } from "../queries/todo.queries";
 import { ListViewProvider } from "../utils/list-view";
 import { deleteQuestion } from "../utils/subtasks";
 import { useTaskCompletion } from "../utils/use-task-completion";
+import { MoveTask } from "./move-task";
 
 /**
  * Ce que le détail offre à un autre module (l'agenda) pour se montrer sous la tâche. `todo` n'importe pas ce module :
@@ -147,6 +148,7 @@ export function TaskDetailBody({ detail, onClose, Extras }: BodyProps) {
             }}
           />
         )}
+        {list.canWrite ? <MoveTask detail={detail} onMoved={onClose} /> : null}
         {list.canWrite ? <DeleteTask detail={detail} onClose={onClose} /> : null}
       </div>
     </ListViewProvider>

@@ -100,6 +100,15 @@ export const undoCompletionInputSchema = taskTargetSchema.extend({
   recurrence: recurrenceSchema,
 });
 
+/**
+ * Envoyer une tâche, avec ses sous-tâches, dans une autre liste (écrivable). `version` : celle de la tâche lue.
+ * Sa liste est déjà `listId` : rien ne change, rien n'est écrit.
+ */
+export const moveTaskInputSchema = taskTargetSchema.extend({
+  version: z.int().min(1),
+  listId: listIdSchema,
+});
+
 export const deleteTaskInputSchema = taskTargetSchema;
 
 export const taskSchema = z.strictObject({
@@ -202,6 +211,7 @@ export const postponeTasksOutputSchema = z.strictObject({
   items: z.array(taskSchema).max(TODAY_SECTION_MAX),
 });
 
+export type MoveTaskInput = z.output<typeof moveTaskInputSchema>;
 export type TaskOutput = z.infer<typeof taskSchema>;
 export type GetTaskOutput = z.infer<typeof getTaskOutputSchema>;
 export type PostponeTasksInput = z.output<typeof postponeTasksInputSchema>;

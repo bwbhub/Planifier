@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Détail de tâche : feuille `?tache=` (branche `feat/todo-detail-sheet`)
+
+**Fait** : toucher le titre d'une tâche (Todo et Aujourd'hui) ouvre le détail : feuille au-dessus de la page, adresse `?tache=<id>` (lien profond ; « retour » ou Échap la ferme). Contenu : le même `TaskForm` qu'à la création (un seul bouton « Enregistrer »), sous-tâches (coche, ajout rapide), suppression avec confirmation. Liste montrée en lecture seule : tout se lit, rien ne se modifie. « Modifier » du menu ouvre le détail (l'édition en ligne disparaît). `todo.tasks.get` rend aussi `list.shared`.
+**Décisions** : `TaskLine` gagne `onOpen` : le titre devient un bouton, la case reste à part (zone de toucher de 44 px, nom accessible = titre) ; sans `onOpen`, rien ne change. La feuille est montée une fois dans `app/(app)/layout.tsx` ; `useOpenTask` vit dans `_shared`. `next/navigation` est simulé par défaut dans `vitest.setup.ts`.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, intégration API (191), `pnpm test:e2e` (62) verts. Rien vu à l'œil.
+**Ouvert** : à regarder à l'œil, PC et 375 px : la feuille, et la ligne de tâche (titre cliquable, retrait des détails) ; pas de rappel ni de « Créer un créneau » / « Envoyer vers une autre liste » (PR 3 et 4).
+**Attendu ensuite** : créneau lié, puis envoi vers une autre liste.
+
+---
+
 ## 2026-11-08 — Détail de tâche : lecture `todo.tasks.get` (branche `feat/todo-task-get`)
 
 **Fait** : procédure `todo.tasks.get` `{ taskId }` ⇒ tâche, liste (`id`, `name`, `tint`, `canWrite`) et sous-tâches ; garde `taskGuard("read")`. Tests d'intégration : contenu, sous-tâche seule, liste perso d'un autre, liste partagée, liste en lecture seule.

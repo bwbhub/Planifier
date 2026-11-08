@@ -126,7 +126,8 @@ describe("TaskRow, lecture seule", () => {
     const completion = completionWith();
     renderRow(completion, parent, false, true);
     expect(screen.getAllByRole("checkbox").every((box) => box.hasAttribute("disabled"))).toBe(true);
-    expect(screen.queryByRole("button")).toBeNull();
+    // Seul le titre reste un bouton : il ouvre le détail, en lecture.
+    expect(screen.queryByRole("button", { name: /^(?!Ouvrir)/ })).toBeNull();
     expect(screen.queryByRole("menu")).toBeNull();
   });
 });

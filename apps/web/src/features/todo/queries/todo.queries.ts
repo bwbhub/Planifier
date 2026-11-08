@@ -49,6 +49,11 @@ export function useSharingSpaces() {
   return useQuery(orpc.spaces.space.list.queryOptions({ input: { limit: PAGE_MAX_LIMIT } }));
 }
 
+/** Une tâche pour son détail : la tâche, sa liste et ses sous-tâches. */
+export function useTask(taskId: string) {
+  return useQuery(orpc.todo.tasks.get.queryOptions({ input: { taskId } }));
+}
+
 export function useTasks(listId: string) {
   return useQuery(orpc.todo.tasks.list.queryOptions({ input: { listId } }));
 }

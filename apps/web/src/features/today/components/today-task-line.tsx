@@ -1,6 +1,7 @@
 import type { TodayTaskOutput } from "@planifier/api-contract";
 import { Badge } from "@planifier/ui/components/badge";
 
+import { useOpenTask } from "@/features/_shared/utils/use-open-task";
 import { TaskLine } from "@/features/_shared/components/task-line";
 import { TODAY_LABELS } from "../labels";
 import { overdueDayLabel } from "../utils/today-day";
@@ -15,12 +16,16 @@ interface TodayTaskLineProps {
 /** Ligne de tâche de l'écran : la pastille de sa liste, et son heure ou son jour. Rien ne se coche seul. */
 export function TodayTaskLine({ task, day, onCheck }: TodayTaskLineProps) {
   const { dueDate, dueTime, list } = task;
+  const openTask = useOpenTask();
   const when =
     dueDate !== null && dueDate < day ? TODAY_LABELS.dueOn(overdueDayLabel(dueDate)) : dueTime;
   return (
     <TaskLine
       title={task.title}
       done={false}
+      onOpen={() => {
+        openTask(task.id);
+      }}
       onToggle={() => {
         onCheck(task);
       }}

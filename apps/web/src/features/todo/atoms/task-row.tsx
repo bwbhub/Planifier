@@ -12,6 +12,7 @@ import { useListView } from "../utils/list-view";
 import { deleteQuestion, isSubtask, subtaskProgress } from "../utils/subtasks";
 import { useInPlaceMode } from "../utils/use-in-place-mode";
 import { DueDate } from "./due-date";
+import { useOpenTask } from "@/features/_shared/utils/use-open-task";
 import { TaskLine } from "@/features/_shared/components/task-line";
 import { recurrenceLabel } from "@/features/_shared/utils/recurrence-label";
 import { TodoErrorAlert } from "./todo-error-alert";
@@ -118,7 +119,6 @@ interface TodoTaskLineProps {
   /** Les actions de la tâche (hors modification et confirmation de suppression), jamais en lecture seule. */
   showActions: boolean;
   onAddSubtask: () => void;
-  onEdit: () => void;
   onDelete: () => void;
 }
 
@@ -129,10 +129,10 @@ function TodoTaskLine({
   completion,
   showActions,
   onAddSubtask,
-  onEdit,
   onDelete,
 }: TodoTaskLineProps) {
   const { isDimmed, readOnly, shared } = useListView();
+  const openTask = useOpenTask();
   const done = task.completedAt !== null;
   return (
     <TaskLine
@@ -145,6 +145,9 @@ function TodoTaskLine({
               completion.toggle(task, checked);
             }
       }
+      onOpen={() => {
+        openTask(task.id);
+      }}
       dimmed={isDimmed(task)}
       subtasks={subtasks.length === 0 ? undefined : subtaskProgress(subtasks)}
       assignee={task.assignee}
@@ -157,7 +160,9 @@ function TodoTaskLine({
             done={done}
             onAddSubtask={onAddSubtask}
             onFinish={completion.finish}
-            onEdit={onEdit}
+            onEdit={() => {
+              openTask(task.id);
+            }}
             onDelete={onDelete}
           />
         ) : null
@@ -174,11 +179,11 @@ interface TaskRowProps {
 }
 
 /**
- * Une tâche : case à cocher, échéance, description, sous-tâches ; modification et suppression sur place. Lecture
+ * Une tâche : case à cocher, échéance, description, sous-tâches ; suppression sur place, modification dans le détail. Lecture
  * seule : la coche montre l'état, sans geste possible.
  */
 export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
-  const { mode, showView, showEdit, showConfirmDelete } = useInPlaceMode();
+  const { mode, showView, showConfirmDelete } = useInPlaceMode();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const deleteTask = useDeleteTask();
   const subtaskList = (
@@ -192,16 +197,6 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
       }}
     />
   );
-
-  // En modification, seule la tâche devient un formulaire : ses sous-tâches restent affichées dessous.
-  if (mode === "edit") {
-    return (
-      <li className="flex flex-col gap-2 rounded-control bg-surface p-4">
-        <TaskForm listId={task.listId} task={task} onDone={showView} />
-        {subtaskList}
-      </li>
-    );
-  }
 
   return (
     <li
@@ -219,7 +214,6 @@ export function TaskRow({ task, subtasks = [], completion }: TaskRowProps) {
         onAddSubtask={() => {
           setAddingSubtask(true);
         }}
-        onEdit={showEdit}
         onDelete={showConfirmDelete}
       />
       {mode === "confirmDelete" ? (

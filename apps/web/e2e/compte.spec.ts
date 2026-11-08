@@ -165,10 +165,21 @@ async function editThenDeleteTaskAndList(page: Page) {
   await expect(page.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
   await expect(parent).not.toBeChecked();
 
+  // « Modifier » ouvre le détail (feuille, adresse `?tache=`) : le même formulaire qu'à la création.
   await chooseTaskAction(page, "Acheter du pain", "Modifier");
-  await page.getByLabel("Titre").fill("Acheter du pain complet");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  const detail = page.getByRole("dialog", { name: "Détail de la tâche" });
+  await expect(page).toHaveURL(/[?&]tache=/);
+  await detail.getByLabel("Titre").fill("Acheter du pain complet");
+  await detail.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(detail).toBeHidden();
   await expect(page.getByRole("checkbox", { name: "Acheter du pain complet" })).toBeVisible();
+
+  // Toucher le titre ouvre le détail avec ses sous-tâches ; Échap le ferme et retire le paramètre.
+  await page.getByRole("button", { name: "Ouvrir : Acheter du pain complet" }).click();
+  await expect(detail.getByRole("checkbox", { name: "Baguette" })).toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(detail).toBeHidden();
+  await expect(page).not.toHaveURL(/tache=/);
 
   await chooseTaskAction(page, "Acheter du pain complet", "Supprimer");
   await expect(

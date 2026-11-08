@@ -275,7 +275,7 @@ describe("ListPanel, liste partagée", () => {
     });
     expect(await screen.findByText("Assignée à Julien")).toBeTruthy();
     const dimmedTitles = () =>
-      [...document.querySelectorAll("[data-dimmed] input + span")].map(
+      [...document.querySelectorAll('[data-dimmed] button[aria-label^="Ouvrir"]')].map(
         (title) => title.textContent,
       );
     expect(dimmedTitles()).toEqual([]);

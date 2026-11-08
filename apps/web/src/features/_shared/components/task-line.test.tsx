@@ -24,6 +24,17 @@ describe("TaskLine", () => {
     expect(onToggle).toHaveBeenCalledWith(true);
   });
 
+  it("ouvre le détail au toucher du titre, sans cocher ; la case garde le nom de la tâche", async () => {
+    const onOpen = vi.fn();
+    const onToggle = vi.fn();
+    renderLine({ onOpen, onToggle });
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir : Acheter du pain" }));
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(onToggle).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Acheter du pain" }));
+    expect(onToggle).toHaveBeenCalledWith(true);
+  });
+
   it("montre l'état sans geste possible quand rien ne la coche (lecture seule)", () => {
     renderLine({ done: true });
     const box = screen.getByRole("checkbox", { name: "Acheter du pain" });

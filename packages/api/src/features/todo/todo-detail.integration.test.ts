@@ -45,7 +45,13 @@ describe("todo.tasks.get (base réelle)", () => {
     const detail = await get(alice, task.id);
 
     expect(detail.task).toMatchObject({ id: task.id, title: "Voyage", dueDate: "2026-12-01" });
-    expect(detail.list).toEqual({ id: list.id, name: "Maison", tint: "general", canWrite: true });
+    expect(detail.list).toEqual({
+      id: list.id,
+      name: "Maison",
+      tint: "general",
+      canWrite: true,
+      shared: false,
+    });
     expect(detail.subtasks.map(({ title }) => title)).toEqual(["Réserver", "Valises"]);
   });
 
@@ -80,7 +86,7 @@ describe("todo.tasks.get (base réelle)", () => {
     );
     const task = await call(tasks.create, { listId: shared.id, title: "Pain" }, asUser(alice));
 
-    expect((await get(bob, task.id)).list.canWrite).toBe(true);
+    expect((await get(bob, task.id)).list).toMatchObject({ canWrite: true, shared: true });
     await expect(get(carol, task.id)).rejects.toMatchObject(notFound);
   });
 

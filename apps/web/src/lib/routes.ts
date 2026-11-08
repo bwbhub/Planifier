@@ -16,6 +16,9 @@ export const ROUTES = {
   joinSpace: "/rejoindre",
 } as const;
 
+/** Paramètre d'adresse de la tâche ouverte en détail (`?tache=<id>`) : lien profond, « retour » la ferme. */
+export const TASK_PARAM = "tache";
+
 export function spaceRoute(spaceId: string): string {
   return `${ROUTES.spaces}/${spaceId}`;
 }

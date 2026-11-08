@@ -105,7 +105,12 @@ function exceptionsOf(lines: ContentLine[]): string[] {
 
 function recurrenceOf(lines: ContentLine[]): FeedRecurrence | null {
   const rule = firstOf(lines, "RRULE")?.value.trim();
-  return rule === undefined || rule === "" ? null : { rule, exceptions: exceptionsOf(lines) };
+  if (rule === undefined || rule === "") return null;
+  return {
+    rule,
+    timeZone: firstOf(lines, "DTSTART")?.params["TZID"] ?? null,
+    exceptions: exceptionsOf(lines),
+  };
 }
 
 type Built = { event: FeedEvent } | { skipped: keyof IgnoredCounts };

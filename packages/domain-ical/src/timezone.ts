@@ -70,3 +70,18 @@ export function wallTimeToInstant(wall: WallTime, timeZone: string): Date | null
   // Heure absente (saut de printemps) : aucun candidat, on décale après le saut.
   return new Date(candidates[0] ?? asUtc - Math.min(before, after));
 }
+
+/** Heure murale de `at` dans `timeZone`. `null` si le fuseau est inconnu. */
+export function instantToWallTime(at: Date, timeZone: string): WallTime | null {
+  const offset = offsetAt(at.getTime(), timeZone);
+  if (offset === null) return null;
+  const local = new Date(at.getTime() + offset);
+  return {
+    year: local.getUTCFullYear(),
+    month: local.getUTCMonth() + 1,
+    day: local.getUTCDate(),
+    hour: local.getUTCHours(),
+    minute: local.getUTCMinutes(),
+    second: local.getUTCSeconds(),
+  };
+}

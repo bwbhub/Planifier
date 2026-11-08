@@ -9,6 +9,12 @@ Décision d'ensemble : ADR 0011 (upsert sur `(source, uid)`, anti-boucle).
 - `@planifier/domain-ical/parse` : `parseFeed(texte)` ⇒ `{ events, ignored }`. Lit `VEVENT` (titre, lieu, description,
   jours entiers ou instants, fuseaux IANA, durées), la répétition (`RRULE`, `EXDATE`, `RECURRENCE-ID`) **sans la
   développer**. Écarte les annulés, les illisibles et nos propres exports, et les compte.
+- `@planifier/domain-ical/expand` : `expandFeed(événements, fenêtre)` ⇒ `{ entries, unsupported }`. Développe les séries
+  (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` sans rang, `BYMONTHDAY`) en occurrences
+  dans la fenêtre (recommandé : −30 j / +365 j), retire les `EXDATE`, remplace les occurrences modifiées
+  (`RECURRENCE-ID`). Chaque occurrence a le `uid` `uid#jour-ou-instant` ; un événement simple garde son `uid` et n'est
+  jamais filtré par la fenêtre. L'heure murale est gardée d'un changement d'heure à l'autre (`TZID`). Règle non prise
+  en charge (`BYSETPOS`, `2MO`, `BYMONTH`…) : première occurrence seule, comptée dans `unsupported`.
 - `@planifier/domain-ical/plan` : `planUpsert(existantes, reçues)` ⇒ `{ create, update, unchanged, removed }`, par `uid`.
 - `@planifier/domain-ical/render` : `renderFeed(entrées, maintenant)` ⇒ texte iCal marqué (`PRODID` et
   `X-PLANIFIER-ORIGIN`), relu par `parseFeed` il est ignoré.

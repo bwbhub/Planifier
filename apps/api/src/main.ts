@@ -1,3 +1,9 @@
+import {
+  createFeedFetcher,
+  createNodeTransport,
+  createSecretBox,
+  parseSecretKey,
+} from "@planifier/api";
 import { createAuthNodeHandler, getAuth, getSessionUser } from "@planifier/auth";
 import { getDb } from "@planifier/db";
 
@@ -12,6 +18,11 @@ const server = createApiServer({
   authHandler: createAuthNodeHandler(auth),
   getSessionUser: (headers) => getSessionUser(auth, headers),
   getDb,
+  imports: {
+    fetchFeed: createFeedFetcher({ transport: createNodeTransport() }),
+    secretBox: createSecretBox(parseSecretKey(env.ICAL_ENCRYPTION_KEY)),
+    now: () => new Date(),
+  },
 });
 
 server.listen(env.PORT, () => {

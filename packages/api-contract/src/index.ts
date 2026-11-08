@@ -2,6 +2,7 @@ import type { ContractRouterClient } from "@orpc/contract";
 
 import { meContract } from "./features/account/me/me.contract";
 import { entriesContract } from "./features/agenda/entries/entries.contract";
+import { importsContract } from "./features/agenda/imports/imports.contract";
 import { invitesContract } from "./features/spaces/invites/invites.contract";
 import { membersContract } from "./features/spaces/members/members.contract";
 import { spaceContract } from "./features/spaces/space/space.contract";
@@ -15,7 +16,7 @@ export const contract = {
   account: { me: meContract },
   spaces: { space: spaceContract, members: membersContract, invites: invitesContract },
   todo: { lists: listsContract, tasks: tasksContract },
-  agenda: { entries: entriesContract },
+  agenda: { entries: entriesContract, imports: importsContract },
 };
 
 /** Client typé de l'API, dérivé du contrat. */
@@ -29,6 +30,16 @@ export {
   type AgendaConflictReason,
   agendaConflictDataSchema,
 } from "./features/agenda/agenda.schemas";
+export {
+  type CreateImportInput,
+  createImportInputSchema,
+  IMPORT_FAILURE_REASONS,
+  type ImportFailureReason,
+  importFailureSchema,
+  importSourceOf,
+  type ImportSubscriptionOutput,
+  type ListImportsOutput,
+} from "./features/agenda/imports/imports.schemas";
 export {
   createEntryInputSchema,
   updateEntryInputSchema,

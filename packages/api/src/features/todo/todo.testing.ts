@@ -1,3 +1,5 @@
+import type { ImportsDeps } from "../agenda/imports/imports-deps";
+import { testImportsDeps } from "../agenda/imports/imports.testing";
 import { call } from "@orpc/server";
 import type { SessionUser } from "@planifier/auth";
 import type { AppModule } from "@planifier/constants/spaces";
@@ -13,7 +15,11 @@ const { lists, tasks } = router.todo;
 export const WEEKLY = { frequency: "WEEKLY", interval: 1 } as const;
 
 /** Contexte d'une requête de `user` (null : sans session) ; limiteur neuf, aucun état partagé. */
-export function requestAs(db: Db, user: SessionUser | null): { context: ApiContext } {
+export function requestAs(
+  db: Db,
+  user: SessionUser | null,
+  imports: ImportsDeps = testImportsDeps(),
+): { context: ApiContext } {
   return {
     context: {
       requestId: "test",
@@ -21,6 +27,7 @@ export function requestAs(db: Db, user: SessionUser | null): { context: ApiConte
       consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
       getSessionUser: () => Promise.resolve(user),
       getDb: () => db,
+      imports,
     },
   };
 }

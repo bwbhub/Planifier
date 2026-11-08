@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ApiContext } from "./procedures";
 import { PLAN_GUARDS } from "./procedures";
+import { testImportsDeps } from "./features/agenda/imports/imports.testing";
 import { createRateLimiter, PLAN_RATE_LIMIT } from "./rate-limit";
 import { router } from "./router";
 
@@ -37,6 +38,7 @@ function contextFor(user: SessionUser | null): ApiContext {
     clientIp: "192.0.2.1",
     consumeRateLimit: createRateLimiter(PLAN_RATE_LIMIT),
     getSessionUser: () => Promise.resolve(user),
+    imports: testImportsDeps(),
     getDb: () => {
       throw new Error("Pas de base dans les tests unitaires : voir *.integration.test.ts.");
     },

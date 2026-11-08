@@ -41,6 +41,7 @@ const entrySelect = {
   tint: true,
   hidden: true,
   taskId: true,
+  source: true,
   version: true,
 } as const satisfies Prisma.AgendaEntrySelect;
 
@@ -68,10 +69,18 @@ function toSharedOutput(row: SharedRow) {
 }
 
 function toEntryOutput(row: EntryRow): AgendaEntryOutput {
-  const { id, description, tint, hidden, taskId, version } = row;
+  const { id, description, tint, hidden, taskId, source, version } = row;
   // Chaîne libre en base : une valeur inconnue est une donnée corrompue, pas une entrée à deviner.
   if (!isListTint(tint)) throw new Error(`Teinte d'entrée inconnue en base (entrée ${id}).`);
-  return { ...toSharedOutput(row), description, tint, hidden, taskId, version };
+  return {
+    ...toSharedOutput(row),
+    description,
+    tint,
+    hidden,
+    taskId,
+    imported: source !== null,
+    version,
+  };
 }
 
 function toSpaceEntryOutput(row: SpaceEntryRow): SpaceEntryOutput {
@@ -79,7 +88,7 @@ function toSpaceEntryOutput(row: SpaceEntryRow): SpaceEntryOutput {
 }
 
 /** Colonnes d'une forme, celles de l'autre à null : changer de forme ne laisse rien derrière. */
-function whenColumns(when: AgendaWhen) {
+export function whenColumns(when: AgendaWhen) {
   return when.allDay
     ? {
         startsAt: null,
@@ -207,6 +216,15 @@ function entryChanges({
   };
 }
 
+/** Une entrée importée se modifie à la source : la relecture rétablirait tout changement ou suppression d'ici. */
+async function assertNotImported(db: Db | DbTransaction, entryId: string): Promise<void> {
+  const entry = await db.agendaEntry.findUnique({
+    where: { id: entryId },
+    select: { source: true },
+  });
+  if (entry?.source !== null && entry?.source !== undefined) throw agendaConflict("IMPORTED_ENTRY");
+}
+
 export async function updateEntry(
   db: Db,
   userId: string,
@@ -214,6 +232,7 @@ export async function updateEntry(
 ): Promise<AgendaEntryOutput> {
   const { entryId, version, taskId } = input;
   return db.$transaction(async (tx) => {
+    await assertNotImported(tx, entryId);
     if (typeof taskId === "string") await assertReadableTask(tx, userId, taskId);
     const { count } = await tx.agendaEntry.updateMany({
       where: { id: entryId, version },
@@ -231,6 +250,7 @@ export async function updateEntry(
 }
 
 export async function deleteEntry(db: Db, entryId: string): Promise<void> {
+  await assertNotImported(db, entryId);
   await db.agendaEntry.deleteMany({ where: { id: entryId } });
 }
 

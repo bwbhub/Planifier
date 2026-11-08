@@ -23,7 +23,7 @@ export function isAllowedFeedHost(host: string, extraHosts: readonly string[] = 
 }
 
 /** `webcal://` et `webcals://` sont des liens d'abonnement : même adresse, en `https://`. */
-function withHttps(text: string): string {
+export function withHttps(text: string): string {
   return text.replace(/^webcals?:\/\//i, "https://");
 }
 

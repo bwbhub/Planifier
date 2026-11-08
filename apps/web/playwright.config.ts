@@ -41,6 +41,8 @@ export default defineConfig({
         DATABASE_URL,
         // Secret jetable, tiré à chaque lancement : les sessions ne survivent pas au run.
         BETTER_AUTH_SECRET: randomBytes(32).toString("base64"),
+        // Clé jetable, tirée à chaque lancement : chiffre les liens d'agendas importés.
+        ICAL_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
         BETTER_AUTH_URL: WEB_URL,
         MAIL_TRANSPORT: "mailpit",
         MAILPIT_URL,

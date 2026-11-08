@@ -118,25 +118,26 @@ model User {
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
-  sessions            Session[]
-  accounts            Account[]
-  spaces              SpaceMember[]
-  createdSpaces       Space[]            @relation("SpaceCreator")
-  createdSpaceInvites SpaceInvite[]      @relation("SpaceInviteCreator")
-  todoLists           TodoList[]
-  agendaEntries       AgendaEntry[]
+  sessions              Session[]
+  accounts              Account[]
+  spaces                SpaceMember[]
+  createdSpaces         Space[]                @relation("SpaceCreator")
+  createdSpaceInvites   SpaceInvite[]          @relation("SpaceInviteCreator")
+  todoLists             TodoList[]
+  agendaEntries         AgendaEntry[]
+  calendarSubscriptions CalendarSubscription[]
   /// Tâches cochées par l'utilisateur (« Cochée par »).
-  completedTasks      Task[]             @relation("TaskCompleter")
-  assignedTasks       Task[]             @relation("TaskAssignee")
-  ownedEvents         Event[]            @relation("EventOwner")
-  eventParticipations EventParticipant[]
-  sentInvites         Invite[]           @relation("InviteSender")
-  receivedInvites     Invite[]           @relation("InviteReceiver")
-  madeProposals       ProposedInvite[]   @relation("Proposer")
-  notifications       Notification[]
-  comments            Comment[]
-  friends             Friendship[]       @relation("UserFriends")
-  friendOf            Friendship[]       @relation("FriendOf")
+  completedTasks        Task[]                 @relation("TaskCompleter")
+  assignedTasks         Task[]                 @relation("TaskAssignee")
+  ownedEvents           Event[]                @relation("EventOwner")
+  eventParticipations   EventParticipant[]
+  sentInvites           Invite[]               @relation("InviteSender")
+  receivedInvites       Invite[]               @relation("InviteReceiver")
+  madeProposals         ProposedInvite[]       @relation("Proposer")
+  notifications         Notification[]
+  comments              Comment[]
+  friends               Friendship[]           @relation("UserFriends")
+  friendOf              Friendship[]           @relation("FriendOf")
 
   @@map("users")
 }
@@ -394,6 +395,27 @@ model AgendaEntry {
   @@index([ownerId, startDay])
   @@index([taskId])
   @@map("agenda_entries")
+}
+
+/// Agenda externe importé par lien privé (ADR 0011). Ses entrées ont `source = "ical:<id>"`.
+model CalendarSubscription {
+  id            String    @id @default(uuid(7))
+  label         String
+  /// Lien privé chiffré (AES-256-GCM, contexte = id) : c'est un secret, jamais en clair, en journal ni en sortie d'API.
+  /// @pii secret jusqu'à-suppression
+  urlEncrypted  String    @map("url_encrypted")
+  /// Hôte du lien pour le reconnaître à l'écran : le chemin et la requête sont le secret, aucune partie n'en sort.
+  urlHint       String    @map("url_hint")
+  lastFetchedAt DateTime? @map("last_fetched_at")
+  /// Code de la dernière erreur de lecture (`FEED_UNREACHABLE`…), null si la dernière lecture a réussi.
+  lastError     String?   @map("last_error")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  ownerId String @map("owner_id")
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("calendar_subscriptions")
 }
 
 // ---------------------------------------------------------------------------

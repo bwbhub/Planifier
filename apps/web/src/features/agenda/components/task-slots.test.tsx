@@ -37,6 +37,7 @@ const ENTRY: AgendaEntryOutput = {
   tint: "general",
   hidden: false,
   taskId: TASK.id,
+  imported: false,
   version: 1,
 };
 

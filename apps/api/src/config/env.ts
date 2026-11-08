@@ -8,6 +8,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   // Plans oRPC acceptés par minute et par IP. Ne se relève que pour les tests de bout en bout, qui viennent tous de
   // localhost ; jamais en production.
+  // Obligatoire, secret, distinct par environnement : chiffre les liens privés des agendas importés (AES-256-GCM).
+  // 32 octets en base64 (`openssl rand -base64 32`). Perdue ou changée, les liens enregistrés deviennent illisibles.
+  ICAL_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[A-Za-z0-9+/]{43}=$/, "32 octets en base64 attendus (openssl rand -base64 32)."),
   RPC_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(PLAN_RATE_LIMIT.max),
 });
 

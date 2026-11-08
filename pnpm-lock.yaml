@@ -340,6 +340,9 @@ importers:
       '@planifier/domain-access':
         specifier: workspace:*
         version: link:../domain-access
+      '@planifier/domain-ical':
+        specifier: workspace:*
+        version: link:../domain-ical
       '@planifier/domain-recurrence':
         specifier: workspace:*
         version: link:../domain-recurrence

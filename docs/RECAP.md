@@ -18,6 +18,17 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — iCal 4/5 : abonnements et procédures d'import (branche `feat/ical-import-abonnements`, ticket `869fjgrcc`)
+
+**Fait** : table `calendar_subscriptions` (migration `20261108130000_abonnements_agenda_ical`, additive) ; variable obligatoire `ICAL_ENCRYPTION_KEY` (`env.ts` de l'API, `.env.example`, config E2E) ; procédures `agenda.imports.{list, create, refresh, delete}` ; `ApiContext.imports` (lecteur de flux, boîte à secrets, horloge) branché dans `main.ts`. `create` lit le lien d'abord (échec ⇒ rien d'enregistré), chiffre le lien (contexte = id de l'abonnement), importe. `refresh` : un appel par minute et par agenda (réservation atomique), upsert par `uid` (créées / mises à jour au même identifiant / retirées), échec noté dans `lastError`. `delete` retire l'abonnement et ses entrées. Entrées importées : `imported: true` en sortie, `update` et `delete` refusés (`CONFLICT IMPORTED_ENTRY`).
+**Décisions** : entrées importées **cachées de la vue fusionnée des Espaces** (`hidden`) : un agenda externe peut contenir du privé que personne n'a choisi de montrer ; à rouvrir plus tard par agenda si tu veux. 5 agendas importés au plus ; les entrées importées comptent dans les 5 000. Fenêtre des séries : −30 j / +365 j. Lecture synchrone (pas de cron). `source = ical:<id>` : deux agendas avec le même `uid` ne se marchent pas dessus. L'API ne démarre plus sans `ICAL_ENCRYPTION_KEY` : à ajouter dans `apps/api/.env.local` (`openssl rand -base64 32`).
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build` ; intégration API (220, dont 15 nouveaux : création, lien jamais rendu ni stocké en clair, échec sans trace, plafonds, upsert sans doublon, anti-boucle, délai d'une minute, droits NOT_FOUND, suppression et suppression de compte, lecture seule) ; intégration `apps/api` (15) ; E2E (70) verts. Pas de test de bout en bout sur un vrai lien Google (aucun accès réseau voulu).
+**Revue** : l'indice du lien montre l'hôte seulement (le jeton est souvent le dernier segment du chemin) ; un agenda retiré pendant sa lecture rend NOT_FOUND, sans entrée orpheline.
+**Ouvert** : pas de délai entre deux créations d'agenda (lectures sortantes en rafale, bornées par la liste blanche et le débit par IP) ; un `TOO_MANY_ENTRIES` n'écrit pas `lastError` ; `lastFetchedAt` est posé avant la lecture (une tentative ratée compte). **Revue humaine obligatoire** (droits, migration, secrets, intégration externe) : `imports.service.ts`, `imports.guard.ts`, `imports.router.ts`, migration, `entries.service.ts` (garde `assertNotImported`), `apps/api/src/main.ts` (câblage). La clé de chiffrement n'a pas de rotation. Aucun écran encore : les procédures ne sont appelées par personne.
+**Attendu ensuite** : iCal 5/5 : écran « Importer un agenda » dans l'Agenda (coller le lien, liste, Actualiser, Retirer, entrées importées en lecture seule), puis export (`869fhwtup`).
+
+---
+
 ## 2026-11-08 — iCal 3/5 : lecture sûre du lien et chiffrement (branche `feat/ical-lecture-sure`, ticket `869fjgrcc`)
 
 **Fait** : dans `packages/api/src/features/agenda/imports/` : `parseFeedUrl` (https ou webcal seulement, ni identifiants ni port, liste blanche Google / Outlook / iCloud `pN-caldav`), `isPublicAddress` (IPv4 : plages privées et réservées refusées ; IPv6 : seul `2000::/3` hors plages réservées admis), `createFeedFetcher` (chaque lien et chaque redirection : hôte contrôlé, toutes les adresses résolues publiques, 3 redirections, 10 s, 5 Mo, types de contenu, délai global) avec un transport Node qui se connecte à l'adresse contrôlée (anti « DNS rebinding »), `createSecretBox` (AES-256-GCM, IV de 12 octets, étiquette de 16, contexte authentifié par ressource, clé de 32 octets en base64 strict). Rien n'est encore branché : ni table, ni procédure, ni variable d'environnement.
@@ -251,7 +262,7 @@ normale, sous-tâches, assignée et cochée par quelqu'un, atténuée, lecture s
 l'écran Détail de tâche (`869fp54d9`). Les quatre boutons d'action de `TaskActions` ne passent pas au `Menu` dans cette
 PR (un sujet par PR) : PR suivante, avec la mise à jour des tests et de l'E2E qui cliquent ces boutons.
 **Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test` (239 tests du web existants inchangés + 7 nouveaux),
-`pnpm build`, `pnpm format:check` OK ; E2E : voir ci-dessous. Rien vu au navigateur.
+`pnpm build`, `pnpm format:check` OK ; E2E (70) verts. Rien vu au navigateur.
 **Ouvert** : revue visuelle de la ligne (pastille, atténuation) ; le compteur « 1 sur 2 sous-tâches cochée » (texte) n'est
 plus affiché, la pastille « 1/2 » le remplace.
 **Attendu ensuite** : plan 2, PR 3 : menu d'actions de la ligne ; PR 4 : `SlotBlock` ; PR 5 : `DateTimeField` ; PR 6 :

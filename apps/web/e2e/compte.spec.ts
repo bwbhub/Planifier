@@ -559,6 +559,18 @@ test.describe.serial("changement d'adresse", () => {
     await expect(page.getByText(changedEmail).first()).toBeVisible();
     await waitForMailText(request, oldEmail, "vient d'être remplacée");
   });
+
+  test("ouvre l'accueil avec la nouvelle adresse, et la refuse à l'ancienne", async ({ page }) => {
+    await page.goto("/connexion");
+    await fillCredentials(page, oldEmail, password);
+    await page.getByRole("button", { name: "Se connecter" }).click();
+    await expect(page.getByText("E-mail ou mot de passe incorrect.")).toBeVisible();
+
+    await fillCredentials(page, changedEmail, password);
+    await submitPastRateLimit(page, "Se connecter", async () => {
+      await expect(greeting(page)).toBeVisible({ timeout: ATTEMPT_TIMEOUT });
+    });
+  });
 });
 
 test("renvoie à la connexion quand on ouvre l'accueil sans session", async ({ page }) => {

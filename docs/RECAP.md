@@ -18,6 +18,16 @@ Modèle d'entrée :
 
 ---
 
+## 2026-11-08 — Changement d'adresse e-mail (branche `feat/auth-changement-email`, ticket `869fmk5dw`)
+
+**Fait** : `user.changeEmail` de Better Auth activé. Bloc « Adresse e-mail » dans `/profil` (nouvelle adresse + mot de passe actuel). Lien à la nouvelle adresse (gabarit `changeEmailMail`), adresse changée au clic seulement, avis sans lien à l'ancienne après coup (`emailChangedNoticeMail`). Le mot de passe actuel est vérifié côté serveur (hook `/change-email`, code `INVALID_PASSWORD`). Lien expiré : `?error` sur `/profil`, message dédié.
+**Décisions** : pas d'approbation préalable de l'ancienne adresse (Better Auth 1.7 : `sendChangeEmailConfirmation` absent ⇒ lien direct à la nouvelle). Adresse déjà prise : Better Auth répond `{status:true}` sans rien envoyer ; pas d'e-mail « compte existant » (le plan le suggérait) : aucune fuite, un e-mail de moins. `action` optionnel dans `actionMail` pour l'avis. `fileParallelism: false` sur les tests d'intégration auth (base partagée). L'ancienne adresse est lue dans le jeton (JWT décodé sans contrôle de signature), seulement sur `/verify-email` après écriture réussie.
+**Vérifié** : `pnpm check-types`, `pnpm lint`, `pnpm test`, `pnpm build`, intégration auth (5), `pnpm test:e2e` (70) exécutés. `/code-review` Standards + Spec : mise au point du hook (`/verify-email` seul), test casse mixte, E2E de reconnexion, dette retirée de `project-context`. Pas de test pour l'affichage de `?error` sur `/profil`.
+**Ouvert** : **revue humaine** (auth, e-mails) : `packages/auth/src/change-email.ts`, `email-token.ts`, `auth.ts` (hooks), gabarits `change-email.ts` et `email-changed-notice.ts`. Dépend du format interne des jetons de Better Auth (`requestType`, `updateTo`). Lien expiré ouvert sans session : redirection vers la connexion, message perdu. Compte sans mot de passe (OAuth futur) : ne pourrait pas changer d'adresse.
+**Attendu ensuite** : iCal (import puis export).
+
+---
+
 ## 2026-11-08 — Détail de tâche : envoyer vers une autre liste (branche `feat/todo-move-task`)
 
 **Fait** : procédure `todo.tasks.move { taskId, version, listId }` : la tâche et ses sous-tâches changent de liste (droit d'écriture sur les deux listes, sinon `NOT_FOUND` / `FORBIDDEN`), sous le verrou de la liste cible (borne de 500 tâches : `LIST_FULL`), `version` vérifiée (`STALE_VERSION`), rejouable si déjà dans la liste. Les assignés qui ne sont pas membres de l'Espace de la cible sont retirés. Dans le détail : « Envoyer vers » (listes écrivables autres que la sienne) et « Envoyer » ; toast « Tâche envoyée dans « X » » avec « Annuler » ; le détail se ferme.

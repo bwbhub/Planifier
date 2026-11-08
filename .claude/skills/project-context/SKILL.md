@@ -81,7 +81,7 @@ contourner.
 3. `packages/ui` : `Button`, `TextField`, `TextAreaField`, `SelectField`, `ChoiceGroup`, `Checkbox`, `Switch`, `Tabs`, `SegmentedControl`, `Badge`, `ConfirmPanel`, `Sheet`, `Avatar`, `AvatarStack`, `Card`, `PageHeader`, `TitledSection`, `Skeleton`, `EmptyState`, `Menu`, `ConfirmDialog` et blocs d'écran (`ListSkeleton`, `LoadError`, `MessageCard`, `setting-list`) seulement (le reste avec le ticket design system).
 4. Limitation de débit en mémoire (Better Auth et plans oRPC) : une seule instance d'API tant qu'elle n'est pas
    partagée (ADR 0016). Réexamen : ticket Docker / déploiement (`869fhwtcc`), avant toute seconde instance.
-5. Pas de changement d'e-mail (ticket `869fmk5dw`). Domaine à acheter pour Resend : aucun e-mail réel ne part tant
+5. Domaine à acheter pour Resend : aucun e-mail réel ne part tant
    qu'il n'est pas vérifié (`docs/A-DISCUTER-domaine-resend.md`).
 6. Sécurité, long terme : à l'inscription, un compte neuf est écrit en base, pas un doublon ; l'écart de durée de
    réponse laisse deviner les adresses inscrites. Accepté pour l'instant (limitation de débit) ; réexamen avant

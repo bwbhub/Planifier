@@ -106,7 +106,8 @@ describe("changement d'adresse (base réelle)", () => {
   });
 
   it("envoie le lien à la nouvelle adresse, et ne change l'adresse qu'au clic", async () => {
-    expect((await change(NEW, PASSWORD)).status).toBe(200);
+    // Casse mixte : Better Auth normalise en minuscules, l'avis à l'ancienne doit partir quand même.
+    expect((await change(NEW.toUpperCase(), PASSWORD)).status).toBe(200);
     await waitForMail(NEW);
 
     expect(sent.map((mail) => mail.to)).toEqual([NEW]);

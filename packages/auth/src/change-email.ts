@@ -34,7 +34,7 @@ export async function requireCurrentPassword(ctx: HookContext): Promise<void> {
  * Ancienne adresse d'un compte dont l'adresse vient d'être remplacée par un lien de changement, sinon `null`. Appelé
  * après l'écriture : le jeton de la requête a donc été validé par Better Auth, et son contenu peut être lu.
  */
-function changedEmailBefore(query: unknown, newEmail: string): string | null {
+function previousEmailFromChangeToken(query: unknown, newEmail: string): string | null {
   const token = QueryWithToken.safeParse(query);
   const payload = token.success ? readEmailTokenPayload(token.data.token) : null;
   return payload?.requestType === "change-email-verification" && payload.updateTo === newEmail
@@ -44,8 +44,13 @@ function changedEmailBefore(query: unknown, newEmail: string): string | null {
 
 /** Hook « après écriture » d'un compte : avis à l'ancienne adresse quand un lien de changement vient de servir. */
 export function noticeOnEmailChange(sendNotice: (oldEmail: string) => Promise<void>) {
-  return (user: { email: string }, ctx: { query?: unknown } | null): Promise<void> => {
-    const oldEmail = changedEmailBefore(ctx?.query, user.email);
+  return (
+    user: { email: string },
+    ctx: { path?: string; query?: unknown } | null,
+  ): Promise<void> => {
+    // Seul le lien de vérification porte un jeton validé par Better Auth : sur les autres routes, la requête est libre.
+    if (ctx?.path !== "/verify-email") return Promise.resolve();
+    const oldEmail = previousEmailFromChangeToken(ctx.query, user.email);
     return oldEmail === null ? Promise.resolve() : sendNotice(oldEmail);
   };
 }

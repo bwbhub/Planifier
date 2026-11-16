@@ -3,6 +3,7 @@ import type { ContractRouterClient } from "@orpc/contract";
 import { meContract } from "./features/account/me/me.contract";
 import { entriesContract } from "./features/agenda/entries/entries.contract";
 import { importsContract } from "./features/agenda/imports/imports.contract";
+import { eventContract } from "./features/events/event/event.contract";
 import { invitesContract } from "./features/spaces/invites/invites.contract";
 import { membersContract } from "./features/spaces/members/members.contract";
 import { spaceContract } from "./features/spaces/space/space.contract";
@@ -17,6 +18,7 @@ export const contract = {
   spaces: { space: spaceContract, members: membersContract, invites: invitesContract },
   todo: { lists: listsContract, tasks: tasksContract },
   agenda: { entries: entriesContract, imports: importsContract },
+  events: { event: eventContract },
 };
 
 /** Client typé de l'API, dérivé du contrat. */
@@ -130,3 +132,31 @@ export {
   type UpdateProfileInput,
   updateProfileInputSchema,
 } from "./features/account/auth/auth.schemas";
+export {
+  EVENT_CONFLICT_REASONS,
+  type EventChange,
+  type EventConflictReason,
+  eventChangeSchema,
+  eventConflictDataSchema,
+} from "./features/events/events.schemas";
+export {
+  createEventInputSchema,
+  LIST_PERIODS,
+  updateEventInputSchema,
+} from "./features/events/event/event.schemas";
+export type {
+  CreateEventInput,
+  EventDetailOutput,
+  EventSummaryOutput,
+  EventWhenInput,
+  EventWhenOutput,
+  ListEventsInput,
+  ListEventsOutput,
+  ParticipantsOutput,
+  RemoveParticipantInput,
+  RespondInput,
+  RespondOutput,
+  SetEventSpaceInput,
+  SetRoleInput,
+  UpdateEventInput,
+} from "./features/events/event/event.schemas";

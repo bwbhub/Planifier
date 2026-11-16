@@ -1,6 +1,7 @@
 import { meRouter } from "./features/account/me/me.router";
 import { entriesRouter } from "./features/agenda/entries/entries.router";
 import { importsRouter } from "./features/agenda/imports/imports.router";
+import { eventRouter } from "./features/events/event/event.router";
 import { invitesRouter } from "./features/spaces/invites/invites.router";
 import { membersRouter } from "./features/spaces/members/members.router";
 import { spaceRouter } from "./features/spaces/space/space.router";
@@ -16,6 +17,7 @@ export const router = routerBuilder.router({
   spaces: { space: spaceRouter, members: membersRouter, invites: invitesRouter },
   todo: { lists: listsRouter, tasks: tasksRouter },
   agenda: { entries: entriesRouter, imports: importsRouter },
+  events: { event: eventRouter },
 });
 
 export type ApiRouter = typeof router;

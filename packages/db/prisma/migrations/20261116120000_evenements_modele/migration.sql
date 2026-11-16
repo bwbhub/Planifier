@@ -84,7 +84,6 @@ CREATE INDEX "invites_inviter_id_sent_at_idx" ON "invites"("inviter_id", "sent_a
 -- CreateIndex
 CREATE INDEX "invites_email_idx" ON "invites"("email");
 
-
 -- Horaire ou à la journée, jamais les deux, et fin après début (hors du périmètre de Prisma). Comme les entrées d'agenda.
 ALTER TABLE "events" ADD CONSTRAINT "events_when_check" CHECK (
   ("starts_at" IS NOT NULL AND "ends_at" IS NOT NULL AND "start_day" IS NULL AND "end_day" IS NULL AND "ends_at" > "starts_at")

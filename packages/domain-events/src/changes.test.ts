@@ -50,6 +50,22 @@ describe("importantChanges", () => {
     ).toHaveLength(1);
   });
 
+  it("ignore la fin déduite quand la fin n'est pas choisie des deux côtés (autre fuseau)", () => {
+    const parisDay = timed("2026-11-22T19:30:00Z", "2026-11-22T23:00:00Z", true);
+    const newYorkDay = timed("2026-11-22T19:30:00Z", "2026-11-23T05:00:00Z", true);
+    expect(
+      importantChanges({ when: parisDay, location: null }, { when: newYorkDay, location: null }),
+    ).toEqual([]);
+  });
+
+  it("signale un début modifié même sans fin choisie", () => {
+    const before = timed("2026-11-22T19:30:00Z", "2026-11-22T23:00:00Z", true);
+    const after = timed("2026-11-22T20:30:00Z", "2026-11-22T23:00:00Z", true);
+    expect(
+      importantChanges({ when: before, location: null }, { when: after, location: null }),
+    ).toHaveLength(1);
+  });
+
   it("signale le passage de l'horaire à la journée", () => {
     expect(
       importantChanges(

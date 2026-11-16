@@ -14,6 +14,8 @@
 
 **État au 2026-11-08.** Plans 1 à 4 **faits** (#53, #54 fusionnées). **Priorité 1** : polices dans le dépôt (`fix/polices-locales`). Plans de la série 2 écrits (mémoire : Détail de tâche, changement d'e-mail, iCal).
 
+**Série 3, Événements cœur (plan : mémoire `plan-serie3-evenements`, 10 PR)** : 1/10 (modèle, droits, `domain-events`) en revue ; suivent API événements, écrans, commentaires, invitations, visiteur sans compte, Agenda. Export iCal (`869fhwtup`) toujours à faire, indépendant.
+
 **À faire ensuite** : Détail de tâche (`869fp54d9`, donne le « tap = détail » et peut accueillir « mettre en récurrente »), iCal (`869fjgrcc`, `869fhwtup`), changement d'e-mail (`869fmk5dw`). Aujourd'hui : états vides sans action « Nouvelle tâche / entrée » ; salutation avec le nom entier.
 
 **`869fhwtg4` (navigation, urgent)** : reste la pastille de non-lus et les entrées Événements / Notifications (attendent leurs modules) ; « Aujourd'hui » et le « + » sont faits.

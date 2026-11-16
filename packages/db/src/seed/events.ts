@@ -24,7 +24,7 @@ const timed = (start: string, end: string) => ({
   startKey: instant(start),
 });
 /** Sans fin choisie : fin du jour de début. */
-const openEnd = (start: string, end: string) => ({ ...timed(start, end), openEnd: true });
+const timedOpenEnd = (start: string, end: string) => ({ ...timed(start, end), openEnd: true });
 
 const EVENTS = [
   // Événement d'Espace, à la journée sur deux jours.
@@ -57,7 +57,7 @@ const EVENTS = [
     tint: "general",
     ownerId: SEED_IDS.bob,
     spaceId: SEED_IDS.space,
-    ...openEnd("2026-11-28T20:00:00", "2026-11-29T00:00:00"),
+    ...timedOpenEnd("2026-11-28T20:00:00", "2026-11-29T00:00:00"),
   },
   {
     id: SEED_IDS.pastEvent,

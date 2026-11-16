@@ -16,13 +16,16 @@ const timedInputSchema = z
   .refine(({ startsAt, endsAt }) => startsAt < endsAt, "La fin doit suivre le début.")
   .refine(
     ({ startsAt, endsAt }) => spansAtMost(startsAt.getTime(), endsAt.getTime(), WHEN_MAX_DAYS),
-    "Trop long.",
+    "Entrée trop longue.",
   );
 
 const allDayInputSchema = z
   .strictObject(allDayFields)
   .refine(({ startDay, endDay }) => startDay <= endDay, "La fin doit suivre le début.")
-  .refine(({ startDay, endDay }) => daysBetween(startDay, endDay) < WHEN_MAX_DAYS, "Trop long.");
+  .refine(
+    ({ startDay, endDay }) => daysBetween(startDay, endDay) < WHEN_MAX_DAYS,
+    "Entrée trop longue.",
+  );
 
 /** Horaire (instants) ou à la journée (jours, sans fuseau) : jamais les deux. Entrée d'agenda ou événement. */
 export const whenInputSchema = z.discriminatedUnion("allDay", [

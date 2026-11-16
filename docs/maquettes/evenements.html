@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planifier v2 — Événements (Phase 2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Tokens repris tels quels des maquettes Phase 1 et Espaces (packages/tokens). Aucun token nouveau. */
+:root{--bg:#F8F6F9;--surface:#FFFFFF;--ink:#1C1226;--muted:#645A70;--line:#ECE7EF;--field:#F1EDF4;--accent:#D11F72;--on-accent:#FFFFFF;--accent-text:#B3195F;--accent-tint:#FCDDEB;--scrim:rgba(10,6,14,.55);--t-gen:#DDE6FB;--t-work:#FFE6C2;--t-couple:#F7D9F0;--t-trip:#D3F0E4}
+[data-theme=dark]{--bg:#101216;--surface:#1B1E25;--ink:#F2F3F6;--muted:#A4AAB8;--line:#2A2E38;--field:#252932;--accent:#FF8F5A;--on-accent:#1A1208;--accent-text:#FFA072;--accent-tint:#3A2A24;--scrim:rgba(0,0,0,.6);--t-gen:#1F2D44;--t-work:#3B2E17;--t-couple:#3E2233;--t-trip:#1D3A36}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E5EC;font-family:'DM Sans',sans-serif;color:#1C1226}
+body[data-theme=dark]{background:#05060A;color:#F2F3F6}
+button,a,input,textarea{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Planche */
+.board{padding:32px;display:flex;flex-direction:column;gap:40px}
+.board-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;max-width:1200px}
+.board-head h1{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-size:32px}
+.board-head p{margin:6px 0 0;max-width:760px;line-height:1.5;opacity:.75}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.cap{font-size:13px;font-weight:600;opacity:.7;margin:0 0 8px 4px;max-width:390px}
+.toggle{min-height:44px;padding:0 20px;border-radius:999px;border:0;background:#1C1226;color:#fff;font-weight:600;cursor:pointer}
+
+/* Écrans (repris des Espaces) */
+.m{width:390px;min-height:844px;background:var(--bg);color:var(--ink);border-radius:28px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.pc{width:1440px;min-height:760px;background:var(--bg);color:var(--ink);border-radius:20px;padding:20px;display:flex;gap:20px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 16px 0}
+.round{width:44px;height:44px;border:0;border-radius:22px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none;font-size:18px}
+.body{padding:12px 16px 104px;display:flex;flex-direction:column;gap:12px;flex:1}
+h1.t{margin:4px 4px 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:34px;letter-spacing:-.02em}
+.lead{margin:0 4px;color:var(--muted);font-size:15px;line-height:1.5}
+h2.sec{margin:10px 6px 0;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--surface);border-radius:20px;padding:6px 18px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:8px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .l{min-width:0;flex:1}
+.item .n{font-size:16px;font-weight:500}
+.item .s{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.btn{text-decoration:none;white-space:nowrap;min-height:50px;padding:0 24px;border:0;border-radius:999px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn.p{background:var(--accent);color:var(--on-accent)}
+.btn.s{background:var(--field);color:var(--ink)}
+.btn.o{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn.k{background:var(--ink);color:var(--bg)}
+.btn.sm{min-height:44px;padding:0 18px}
+.btn.w{width:100%}
+.lnk{min-height:44px;display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);text-decoration:underline;background:none;border:0;padding:0}
+.av{width:38px;height:38px;border-radius:19px;color:#1C1226;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.av.xs{width:28px;height:28px;border-radius:14px;font-size:11px}
+.stack{display:flex}.stack .av{margin-left:-8px;border:2px solid var(--sb,var(--surface))}.stack .av:first-child{margin-left:0}
+.pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--field);color:var(--muted);white-space:nowrap}
+.pill.a{background:var(--accent-tint);color:var(--accent-text)}
+.pill.k{background:var(--ink);color:var(--bg)}
+.pill.d{background:transparent;border:1.5px dashed var(--muted);padding:2px 9px}
+.lbl{font-size:14px;font-weight:600;margin:0 0 6px}
+.lbl em{font-style:normal;font-weight:400;color:var(--muted)}
+.field{width:100%;min-height:48px;padding:0 14px;border-radius:12px;border:2px solid transparent;background:var(--field);color:var(--ink);font-size:16px;display:flex;align-items:center}
+.field.f{border-color:var(--accent);background:var(--surface)}
+textarea.field{padding:12px 14px;min-height:96px;resize:none;line-height:1.45}
+.hint{font-size:13.5px;color:var(--muted);margin:6px 2px 0;line-height:1.4}
+.note{padding:12px 14px;border-radius:12px;background:var(--field);font-size:14px;color:var(--muted);line-height:1.45}
+.tip{padding:14px 16px;border-radius:16px;background:var(--accent-tint);font-size:14.5px;line-height:1.45;display:flex;flex-direction:column;gap:10px}
+.copy{display:flex;gap:8px;align-items:center;padding:6px 6px 6px 14px;border-radius:12px;background:var(--field);font-size:14px;color:var(--ink)}
+.copy code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit}
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end;padding:16px 16px 24px}
+.sheet{width:100%;background:var(--surface);border-radius:28px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.01em}
+.sheet p{margin:0;font-size:16px;line-height:1.5}
+.acts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.sk{background:var(--field);border-radius:12px;animation:sk 1.6s ease-in-out infinite}
+@keyframes sk{0%,100%{opacity:1}50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.err{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45}
+.err b{color:var(--accent-text)}
+.mnav{position:absolute;left:16px;right:16px;bottom:16px;height:64px;border-radius:999px;background:#1C1226;display:flex;justify-content:space-around;align-items:center;color:#B9AEC6;font-size:11px;font-weight:500}
+.mnav b{color:#fff;font-weight:600}
+body[data-theme=dark] .mnav{background:#262A33}
+.side{flex:0 0 232px;background:var(--surface);border-radius:20px;padding:24px 14px;display:flex;flex-direction:column;gap:6px}
+.side .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.02em;padding:0 12px 20px}
+.side a{display:flex;align-items:center;min-height:46px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:15px;font-weight:500;color:var(--muted)}
+.side a[aria-current]{color:var(--ink);font-weight:600;background:var(--accent-tint)}
+.side hr{border:0;border-top:1px solid var(--line);margin:8px 6px}
+.main{flex:1;min-width:0;display:flex;gap:20px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ann{max-width:1200px;background:#fff;color:#1C1226;border-radius:16px;padding:20px 24px;line-height:1.55;font-size:14.5px}
+.ann h2{font-family:'Bricolage Grotesque',sans-serif;margin:0 0 8px;font-size:20px}
+.ann h3{margin:16px 0 4px;font-size:15px}
+.ann ul{margin:4px 0;padding-left:20px}
+.ann code{background:#F1EDF4;padding:1px 5px;border-radius:5px}
+
+/* ---- Propre aux Événements ---- */
+/* Segments À venir / Passés (SegmentedControl de packages/ui) */
+.seg{display:flex;background:var(--field);border-radius:999px;padding:4px;gap:4px}
+.seg button{flex:1;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:14px;font-weight:600}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink)}
+/* Tuile de date (réf. collectui « event listing ») : mois en petit, jour en grand, sur la teinte de l'événement */
+.date{width:56px;flex:none;border-radius:14px;background:var(--tint);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0 7px;line-height:1}
+.date .mo{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.date .d{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;margin-top:3px}
+.date .d small{font-size:14px}
+/* Carte d'événement dans la liste */
+.ev{display:flex;gap:14px;align-items:stretch;background:var(--surface);border-radius:20px;padding:14px;text-decoration:none;color:inherit}
+.ev .l{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ev .n{font-size:17px;font-weight:600;line-height:1.3}
+.ev .s{font-size:13.5px;color:var(--muted);line-height:1.4}
+.ev .ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.ev.past{opacity:.72}
+/* En-tête du détail (réf. Gravelle du parc : date et lieu en surtitre, grand titre) */
+.hero{border-radius:24px;background:var(--tint);padding:20px 20px 18px;display:flex;flex-direction:column;gap:10px}
+.hero .over{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.hero .ti{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:34px;line-height:1.05;letter-spacing:-.02em}
+.hero .by{font-size:14px;color:var(--muted)}
+/* Infos structurées (réf. Wedding invitation : lignes à filet fin) */
+.facts{background:var(--surface);border-radius:20px;padding:4px 18px}
+.fact{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.45}
+.fact:last-child{border-bottom:0}
+.fact dt{font-size:13px;font-weight:600;color:var(--muted);padding-top:1px}
+.fact dd{margin:0}
+.fact .big{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;line-height:1.2}
+/* Réponse (RSVP) */
+.rsvp{background:var(--surface);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.rsvp .q{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px}
+.choices{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.choice{min-height:52px;border:0;border-radius:16px;background:var(--field);color:var(--ink);font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 6px;cursor:pointer}
+.choice[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+/* Invités groupés par réponse */
+.who{display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px solid var(--line)}
+.who:last-child{border-bottom:0}
+.who .n{flex:1;font-size:15px}
+.who .n small{display:block;font-size:13px;color:var(--muted)}
+/* Commentaires */
+.cm{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cm:last-child{border-bottom:0}
+.cm .bd{flex:1;min-width:0}
+.cm .h{font-size:13.5px;color:var(--muted)}
+.cm .h b{color:var(--ink);font-weight:600}
+.cm .x{font-size:15px;line-height:1.5;margin-top:2px}
+.cm.imp{background:var(--accent-tint);border-radius:16px;padding:12px;border-bottom:0;margin:8px 0}
+.cm.imp .tag{font-size:12px;font-weight:700;color:var(--accent-text);letter-spacing:.03em;text-transform:uppercase}
+.cm.sys{background:var(--field);border-radius:16px;padding:12px;border-bottom:0;margin:8px 0}
+.compose{display:flex;gap:8px;align-items:flex-end;padding:10px 0 4px}
+.compose .field{flex:1;min-height:48px}
+/* Billet d'invitation (réf. collectui « invite », billet à souche) */
+.ticket{background:var(--surface);border-radius:24px;overflow:hidden;position:relative}
+.ticket .tp{background:var(--tint);padding:22px 20px 20px;display:flex;flex-direction:column;gap:8px}
+.ticket .cut{height:0;border-top:2px dashed var(--line);margin:0 18px;position:relative}
+.ticket .cut::before,.ticket .cut::after{content:"";position:absolute;top:-13px;width:24px;height:24px;border-radius:12px;background:var(--bg)}
+.ticket .cut::before{left:-30px}.ticket .cut::after{right:-30px}
+.ticket .bt{padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px}
+/* Agenda (aperçu) */
+.slot{border-radius:12px;padding:8px 10px;font-size:13.5px;line-height:1.35;background:var(--tint)}
+.slot.maybe{background:transparent;box-shadow:inset 0 0 0 2px var(--muted);border-radius:12px}
+.slot b{display:block;font-size:14px}
+.hours{display:grid;grid-template-columns:44px 1fr;gap:0 10px;font-size:12px;color:var(--muted)}
+.hours>div{min-height:52px;border-top:1px solid var(--line);padding-top:4px}
+/* Choix teinte */
+.tints{display:flex;gap:10px}
+.tints span{width:44px;height:44px;border-radius:22px;display:block}
+.tints span[aria-checked=true]{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+.sw{flex:none;width:52px;height:44px;border:0;background:transparent;padding:0;display:flex;align-items:center}
+.sw>span{width:52px;height:32px;border-radius:16px;background:var(--line);position:relative;display:block}
+.sw>span>span{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--surface)}
+.sw[aria-checked=true]>span{background:var(--accent)}
+.sw[aria-checked=true]>span>span{left:auto;right:3px;background:var(--on-accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="board-head">
+    <div>
+      <h1>Événements — maquette Phase 2</h1>
+      <p>Série « Événements cœur » : liste, création, détail (infos, réponse, invités, commentaires), invitation par e-mail,
+        propositions d'invités, lien d'invitation (connecté ou visiteur sans compte), place dans l'Agenda. Même direction
+        « Doux et vivant » que la Phase 1 et les Espaces, mêmes tokens. Pas d'image d'événement : sa teinte suffit (voir
+        questions). Briques, budget et notifications : hors série. Données fictives ; fiches d'écran en bas de planche.</p>
+    </div>
+    <button class="toggle" type="button" onclick="document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark'">Clair / nuit</button>
+  </div>
+
+  <!-- ========== 1. Liste ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">1 · Mes événements, à venir — mobile</p>
+      <div class="m">
+        <div class="body">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:20px">
+            <h1 class="t">Événements</h1>
+          </div>
+          <div class="seg" role="group" aria-label="Période"><button aria-pressed="true">À venir</button><button aria-pressed="false">Passés</button></div>
+
+          <div class="tip" role="note" style="flex-direction:row;align-items:center;justify-content:space-between">
+            <span><b>Léo t'invite</b> à « Crémaillère rue Pasteur ».</span>
+            <a class="btn k sm" href="#">Répondre</a>
+          </div>
+
+          <h2 class="sec">Ce mois-ci</h2>
+          <a class="ev" href="#" style="--tint:var(--t-couple)">
+            <span class="date"><span class="mo">nov.</span><span class="d">22</span></span>
+            <span class="l">
+              <span class="n">Anniversaire de Camille</span>
+              <span class="s">Samedi · 19:30 · Chez Julien</span>
+              <span class="ft"><span class="stack" aria-label="Camille, Julien, Marie et 6 autres"><span class="av xs" style="background:#FFD7E5">C</span><span class="av xs" style="background:#FFE6C2">J</span><span class="av xs" style="background:#DDE6FB">M</span><span class="av xs" style="background:var(--field);color:var(--muted)">+6</span></span><span class="pill a">J'y vais</span></span>
+            </span>
+          </a>
+          <a class="ev" href="#" style="--tint:var(--t-gen)">
+            <span class="date"><span class="mo">nov.</span><span class="d">28</span></span>
+            <span class="l">
+              <span class="n">Crémaillère rue Pasteur</span>
+              <span class="s">Vendredi · 20:00 · Coloc rue Pasteur</span>
+              <span class="ft"><span class="stack"><span class="av xs" style="background:#F7D9F0">L</span><span class="av xs" style="background:#D3F0E4">N</span></span><span class="pill k">À répondre</span></span>
+            </span>
+          </a>
+          <h2 class="sec">Décembre</h2>
+          <a class="ev" href="#" style="--tint:var(--t-trip)">
+            <span class="date"><span class="mo">déc.</span><span class="d">13<small>–14</small></span></span>
+            <span class="l">
+              <span class="n">Week-end au chalet</span>
+              <span class="s">Samedi et dimanche · Les Contamines</span>
+              <span class="ft"><span class="stack"><span class="av xs" style="background:#FFD7E5">C</span><span class="av xs" style="background:#FFE6C2">J</span><span class="av xs" style="background:#D3F0E4">S</span></span><span class="pill d">Peut-être</span></span>
+            </span>
+          </a>
+          <a class="ev" href="#" style="--tint:var(--t-work)">
+            <span class="date"><span class="mo">déc.</span><span class="d">19</span></span>
+            <span class="l">
+              <span class="n">Repas de fin d'année</span>
+              <span class="s">Vendredi · 12:30 · Le Comptoir</span>
+              <span class="ft"><span class="stack"><span class="av xs" style="background:#DDE6FB">M</span></span><span class="pill">Organisé par toi</span></span>
+            </span>
+          </a>
+          <button class="btn p w" type="button">Nouvel événement</button>
+        </div>
+        <nav class="mnav" aria-label="Navigation"><span>Aujourd'hui</span><span>Todo</span><span>Agenda</span><b>Événements</b><span>Journal</span></nav>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">1b · Aucun événement — mobile</p>
+      <div class="m">
+        <div class="body">
+          <h1 class="t" style="padding-top:20px">Événements</h1>
+          <div class="seg" role="group" aria-label="Période"><button aria-pressed="true">À venir</button><button aria-pressed="false">Passés</button></div>
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center;margin-top:8px">
+            <div style="display:flex;gap:8px"><span class="date" style="--tint:var(--t-couple)"><span class="mo">sam.</span><span class="d">?</span></span><span class="date" style="--tint:var(--t-trip)"><span class="mo">dim.</span><span class="d">?</span></span></div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Rien de prévu pour l'instant</div>
+            <p class="lead" style="margin:0">Un repas, un anniversaire, un week-end : crée l'événement, invite par e-mail, chacun répond quand il veut.</p>
+            <button class="btn p w" type="button">Nouvel événement</button>
+          </section>
+          <p class="hint" style="text-align:center">Tu as reçu une invitation ? Ouvre le lien de l'e-mail : l'événement apparaîtra ici.</p>
+        </div>
+        <nav class="mnav" aria-label="Navigation"><span>Aujourd'hui</span><span>Todo</span><span>Agenda</span><b>Événements</b><span>Journal</span></nav>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">1c · Chargement puis erreur — mobile</p>
+      <div class="m">
+        <div class="body" aria-busy="true">
+          <h1 class="t" style="padding-top:20px">Événements</h1>
+          <div class="seg" role="group" aria-label="Période"><button aria-pressed="true">À venir</button><button aria-pressed="false">Passés</button></div>
+          <div class="ev"><span class="sk" style="width:56px;height:64px;border-radius:14px"></span><span class="l" style="gap:10px;padding-top:4px"><span class="sk" style="height:16px;width:70%"></span><span class="sk" style="height:12px;width:50%"></span></span></div>
+          <div class="ev"><span class="sk" style="width:56px;height:64px;border-radius:14px"></span><span class="l" style="gap:10px;padding-top:4px"><span class="sk" style="height:16px;width:55%"></span><span class="sk" style="height:12px;width:40%"></span></span></div>
+          <section class="card" role="alert" style="padding:18px;display:flex;flex-direction:column;gap:12px;margin-top:20px">
+            <div class="err"><b aria-hidden="true">!</b><span>Tes événements n'ont pas pu être chargés. Rien n'est perdu.</span></div>
+            <button class="btn s w" type="button">Réessayer maintenant</button>
+          </section>
+        </div>
+        <nav class="mnav" aria-label="Navigation"><span>Aujourd'hui</span><span>Todo</span><span>Agenda</span><b>Événements</b><span>Journal</span></nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 2. PC liste + détail organisatrice ========== -->
+  <div>
+    <p class="cap" style="max-width:none">2 · Liste et détail, vus par l'organisatrice — PC</p>
+    <div class="pc">
+      <nav class="side" aria-label="Navigation principale">
+        <div class="brand">Planifier</div>
+        <a href="#">Aujourd'hui</a><a href="#">Todo</a><a href="#">Agenda</a><a href="#" aria-current="page">Événements</a><a href="#">Journal</a>
+        <hr><a href="#">Espaces</a><a href="#">Notifications</a><a href="#">Profil</a>
+      </nav>
+      <div class="main">
+        <div class="col" style="flex:0 0 300px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><h1 class="t" style="font-size:30px">Événements</h1><button class="btn p sm" type="button" aria-label="Nouvel événement">Nouveau</button></div>
+          <div class="seg" role="group" aria-label="Période"><button aria-pressed="true">À venir</button><button aria-pressed="false">Passés</button></div>
+          <a class="ev" href="#" style="--tint:var(--t-couple);box-shadow:inset 0 0 0 2px var(--ink)" aria-current="true">
+            <span class="date"><span class="mo">nov.</span><span class="d">22</span></span>
+            <span class="l"><span class="n">Anniversaire de Camille</span><span class="s">Samedi · 19:30 · Chez Julien</span><span class="ft"><span class="pill">Organisé par toi</span></span></span>
+          </a>
+          <a class="ev" href="#" style="--tint:var(--t-gen)">
+            <span class="date"><span class="mo">nov.</span><span class="d">28</span></span>
+            <span class="l"><span class="n">Crémaillère rue Pasteur</span><span class="s">Vendredi · 20:00</span><span class="ft"><span class="pill k">À répondre</span></span></span>
+          </a>
+          <a class="ev" href="#" style="--tint:var(--t-trip)">
+            <span class="date"><span class="mo">déc.</span><span class="d">13<small>–14</small></span></span>
+            <span class="l"><span class="n">Week-end au chalet</span><span class="s">Samedi et dimanche</span><span class="ft"><span class="pill d">Peut-être</span></span></span>
+          </a>
+        </div>
+
+        <div class="col" style="flex:1.25">
+          <div class="hero" style="--tint:var(--t-couple)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+              <span class="over">Samedi 22 novembre · 19:30 → 23:30</span>
+              <span style="display:flex;gap:8px"><button class="btn s sm" type="button" style="background:var(--surface)">Modifier</button><button class="round" aria-label="Plus d'actions" style="width:44px">⋯</button></span>
+            </div>
+            <div class="ti">Anniversaire de Camille</div>
+            <div class="by">Organisé par toi, avec Julien · Espace « Camille et moi »</div>
+          </div>
+          <dl class="facts" style="margin:0">
+            <div class="fact"><dt>Quand</dt><dd><span class="big">Samedi 22 novembre</span><br>de 19:30 à 23:30</dd></div>
+            <div class="fact"><dt>Où</dt><dd><span class="big">Chez Julien</span><br>12 rue des Lilas, Lyon 7e</dd></div>
+            <div class="fact"><dt>Infos</dt><dd>On apporte chacun un plat. Surprise : ne rien dire à Camille avant 20 h !<br><span style="color:var(--muted)">Interphone « Martin », 3e étage.</span></dd></div>
+          </dl>
+          <h2 class="sec">Commentaires</h2>
+          <section class="card" aria-label="Commentaires">
+            <div class="cm sys"><div class="bd"><div class="tag" style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">Changement</div><div class="x"><b>Julien</b> a changé l'heure : <s>19:00</s> → <b>19:30</b>.</div><div class="h">Hier, 18:12</div></div></div>
+            <div class="cm imp"><span class="av xs" style="background:#FFE6C2">J</span><div class="bd"><div class="tag">Important</div><div class="h"><b>Julien</b> · hier, 18:14</div><div class="x">Le parking de la résidence est fermé samedi, garez-vous rue Garibaldi.</div></div></div>
+            <div class="cm"><span class="av xs" style="background:#DDE6FB">M</span><div class="bd"><div class="h"><b>Marie</b> · aujourd'hui, 09:02</div><div class="x">J'apporte un gâteau au chocolat, quelqu'un fait une salade ?</div></div><button class="round" aria-label="Actions du commentaire de Marie" style="background:transparent">⋯</button></div>
+            <div class="compose"><textarea class="field" aria-label="Écrire un commentaire" placeholder="Écrire un commentaire…" style="min-height:48px"></textarea><button class="btn p sm" type="button">Publier</button></div>
+            <label style="display:flex;gap:10px;align-items:center;min-height:44px;font-size:14px;color:var(--muted)"><span class="box" style="width:22px;height:22px;border-radius:6px;border:2px solid var(--muted)"></span>Marquer comme important (mis en avant pour tout le monde)</label>
+          </section>
+        </div>
+
+        <div class="col" style="flex:0 0 300px">
+          <div class="rsvp">
+            <div class="q">Ta réponse</div>
+            <div class="choices" role="group" aria-label="Ta réponse"><button class="choice" aria-pressed="true">J'y vais</button><button class="choice" aria-pressed="false">Peut-être</button><button class="choice" aria-pressed="false">Non</button></div>
+          </div>
+          <h2 class="sec">Invités <span>9 · 6 y vont</span></h2>
+          <section class="card" aria-label="Invités">
+            <div class="who"><span class="av xs" style="background:#FFD7E5">C</span><span class="n">Toi<small>Organisatrice</small></span><span class="pill a">J'y vais</span></div>
+            <div class="who"><span class="av xs" style="background:#FFE6C2">J</span><span class="n">Julien<small>Co-organisateur</small></span><span class="pill a">J'y vais</span></div>
+            <div class="who"><span class="av xs" style="background:#DDE6FB">M</span><span class="n">Marie</span><span class="pill a">J'y vais</span></div>
+            <div class="who"><span class="av xs" style="background:#D3F0E4">S</span><span class="n">Sarah</span><span class="pill d">Peut-être</span></div>
+            <div class="who"><span class="av xs" style="background:var(--field);color:var(--muted)">@</span><span class="n">paul.d@exemple.fr<small>Invitation envoyée, sans compte</small></span><span class="pill">En attente</span></div>
+            <div class="who"><button class="lnk">Voir les 4 autres</button></div>
+          </section>
+          <button class="btn k w" type="button">Inviter quelqu'un</button>
+          <div class="tip" role="note"><span><b>1 proposition</b> : Sarah propose d'inviter Hugo.</span><button class="btn s sm" type="button" style="background:var(--surface)">Voir</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 3. Détail mobile ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">3 · Détail, vu par un invité qui n'a pas encore répondu — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button><button class="round" aria-label="Plus d'actions">⋯</button></div>
+        <div class="body">
+          <div class="hero" style="--tint:var(--t-gen)">
+            <span class="over">Vendredi 28 novembre · 20:00</span>
+            <div class="ti">Crémaillère rue Pasteur</div>
+            <div class="by">Organisé par Léo · Espace « Coloc rue Pasteur »</div>
+          </div>
+          <div class="rsvp" style="box-shadow:inset 0 0 0 2px var(--accent)">
+            <div class="q">Tu viens ?</div>
+            <div class="choices" role="group" aria-label="Ta réponse"><button class="choice" aria-pressed="false">J'y vais</button><button class="choice" aria-pressed="false">Peut-être</button><button class="choice" aria-pressed="false">Non</button></div>
+            <p class="hint" style="margin:0">« J'y vais » et « Peut-être » ajoutent l'événement à ton Agenda. Tu peux changer d'avis quand tu veux.</p>
+          </div>
+          <dl class="facts" style="margin:0">
+            <div class="fact"><dt>Quand</dt><dd><span class="big">Vendredi 28 novembre</span><br>à partir de 20:00</dd></div>
+            <div class="fact"><dt>Où</dt><dd><span class="big">Coloc rue Pasteur</span><br>4 rue Pasteur, Lyon 7e</dd></div>
+            <div class="fact"><dt>Infos</dt><dd>Apéro dînatoire, ramène ce que tu veux boire.</dd></div>
+          </dl>
+          <h2 class="sec">Invités <span>12 · 7 y vont</span></h2>
+          <section class="card"><div class="who"><span class="stack"><span class="av xs" style="background:#F7D9F0">L</span><span class="av xs" style="background:#D3F0E4">N</span><span class="av xs" style="background:#FFE6C2">Y</span><span class="av xs" style="background:#DDE6FB">A</span></span><span class="n" style="padding-left:6px">Léo, Nora, Yanis et 4 autres y vont</span><span>›</span></div></section>
+          <button class="btn s w" type="button">Proposer quelqu'un</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">3b · Commentaires, avec un changement de date signalé — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button><button class="round" aria-label="Plus d'actions">⋯</button></div>
+        <div class="body">
+          <div class="hero" style="--tint:var(--t-trip);padding:16px 18px">
+            <span class="over">Sam. 13 – dim. 14 décembre · à la journée</span>
+            <div class="ti" style="font-size:26px">Week-end au chalet</div>
+          </div>
+          <div class="rsvp" style="flex-direction:row;align-items:center;justify-content:space-between;padding:12px 16px">
+            <span><span style="font-size:13px;color:var(--muted)">Ta réponse</span><br><b>Peut-être</b></span>
+            <button class="btn s sm" type="button">Changer</button>
+          </div>
+          <h2 class="sec">Commentaires</h2>
+          <section class="card" aria-label="Commentaires">
+            <div class="cm sys"><div class="bd"><div class="tag" style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">Changement</div><div class="x"><b>Sarah</b> a changé la date : <s>6 – 7 décembre</s> → <b>13 – 14 décembre</b>.</div><div class="h">Lundi, 21:40</div></div></div>
+            <div class="cm imp"><span class="av xs" style="background:#D3F0E4">S</span><div class="bd"><div class="tag">Important</div><div class="h"><b>Sarah</b> · lundi, 21:42</div><div class="x">Décalé d'une semaine à cause de la neige. Dites-moi si ça ne va plus pour vous.</div></div></div>
+            <div class="cm"><span class="av xs" style="background:#FFE6C2">J</span><div class="bd"><div class="h"><b>Julien</b> · mardi, 08:15</div><div class="x">Toujours bon pour moi, je prends la voiture.</div></div></div>
+            <div class="cm"><span class="av xs" style="background:#FFD7E5">C</span><div class="bd"><div class="h"><b>Toi</b> · mardi, 12:03</div><div class="x">Je confirme jeudi, je dois voir pour le travail.</div></div><button class="round" aria-label="Supprimer mon commentaire" style="background:transparent">⋯</button></div>
+            <div class="compose"><textarea class="field" aria-label="Écrire un commentaire" placeholder="Écrire un commentaire…" style="min-height:48px"></textarea><button class="btn p sm" type="button">Publier</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">3c · Liste des invités — feuille (organisateur)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><div class="hero" style="--tint:var(--t-couple)"><div class="ti">Anniversaire de Camille</div></div></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="g-t" style="max-height:740px;overflow:hidden">
+            <h2 id="g-t">Invités</h2>
+            <div class="seg" role="group" aria-label="Filtrer"><button aria-pressed="true">Tous 9</button><button aria-pressed="false">Oui 6</button><button aria-pressed="false">Peut-être 1</button><button aria-pressed="false">Attente 2</button></div>
+            <div>
+              <div class="who"><span class="av xs" style="background:#FFE6C2">J</span><span class="n">Julien<small>Co-organisateur</small></span><span class="pill a">J'y vais</span><button class="round" aria-label="Gérer Julien" style="background:var(--field)">⋯</button></div>
+              <div class="who"><span class="av xs" style="background:#DDE6FB">M</span><span class="n">Marie<small>Invitée</small></span><span class="pill a">J'y vais</span><button class="round" aria-label="Gérer Marie" style="background:var(--field)">⋯</button></div>
+              <div class="who"><span class="av xs" style="background:#D3F0E4">S</span><span class="n">Sarah<small>Invitée</small></span><span class="pill d">Peut-être</span><button class="round" aria-label="Gérer Sarah" style="background:var(--field)">⋯</button></div>
+              <div class="who"><span class="av xs" style="background:var(--field);color:var(--muted)">@</span><span class="n">paul.d@exemple.fr<small>Sans compte · envoyée il y a 3 jours</small></span><span class="pill">En attente</span><button class="round" aria-label="Gérer l'invitation de paul.d@…" style="background:var(--field)">⋯</button></div>
+              <div class="who"><span class="av xs" style="background:var(--field);color:var(--muted)">@</span><span class="n">ines.r@exemple.fr<small>Lien expiré</small></span><button class="btn s sm" type="button">Renvoyer</button></div>
+            </div>
+            <p class="hint" style="margin:0">« Gérer » : nommer co-organisateur, retirer de l'événement, renvoyer ou annuler une invitation.</p>
+            <button class="btn s w" type="button">Fermer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 4. Créer / modifier ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">4 · Nouvel événement — mobile (même formulaire pour « Modifier »)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Fermer">✕</button></div>
+        <div class="body" style="padding-bottom:24px">
+          <h1 class="t">Nouvel événement</h1>
+          <div><p class="lbl">Titre</p><div class="field f">Anniversaire de Camille</div></div>
+          <div>
+            <p class="lbl">Quand</p>
+            <div class="seg" role="radiogroup" aria-label="Type d'horaire"><button aria-pressed="true">À une heure</button><button aria-pressed="false">À la journée</button></div>
+            <div class="two" style="margin-top:8px"><div class="field">sam. 22 nov.</div><div class="field">19:30</div></div>
+            <div class="two" style="margin-top:8px"><div class="field" style="color:var(--muted)">Fin (facultative)</div><div class="field">23:30</div></div>
+            <p class="hint">Même saisie que l'Agenda. « À la journée » : un ou plusieurs jours, sans heure (un week-end, par exemple).</p>
+          </div>
+          <div><p class="lbl">Lieu <em>(facultatif)</em></p><div class="field">Chez Julien, 12 rue des Lilas</div></div>
+          <div><p class="lbl">Infos <em>(facultatives)</em></p><textarea class="field" aria-label="Infos">On apporte chacun un plat.</textarea></div>
+          <div><p class="lbl">Teinte</p><div class="tints" role="radiogroup" aria-label="Teinte"><span role="radio" aria-checked="false" aria-label="Bleu" style="background:var(--t-gen)"></span><span role="radio" aria-checked="false" aria-label="Orange" style="background:var(--t-work)"></span><span role="radio" aria-checked="true" aria-label="Rose" style="background:var(--t-couple)"></span><span role="radio" aria-checked="false" aria-label="Vert" style="background:var(--t-trip)"></span></div></div>
+          <details style="background:var(--surface);border-radius:20px;padding:4px 18px"><summary style="min-height:52px;display:flex;align-items:center;font-weight:600;cursor:pointer">Plus d'options</summary></details>
+          <div style="flex:1"></div>
+          <button class="btn p w" type="button">Créer l'événement</button>
+          <p class="hint" style="text-align:center;margin:0">Tu inviteras juste après. Rien n'est envoyé tant que tu n'invites personne.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">4b · « Plus d'options » ouvert — mobile</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Fermer">✕</button></div>
+        <div class="body" style="padding-bottom:24px">
+          <h1 class="t">Nouvel événement</h1>
+          <section class="card" style="padding:4px 18px">
+            <div class="item" style="min-height:52px"><div class="l"><div class="n" style="font-weight:600">Plus d'options</div></div><span style="color:var(--muted)">▴</span></div>
+            <div class="item"><div class="l"><div class="n">Espace</div><div class="s">Ses membres voient l'événement, sans être invités.</div></div><span class="pill">Aucun ›</span></div>
+            <div class="item"><div class="l"><div class="n">Les invités voient qui vient</div></div><button class="sw" role="switch" aria-checked="true" aria-label="Les invités voient qui vient"><span><span></span></span></button></div>
+            <div class="item"><div class="l"><div class="n">Les invités invitent eux-mêmes</div><div class="s">Désactivé : ils te proposent quelqu'un, tu acceptes ou non.</div></div><button class="sw" role="switch" aria-checked="false" aria-label="Les invités invitent eux-mêmes"><span><span></span></span></button></div>
+            <div class="item"><div class="l"><div class="n">Nombre de places</div><div class="s">Au-delà, « J'y vais » n'est plus possible.</div></div><span class="pill">Illimité ›</span></div>
+          </section>
+          <p class="hint">Aucune option n'est obligatoire. Tu pourras tout changer plus tard.</p>
+          <div style="flex:1"></div>
+          <button class="btn p w" type="button">Créer l'événement</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">4c · Modifier la date — ce que verront les invités</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Fermer">✕</button></div>
+        <div class="body" style="opacity:.35"><h1 class="t">Modifier</h1></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="ch-t">
+            <h2 id="ch-t">Changer la date ?</h2>
+            <p>Un message apparaîtra en haut des commentaires : « Tu as changé la date : 6 – 7 décembre → 13 – 14 décembre ». Les réponses des invités ne changent pas.</p>
+            <div class="note">L'événement bouge aussi dans l'Agenda de ceux qui ont répondu « J'y vais » ou « Peut-être ».</div>
+            <div class="acts"><button class="btn p w" type="button">Enregistrer</button><button class="btn s w" type="button">Annuler</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 5. Inviter / proposer ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">5 · Inviter par e-mail — feuille (organisateur)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><div class="hero" style="--tint:var(--t-couple)"><div class="ti">Anniversaire de Camille</div></div></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="inv-t">
+            <h2 id="inv-t">Inviter quelqu'un</h2>
+            <div><p class="lbl">Adresse e-mail</p><div class="field f">hugo.martin@exemple.fr</div>
+              <p class="hint">Hugo reçoit un e-mail avec un lien personnel, valable 48 h. S'il a déjà un compte, l'événement apparaît aussi dans sa liste.</p></div>
+            <button class="btn p w" type="button">Envoyer l'invitation</button>
+            <p class="hint" role="status" style="margin:0">Invitation envoyée à marie.l@exemple.fr</p>
+            <div class="note">Les invitations sans réponse restent « En attente ». Un lien expiré se renvoie depuis la liste des invités.</div>
+            <button class="btn s w" type="button">Terminé</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">5b · Proposer quelqu'un — feuille (invité, réglage « les invités invitent » désactivé)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><div class="hero" style="--tint:var(--t-gen)"><div class="ti">Crémaillère rue Pasteur</div></div></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="pr-t">
+            <h2 id="pr-t">Proposer quelqu'un</h2>
+            <p style="color:var(--muted);font-size:15px">Léo décide. Rien n'est envoyé à la personne tant qu'il n'a pas accepté ; s'il refuse, elle n'en saura rien.</p>
+            <div><p class="lbl">Adresse e-mail</p><div class="field f">hugo.martin@exemple.fr</div></div>
+            <div><p class="lbl">Un mot pour Léo <em>(facultatif)</em></p><div class="field">Mon frère, il passe le week-end chez moi</div></div>
+            <div class="acts"><button class="btn p w" type="button">Proposer</button><button class="btn s w" type="button">Annuler</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">5c · Propositions reçues — feuille (organisateur)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="body" style="opacity:.35"><div class="hero" style="--tint:var(--t-couple)"><div class="ti">Anniversaire de Camille</div></div></div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-labelledby="pp-t">
+            <h2 id="pp-t">Propositions</h2>
+            <section style="border-radius:16px;background:var(--field);padding:14px;display:flex;flex-direction:column;gap:10px">
+              <div><b>Sarah</b> propose <b>hugo.martin@exemple.fr</b></div>
+              <div style="font-size:14.5px;color:var(--muted)">« Mon frère, il passe le week-end chez moi »</div>
+              <div class="two"><button class="btn p sm" type="button">Inviter</button><button class="btn o sm" type="button" style="background:var(--surface)">Refuser</button></div>
+            </section>
+            <p class="hint" style="margin:0">« Inviter » envoie l'invitation par e-mail. « Refuser » ne prévient personne.</p>
+            <button class="btn s w" type="button">Fermer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 6. Lien d'invitation ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">6 · Lien d'invitation ouvert, connecté — mobile</p>
+      <div class="m">
+        <div class="body" style="justify-content:center;padding-bottom:24px">
+          <article class="ticket" style="--tint:var(--t-gen)">
+            <div class="tp">
+              <span style="font-size:14px;color:var(--muted)">Léo t'invite</span>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:30px;line-height:1.05">Crémaillère rue Pasteur</div>
+            </div>
+            <div class="cut" aria-hidden="true"></div>
+            <div class="bt">
+              <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px">
+                <dt style="color:var(--muted)">Quand</dt><dd style="margin:0"><b>Vendredi 28 novembre, 20:00</b></dd>
+                <dt style="color:var(--muted)">Où</dt><dd style="margin:0">4 rue Pasteur, Lyon 7e</dd>
+              </dl>
+              <div class="choices" role="group" aria-label="Ta réponse"><button class="choice" aria-pressed="false">J'y vais</button><button class="choice" aria-pressed="false">Peut-être</button><button class="choice" aria-pressed="false">Non</button></div>
+              <a class="lnk" href="#" style="justify-content:center">Voir l'événement sans répondre</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">6b · Vue visiteur sans compte (même lien) — mobile</p>
+      <div class="m">
+        <div class="top"><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;padding-left:4px">Planifier</span><a class="btn s sm" href="#">Se connecter</a></div>
+        <div class="body" style="padding-bottom:24px">
+          <div class="hero" style="--tint:var(--t-gen)">
+            <span class="over">Vendredi 28 novembre · 20:00</span>
+            <div class="ti">Crémaillère rue Pasteur</div>
+            <div class="by">Léo t'invite (invitation pour paul.d@exemple.fr)</div>
+          </div>
+          <div class="rsvp" style="box-shadow:inset 0 0 0 2px var(--accent)">
+            <div class="q">Tu viens ?</div>
+            <div class="choices" role="group" aria-label="Ta réponse"><button class="choice" aria-pressed="true">J'y vais</button><button class="choice" aria-pressed="false">Peut-être</button><button class="choice" aria-pressed="false">Non</button></div>
+            <p class="hint" role="status" style="margin:0">Réponse enregistrée. Léo la voit. Tu peux revenir par ce même lien pour la changer.</p>
+          </div>
+          <dl class="facts" style="margin:0">
+            <div class="fact"><dt>Où</dt><dd><span class="big">Coloc rue Pasteur</span><br>4 rue Pasteur, Lyon 7e</dd></div>
+            <div class="fact"><dt>Infos</dt><dd>Apéro dînatoire, ramène ce que tu veux boire.</dd></div>
+          </dl>
+          <h2 class="sec">Commentaires</h2>
+          <section class="card"><div class="cm imp" style="margin:12px 0"><div class="bd"><div class="tag">Important</div><div class="h"><b>Léo</b> · hier</div><div class="x">Le code de la porte : 4521B.</div></div></div><p class="hint" style="margin:0 0 12px">Pour écrire un commentaire, crée un compte.</p></section>
+          <div class="note" style="display:flex;flex-direction:column;gap:10px"><span>Avec un compte, l'événement s'ajoute à ton agenda et tu retrouves toutes tes invitations au même endroit. Ce n'est pas obligatoire.</span><a class="btn s sm" href="#" style="align-self:flex-start;background:var(--surface)">Créer un compte avec paul.d@…</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">6c · Lien expiré · 6d · invitation pour une autre adresse</p>
+      <div class="m">
+        <div class="body" style="justify-content:center;gap:20px;padding-bottom:24px">
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:14px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px">Ce lien a expiré</div>
+            <p class="lead" style="margin:0">Un lien d'invitation marche 48 h. Demande à Léo de te le renvoyer : il le peut depuis la liste des invités.</p>
+            <button class="btn s w" type="button">Aller à l'accueil</button>
+          </section>
+          <section class="card" role="alert" style="padding:24px 22px;display:flex;flex-direction:column;gap:12px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Cette invitation est pour une autre adresse</div>
+            <p class="lead" style="margin:0">Ton compte est camille@…, l'invitation est pour paul.d@…. Connecte-toi avec la bonne adresse, ou déconnecte-toi puis rouvre le lien.</p>
+            <button class="btn s w" type="button">Changer de compte</button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 7. Confirmations, Agenda ========== -->
+  <div class="row">
+    <div>
+      <p class="cap">7 · Supprimer l'événement — confirmation (propriétaire)</p>
+      <div class="m">
+        <div class="top"><button class="round" aria-label="Retour">‹</button></div>
+        <div class="scrim">
+          <div class="sheet" role="alertdialog" aria-labelledby="del-t" aria-describedby="del-d">
+            <h2 id="del-t">Supprimer « Anniversaire de Camille » ?</h2>
+            <p id="del-d">L'événement disparaît <strong>pour ses 9 invités</strong>, avec ses commentaires. Il sort aussi de leur Agenda. Les liens d'invitation ne marcheront plus.</p>
+            <div class="acts"><button class="btn k w" type="button">Supprimer définitivement</button><button class="btn s w" type="button">Garder l'événement</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">7b · Événement complet / plus visible</p>
+      <div class="m">
+        <div class="body" style="justify-content:center;gap:20px;padding-bottom:24px">
+          <div class="rsvp">
+            <div class="q">Tu viens ?</div>
+            <div class="choices" role="group" aria-label="Ta réponse"><button class="choice" aria-pressed="false" disabled style="opacity:.45">J'y vais</button><button class="choice" aria-pressed="false">Peut-être</button><button class="choice" aria-pressed="false">Non</button></div>
+            <div class="err"><b aria-hidden="true">!</b><span>Les 12 places sont prises. Tu peux répondre « Peut-être » : Léo le verra.</span></div>
+          </div>
+          <section class="card" style="padding:28px 22px;display:flex;flex-direction:column;gap:14px;text-align:center">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px">Cet événement n'existe plus</div>
+            <p class="lead" style="margin:0">Il a été supprimé, ou tu n'y as plus accès.</p>
+            <button class="btn s w" type="button">Mes événements</button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap">7c · Dans l'Agenda (jour) : « J'y vais » plein, « Peut-être » en pointillé</p>
+      <div class="m">
+        <div class="body">
+          <h1 class="t" style="padding-top:20px;font-size:28px">Samedi 13 déc.</h1>
+          <div class="slot maybe" style="--tint:var(--t-trip)"><b>Week-end au chalet</b>À la journée · Peut-être · Événement</div>
+          <div class="hours">
+            <span>12:00</span><div><div class="slot" style="--tint:var(--t-gen)"><b>Courses</b>12:00 – 13:00</div></div>
+            <span>13:00</span><div></div>
+            <span>14:00</span><div></div>
+            <span>19:00</span><div><div class="slot" style="--tint:var(--t-couple)"><b>Dîner chez Julien</b>19:30 – 23:30 · Événement · J'y vais</div></div>
+            <span>20:00</span><div></div>
+          </div>
+          <p class="hint">Un événement s'ouvre sur sa page, pas dans le formulaire d'entrée : il se modifie dans Événements. Masqué de la vue fusionnée comme une entrée masquée ? (question)</p>
+        </div>
+        <nav class="mnav" aria-label="Navigation"><span>Aujourd'hui</span><span>Todo</span><b>Agenda</b><span>Événements</span><span>Journal</span></nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Fiches ========== -->
+  <section class="ann">
+    <h2>Fiches d'écran</h2>
+    <h3>Références (inspiration, rien de copié)</h3>
+    <ul>
+      <li>collectui « Event Listing » : tuile de date (mois en petit, jour en grand) à gauche d'une ligne + pastille de statut → carte <code>.ev</code>.</li>
+      <li>collectui « Invite » : billet à souche découpée → page du lien d'invitation (6) ; fenêtre « invite » (lien, e-mail, membres et rôle) → feuilles 3c et 5.</li>
+      <li>awwwards « Gravelle du Parc » : date et lieu en surtitre au-dessus d'un grand titre → en-tête <code>.hero</code> ; « Wedding Invitation Y&amp;T » : infos en lignes à filet fin et bloc de réponse bien visible → <code>.facts</code> et <code>.rsvp</code>.</li>
+      <li>pixlpin (texte seulement, images inaccessibles) : sélecteur date et heure qui s'ouvre depuis une pastille ; piles d'avatars.</li>
+    </ul>
+    <h3>Mes événements · <code>/evenements</code></h3>
+    <ul>
+      <li>Objectif : voir ce qui arrive et à quoi répondre. Données : date (tuile, teinte de l'événement), titre, jour · heure · lieu (ou Espace), quelques avatars de ceux qui y vont, ma réponse (pastille) ou mon rôle (« Organisé par toi »).</li>
+      <li>À venir / Passés (<code>SegmentedControl</code>, état dans l'URL <code>?periode=passes</code>). À venir : par mois, le plus proche d'abord ; Passés : le plus récent d'abord, cartes atténuées. Un événement en cours compte « à venir » jusqu'à sa fin.</li>
+      <li>Invitations sans réponse : bandeau « X t'invite » en tête (la plus proche). Contient aussi les événements de mes Espaces (visibles sans être invité : pastille « Espace X », pas de réponse).</li>
+      <li>États : squelette, vide (1b), erreur (1c). Pagination par curseur : « Afficher plus » au-delà de 50.</li>
+    </ul>
+    <h3>Créer / Modifier · <code>/evenements/nouveau</code>, feuille sur PC</h3>
+    <ul>
+      <li>Un seul formulaire (règle 13). Titre obligatoire ; quand : « À une heure » (début obligatoire, fin facultative) ou « À la journée » (premier jour obligatoire, dernier facultatif) avec le même composant que l'Agenda ; lieu, infos, teinte (4 teintes des tokens) facultatifs.</li>
+      <li>« Plus d'options » replié : Espace (parmi ceux où Événements est actif), « les invités voient qui vient » (oui), « les invités invitent eux-mêmes » (non), nombre de places (illimité).</li>
+      <li>Après création : la page de l'événement s'ouvre ; rien n'est envoyé tant que l'organisateur n'invite personne.</li>
+      <li>Changer lieu, date ou heure : confirmation 4c, puis message « Changement » en tête des commentaires (pas de notification dans cette série). <code>STALE_VERSION</code> → message de rechargement (comme les Espaces).</li>
+    </ul>
+    <h3>Un événement · <code>/evenements/[id]</code></h3>
+    <ul>
+      <li>Objectif : savoir quand, où, qui vient, et répondre. Ordre mobile : en-tête, réponse, infos, invités (résumé), commentaires. PC : liste | détail + commentaires | réponse + invités.</li>
+      <li>Réponse : J'y vais / Peut-être / Non (trois boutons, état pressé). Organisateur aussi (il peut ne pas y aller). Complet : « J'y vais » désactivé avec l'explication (7b).</li>
+      <li>Invités : groupés par réponse, rôle sous le nom ; si « les invités voient qui vient » est désactivé, un invité ne voit que le nombre et les organisateurs. Invitation sans compte : les organisateurs voient l'adresse complète (ils l'ont saisie), un invité n'en voit jamais ; « Sans compte ».</li>
+      <li>Organisateurs : Modifier, Inviter, propositions (bandeau), Gérer un invité (nommer co-organisateur, retirer, renvoyer / annuler une invitation). Propriétaire seul : Supprimer (7), retirer un co-organisateur.</li>
+      <li>Commentaires : du plus ancien au plus récent ; « Important » (organisateurs) mis en avant sur fond accent ; message « Changement » automatique. Suppression : l'auteur ou un organisateur.</li>
+      <li>Membre de l'Espace non invité : voit la page en lecture, sans réponse ni commentaire. Sans droit : « Cet événement n'existe plus » (NOT_FOUND).</li>
+    </ul>
+    <h3>Lien d'invitation · <code>/invitation#jeton</code></h3>
+    <ul>
+      <li>Jeton dans le fragment (comme <code>/rejoindre</code>), stocké haché, 48 h, renvoyable (nouveau jeton, l'ancien ne marche plus).</li>
+      <li>Connecté avec la bonne adresse : billet (6) ; répondre rattache l'invitation au compte et ajoute l'événement à la liste. Autre adresse : 6d. Expiré : 6c.</li>
+      <li>Sans compte : vue visiteur (6b) : en-tête, réponse, lieu, infos, commentaires en lecture ; pas d'écriture ; incitation douce à créer un compte, jamais bloquante. Jamais de notification.</li>
+    </ul>
+    <h3>Questions ouvertes</h3>
+    <ul>
+      <li>Image d'événement (<code>coverUrl</code>) : pas de stockage de fichiers aujourd'hui. Proposition : pas d'image dans cette série, la teinte suffit.</li>
+      <li>Vue fusionnée d'un Espace : y montrer les événements de ses membres (titre, horaire), ou seulement dans l'agenda de chacun ? Proposition : seulement dans l'agenda de chacun pour cette série.</li>
+      <li>Visiteur : voit-il la liste des invités (prénoms) si « les invités voient qui vient » est activé ? Proposition : non, seulement le nombre.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

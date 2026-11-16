@@ -61,7 +61,9 @@ propriétaire ou un membre, lien d'invitation, rejoindre, confirmations ; clair 
 « Espaces » de l'en-tête, en attendant la barre latérale. Teinte d'un Espace tirée de son identifiant parmi les teintes
 des tokens (rien de stocké).
 
-À maquetter : Événements (liste, création, détail), Notifications, Profil, connexion et inscription, Agenda mois,
+Maquetté aussi : **Événements** (`docs/maquettes/evenements.html`, 2026-11-16 : liste, détail, commentaires, formulaire, invitations par e-mail, propositions, lien d'invitation connecté ou visiteur sans compte, place dans l'Agenda ; clair et nuit). Pas d'image d'événement : sa teinte suffit ; fin facultative (« jusqu'à la fin du jour »).
+
+À maquetter : Notifications, Profil, connexion et inscription, Agenda mois,
 états vides et d'erreur hors Journal.
 
 ## Fiche d'écran (avant tout code d'UI)

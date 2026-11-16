@@ -1,18 +1,24 @@
 import {
   AGENDA_DESCRIPTION_MAX_LENGTH,
   AGENDA_LOCATION_MAX_LENGTH,
-  AGENDA_MAX_ENTRY_DAYS,
   AGENDA_MAX_PARTICIPANTS,
   AGENDA_PARTICIPANT_MAX_LENGTH,
   AGENDA_MAX_WINDOW_DAYS,
   AGENDA_TITLE_MAX_LENGTH,
 } from "@planifier/constants/agenda";
-import { daysBetween, MS_PER_DAY } from "@planifier/constants/days";
+import { daysBetween } from "@planifier/constants/days";
 import { LIST_TINTS } from "@planifier/constants/todo";
 import { z } from "zod";
 
 import { PAGE_MAX_LIMIT } from "../../_shared/page.schemas";
 import { personSchema } from "../../_shared/person.schemas";
+import {
+  daySchema,
+  spansAtMost,
+  type When,
+  whenInputSchema,
+  whenOutputSchema,
+} from "../../_shared/when.schemas";
 import { entryIdSchema, entryTargetSchema, spaceIdSchema, taskIdSchema } from "../agenda.schemas";
 
 const titleSchema = z.string().trim().min(1).max(AGENDA_TITLE_MAX_LENGTH);
@@ -28,41 +34,6 @@ const participantsSchema = z
     "Chaque participant une seule fois.",
   );
 const tintSchema = z.enum(LIST_TINTS);
-/** Jour `AAAA-MM-JJ`, sans heure ni fuseau. */
-const daySchema = z.iso.date();
-
-const spansAtMost = (startMs: number, endMs: number, days: number) =>
-  endMs - startMs <= days * MS_PER_DAY;
-
-const timedFields = { allDay: z.literal(false), startsAt: z.date(), endsAt: z.date() };
-/** `endDay` inclus : une entrée d'un jour a `startDay` égal à `endDay`. */
-const allDayFields = { allDay: z.literal(true), startDay: daySchema, endDay: daySchema };
-
-const timedInputSchema = z
-  .strictObject(timedFields)
-  .refine(({ startsAt, endsAt }) => startsAt < endsAt, "La fin doit suivre le début.")
-  .refine(
-    ({ startsAt, endsAt }) =>
-      spansAtMost(startsAt.getTime(), endsAt.getTime(), AGENDA_MAX_ENTRY_DAYS),
-    "Entrée trop longue.",
-  );
-
-const allDayInputSchema = z
-  .strictObject(allDayFields)
-  .refine(({ startDay, endDay }) => startDay <= endDay, "La fin doit suivre le début.")
-  .refine(
-    ({ startDay, endDay }) => daysBetween(startDay, endDay) < AGENDA_MAX_ENTRY_DAYS,
-    "Entrée trop longue.",
-  );
-
-/** Horaire (instants) ou à la journée (jours, sans fuseau) : une entrée n'a jamais les deux. */
-const whenInputSchema = z.discriminatedUnion("allDay", [timedInputSchema, allDayInputSchema]);
-
-/** En sortie, la forme seule : une borne d'écriture ne doit pas rendre illisible une entrée importée, plus longue. */
-const agendaWhenSchema = z.discriminatedUnion("allDay", [
-  z.strictObject(timedFields),
-  z.strictObject(allDayFields),
-]);
 
 /**
  * Période affichée, dite dans les deux formes : le serveur ne connaît pas le fuseau de l'utilisateur, l'appareil
@@ -139,7 +110,7 @@ const sharedEntryFields = {
   title: z.string(),
   location: z.string().nullable(),
   participants: z.array(z.string()),
-  when: agendaWhenSchema,
+  when: whenOutputSchema,
 };
 
 /** Entrée de l'appelant. */
@@ -182,7 +153,7 @@ export const listSpaceEntriesOutputSchema = z.strictObject({
   nextCursor: nextCursorSchema,
 });
 
-export type AgendaWhen = z.infer<typeof agendaWhenSchema>;
+export type AgendaWhen = When;
 export type AgendaEntryOutput = z.infer<typeof agendaEntrySchema>;
 export type SpaceEntryOutput = z.infer<typeof spaceEntrySchema>;
 export type ListEntriesOutput = z.infer<typeof listEntriesOutputSchema>;

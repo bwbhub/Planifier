@@ -18,9 +18,6 @@ export const AGENDA_GRID_LAST_HOUR = 22;
 /** Entrées par utilisateur au plus : borne le coût d'un agenda, et d'un import à venir. */
 export const AGENDA_MAX_ENTRIES = 5000;
 
-/** Durée d'une entrée au plus, en jours. */
-export const AGENDA_MAX_ENTRY_DAYS = 366;
-
 /** Fenêtre lue en une fois au plus, en jours : un mois affiché tient en six semaines. */
 export const AGENDA_MAX_WINDOW_DAYS = 62;
 

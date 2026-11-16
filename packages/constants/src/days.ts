@@ -12,6 +12,9 @@ export function utcDateToDay(date: Date): string {
 
 export const MS_PER_DAY = 86_400_000;
 
+/** Durée au plus d'une entrée d'agenda ou d'un événement, en jours. */
+export const WHEN_MAX_DAYS = 366;
+
 /** `days` jours après `day` (négatif : avant). */
 export function addDays(day: string, days: number): string {
   return utcDateToDay(new Date(dayToUtcDate(day).getTime() + days * MS_PER_DAY));

@@ -37,13 +37,12 @@ enum ParticipantStatus {
   @@map("participant_status")
 }
 
-enum InviteStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  EXPIRED
+/// Nature d'un commentaire : écrit par une personne, ou message automatique d'un champ important modifié.
+enum CommentKind {
+  TEXT
+  CHANGE
 
-  @@map("invite_status")
+  @@map("comment_kind")
 }
 
 /// Proposition d'un invité, validée par un organisateur.
@@ -132,7 +131,6 @@ model User {
   ownedEvents           Event[]                @relation("EventOwner")
   eventParticipations   EventParticipant[]
   sentInvites           Invite[]               @relation("InviteSender")
-  receivedInvites       Invite[]               @relation("InviteReceiver")
   madeProposals         ProposedInvite[]       @relation("Proposer")
   notifications         Notification[]
   comments              Comment[]
@@ -422,19 +420,31 @@ model CalendarSubscription {
 // Événements
 // ---------------------------------------------------------------------------
 
+/// Événement. Horaire (`startsAt`, `endsAt`) ou à la journée sans fuseau (`startDay`, `endDay`), comme une entrée
+/// d'agenda ; `openEnd` : l'hôte n'a pas choisi de fin, `endsAt` est la fin du jour de début (calculée par l'appareil).
 model Event {
-  id          String    @id @default(uuid(7))
-  title       String
-  description String?   @db.Text
-  location    String?
-  startDate   DateTime  @map("start_date")
-  endDate     DateTime? @map("end_date")
-  coverUrl    String?   @map("cover_url")
-  /// Teinte choisie par l'utilisateur (la valeur par défaut vient des tokens côté interface).
-  color       String?
-  version     Int       @default(1)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid(7))
+  title              String
+  description        String?   @db.Text
+  location           String?
+  startsAt           DateTime? @map("starts_at")
+  endsAt             DateTime? @map("ends_at")
+  openEnd            Boolean   @default(false) @map("open_end")
+  startDay           DateTime? @map("start_day") @db.Date
+  endDay             DateTime? @map("end_day") @db.Date
+  /// Clé de tri et de pagination : `startsAt`, ou `startDay` à 00:00 UTC. Écrite par le service avec le reste de la date.
+  startKey           DateTime  @map("start_key")
+  /// Teinte (`LIST_TINTS`, constants) : validée par Zod en écriture et en lecture.
+  tint               String    @default("general")
+  /// Les invités voient qui vient (les organisateurs, toujours).
+  isGuestListVisible Boolean   @default(true) @map("is_guest_list_visible")
+  /// true : un invité invite directement ; false : il passe par une proposition.
+  allowGuestInvite   Boolean   @default(false) @map("allow_guest_invite")
+  /// Places pour « j'y vais » ; null = illimité.
+  maxParticipants    Int?      @map("max_participants")
+  version            Int       @default(1)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   /// Propriétaire. null : il a supprimé son compte ; un co-organisateur peut reprendre la propriété, sinon un job
   /// planifié supprime l'événement 48 h après `ownerLeftAt`. Le service de suppression de compte renseigne
@@ -447,15 +457,14 @@ model Event {
   space       Space?    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
 
   participants    EventParticipant[]
-  settings        EventSettings?
   invites         Invite[]
   proposedInvites ProposedInvite[]
   notifications   Notification[]
   comments        Comment[]
 
-  @@index([spaceId, startDate])
+  @@index([spaceId, startKey])
   @@index([ownerId])
-  @@index([startDate])
+  @@index([startKey, id])
   @@index([ownerLeftAt])
   @@map("events")
 }
@@ -476,58 +485,47 @@ model EventParticipant {
   @@map("event_participants")
 }
 
-model EventSettings {
-  id                 String  @id @default(uuid(7))
-  /// Les invités peuvent voir qui vient.
-  isGuestListVisible Boolean @default(true) @map("is_guest_list_visible")
-  /// true : un invité invite directement ; false : il passe par une proposition.
-  allowGuestInvite   Boolean @default(false) @map("allow_guest_invite")
-  /// null = illimité.
-  maxParticipants    Int?    @map("max_participants")
-
-  eventId String @unique @map("event_id")
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@map("event_settings")
-}
-
 // ---------------------------------------------------------------------------
 // Invitations
 // ---------------------------------------------------------------------------
 
-/// Invitation officielle (envoyée par un organisateur, ou issue d'une proposition validée).
+/// Invitation officielle (envoyée par un organisateur, ou issue d'une proposition validée). Elle ne crée aucun
+/// participant : l'invité, avec ou sans compte, y répond par un lien ou depuis son compte (même adresse e-mail).
 model Invite {
-  id        String       @id @default(uuid(7))
-  /// Jeton du lien d'accès.
-  token     String       @unique
+  id          String            @id @default(uuid(7))
+  /// Empreinte SHA-256 (hex) du jeton du lien ; le jeton n'est jamais stocké. Un renvoi en crée un autre.
+  tokenHash   String            @unique @map("token_hash")
   /// L'invité n'a pas forcément de compte.
   /// @pii identité fin-de-l'événement
-  email     String
-  status    InviteStatus @default(PENDING)
-  /// Rôle que la personne aura si elle accepte.
-  role      EventRole    @default(GUEST)
-  expiresAt DateTime?    @map("expires_at")
-  createdAt DateTime     @default(now()) @map("created_at")
+  email       String
+  /// Rôle que la personne aura si elle répond.
+  role        EventRole         @default(GUEST)
+  /// Réponse donnée par le lien, sans compte. `PENDING` : pas répondu.
+  response    ParticipantStatus @default(PENDING)
+  respondedAt DateTime?         @map("responded_at")
+  /// Fin de validité du lien (48 h après l'envoi) ; l'invitation, elle, reste.
+  expiresAt   DateTime          @map("expires_at")
+  /// Dernier envoi du lien (envoi ou renvoi) : sert au plafond d'envois par jour.
+  sentAt      DateTime          @default(now()) @map("sent_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
 
-  eventId   String  @map("event_id")
-  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  inviterId String  @map("inviter_id")
-  inviter   User    @relation("InviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
-  /// Renseigné si l'invité a déjà un compte.
-  userId    String? @map("user_id")
-  user      User?   @relation("InviteReceiver", fields: [userId], references: [id], onDelete: SetNull)
+  eventId   String @map("event_id")
+  event     Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  inviterId String @map("inviter_id")
+  inviter   User   @relation("InviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, email])
-  @@index([inviterId])
-  @@index([userId])
+  @@index([inviterId, sentAt])
+  @@index([email])
   @@map("invites")
 }
 
 model ProposedInvite {
   id             String         @id @default(uuid(7))
   /// @pii identité fin-de-l'événement
-  suggestedEmail String?        @map("suggested_email")
-  reason         String?
+  suggestedEmail String         @map("suggested_email")
+  /// Un mot pour l'organisateur (280 caractères au plus).
+  message        String?
   status         ProposalStatus @default(PENDING)
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
@@ -566,12 +564,16 @@ model Notification {
 }
 
 model Comment {
-  id          String   @id @default(uuid(7))
-  text        String   @db.Text
-  /// Un commentaire important notifie les inscrits (CONTEXT.md).
-  isImportant Boolean  @default(false) @map("is_important")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id          String      @id @default(uuid(7))
+  kind        CommentKind @default(TEXT)
+  /// Texte d'un commentaire `TEXT` ; null pour un `CHANGE`.
+  text        String?     @db.Text
+  /// Champ important modifié, pour un `CHANGE` : `{ schemaVersion, field, from, to }`, validé par Zod à l'écriture et à la lecture.
+  change      Json?
+  /// Un commentaire important est mis en avant (et notifiera les inscrits, plus tard : CONTEXT.md).
+  isImportant Boolean     @default(false) @map("is_important")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
 
   userId  String @map("user_id")
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)

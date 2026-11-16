@@ -39,6 +39,7 @@ const expected: Record<EventRole, EventAction[]> = {
     "remove_guest",
     "mark_important",
     "see_guest_list",
+    "change_space",
   ],
   ORGANIZER: [
     "view",

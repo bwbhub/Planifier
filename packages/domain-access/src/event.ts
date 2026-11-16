@@ -16,6 +16,7 @@ export const EVENT_ACTIONS = [
   "remove_guest",
   "mark_important",
   "see_guest_list",
+  "change_space",
 ] as const;
 export type EventAction = (typeof EVENT_ACTIONS)[number];
 
@@ -53,6 +54,7 @@ const ROLE_ACTIONS: Record<EventRole, readonly EventAction[]> = {
     "manage_roles",
     "remove_guest",
     "mark_important",
+    "change_space",
   ],
   ORGANIZER: [
     "view",

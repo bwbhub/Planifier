@@ -152,7 +152,12 @@ describe("événements : ce que la liste montre", () => {
     await addParticipant(db, made.id, carol, { role: "GUEST", status: "MAYBE" });
     await addInvite(db, made.id, alice, { email: "visiteur@example.test", response: "GOING" });
     const { items } = await list(bob, "upcoming");
-    expect(items[0]).toMatchObject({ myRole: "GUEST", myStatus: "GOING", goingCount: 3 });
+    expect(items[0]).toMatchObject({
+      myRole: "GUEST",
+      myStatus: "GOING",
+      goingCount: 3,
+      owner: { name: "alice" },
+    });
     expect(items[0]?.goingPreview.map(({ name }) => name).sort()).toEqual(["alice", "bob"]);
   });
 

@@ -5,7 +5,13 @@ import type { Db, DbTransaction, Prisma } from "@planifier/db";
 import { hasRoomFor } from "@planifier/domain-events/capacity";
 
 import { toPerson } from "../../_shared/list-access";
-import { abilitiesOf, eventAccessSelect, toEventCaller } from "../event-access";
+import {
+  abilitiesOf,
+  type Caller,
+  eventAccessSelect,
+  goingCountSelect,
+  toEventCaller,
+} from "../event-access";
 import { toEventWhen, whenSelect } from "../event-when";
 
 /** Tout ce que lit le détail d'un événement et les droits de `userId` (e-mail de sa session : `email`). */
@@ -21,12 +27,7 @@ export function detailSelect(userId: string, email: string) {
     owner: { select: { id: true, name: true } },
     ...whenSelect,
     ...eventAccessSelect(userId, email),
-    _count: {
-      select: {
-        participants: { where: { status: "GOING" } },
-        invites: { where: { response: "GOING" } },
-      },
-    },
+    ...goingCountSelect,
   } as const satisfies Prisma.EventSelect;
 }
 
@@ -70,7 +71,7 @@ export function toDetail(row: DetailRow): EventDetailOutput {
 /** Détail lu pour l'appelant ; événement disparu entre-temps ⇒ NOT_FOUND. */
 export async function readDetail(
   db: Db | DbTransaction,
-  { userId, email }: { userId: string; email: string },
+  { userId, email }: Caller,
   eventId: string,
 ): Promise<EventDetailOutput> {
   const row = await db.event.findUnique({

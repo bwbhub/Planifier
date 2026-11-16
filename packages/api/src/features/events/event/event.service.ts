@@ -8,17 +8,12 @@ import type {
 import type { Db, DbTransaction, Prisma } from "@planifier/db";
 import { importantChanges } from "@planifier/domain-events/changes";
 
+import { type Caller } from "../event-access";
 import { toChangeJson } from "../event-change";
 import { eventConflict } from "../event-errors";
 import { lockEvent } from "../event-lock";
 import { normalizeWhen, toEventWhen, whenColumns, whenSelect } from "../event-when";
 import { readDetail } from "./event-detail";
-
-/** Personne qui lit : son identifiant et l'adresse e-mail de sa session (pour retrouver ses invitations). */
-export interface Caller {
-  userId: string;
-  email: string;
-}
 
 /** Espace où rattacher un événement : l'appelant en est membre (sinon il n'existe pas pour lui), Événements y est activé. */
 async function assertEventsSpace(tx: DbTransaction, userId: string, spaceId: string) {
@@ -28,14 +23,6 @@ async function assertEventsSpace(tx: DbTransaction, userId: string, spaceId: str
   });
   if (membership === null) throw new ORPCError("NOT_FOUND");
   if (!membership.space.modules.includes("EVENTS")) throw eventConflict("EVENTS_DISABLED");
-}
-
-export async function getEvent(
-  db: Db,
-  caller: Caller,
-  eventId: string,
-): Promise<EventDetailOutput> {
-  return readDetail(db, caller, eventId);
 }
 
 export async function createEvent(

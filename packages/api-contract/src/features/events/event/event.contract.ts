@@ -56,7 +56,7 @@ export const eventContract = {
     .route({
       summary: "Rattacher un événement à un Espace",
       description:
-        "Propriétaire seulement. `spaceId` : un Espace dont il est membre, Événements activé (CONFLICT `EVENTS_DISABLED`) ; `null` : événement personnel et privé.",
+        "Propriétaire seulement. `spaceId` : un Espace dont il est membre, Événements activé (CONFLICT `EVENTS_DISABLED`) ; `null` : événement personnel et privé. Aucun message « Changement » (l'Espace n'est pas un champ important).",
     })
     .errors(EVENT_ERRORS)
     .input(setEventSpaceInputSchema)

@@ -3,10 +3,10 @@ import { ORPCError } from "@orpc/server";
 import type { Db } from "@planifier/db";
 import { hasRoomFor } from "@planifier/domain-events/capacity";
 
+import { type Caller, goingCountSelect } from "../event-access";
 import { eventConflict } from "../event-errors";
 import { lockEvent } from "../event-lock";
 import { goingOf } from "./event-detail";
-import type { Caller } from "./event.service";
 
 /**
  * Réponse de l'appelant. Sous le verrou de l'événement : deux réponses simultanées ne dépassent pas les places. Un
@@ -26,12 +26,7 @@ export async function respondToEvent(
         maxParticipants: true,
         participants: { where: { userId }, select: { id: true, role: true, status: true } },
         invites: { where: { email }, select: { id: true, role: true, response: true } },
-        _count: {
-          select: {
-            participants: { where: { status: "GOING" } },
-            invites: { where: { response: "GOING" } },
-          },
-        },
+        ...goingCountSelect,
       },
     });
     const participant = event.participants[0];

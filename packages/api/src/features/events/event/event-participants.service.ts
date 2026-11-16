@@ -6,7 +6,7 @@ import type {
 } from "@planifier/api-contract";
 import { EVENT_MAX_GUESTS, type ParticipantStatus } from "@planifier/constants/events";
 import type { Db } from "@planifier/db";
-import { canAccessEvent, canRemoveParticipant } from "@planifier/domain-access/event";
+import { canAccessEvent, canRemoveParticipant, canSetRole } from "@planifier/domain-access/event";
 
 import { toPerson } from "../../_shared/list-access";
 import type { EventCaller } from "../event-access";
@@ -48,7 +48,7 @@ export async function listParticipants(
     participants: canAccessEvent(access, "see_guest_list")
       ? event.participants.map(({ role, status, user }) => ({ ...toPerson(user), role, status }))
       : [],
-    invitations: canAccessEvent(access, "update")
+    invitations: canAccessEvent(access, "see_invite_emails")
       ? event.invites.map(({ id, email, response, sentAt, expiresAt }) => ({
           id,
           email,
@@ -77,7 +77,9 @@ export async function setRole(
   { eventId, userId, role }: SetRoleInput,
 ): Promise<void> {
   const target = await findTarget(db, eventId, userId);
-  if (target.role === "OWNER" || userId === callerId) throw new ORPCError("FORBIDDEN");
+  if (!canSetRole({ targetRole: target.role, isSelf: userId === callerId })) {
+    throw new ORPCError("FORBIDDEN");
+  }
   await db.eventParticipant.update({ where: { id: target.id }, data: { role } });
 }
 
@@ -91,13 +93,11 @@ export async function removeParticipant(
   { eventId, userId }: RemoveParticipantInput,
 ): Promise<void> {
   const target = await findTarget(db, eventId, userId);
-  const allowed =
-    access.role !== null &&
-    canRemoveParticipant({
-      callerRole: access.role,
-      targetRole: target.role,
-      isSelf: userId === callerId,
-    });
+  const allowed = canRemoveParticipant({
+    callerRole: access.role,
+    targetRole: target.role,
+    isSelf: userId === callerId,
+  });
   if (!allowed) throw new ORPCError("FORBIDDEN");
   await db.eventParticipant.delete({ where: { id: target.id } });
 }

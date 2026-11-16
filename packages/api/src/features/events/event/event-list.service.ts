@@ -4,11 +4,10 @@ import type { Db, Prisma } from "@planifier/db";
 import { canAccessEvent } from "@planifier/domain-access/event";
 
 import { toPerson } from "../../_shared/list-access";
-import { eventAccessSelect, toEventCaller } from "../event-access";
+import { type Caller, eventAccessSelect, goingCountSelect, toEventCaller } from "../event-access";
 import { decodeCursor, type EventCursor, encodeCursor } from "../event-cursor";
 import { toEventWhen, whenSelect } from "../event-when";
 import { goingOf, tintOf } from "./event-detail";
-import type { Caller } from "./event.service";
 
 /** Personnes montrées sur une carte : quelques-unes parmi celles qui y vont. */
 const PREVIEW_SIZE = 3;
@@ -20,6 +19,7 @@ function listSelect({ userId, email }: Caller) {
     location: true,
     tint: true,
     startKey: true,
+    owner: { select: { id: true, name: true } },
     ...whenSelect,
     ...eventAccessSelect(userId, email),
     // Sa propre participation se lit à part (voir `listEvents`) : cette relation montre ceux qui y vont.
@@ -29,12 +29,7 @@ function listSelect({ userId, email }: Caller) {
       take: PREVIEW_SIZE,
       select: { user: { select: { id: true, name: true } } },
     },
-    _count: {
-      select: {
-        participants: { where: { status: "GOING" } },
-        invites: { where: { response: "GOING" } },
-      },
-    },
+    ...goingCountSelect,
   } as const satisfies Prisma.EventSelect;
 }
 
@@ -126,6 +121,7 @@ export async function listEvents(
       location: row.location,
       tint: tintOf(row),
       space: row.space === null ? null : { id: row.space.id, name: row.space.name },
+      owner: row.owner === null ? null : toPerson(row.owner),
       myRole: access.role,
       myStatus: status,
       goingCount: goingOf(row),

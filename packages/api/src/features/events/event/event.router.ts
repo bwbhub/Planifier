@@ -1,38 +1,32 @@
 import { userProcedure } from "../../../procedures";
+import { callerOf } from "../event-access";
 import { eventGuard } from "../event-guard";
 import { listParticipants, removeParticipant, setRole } from "./event-participants.service";
 import { listEvents } from "./event-list.service";
 import { respondToEvent } from "./event-respond.service";
-import { createEvent, deleteEvent, getEvent, setEventSpace, updateEvent } from "./event.service";
+import { readDetail } from "./event-detail";
+import { createEvent, deleteEvent, setEventSpace, updateEvent } from "./event.service";
 
 export const eventRouter = {
   // Filtré par l'appelant : ce qu'il voit (participe, invité par e-mail, Espace).
   list: userProcedure.events.event.list.handler(({ context, input }) =>
-    listEvents(context.getDb(), { userId: context.user.id, email: context.user.email }, input),
+    listEvents(context.getDb(), callerOf(context.user), input),
   ),
   get: userProcedure.events.event.get
     .use(eventGuard("view"))
     .handler(({ context, input }) =>
-      getEvent(
-        context.getDb(),
-        { userId: context.user.id, email: context.user.email },
-        input.eventId,
-      ),
+      readDetail(context.getDb(), callerOf(context.user), input.eventId),
     ),
   // Tout compte peut créer un événement : il en est le propriétaire.
   create: userProcedure.events.event.create.handler(({ context, input }) =>
-    createEvent(context.getDb(), { userId: context.user.id, email: context.user.email }, input),
+    createEvent(context.getDb(), callerOf(context.user), input),
   ),
   update: userProcedure.events.event.update
     .use(eventGuard("update"))
-    .handler(({ context, input }) =>
-      updateEvent(context.getDb(), { userId: context.user.id, email: context.user.email }, input),
-    ),
+    .handler(({ context, input }) => updateEvent(context.getDb(), callerOf(context.user), input)),
   setSpace: userProcedure.events.event.setSpace
     .use(eventGuard("change_space"))
-    .handler(({ context, input }) =>
-      setEventSpace(context.getDb(), { userId: context.user.id, email: context.user.email }, input),
-    ),
+    .handler(({ context, input }) => setEventSpace(context.getDb(), callerOf(context.user), input)),
   delete: userProcedure.events.event.delete
     .use(eventGuard("delete"))
     .handler(async ({ context, input }) => {
@@ -42,11 +36,7 @@ export const eventRouter = {
   respond: userProcedure.events.event.respond
     .use(eventGuard("react"))
     .handler(({ context, input }) =>
-      respondToEvent(
-        context.getDb(),
-        { userId: context.user.id, email: context.user.email },
-        input,
-      ),
+      respondToEvent(context.getDb(), callerOf(context.user), input),
     ),
   participants: userProcedure.events.event.participants
     .use(eventGuard("view"))

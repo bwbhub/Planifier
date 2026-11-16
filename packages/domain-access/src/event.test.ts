@@ -5,6 +5,7 @@ import {
   canAccessEvent,
   canDeleteComment,
   canRemoveParticipant,
+  canSetRole,
   EVENT_ACTIONS,
   type EventAccess,
   type EventAction,
@@ -40,6 +41,7 @@ const expected: Record<EventRole, EventAction[]> = {
     "mark_important",
     "see_guest_list",
     "change_space",
+    "see_invite_emails",
   ],
   ORGANIZER: [
     "view",
@@ -52,6 +54,7 @@ const expected: Record<EventRole, EventAction[]> = {
     "remove_guest",
     "mark_important",
     "see_guest_list",
+    "see_invite_emails",
   ],
   GUEST: ["view", "react", "comment", "propose_invite", "see_guest_list"],
 };
@@ -144,6 +147,12 @@ describe("canRemoveParticipant", () => {
     expect(canRemoveParticipant({ callerRole, targetRole, isSelf: false })).toBe(allowed);
   });
 
+  it("ne retire rien sans rôle", () => {
+    expect(canRemoveParticipant({ callerRole: null, targetRole: "GUEST", isSelf: false })).toBe(
+      false,
+    );
+  });
+
   it("ne retire jamais soi-même", () => {
     expect(
       canRemoveParticipant({ callerRole: "ORGANIZER", targetRole: "GUEST", isSelf: true }),
@@ -173,5 +182,17 @@ describe("canDeleteComment", () => {
 
   it("refuse à qui ne participe pas", () => {
     expect(canDeleteComment({ role: null, isAuthor: true, kind: "TEXT" })).toBe(false);
+  });
+});
+
+describe("canSetRole", () => {
+  it("laisse changer le rôle d'un co-organisateur ou d'un invité", () => {
+    expect(canSetRole({ targetRole: "ORGANIZER", isSelf: false })).toBe(true);
+    expect(canSetRole({ targetRole: "GUEST", isSelf: false })).toBe(true);
+  });
+
+  it("ne touche ni au propriétaire ni à soi-même", () => {
+    expect(canSetRole({ targetRole: "OWNER", isSelf: false })).toBe(false);
+    expect(canSetRole({ targetRole: "ORGANIZER", isSelf: true })).toBe(false);
   });
 });

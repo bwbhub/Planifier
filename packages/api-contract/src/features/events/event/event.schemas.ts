@@ -99,6 +99,8 @@ export const eventSummarySchema = z.strictObject({
   location: z.string().nullable(),
   tint: tintSchema,
   space: spaceRefSchema.nullable(),
+  /** Qui organise ; null : le propriétaire a supprimé son compte. Sert au bandeau « X t'invite ». */
+  owner: personSchema.nullable(),
   /** Rôle de l'appelant ; null : il voit l'événement par son Espace ou par une invitation. */
   myRole: roleSchema.nullable(),
   /** Réponse de l'appelant ; `PENDING` : invité, pas encore répondu ; null : vu par son Espace, sans invitation. */
@@ -136,9 +138,10 @@ export const eventDetailSchema = z.strictObject({
   isGuestListVisible: z.boolean(),
   allowGuestInvite: z.boolean(),
   maxParticipants: z.int().nullable(),
-  /** null : le propriétaire a supprimé son compte. */
-  owner: personSchema.nullable(),
-  /** Plus de place pour « J'y vais ». */
+  /**
+   * Plus de place pour une nouvelle réponse « J'y vais ». Qui y va déjà garde sa place : l'écran ne désactive le bouton
+   * que si `myStatus` n'est pas `GOING`.
+   */
   isFull: z.boolean(),
   can: abilitiesSchema,
 });

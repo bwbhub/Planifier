@@ -17,6 +17,7 @@ export const EVENT_ACTIONS = [
   "mark_important",
   "see_guest_list",
   "change_space",
+  "see_invite_emails",
 ] as const;
 export type EventAction = (typeof EVENT_ACTIONS)[number];
 
@@ -55,6 +56,7 @@ const ROLE_ACTIONS: Record<EventRole, readonly EventAction[]> = {
     "remove_guest",
     "mark_important",
     "change_space",
+    "see_invite_emails",
   ],
   ORGANIZER: [
     "view",
@@ -66,6 +68,7 @@ const ROLE_ACTIONS: Record<EventRole, readonly EventAction[]> = {
     "activate_brick",
     "remove_guest",
     "mark_important",
+    "see_invite_emails",
   ],
   GUEST: ["view", "react", "comment"],
 };
@@ -104,22 +107,36 @@ export function canAccessEvent(access: EventAccess, action: EventAction): boolea
 }
 
 /**
- * Retrait d'un participant (`remove_guest` déjà accordé à l'appelant) : le propriétaire retire un co-organisateur ou
- * un invité, un co-organisateur retire un invité. Personne ne retire le propriétaire, ni soi-même (on part par
- * « Non » ; la suppression du compte a son propre parcours).
+ * Retrait d'un participant (`remove_guest` accordé à l'appelant) : le propriétaire retire un co-organisateur ou un
+ * invité, un co-organisateur retire un invité. Personne ne retire le propriétaire, ni soi-même (on part par « Non » ;
+ * la suppression du compte a son propre parcours). Sans rôle, rien.
  */
 export function canRemoveParticipant({
   callerRole,
   targetRole,
   isSelf,
 }: {
-  callerRole: EventRole;
+  callerRole: EventRole | null;
   targetRole: EventRole;
   isSelf: boolean;
 }): boolean {
-  if (isSelf || targetRole === "OWNER") return false;
+  if (callerRole === null || isSelf || targetRole === "OWNER") return false;
   if (callerRole === "OWNER") return true;
   return callerRole === "ORGANIZER" && targetRole === "GUEST";
+}
+
+/**
+ * Changement de rôle d'un participant (`manage_roles` accordé à l'appelant) : jamais le propriétaire, jamais soi-même
+ * (le propriétaire ne se rétrograde pas).
+ */
+export function canSetRole({
+  targetRole,
+  isSelf,
+}: {
+  targetRole: EventRole;
+  isSelf: boolean;
+}): boolean {
+  return !isSelf && targetRole !== "OWNER";
 }
 
 /**

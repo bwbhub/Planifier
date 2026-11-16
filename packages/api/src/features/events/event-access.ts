@@ -1,6 +1,27 @@
+import type { SessionUser } from "@planifier/auth";
 import type { EventAccess } from "@planifier/domain-access/event";
 import { canAccessEvent } from "@planifier/domain-access/event";
 import type { Prisma } from "@planifier/db";
+
+/** Personne qui lit : son identifiant et l'adresse e-mail de sa session (pour retrouver ses invitations). */
+export interface Caller {
+  userId: string;
+  email: string;
+}
+
+export function callerOf({ id, email }: Pick<SessionUser, "id" | "email">): Caller {
+  return { userId: id, email };
+}
+
+/** Personnes qui y vont : participants en « J'y vais » et invités sans compte qui l'ont dit par leur lien. */
+export const goingCountSelect = {
+  _count: {
+    select: {
+      participants: { where: { status: "GOING" } },
+      invites: { where: { response: "GOING" } },
+    },
+  },
+} as const satisfies Prisma.EventSelect;
 
 /**
  * Ce qu'il faut lire d'un événement pour décider des droits de `userId` (e-mail de sa session : `email`, en minuscules
